@@ -1,7 +1,11 @@
 (defpackage :fdog-models
   (:use :cl)
   (:export :connected-p :connect :disconnect :reconnect
-           :*server-database*))
+           :*server-database*
+
+           ;; Mongrel2 configuration view classes
+           :setting))
+
 (in-package :fdog-models)
 
 ;; TODO: This may be better expressed in CLOS, now that I've noticed what I'm doing..

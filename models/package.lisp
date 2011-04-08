@@ -1,12 +1,15 @@
 (defpackage :fdog-models
   (:use :cl)
-  (:export :connected-p :connect :disconnect :reconnect))
+  (:export :connected-p :connect :disconnect :reconnect
+           :*server-database*))
 (in-package :fdog-models)
+
+;; TODO: This may be better expressed in CLOS, now that I've noticed what I'm doing..
+;;   Re: Keeping state and a pile of methods to poke it
 
 ;; Knobs
 (defvar *server-database* nil
   "A handle to the database connection to the server.")
-
 
 ;; Methods
 (defun connected-p ()

@@ -22,18 +22,17 @@
 
 (defun connect (&optional db-path)
   "Connect to a mongrel2 configuration database.
-
 If `db-path' is omitted a default is used composed of:
   `fdog:*default-server-database-path*' `fdog:*default-server-path*' `fdog:*default-root-path*'
 Merged into a pathname."
   (let* ((paths (list fdog:*default-server-database-path* fdog:*default-server-path* fdog:*default-root-path*))
          (db-path (or db-path (reduce #'merge-pathnames paths))))
+    (format t "Paths: ~A~%" db-path)
     (unless (connected-p)
-      (setf *server-database* (clsql:connect `(,(namestring db-path)))))))
+      (setf *server-database* (clsql:connect `(,(namestring db-path)) :database-type :sqlite3)))))
 
 (defun disconnect ()
   "Disconnect from any existing database connecting we have.
-
 Return t if an action took place, nil otherwise"
   (when (connected-p)
     (clsql:disconnect :database *server-database*))
@@ -42,7 +41,6 @@ Return t if an action took place, nil otherwise"
 
 (defun reconnect ()
   "Disconnect and reconnect to the database
-
 Returns two values, the result of disconnecting and connecting"
   (let ((name (and (connected-p) (clsql:database-name *server-database*))))
     (values (disconnect)

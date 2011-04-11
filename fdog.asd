@@ -4,7 +4,7 @@
   :serial t
   :depends-on (#:clsql)
   :components ((:file "package")
-               (:file "fdog")
                (:file "models/package")
+               (:file "fdog")
                (:file "models/config")))
 

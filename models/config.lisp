@@ -29,12 +29,34 @@
 
 (clsql:def-view-class mongrel2-handler ()
   ((id :db-kind :key :type integer)
-    (send_spec :type string)
-    (send_ident :type string)
-    (recv_spec :type string)
-    (recv_ident :type string)
-    (raw_payload :type integer
+    (send-spec :type string)
+    (send-ident :type string)
+    (recv-spec :type string)
+    (recv-ident :type string)
+    (raw-payload :type integer
                  :initform 0)
     (protocol :type string
               :initform "json"))
   (:base-table handler))
+
+(clsql:def-view-class mongrel2-proxy ()
+  ((id :db-kind :key :type integer)
+   (addr :type string)
+   (port :type integer))
+  (:base-table proxy))
+
+(clsql:def-view-class mongrel2-directory ()
+  ((id :db-kind :key :type integer)
+   (base :type string)
+   (index-file :type string)
+   (default-ctype :type string))
+  (:base-table directory))
+
+(clsql:def-view-class mongrel2-route ()
+  ((path :type string)
+   (reversed :type boolean
+             :init-form 0)
+   (host-id :db-kind :key :type integer)
+   (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM
+   (target-type :db-kind :key :type string))  ;;       needs to be done with a :virtual slot and slot-value-using-class (?)
+  (:base-table route))

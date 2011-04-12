@@ -3,9 +3,8 @@
   (:export :connected-p :connect :disconnect :reconnect
            :*server-database*
 
-           ;; Mongrel2 configuration view classes
-           :setting))
-
+           ;; Mongrel2 Configuration Classes
+           :mongrel2-server))
 (in-package :fdog-models)
 
 ;; TODO: This may be better expressed in CLOS, now that I've noticed what I'm doing..

@@ -27,3 +27,14 @@
                      :set nil)))
   (:base-table host))
 
+(clsql:def-view-class mongrel2-handler ()
+  ((id :db-kind :key :type integer)
+    (send_spec :type string)
+    (send_ident :type string)
+    (recv_spec :type string)
+    (recv_ident :type string)
+    (raw_payload :type integer
+                 :initform 0)
+    (protocol :type string
+              :initform "json"))
+  (:base-table handler))

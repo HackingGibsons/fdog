@@ -5,7 +5,8 @@
 
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
-           :mongrel2-host))
+           :mongrel2-host
+           :mongrel2-handler))
 (in-package :fdog-models)
 
 ;; TODO: This may be better expressed in CLOS, now that I've noticed what I'm doing..

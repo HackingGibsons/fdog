@@ -9,7 +9,11 @@
            :mongrel2-handler
            :mongrel2-proxy
            :mongrel2-directory
-           :mongrel2-route))
+           :mongrel2-route
+           :mongrel2-setting
+           :mongrel2-mimetype
+           :mongrel2-log
+           :mongrel2-statistic))
 (in-package :fdog-models)
 
 ;; TODO: This may be better expressed in CLOS, now that I've noticed what I'm doing..

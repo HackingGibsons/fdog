@@ -16,10 +16,14 @@
 (clsql:def-view-class mongrel2-host ()
   ((id :db-kind :key :type integer)
    (server-id :type integer :db-kind :key)
+   (maintenance :type boolean)
+   (name :type string)
+   (matching :type string)
+
    (server :db-kind :join
            :db-info (:join-class mongrel2-server
-                        :home-key server-id
-                        :foreign-key id))
-   (name :type string)
-   (matching :type string))
+                     :home-key server-id
+                     :foreign-key id
+                     :set nil)))
   (:base-table host))
+

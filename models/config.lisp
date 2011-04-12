@@ -1,7 +1,8 @@
 (in-package :fdog-models)
 
 (clsql:def-view-class mongrel2-server ()
-  ((id :type integer :db-kind :key)
+  ((id :type integer :db-kind :key
+       :db-constraints '(:unique :auto-increment))
    (uuid :type string)
    (access-log :type string)
    (error-log :type string)
@@ -14,7 +15,8 @@
   (:base-table server))
 
 (clsql:def-view-class mongrel2-host ()
-  ((id :db-kind :key :type integer)
+  ((id :db-kind :key :type integer
+       :db-constraints '(:unique :auto-increment))
    (server-id :type integer :db-kind :key)
    (maintenance :type boolean)
    (name :type string)
@@ -28,7 +30,8 @@
   (:base-table host))
 
 (clsql:def-view-class mongrel2-handler ()
-  ((id :db-kind :key :type integer)
+  ((id :db-kind :key :type integer
+       :db-constraints '(:unique :auto-increment))
     (send-spec :type string)
     (send-ident :type string)
     (recv-spec :type string)
@@ -40,13 +43,15 @@
   (:base-table handler))
 
 (clsql:def-view-class mongrel2-proxy ()
-  ((id :db-kind :key :type integer)
+  ((id :db-kind :key :type integer
+       :db-constraints '(:unique :auto-increment))
    (addr :type string)
    (port :type integer))
   (:base-table proxy))
 
 (clsql:def-view-class mongrel2-directory ()
-  ((id :db-kind :key :type integer)
+  ((id :db-kind :key :type integer
+       :db-constraints '(:unique :auto-increment))
    (base :type string)
    (index-file :type string)
    (default-ctype :type string))
@@ -62,7 +67,8 @@
   (:base-table route))
 
 (clsql:def-view-class mongrel2-setting ()
-  ((id :db-kind :key :type integer)
+  ((id :db-kind :key :type integer
+       :db-constraints '(:unique :auto-increment))
    (key :type string)
    (value :type string))
   (:base-table setting))

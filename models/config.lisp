@@ -33,16 +33,25 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
+(defclass jawsome (clsql-sys::standard-db-class) ())
+
 (clsql:def-view-class mongrel2-route ()
   ((path :type string)
    (reversed :type boolean
              :init-form 0)
    (host-id :db-kind :key :type integer)
+   (target :db-kind :virtual :initform 'undefd)
    (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM
    (target-type :db-kind :key :type string))  ;;       needs to be done with a :virtual slot and slot-value-using-class (?)
+  (:metaclass jawsome)
   (:base-table route
    :documentation
    "Mongrel2 Route configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-280003.4.3"))
+
+(defparameter *inc* nil)
+(defmethod sb-mop:slot-value-using-class ((class jawsome) o s)
+  (push (list class o s) *inc*)
+  (call-next-method))
 
 (clsql:def-view-class mongrel2-handler ()
   ((id :db-kind :key :type integer

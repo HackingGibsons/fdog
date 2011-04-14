@@ -1,5 +1,65 @@
 (in-package :fdog-models)
 
+;;; Virtual metaclass
+(defclass db-with-virtual-slots-class (clsql-sys::standard-db-class) nil)
+
+;;; Virtual slot definition
+(defclass virtual-slot-definition (standard-slot-definition)
+  ((function :initarg :function
+             :accessor virtual-slot-definition-function)))
+
+(defmethod slot-definition-allocation ((slotd virtual-slot-definition))
+  :virtual)
+
+(defmethod (setf slot-definition-allocation) (allocation (slotd virtual-slot-definition))
+  (unless (eq allocation :virtual)
+    (error "Cannot change the allocation of ~S" 'virtual-slot-definition))
+  allocation)
+
+;;; Virtual direct slot definition
+(defclass virtual-direct-slot-definition (standard-direct-slot-definition virtual-slot-definition)
+  nil)
+
+(defmethod direct-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
+  (if (eq (getf initargs :allocation) :virtual)
+      (find-class 'virtual-direct-slot-definition)
+    (call-next-method)))
+
+(defmethod process-a-slot-option
+    ((class db-with-virtual-slots-class) option value already-processed-opts slot)
+  (if (eq option :function)
+      (list* :function value already-processed-opts)
+    (call-next-method)))
+
+;;; Virtual effective slot definition
+(defclass virtual-effective-slot-definition (standard-effective-slot-definition virtual-slot-definition)
+  nil)
+
+(defmethod effective-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
+  (let ((slot-initargs (getf initargs :initargs)))
+    (if (member :virtual slot-initargs)
+        (find-class 'virtual-effective-slot-definition)
+      (call-next-method))))
+
+(defmethod compute-effective-slot-definition ((class db-with-virtual-slots-class) name direct-slot-defs)
+  (let ((effective-slotd (call-next-method)))
+    (dolist (slotd direct-slot-defs)
+      (when (typep slotd 'virtual-direct-slot-definition)
+        (setf (virtual-slot-definition-function effective-slotd)
+              (virtual-slot-definition-function slotd))
+        (return)))
+    effective-slotd))
+
+;; Access methods for virtual func access
+;; TODO
+
+(defparameter *slot-value-gets* nil)
+
+(defmethod slot-value-using-class ((class db-with-virtual-slots-class) object slot)
+  (push (list class object slot) *slot-value-gets*)
+  (call-next-method))
+
+;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()
   ((id :type integer :db-kind :key
        :db-constraints '(:unique :auto-increment))
@@ -33,8 +93,6 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
-(defclass jawsome (clsql-sys::standard-db-class) ())
-
 (clsql:def-view-class mongrel2-route ()
   ((path :type string)
    (reversed :type boolean
@@ -43,15 +101,10 @@
    (target :db-kind :virtual :initform 'undefd)
    (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM
    (target-type :db-kind :key :type string))  ;;       needs to be done with a :virtual slot and slot-value-using-class (?)
-  (:metaclass jawsome)
+  (:metaclass db-with-virtual-slots-class)
   (:base-table route
    :documentation
    "Mongrel2 Route configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-280003.4.3"))
-
-(defparameter *inc* nil)
-(defmethod sb-mop:slot-value-using-class ((class jawsome) o s)
-  (push (list class o s) *inc*)
-  (call-next-method))
 
 (clsql:def-view-class mongrel2-handler ()
   ((id :db-kind :key :type integer

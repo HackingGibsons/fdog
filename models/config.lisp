@@ -51,13 +51,38 @@
     effective-slotd))
 
 ;; Access methods for virtual func access
-;; TODO
-
-(defparameter *slot-value-gets* nil)
-
 (defmethod slot-value-using-class ((class db-with-virtual-slots-class) object slot)
-  (push (list class object slot) *slot-value-gets*)
-  (call-next-method))
+  (let ((slotd (find slot (class-slots class) :key 'slot-definition-name)))
+    (if (typep slotd 'virtual-slot-definition)
+        (funcall (virtual-slot-definition-function object)
+                 :get object)
+      (call-next-method))))
+
+(defmethod (setf slot-value-using-class) (value (class db-with-virtual-slots-class) object slot)
+  (let ((slotd (find slot (class-slots class) :key 'slot-definition-name)))
+        (if (typep slotd 'virtual-slot-definition)
+        (funcall (virtual-slot-definition-function object)
+                 :set object value)
+      (call-next-method))))
+
+(defmethod slot-boundp-using-class ((class db-with-virtual-slots-class) object slot)
+  (let ((slotd (find slot (class-slots class) :key 'slot-definition-name)))
+        (if (typep slotd 'virtual-slot-definition)
+        (funcall (virtual-slot-definition-function object)
+                 :is-set object)
+      (call-next-method))))
+
+(defmethod slot-makunbound-using-class ((class db-with-virtual-slots-class) object slot)
+  (let ((slotd (find slot (class-slots class) :key 'slot-definition-name)))
+        (if (typep slotd 'virtual-slot-definition)
+        (funcall (virtual-slot-definition-function object)
+                 :unset object)
+      (call-next-method))))
+
+(defmethod slot-exists-p-using-class ((class db-with-virtual-slots-class) object slot)
+  (or (call-next-method)
+      (and (find slot (class-slots class) :key 'slot-definition-name)
+           t)))
 
 ;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()
@@ -93,12 +118,19 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
+(defun do-all-the-things (action object &optional value)
+  (format t "DO ALL THE ~A THINGS ON ~A (Val: ~A)~%" action object value)
+  'hallo)
+
 (clsql:def-view-class mongrel2-route ()
   ((path :type string)
    (reversed :type boolean
              :init-form 0)
    (host-id :db-kind :key :type integer)
-   (target :db-kind :virtual :initform 'undefd)
+
+   (target :db-kind :virtual :allocation :virtual
+           :function 'do-all-the-things)
+
    (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM
    (target-type :db-kind :key :type string))  ;;       needs to be done with a :virtual slot and slot-value-using-class (?)
   (:metaclass db-with-virtual-slots-class)

@@ -18,9 +18,10 @@
 
 ;;; Virtual direct slot definition
 (defclass virtual-direct-slot-definition (standard-direct-slot-definition virtual-slot-definition)
-  nil)
+  ((db-kind :initarg :db-kind :initform :virtual)))
 
 (defmethod direct-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
+  (format t "Initargs: ~A~%" initargs)
   (if (eq (getf initargs :allocation) :virtual)
       (find-class 'virtual-direct-slot-definition)
     (call-next-method)))
@@ -33,7 +34,7 @@
 
 ;;; Virtual effective slot definition
 (defclass virtual-effective-slot-definition (standard-effective-slot-definition virtual-slot-definition)
-  nil)
+  ((clsql-sys::db-kind :initarg :db-kind :initform :virtual)))
 
 (defmethod effective-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
   (let ((slot-initargs (getf initargs :initargs)))
@@ -43,11 +44,27 @@
 
 (defmethod compute-effective-slot-definition ((class db-with-virtual-slots-class) name direct-slot-defs)
   (let ((effective-slotd (call-next-method)))
+    (format t "Slot defs: ~A~%" direct-slot-defs)
     (dolist (slotd direct-slot-defs)
       (when (typep slotd 'virtual-direct-slot-definition)
-        (setf (virtual-slot-definition-function effective-slotd)
+        (format t "Doing things to ~A~%" slotd)
+        (format t "  \- Effective: ~A~%" effective-slotd)
+        (format t "  \- Initargs: ~A~%" (slot-definition-initargs slotd))
+        (setf effective-slotd
+              (make-instance 'virtual-effective-slot-definition :name (slot-definition-name slotd)
+                                                                :initform (slot-definition-initform slotd)
+                                                                :initfunction (slot-definition-initfunction slotd)
+                                                                :type (slot-definition-type slotd)
+                                                                :allocation (slot-definition-allocation slotd)
+                                                                :initargs (slot-definition-initargs slotd)
+                                                                :readers (slot-definition-readers slotd)
+                                                                :writers (slot-definition-writers slotd)
+                                                                :documentation (documentation slotd t))
+
+              (virtual-slot-definition-function effective-slotd)
               (virtual-slot-definition-function slotd))
         (return)))
+    (format t "Computed: ~A~%" effective-slotd)
     effective-slotd))
 
 ;; Access methods for virtual func access

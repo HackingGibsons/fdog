@@ -1,5 +1,6 @@
 (defpackage :fdog-models
   (:use :cl)
+  (:use :sb-mop)
   (:export :connected-p :connect :disconnect :reconnect
            :*server-database*
 

@@ -4,7 +4,7 @@
 (defclass db-with-virtual-slots-class (clsql-sys::standard-db-class) nil)
 
 ;;; Virtual slot definition
-(defclass virtual-slot-definition (standard-slot-definition)
+(defclass virtual-slot-definition (clsql-sys::view-class-slot-definition-mixin standard-slot-definition)
   ((function :initarg :function
              :accessor virtual-slot-definition-function)))
 
@@ -17,11 +17,11 @@
   allocation)
 
 ;;; Virtual direct slot definition
-(defclass virtual-direct-slot-definition (standard-direct-slot-definition virtual-slot-definition)
-  ((db-kind :initarg :db-kind :initform :virtual)))
+(defclass virtual-direct-slot-definition (clsql-sys::view-class-direct-slot-definition virtual-slot-definition)
+  nil)
 
 (defmethod direct-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
-  (format t "Initargs: ~A~%" initargs)
+  (format t "direct-slot-args: Initargs: ~A~%" initargs)
   (if (eq (getf initargs :allocation) :virtual)
       (find-class 'virtual-direct-slot-definition)
     (call-next-method)))
@@ -33,13 +33,20 @@
     (call-next-method)))
 
 ;;; Virtual effective slot definition
-(defclass virtual-effective-slot-definition (standard-effective-slot-definition virtual-slot-definition)
-  ((clsql-sys::db-kind :initarg :db-kind :initform :virtual)))
+(defclass virtual-effective-slot-definition (clsql-sys::view-class-effective-slot-definition virtual-slot-definition)
+  nil)
 
 (defmethod effective-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
-  (let ((slot-initargs (getf initargs :initargs)))
-    (if (member :virtual slot-initargs)
-        (find-class 'virtual-effective-slot-definition)
+  (format t "effective-slot-definition-class<db-with-virtual-slots-class> called.~%")
+  (format t "  \- Args: ~A~%" initargs)
+  (format t "  \- Name: ~A~%" (getf initargs :name))
+  (format t "  \- Alloc: ~A~%" (getf initargs :allocation))
+  (let ((slot-alloc (getf initargs :allocation)))
+    (format t "  \- Virt? ~A~%"  (eq slot-alloc :virtual))
+    (if (eq slot-alloc :virtual)
+        (progn
+          (format t "  \- seems virtual..~%")
+          (find-class 'virtual-effective-slot-definition))
       (call-next-method))))
 
 (defmethod compute-effective-slot-definition ((class db-with-virtual-slots-class) name direct-slot-defs)

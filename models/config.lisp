@@ -38,6 +38,11 @@
   (format t "DO ALL THE ~A THINGS ON ~A (Val: ~A)~%" action object value)
   'hallo)
 
+(defun endpoint-by-name (name)
+  (cond ((equal name "proxy") 'mongrel2-proxy)
+        ((equal name "handler") 'mongrel2-handler)
+        ((equal name "dir") 'mongrel2-directory)))
+
 (clsql:def-view-class mongrel2-route ()
   ((path :type string)
    (reversed :type boolean
@@ -45,7 +50,10 @@
    (host-id :db-kind :key :type integer)
 
    (target :db-kind :virtual :allocation :virtual
-           :function do-all-the-things)
+           :function (complex-join :find-model 'endpoint-by-name
+                                   :model-field 'target-type
+                                   :model-key 'target-id))
+
 
    (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM
    (target-type :db-kind :key :type string))  ;;       needs to be done with a :virtual slot and slot-value-using-class (?)

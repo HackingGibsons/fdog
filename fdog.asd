@@ -6,5 +6,7 @@
   :components ((:file "package")
                (:file "models/package")
                (:file "fdog")
+               (:file "models/helpers")
                (:file "models/config")))
+
 

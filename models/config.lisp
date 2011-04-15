@@ -70,17 +70,23 @@
 
               (virtual-slot-definition-function effective-slotd)
               (virtual-slot-definition-function slotd))
+        (setf (slot-value effective-slotd 'clsql-sys::db-kind) :virtual)
         (return)))
     (format t "Computed: ~A~%" effective-slotd)
     effective-slotd))
 
 ;; Access methods for virtual func access
 (defmethod slot-value-using-class ((class db-with-virtual-slots-class) object slot)
-  (let ((slotd (find slot (class-slots class) :key 'slot-definition-name)))
-    (if (typep slotd 'virtual-slot-definition)
-        (funcall (virtual-slot-definition-function object)
-                 :get object)
-      (call-next-method))))
+  (format t "s-v-u-c: ~A ~A~%" object slot)
+  (format t " \-Slots: ~A~%" (mapcar #'sb-mop:slot-definition-name (class-slots class)))
+  (format t " \-This: ~A~%" (sb-mop:slot-definition-name slot))
+  (format t " \-V?: ~A~%" (typep slot 'virtual-slot-definition))
+  (if (typep slot 'virtual-slot-definition)
+      (progn
+        (format t "Going through funcall instead of horseshit")
+        (funcall (virtual-slot-definition-function slot)
+                 :get object))
+    (call-next-method)))
 
 (defmethod (setf slot-value-using-class) (value (class db-with-virtual-slots-class) object slot)
   (let ((slotd (find slot (class-slots class) :key 'slot-definition-name)))
@@ -153,7 +159,7 @@
    (host-id :db-kind :key :type integer)
 
    (target :db-kind :virtual :allocation :virtual
-           :function 'do-all-the-things)
+           :function do-all-the-things)
 
    (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM
    (target-type :db-kind :key :type string))  ;;       needs to be done with a :virtual slot and slot-value-using-class (?)

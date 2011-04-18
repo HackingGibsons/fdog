@@ -26,11 +26,11 @@
       (find-class 'virtual-direct-slot-definition)
     (call-next-method)))
 
-(defmethod process-a-slot-option
-    ((class db-with-virtual-slots-class) option value already-processed-opts slot)
-  (if (eq option :function)
-      (list* :function value already-processed-opts)
-    (call-next-method)))
+(defmethod initialize-instance :after ((slot virtual-direct-slot-definition) &rest initargs)
+  ;; Eval the supplied "function" in case it's still a CONS
+  (setf (virtual-slot-definition-function slot)
+        (eval (virtual-slot-definition-function slot)))
+  slot)
 
 ;;; Virtual effective slot definition
 (defclass virtual-effective-slot-definition (clsql-sys::view-class-effective-slot-definition virtual-slot-definition)

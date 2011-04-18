@@ -1,4 +1,9 @@
 (in-package :fdog-models)
+;;; Aux
+(defun endpoint-by-name (name)
+  (cond ((equal name "proxy") 'mongrel2-proxy)
+        ((equal name "handler") 'mongrel2-handler)
+        ((equal name "dir") 'mongrel2-directory)))
 
 ;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()
@@ -34,14 +39,16 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
-(defun do-all-the-things (action object &optional value)
-  (format t "DO ALL THE ~A THINGS ON ~A (Val: ~A)~%" action object value)
-  'hallo)
-
-(defun endpoint-by-name (name)
-  (cond ((equal name "proxy") 'mongrel2-proxy)
-        ((equal name "handler") 'mongrel2-handler)
-        ((equal name "dir") 'mongrel2-directory)))
+(defun complex-join (&key find-model model-field model-key)
+  (lambda (action object &optional value)
+    (format t "I use: find-model:~A model-field:~A model-key:~A~%" find-model model-field model-key)
+    (format t "DO ALL THE (complex) ~A THINGS ON ~A (Val: ~A)~%" action object value)
+    (let* ((model-class (funcall find-model (slot-value object model-field))))
+      (ecase action
+        (:get model-class)
+        (:set 'set-not-implemented)
+        (:is-set 'is-set-not-implemented)
+        (:unset 'unset-not-implemented)))))
 
 (clsql:def-view-class mongrel2-route ()
   ((path :type string)

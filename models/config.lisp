@@ -1,9 +1,16 @@
 (in-package :fdog-models)
 ;;; Aux
-(defun endpoint-by-name (name)
-  (cond ((equal name "proxy") 'mongrel2-proxy)
-        ((equal name "handler") 'mongrel2-handler)
-        ((equal name "dir") 'mongrel2-directory)))
+(let ((endpoints '(("proxy" . mongrel2-proxy)
+                   ("handler" . mongrel2-handler)
+                   ("dir" . mongrel2-directory))))
+
+  (defun endpoint-by-name (name)
+    (cdr (assoc name endpoints :test 'equal)))
+
+  (defun name-by-endpoint (endpoint)
+    (car (rassoc (if (typep endpoint 'clsql:standard-db-object)
+                     (type-of endpoint) endpoint)
+                 endpoints :test 'equal))))
 
 ;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()

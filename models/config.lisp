@@ -39,13 +39,16 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
-(defun complex-join (&key find-model model-field model-key)
+(defun complex-join (&key find-model model-field foreign-key (foreign-field 'id))
   (lambda (action object &optional value)
-    (format t "I use: find-model:~A model-field:~A model-key:~A~%" find-model model-field model-key)
+    (format t "I use: find-model:~A model-field:~A model-key:~A~%" find-model model-field foreign-key)
     (format t "DO ALL THE (complex) ~A THINGS ON ~A (Val: ~A)~%" action object value)
-    (let* ((model-class (funcall find-model (slot-value object model-field))))
+    (let* ((model-class (funcall find-model (slot-value object model-field)))
+           (foreign-key-value (slot-value object foreign-key))
+           (target (car (clsql:select model-class :flatp t :limit 1
+                                            :where [= foreign-field foreign-key-value]))))
       (ecase action
-        (:get model-class)
+        (:get target)
         (:set 'set-not-implemented)
         (:is-set 'is-set-not-implemented)
         (:unset 'unset-not-implemented)))))
@@ -59,7 +62,7 @@
    (target :db-kind :virtual :allocation :virtual
            :function (complex-join :find-model 'endpoint-by-name
                                    :model-field 'target-type
-                                   :model-key 'target-id))
+                                   :foreign-key 'target-id))
 
 
    (target-id :db-kind :key :type integer)    ;; TODO: This relation is not easily expressed in the ORM

@@ -48,17 +48,25 @@
 
 (defun complex-join (&key find-model model-field foreign-key (foreign-field 'id))
   (lambda (action object &optional value)
-    (format t "I use: find-model:~A model-field:~A model-key:~A~%" find-model model-field foreign-key)
-    (format t "DO ALL THE (complex) ~A THINGS ON ~A (Val: ~A)~%" action object value)
+    #.(clsql:locally-enable-sql-reader-syntax)
+
     (let* ((model-class (funcall find-model (slot-value object model-field)))
-           (foreign-key-value (slot-value object foreign-key))
-           (target (car (clsql:select model-class :flatp t :limit 1
-                                            :where [= foreign-field foreign-key-value]))))
+           (foreign-key-value (slot-value object foreign-key)))
       (ecase action
-        (:get target)
-        (:set 'set-not-implemented)
-        (:is-set 'is-set-not-implemented)
-        (:unset 'unset-not-implemented)))))
+        ((:get :is-set)
+         (car (clsql:select model-class :flatp t :limit 1
+                            :where [= foreign-field foreign-key-value])))
+
+        (:set (let ((name (name-by-endpoint value)) ;; TODO: Factor into &key args
+                    (key (slot-value value foreign-field)))
+                (setf (slot-value object model-field) name)
+                (setf (slot-value object foreign-key) key)
+                value))
+
+        (:unset (setf (slot-value object model-field) nil)
+                (setf (slot-value object foreign-key) nil))))
+
+    #.(clsql:restore-sql-reader-syntax-state)))
 
 (clsql:def-view-class mongrel2-route ()
   ((path :type string)

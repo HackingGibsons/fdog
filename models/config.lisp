@@ -17,6 +17,8 @@
   ((id :type integer :db-kind :key
        :reader mongrel2-server-id
        :db-constraints '(:unique :auto-increment))
+   (name :type string
+         :accessor mongrel2-server-name)
    (uuid :type string
          :accessor mongrel2-server-uuid)
    (access-log :type string)

@@ -8,6 +8,7 @@
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
              :mongrel2-server-id
+             :mongrel2-server-name
              :mongrel2-server-uuid
              :mongrel2-server-chroot
              :mongrel2-server-root ;; Computed from defaults

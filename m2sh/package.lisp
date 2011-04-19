@@ -9,7 +9,8 @@
   "Return a list of servers given a :uuid and :host
 Omitted, all servers are returned"
   #.(clsql:locally-enable-sql-reader-syntax)
-  (let (params)
+  (let (params
+        (defaults '(:flatp t)))
     (when uuid
       (push [= 'uuid uuid] params))
     (when host
@@ -17,5 +18,5 @@ Omitted, all servers are returned"
     (when params
       (setf params `(:where ,(eval (car `([and ,@params]))))))
 
-    (apply 'clsql:select `(mongrel2-server :flatp t ,@params)))
+    (apply 'clsql:select `(mongrel2-server ,@defaults ,@params)))
   #.(clsql:restore-sql-reader-syntax-state))

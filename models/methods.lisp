@@ -4,10 +4,17 @@
 (defgeneric mongrel2-server-running-p (server)
   (:documentation "Determine if a given server is running or not."))
 
-(defgeneric mongrel2-server-signal-server (server signal)
-  (:documentation ":start :stop :restart :reload :status a given server")
+(defgeneric mongrel2-server-signal (server signal)
+  (:documentation ":start :stop :restart :reload :status a given server"))
 
 ;;; Method specializations
+(defmethod mongrel2-server-signal ((server mongrel2-server) signal)
+  (let ((known-signals '(:start :stop :restart :reload :status)))
+    (unless (member signal known-signals)
+      (error "Signal ~A is unknown. Must be one of ~{~A~^ ~}" signal known-signals)))
+  (format t "Will signal ~A server: ~A" server signal)
+  'unimp)
+
 (defmethod mongrel2-server-running-p ((server mongrel2-server))
   "T or NIL on (Running or Not-Running given a mongrel2-server
 Returns true of it can find a pidfile, and a process is running there."

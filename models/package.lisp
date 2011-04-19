@@ -7,6 +7,7 @@
 
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
+             ;; Data access
              :mongrel2-server-id
              :mongrel2-server-name
              :mongrel2-server-uuid
@@ -17,7 +18,9 @@
              :mongrel2-server-default-host
              :mongrel2-server-addr
              :mongrel2-server-port
+             ;; More proper methods
              :mongrel2-server-running-p
+             :mongrel2-server-signal
            :mongrel2-host
            :mongrel2-handler
            :mongrel2-proxy

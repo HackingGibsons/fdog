@@ -5,12 +5,12 @@
   (:export :servers))
 (in-package :fdog-m2sh)
 
-(defun servers (&key uuid host name)
+(defun servers (&key uuid host name (refresh nil))
   "Return a list of servers given a :uuid and :host
 Omitted, all servers are returned"
   #.(clsql:locally-enable-sql-reader-syntax)
   (let (params
-        (defaults '(:flatp t)))
+        (defaults `(:flatp t :refresh ,refresh)))
     (when name
       (push [= 'name name] params))
     (when uuid

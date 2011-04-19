@@ -15,16 +15,25 @@
 ;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()
   ((id :type integer :db-kind :key
+       :reader mongrel2-server-id
        :db-constraints '(:unique :auto-increment))
-   (uuid :type string)
+   (uuid :type string
+         :accessor mongrel2-server-uuid)
    (access-log :type string)
    (error-log :type string)
    (chroot :type string
+           :accessor mongrel2-server-chroot
            :initform "/var/www")
-   (pid-file :type string)
-   (default-host :type string)
+   (pid-file :type string
+             :accessor mongrel2-server-pidfile)
+   (default-host :type string
+                 :reader mongrel2-server-default-host)
    (bind-addr :type string
-              :initform "0.0.0.0"))
+              :accessor mongrel2-server-addr
+              :initform "0.0.0.0")
+   (port :type integer
+         :accessor mongrel2-server-port
+         :initform 6767))
   (:base-table server
    :documentation
    "Mongrel2 Server configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-260003.4.1"))

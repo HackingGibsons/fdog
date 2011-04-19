@@ -6,6 +6,15 @@
 
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
+             :mongrel2-server-id
+             :mongrel2-server-uuid
+             :mongrel2-server-chroot
+             :mongrel2-server-pidfile
+             :mongrel2-server-host ;; TODO: Make either a generic method, or a virtual slot
+             :mongrel2-server-default-host
+             :mongrel2-server-addr
+             :mongrel2-server-port
+             :mongrel2-server-running-p
            :mongrel2-host
            :mongrel2-handler
            :mongrel2-proxy

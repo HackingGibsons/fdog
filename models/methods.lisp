@@ -1,12 +1,13 @@
 (in-package :fdog-models)
 
-;; Mongrel2 Server Generic Methods
+;;; Mongrel2 Server Generic Methods
 (defgeneric mongrel2-server-running-p (server)
   (:documentation "Determine if a given server is running or not."))
 
 (defgeneric mongrel2-server-signal-server (server signal)
   (:documentation ":start :stop :restart :reload :status a given server")
 
+;;; Method specializations
 (defmethod mongrel2-server-running-p ((server mongrel2-server))
   "T or NIL on (Running or Not-Running given a mongrel2-server
 Returns true of it can find a pidfile, and a process is running there."

@@ -12,6 +12,7 @@
 
                ;; Models package
                (:file "models/helpers")
-               (:file "models/config")))
+               (:file "models/config")
+               (:file "models/methods")))
 
 

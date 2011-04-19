@@ -33,7 +33,13 @@
               :initform "0.0.0.0")
    (port :type integer
          :accessor mongrel2-server-port
-         :initform 6767))
+         :initform 6767)
+
+   (root :type string :db-kind :virtual
+         :reader mongrel2-server-root
+         ;; TODO: Consider the relativity of the chroot slot when computing this slot.
+         ;;       or outright move this to a method
+         :initform (merge-pathnames fdog:*default-server-path* fdog:*default-root-path*)))
   (:base-table server
    :documentation
    "Mongrel2 Server configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-260003.4.1"))

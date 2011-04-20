@@ -3,6 +3,7 @@
   (:use :sb-mop)
   (:use :external-program)
   (:shadowing-import-from :sb-posix
+                          :syscall-error
                           :kill :sigint :sigterm :sighup
                           :chdir)
   (:export :connected-p :connect :disconnect :reconnect

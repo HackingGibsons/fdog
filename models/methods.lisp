@@ -20,9 +20,14 @@
                (kill (mongrel2-server-pid server) sigint)
                :stopped))
 
-      (:restart 'restarting)
+      (:restart (progn
+                  (mongrel2-server-signal server :stop)
+                  (mongrel2-server-signal server :start)))
 
-      (:reload 'reloading)
+      (:reload (when running
+                 (kill (mongrel2-server-pid server) sighup)
+                 ;; TODO: Need to send a request to finish the reload
+                 :reloaded))
 
       (:status (if running :running :stopped)))))
 

@@ -2,7 +2,7 @@
   (:use :cl)
   (:use :sb-mop)
   (:shadowing-import-from :sb-posix
-                          :kill :sigint :sigterm)
+                          :kill :sigint :sigterm :sighup)
   (:export :connected-p :connect :disconnect :reconnect
            :*server-database*
 

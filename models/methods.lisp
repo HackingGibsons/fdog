@@ -32,6 +32,10 @@
                  (syscall-error () nil))))
 
       (:restart (mongrel2-server-signal server :stop)
+                ;; Wait for the old process to die
+                ;; before starting another
+                (loop while (mongrel2-server-running-p server)
+                   do (sleep 0.01))
                 (mongrel2-server-signal server :start))
 
       (:reload (when running

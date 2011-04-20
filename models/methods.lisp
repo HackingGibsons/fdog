@@ -14,15 +14,20 @@
 (defmethod mongrel2-server-signal ((server mongrel2-server) signal)
   (let ((running (mongrel2-server-running-p server)))
     (ecase signal
-      (:start 'starting)
+      (:start (unless running
+                (let ((root 'TODO)
+                      (config 'TODO)
+                      (uuid 'TODO))
+                  (chdir root)
+                  (start "mongrel2" `(,config ,uuid)))
+                :started))
 
       (:stop (when running
                (kill (mongrel2-server-pid server) sigint) ;; TODO: Accept &optionals to upgrade to sigterm
                :stopped))
 
-      (:restart (progn
-                  (mongrel2-server-signal server :stop)
-                  (mongrel2-server-signal server :start)))
+      (:restart (mongrel2-server-signal server :stop)
+                (mongrel2-server-signal server :start))
 
       (:reload (when running
                  (kill (mongrel2-server-pid server) sighup)

@@ -51,8 +51,7 @@ Returns true of it can find a pidfile, and a process is running there."
          (running (when pid
                     (handler-case (kill pid 0)
                       (syscall-error () nil)))))
-    (and running
-         (= running 0))))
+    (and running (= running 0))))
 
 (defmethod mongrel2-server-pid ((server mongrel2-server))
   (let ((pidfile (merge-pathnames (mongrel2-server-pidfile server)

@@ -2,7 +2,8 @@
   (:use :cl
         :fdog-models)
   (:use :sb-mop)
-  (:export :servers))
+  (:export :servers
+           :init))
 (in-package :fdog-m2sh)
 
 (defun servers (&key uuid host name (refresh nil))
@@ -22,3 +23,14 @@ Omitted, all servers are returned"
 
     (apply 'clsql:select `(mongrel2-server ,@defaults ,@params)))
   #.(clsql:restore-sql-reader-syntax-state))
+
+(defun init (&optional drop-if-exists)
+  (declare (ignorable drop-if-exists))
+  "Drops, thenc creates all the tables of the config"
+  (let (view-classes)
+    (do-symbols (s (find-package :fdog-models) view-classes)
+      (when (typep (find-class s nil) 'clsql-sys::standard-db-class)
+        (push s view-classes)))))
+
+
+

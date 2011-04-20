@@ -24,7 +24,7 @@ Omitted, all servers are returned"
     (apply 'clsql:select `(mongrel2-server ,@defaults ,@params)))
   #.(clsql:restore-sql-reader-syntax-state))
 
-(defun init (&optional drop-if-exists)
+(defun init ()
   (declare (ignorable drop-if-exists))
   "Drops, thenc creates all the tables of the config"
   (let (view-classes)

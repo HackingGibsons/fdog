@@ -12,11 +12,20 @@
 
 ;;; Method specializations
 (defmethod mongrel2-server-signal ((server mongrel2-server) signal)
-  (let ((known-signals '(:start :stop :restart :reload :status)))
-    (unless (member signal known-signals)
-      (error "Signal ~A is unknown. Must be one of ~{~A~^ ~}" signal known-signals)))
-  (format t "Will signal ~A server: ~A" server signal)
-  'unimp)
+  (let ((running (mongrel2-server-running-p server)))
+    (ecase signal
+      (:start 'starting)
+
+      (:stop (when running
+               (kill (mongrel2-server-pid server) sb-posix:sigint)
+               :stopped))
+
+      (:restart 'restarting)
+
+      (:reload 'reloading)
+
+      (:status (if running :running :stopped)))))
+
 
 (defmethod mongrel2-server-running-p ((server mongrel2-server))
   "T or NIL on (Running or Not-Running given a mongrel2-server

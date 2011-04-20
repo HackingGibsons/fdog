@@ -2,7 +2,7 @@
 
 (asdf:defsystem #:fdog
   :serial t
-  :depends-on (#:clsql)
+  :depends-on (#:clsql #:external-program)
   :components ((:file "package")
                (:file "models/package")
                (:file "m2sh/package")

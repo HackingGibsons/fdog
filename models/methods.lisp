@@ -18,24 +18,28 @@
   (let ((running (mongrel2-server-running-p server)))
     (ecase signal
       (:start (unless running
-                (let ((root (mongrel2-server-root *server*))
-                      (config 'TODO)
-                      (uuid 'TODO))
+                (let ((root (mongrel2-server-root server))
+                      (config (mongrel2-server-config server))
+                      (uuid (mongrel2-server-uuid server)))
                   (chdir root)
                   (start "mongrel2" `(,config ,uuid)))
                 :started))
 
       (:stop (when running
-               (kill (mongrel2-server-pid server) sigint) ;; TODO: Accept &optionals to upgrade to sigterm
-               :stopped))
+               (handler-case (progn
+                               (kill (mongrel2-server-pid server) sigint) ;; TODO: Accept &optionals to upgrade to sigterm
+                               :stopped)
+                 (syscall-error () nil))))
 
       (:restart (mongrel2-server-signal server :stop)
                 (mongrel2-server-signal server :start))
 
       (:reload (when running
-                 (kill (mongrel2-server-pid server) sighup)
-                 ;; TODO: Need to send a request to finish the reload
-                 :reloaded))
+                 (handler-case (progn
+                                 (kill (mongrel2-server-pid server) sighup)
+                                 ;; TODO: Need to send a request to finish the reload
+                                 :reloaded)
+                   (syscall-error () nil))))
 
       (:status (if running :running :stopped)))))
 
@@ -43,9 +47,12 @@
 (defmethod mongrel2-server-running-p ((server mongrel2-server))
   "T or NIL on (Running or Not-Running given a mongrel2-server
 Returns true of it can find a pidfile, and a process is running there."
-  (let ((pid (mongrel2-server-pid server)))
-    (when pid
-      (eq (kill pid 0) 0))))
+  (let* ((pid (mongrel2-server-pid server))
+         (running (when pid
+                    (handler-case (kill pid 0)
+                      (syscall-error () nil)))))
+    (and running
+         (= running 0))))
 
 (defmethod mongrel2-server-pid ((server mongrel2-server))
   (let ((pidfile (merge-pathnames (mongrel2-server-pidfile server)

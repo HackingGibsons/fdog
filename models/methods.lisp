@@ -10,12 +10,15 @@
 (defgeneric mongrel2-server-pid (server)
   (:documentation "Get the numeric pid of the server, or nil if it's not running"))
 
+(defgeneric mongrel2-server-config (server)
+  (:documentation "Get the path of the config for a given mongrel2 server"))
+
 ;;; Method specializations
 (defmethod mongrel2-server-signal ((server mongrel2-server) signal)
   (let ((running (mongrel2-server-running-p server)))
     (ecase signal
       (:start (unless running
-                (let ((root 'TODO)
+                (let ((root (mongrel2-server-root *server*))
                       (config 'TODO)
                       (uuid 'TODO))
                   (chdir root)
@@ -49,6 +52,10 @@ Returns true of it can find a pidfile, and a process is running there."
                                   (mongrel2-server-root server))))
     (when (probe-file pidfile)
       (with-open-file (pid pidfile) (read pid)))))
+
+(defmethod mongrel2-server-config ((server mongrel2-server))
+  (merge-pathnames fdog:*default-server-database-path*
+                   (mongrel2-server-root server)))
 
 ;;; Model API Wrappers
 (defmethod mongrel2-server-pidfile :around ((server mongrel2-server))

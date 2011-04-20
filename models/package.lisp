@@ -19,6 +19,7 @@
              :mongrel2-server-addr
              :mongrel2-server-port
              ;; More proper methods
+             :mongrel2-server-pid
              :mongrel2-server-running-p
              :mongrel2-server-signal
            :mongrel2-host

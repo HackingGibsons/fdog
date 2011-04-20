@@ -1,7 +1,8 @@
 (defpackage :fdog-models
   (:use :cl)
   (:use :sb-mop)
-  (:shadowing-import-from :sb-posix :kill)
+  (:shadowing-import-from :sb-posix
+                          :kill :sigint :sigterm)
   (:export :connected-p :connect :disconnect :reconnect
            :*server-database*
 

@@ -17,7 +17,7 @@
       (:start 'starting)
 
       (:stop (when running
-               (kill (mongrel2-server-pid server) sigint)
+               (kill (mongrel2-server-pid server) sigint) ;; TODO: Accept &optionals to upgrade to sigterm
                :stopped))
 
       (:restart (progn

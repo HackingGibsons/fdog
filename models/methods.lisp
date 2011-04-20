@@ -17,7 +17,7 @@
       (:start 'starting)
 
       (:stop (when running
-               (kill (mongrel2-server-pid server) sb-posix:sigint)
+               (kill (mongrel2-server-pid server) sigint)
                :stopped))
 
       (:restart 'restarting)

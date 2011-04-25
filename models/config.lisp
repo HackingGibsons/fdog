@@ -164,7 +164,7 @@
        :db-constraints '(:primary-key :auto-increment))
    (mimetype :type string)
    (extension :type string))
-  (:base-twable mimetype
+  (:base-table mimetype
    :documentation "Mongrel2 table of known mimetypes"))
 
 ;; This table exists largely for the future..

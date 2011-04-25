@@ -33,7 +33,9 @@ Omitted, all servers are returned"
       (when (typep (find-class view-class nil) 'clsql-sys::standard-db-class)
         (push view-class view-classes)
         (log-for (trace) "Dropping table named by viewclass ~A" view-class)
-        (clsql:drop-view-from-class view-class)))))
+        (clsql:drop-view-from-class view-class)
+        (log-for (trace) "Creating table named by viewclass ~A" view-class)
+        (clsql:create-view-from-class view-class)))))
 
 
 

@@ -2,6 +2,8 @@
   (:use :cl)
   (:use :sb-mop)
   (:use :external-program)
+  (:shadowing-import-from :log5
+                          :log-for :info :warn :error)
   (:shadowing-import-from :sb-posix
                           :syscall-error
                           :kill :sigint :sigterm :sighup
@@ -56,7 +58,7 @@ If `db-path' is omitted a default is used composed of:
 Merged into a pathname."
   (let* ((paths (list fdog:*default-server-database-path* fdog:*default-server-path* fdog:*default-root-path*))
          (db-path (or db-path (reduce #'merge-pathnames paths))))
-    (format t "Paths: ~A~%" db-path)
+    (log-for (dribble) "Paths: ~A" db-path)
     (unless (connected-p)
       (setf *server-database* (clsql:connect `(,(namestring db-path)) :database-type :sqlite3)))))
 

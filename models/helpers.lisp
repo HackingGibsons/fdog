@@ -21,7 +21,7 @@
   nil)
 
 (defmethod direct-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
-  (format t "direct-slot-args: Initargs: ~A~%" initargs)
+  (log-for (dribble) "direct-slot-args: Initargs: ~A" initargs)
   (if (eq (getf initargs :allocation) :virtual)
       (find-class 'virtual-direct-slot-definition)
     (call-next-method)))
@@ -37,26 +37,26 @@
   nil)
 
 (defmethod effective-slot-definition-class ((class db-with-virtual-slots-class) &rest initargs)
-  (format t "effective-slot-definition-class<db-with-virtual-slots-class> called.~%")
-  (format t "  \- Args: ~A~%" initargs)
-  (format t "  \- Name: ~A~%" (getf initargs :name))
-  (format t "  \- Alloc: ~A~%" (getf initargs :allocation))
+  (log-for (dribble) "effective-slot-definition-class<db-with-virtual-slots-class> called.")
+  (log-for (dribble) "  \- Args: ~A" initargs)
+  (log-for (dribble) "  \- Name: ~A" (getf initargs :name))
+  (log-for (dribble) "  \- Alloc: ~A" (getf initargs :allocation))
   (let ((slot-alloc (getf initargs :allocation)))
-    (format t "  \- Virt? ~A~%"  (eq slot-alloc :virtual))
+    (log-for (dribble) "  \- Virt? ~A"  (eq slot-alloc :virtual))
     (if (eq slot-alloc :virtual)
         (progn
-          (format t "  \- seems virtual..~%")
+          (log-for (dribble) "  \- seems virtual..")
           (find-class 'virtual-effective-slot-definition))
       (call-next-method))))
 
 (defmethod compute-effective-slot-definition ((class db-with-virtual-slots-class) name direct-slot-defs)
   (let ((effective-slotd (call-next-method)))
-    (format t "Slot defs: ~A~%" direct-slot-defs)
+    (log-for (dribble) "Slot defs: ~A" direct-slot-defs)
     (dolist (slotd direct-slot-defs)
       (when (typep slotd 'virtual-direct-slot-definition)
-        (format t "Doing things to ~A~%" slotd)
-        (format t "  \- Effective: ~A~%" effective-slotd)
-        (format t "  \- Initargs: ~A~%" (slot-definition-initargs slotd))
+        (log-for (dribble) "Doing things to ~A" slotd)
+        (log-for (dribble) "  \- Effective: ~A" effective-slotd)
+        (log-for (dribble) "  \- Initargs: ~A" (slot-definition-initargs slotd))
         (setf effective-slotd
               (make-instance 'virtual-effective-slot-definition :name (slot-definition-name slotd)
                                                                 :initform (slot-definition-initform slotd)
@@ -72,7 +72,7 @@
               (virtual-slot-definition-function slotd))
         (setf (slot-value effective-slotd 'clsql-sys::db-kind) :virtual) ;; TODO: Hackity hack hack hack
         (return)))
-    (format t "Computed: ~A~%" effective-slotd)
+    (log-for (dribble) "Computed: ~A" effective-slotd)
     effective-slotd))
 
 ;; Access methods for virtual func access

@@ -2,10 +2,19 @@
 (defpackage #:fdog
   (:use #:cl)
   (:export :init
-           :*default-root-path* :*default-server-path* :*default-server-database-path*)
+           :*default-root-path* :*default-server-path* :*default-server-database-path*
+           :log-for :info :warn :error)
+  (:shadowing-import-from :log5
+                          :log-for :info :warn :error)
   (:shadowing-import-from #:clsql))
 
 (in-package :fdog)
+
+;; Logging
+(log5:start-sender 'default
+                   (log5:stream-sender :location *error-output*)
+                   :category-spec '(log5:dribble+)
+                   :output-spec '(log5:time log5:category log5:message))
 
 
 ;; Parameters of project-wide relevance

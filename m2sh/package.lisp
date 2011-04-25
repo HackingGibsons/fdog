@@ -2,6 +2,8 @@
   (:use :cl
         :fdog-models)
   (:use :sb-mop)
+  (:shadowing-import-from :log5
+                          :log-for :info :warn :error)
   (:export :servers
            :init))
 (in-package :fdog-m2sh)

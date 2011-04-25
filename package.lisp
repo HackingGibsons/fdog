@@ -11,10 +11,14 @@
 (in-package :fdog)
 
 ;; Logging
+(log5:defoutput human-time (multiple-value-bind (second minute hour date month year)
+                               (decode-universal-time (get-universal-time))
+                             (format nil "[~A-~A-~A ~A:~A:~A]" year month date hour minute second)))
+
 (log5:start-sender 'default
                    (log5:stream-sender :location *error-output*)
                    :category-spec '(log5:dribble+)
-                   :output-spec '(log5:time log5:category log5:message))
+                   :output-spec '(human-time log5:category log5:message))
 
 
 ;; Parameters of project-wide relevance

@@ -32,6 +32,7 @@ Omitted, all servers are returned"
     (do-symbols (view-class (find-package :fdog-models) view-classes)
       (when (typep (find-class view-class nil) 'clsql-sys::standard-db-class)
         (push view-class view-classes)
+        (log-for (trace) "Dropping table named by viewclass ~A" view-class)
         (clsql:drop-view-from-class view-class)))))
 
 

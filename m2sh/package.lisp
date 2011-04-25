@@ -27,12 +27,12 @@ Omitted, all servers are returned"
   #.(clsql:restore-sql-reader-syntax-state))
 
 (defun init ()
-  (declare (ignorable drop-if-exists))
   "Drops, thenc creates all the tables of the config"
   (let (view-classes)
-    (do-symbols (s (find-package :fdog-models) view-classes)
-      (when (typep (find-class s nil) 'clsql-sys::standard-db-class)
-        (push s view-classes)))))
+    (do-symbols (view-class (find-package :fdog-models) view-classes)
+      (when (typep (find-class view-class nil) 'clsql-sys::standard-db-class)
+        (push view-class view-classes)
+        (clsql:drop-view-from-class view-class)))))
 
 
 

@@ -15,6 +15,7 @@
                (:file "fdog")
 
                ;; Models package
+               (:file "models/data")
                (:file "models/helpers")
                (:file "models/config")
                (:file "models/methods")))

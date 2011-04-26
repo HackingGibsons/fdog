@@ -18,20 +18,21 @@
        :db-kind :base
        :db-constraints (:primary-key))
    (name :type string
+         :initform "default"
          :accessor mongrel2-server-name)
    (uuid :type string
          :initform (make-uuid4)
          :accessor mongrel2-server-uuid)
    (access-log :type string
-               :initform "./logs/{uuid}-access.log")
+               :initform "./logs/{name}-access.log")
    (error-log :type string
-               :initform "./logs/{uuid}-error.log")
+               :initform "./logs/{name}-error.log")
    (chroot :type string
            :accessor mongrel2-server-chroot
            :initform "/var/www")
    (pid-file :type string
              :accessor mongrel2-server-pidfile
-             :initform "./run/mongrel2-{uuid}.pid")
+             :initform "./run/mongrel2-{name}.pid")
    (default-host :type string
                  :initform "localhost"
                  :reader mongrel2-server-default-host)

@@ -78,7 +78,14 @@ lisp more easily accepts as a relative path"
 
 (defun update-template-from-instance (instance val)
   "Update strings replacing {name} with the value of slot named `name'"
-  (concatenate 'string "processed-" val))
+  (let ((result val))
+    (cl-ppcre:do-register-groups (slot) ("{([\\w_-]+)}" val)
+      (let* ((slot-sym (intern (string-upcase slot) (symbol-package (type-of instance))))
+             (exists (slot-exists-p instance slot-sym))
+             (slot-val (and exists (slot-value instance slot-sym))))
+        (setf result (cl-ppcre:regex-replace (format nil "{~A}" slot) val slot-val))))
+    result))
+
 
 (defmethod initialize-instance :after ((server mongrel2-server) &rest initargs)
   "Update some instance slots based on other slot values"
@@ -86,7 +93,6 @@ lisp more easily accepts as a relative path"
   (let ((slots '(access-log error-log pid-file)))
     (flet ((update-slot (slot)
              (let ((val (slot-value server slot)))
-               (log-for (dribble) "Updating slot ~A(~A) on ~A" slot val server)
                (setf (slot-value server slot)
                      (update-template-from-instance server val)))))
       (mapc #'update-slot slots))))

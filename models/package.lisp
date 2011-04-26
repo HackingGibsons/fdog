@@ -35,6 +35,7 @@
            :mongrel2-route
            :mongrel2-setting
            :mongrel2-mimetype
+             :*default-mimetypes*
            :mongrel2-log
            :mongrel2-statistic))
 (in-package :fdog-models)

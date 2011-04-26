@@ -14,9 +14,9 @@
 
 ;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()
-  ((id :type integer :db-kind :key
-       :reader mongrel2-server-id
-       :db-constraints (:unique))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
    (name :type string
          :accessor mongrel2-server-name)
    (uuid :type string
@@ -29,7 +29,7 @@
    (pid-file :type string
              :accessor mongrel2-server-pidfile)
    (default-host :type string
-                 :reader mongrel2-server-default-host)
+     :reader mongrel2-server-default-host)
    (bind-addr :type string
               :accessor mongrel2-server-addr
               :initform "0.0.0.0")
@@ -47,18 +47,19 @@
    "Mongrel2 Server configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-260003.4.1"))
 
 (clsql:def-view-class mongrel2-host ()
-  ((id :db-kind :key :type integer
-       :db-constraints (:unique))
-   (server-id :type integer :db-kind :key)
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
+   (server-id :type integer)
    (maintenance :type boolean)
    (name :type string)
    (matching :type string)
 
    (server :db-kind :join
            :db-info (:join-class mongrel2-server
-                     :home-key server-id
-                     :foreign-key id
-                     :set nil)))
+                                 :home-key server-id
+                                 :foreign-key id
+                                 :set nil)))
   (:base-table host
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
@@ -105,22 +106,25 @@
    "Mongrel2 Route configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-280003.4.3"))
 
 (clsql:def-view-class mongrel2-handler ()
-  ((id :db-kind :key :type integer)
-    (send-spec :type string)
-    (send-ident :type string)
-    (recv-spec :type string)
-    (recv-ident :type string)
-    (raw-payload :type integer
-                 :initform 0)
-    (protocol :type string
-              :initform "json"))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
+   (send-spec :type string)
+   (send-ident :type string)
+   (recv-spec :type string)
+   (recv-ident :type string)
+   (raw-payload :type integer
+                :initform 0)
+   (protocol :type string
+             :initform "json"))
   (:base-table handler
    :documentation
    "Mongrel2 Handler endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-310003.4.6"))
 
 (clsql:def-view-class mongrel2-directory ()
-  ((id :db-kind :key :type integer
-       :db-constraints (:unique))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
    (base :type string)
    (index-file :type string)
    (default-ctype :type string))
@@ -129,8 +133,9 @@
    "Mongrel2 Directory endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-290003.4.4"))
 
 (clsql:def-view-class mongrel2-proxy ()
-  ((id :db-kind :key :type integer
-       :db-constraints (:unique))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
    (addr :type string)
    (port :type integer))
   (:base-table proxy
@@ -138,8 +143,9 @@
    "Mongrel2 Proxy endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-300003.4.5"))
 
 (clsql:def-view-class mongrel2-setting ()
-  ((id :db-kind :key :type integer
-       :db-constraints (:unique))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
    (key :type string)
    (value :type string))
   (:base-table setting
@@ -147,8 +153,9 @@
    "Mongrel2 internal settings: http://mongrel2.org/static/mongrel2-manual.html#x1-380003.10"))
 
 (clsql:def-view-class mongrel2-log ()
-  ((id :db-kind :key :type integer
-       :db-constraints (:unique))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
    (who :type string)
    (what :type string)
    (location :type string)
@@ -170,13 +177,14 @@
 ;; This table exists largely for the future..
 ;; (maybe)
 (clsql:def-view-class mongrel2-statistic ()
-  ((id :type integer :db-kind :key
-       :db-constraints (:unique))
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
 
    ;; These /should/ be a c-pk
-   (other-type :db-kind :key :type string)
-   (other-id :db-kind :key :type integer)
-   (name :db-kind :key :type string)
+   (other-type :type string)
+   (other-id :type integer)
+   (name :type string)
    ;; End of c-pk
 
    (sum :type float)

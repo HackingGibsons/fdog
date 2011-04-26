@@ -76,17 +76,7 @@ lisp more easily accepts as a relative path"
         (subseq result 1)
       result)))
 
-(defun update-template-from-instance (instance val)
-  "Update strings replacing {name} with the value of slot named `name'"
-  (let ((result val))
-    (cl-ppcre:do-register-groups (slot) ("{([\\w_-]+)}" val)
-      (let* ((slot-sym (intern (string-upcase slot) (symbol-package (type-of instance))))
-             (exists (slot-exists-p instance slot-sym))
-             (slot-val (and exists (slot-value instance slot-sym))))
-        (setf result (cl-ppcre:regex-replace (format nil "{~A}" slot) val slot-val))))
-    result))
-
-
+;;; Model hooks
 (defmethod initialize-instance :after ((server mongrel2-server) &rest initargs)
   "Update some instance slots based on other slot values"
   (declare (ignorable initargs))
@@ -96,3 +86,11 @@ lisp more easily accepts as a relative path"
                (setf (slot-value server slot)
                      (update-template-from-instance server val)))))
       (mapc #'update-slot slots))))
+
+
+(defmethod clsql-sys::%install-class :after ((view-class (eql (find-class 'mongrel2-mimetype))) db &rest ignore)
+  "Load in the known mimetypes when the mimetype table is created"
+  (declare (ignorable ignore))
+  (log-for (trace) "Created mongrel2-mimetype table, loading mimetypes.")
+  t)
+

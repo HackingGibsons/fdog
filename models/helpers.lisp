@@ -122,3 +122,13 @@
        (format nil "~A" uuid))
       (:raw
        uuid))))
+
+(defun update-template-from-instance (instance val)
+  "Update strings replacing {name} with the value of slot named `name'"
+  (let ((result val))
+    (cl-ppcre:do-register-groups (slot) ("{([\\w_-]+)}" val)
+      (let* ((slot-sym (intern (string-upcase slot) (symbol-package (type-of instance))))
+             (exists (slot-exists-p instance slot-sym))
+             (slot-val (and exists (slot-value instance slot-sym))))
+        (setf result (cl-ppcre:regex-replace (format nil "{~A}" slot) val slot-val))))
+    result))

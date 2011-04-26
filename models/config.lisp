@@ -159,7 +159,9 @@
    :documentation "Mongrel2 config modification log"))
 
 (clsql:def-view-class mongrel2-mimetype ()
-  ((id :db-kind :key :type integer)
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
    (mimetype :type string)
    (extension :type string))
   (:base-table mimetype

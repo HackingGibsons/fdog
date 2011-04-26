@@ -105,3 +105,11 @@
       (and (find slot (class-slots class) :key 'slot-definition-name)
            t)))
 
+
+;;; Database tweaks
+(defmethod clsql-sys:database-get-type-specifier
+    ((type (eql 'integer)) args database (db-type (eql :sqlite3)))
+  (declare (ignore database db-type))
+  (if args
+      (format nil "INTEGER(~A)" (car args))
+      "INTEGER"))

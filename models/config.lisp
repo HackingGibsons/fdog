@@ -22,21 +22,25 @@
    (uuid :type string
          :initform (make-uuid4)
          :accessor mongrel2-server-uuid)
-   (access-log :type string)
-   (error-log :type string)
+   (access-log :type string
+               :initform "./logs/{uuid}-access.log")
+   (error-log :type string
+               :initform "./logs/{uuid}-error.log")
    (chroot :type string
            :accessor mongrel2-server-chroot
            :initform "/var/www")
    (pid-file :type string
-             :accessor mongrel2-server-pidfile)
+             :accessor mongrel2-server-pidfile
+             :initform "./run/mongrel2-{uuid}.pid")
    (default-host :type string
-     :reader mongrel2-server-default-host)
+                 :initform "localhost"
+                 :reader mongrel2-server-default-host)
    (bind-addr :type string
-              :accessor mongrel2-server-addr
-              :initform "0.0.0.0")
+              :initform "0.0.0.0"
+              :accessor mongrel2-server-addr)
    (port :type integer
-         :accessor mongrel2-server-port
-         :initform 6767)
+         :initform 6767
+         :accessor mongrel2-server-port)
 
    (root :type string :db-kind :virtual
          :reader mongrel2-server-root

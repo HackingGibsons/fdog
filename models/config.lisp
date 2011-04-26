@@ -20,6 +20,7 @@
    (name :type string
          :accessor mongrel2-server-name)
    (uuid :type string
+         :initform (make-uuid4)
          :accessor mongrel2-server-uuid)
    (access-log :type string)
    (error-log :type string)

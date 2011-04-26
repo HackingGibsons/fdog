@@ -113,3 +113,12 @@
   (if args
       (format nil "INTEGER(~A)" (car args))
       "INTEGER"))
+
+;;; Just helpers
+(defun make-uuid4 (&optional (as :string))
+  (let ((uuid (uuid:make-v4-uuid)))
+    (ecase as
+      (:string
+       (format nil "~A" uuid))
+      (:raw
+       uuid))))

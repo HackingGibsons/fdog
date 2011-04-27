@@ -118,10 +118,14 @@
   ((id :type integer
        :db-kind :base
        :db-constraints (:primary-key))
-   (send-spec :type string)
-   (send-ident :type string)
-   (recv-spec :type string)
+   (send-spec :type string
+              :initarg :send-spec)
+   (send-ident :type string
+               :initarg :send-ident)
+   (recv-spec :type string
+              :initarg :recv-spec)
    (recv-ident :type string
+               :initarg :recv-ident
                :initform "")
    (raw-payload :type integer
                 :initform 0)

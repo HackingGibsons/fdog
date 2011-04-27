@@ -135,7 +135,8 @@
        :db-kind :base
        :db-constraints (:primary-key))
    (base :type string)
-   (index-file :type string)
+   (index-file :type string
+               :initform "index.html")
    (default-ctype :type string))
   (:base-table directory
    :documentation

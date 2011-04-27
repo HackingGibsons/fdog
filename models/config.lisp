@@ -151,8 +151,10 @@
   ((id :type integer
        :db-kind :base
        :db-constraints (:primary-key))
-   (addr :type string)
-   (port :type integer))
+   (addr :type string
+         :initarg :addr)
+   (port :type integer
+         :initarg :port))
   (:base-table proxy
    :documentation
    "Mongrel2 Proxy endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-300003.4.5"))

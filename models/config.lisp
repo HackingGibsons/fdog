@@ -139,8 +139,10 @@
   ((id :type integer
        :db-kind :base
        :db-constraints (:primary-key))
-   (base :type string)
+   (base :type string
+         :initarg :base)
    (index-file :type string
+               :initarg :index
                :initform "index.html")
    (default-ctype :type string))
   (:base-table directory

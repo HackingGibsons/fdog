@@ -85,4 +85,10 @@ Omitted, all servers are returned"
 
 (defun make-proxy (addr port)
   (let ((proxy (make-instance 'mongrel2-proxy :addr addr :port port)))
-    (clsql:update-records-from-instance proxy)))
+    (clsql:update-records-from-instance proxy)
+    proxy))
+
+(defun make-dir (base &optional (index "index.html"))
+  (let ((dir (make-instance 'mongrel2-directory :base base :index index)))
+    (clsql:update-records-from-instance dir)
+    dir))

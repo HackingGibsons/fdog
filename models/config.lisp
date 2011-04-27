@@ -93,11 +93,13 @@
     #.(clsql:restore-sql-reader-syntax-state)))
 
 (clsql:def-view-class mongrel2-route ()
-  ;;TODO: id!?
-  ((path :type string)
+  ((id :type integer
+       :db-kind :base
+       :db-constraints (:primary-key))
+   (path :type string)
    (reversed :type boolean
              :initform 0)
-   (host-id :db-kind :key :type integer) ;; TODO: Not :key?
+   (host-id :type integer)
 
    (target :db-kind :virtual :allocation :virtual
            :function (complex-join :find-model 'endpoint-by-name
@@ -105,8 +107,8 @@
                                    :foreign-key 'target-id))
 
 
-   (target-id :db-kind :key :type integer)    ;; TODO: Not :key?
-   (target-type :db-kind :key :type string)) ;; TODO: Not :key?
+   (target-id :type integer)
+   (target-type :type string))
   (:metaclass db-with-virtual-slots-class)
   (:base-table route
    :documentation

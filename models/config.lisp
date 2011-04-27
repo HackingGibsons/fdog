@@ -121,7 +121,8 @@
    (send-spec :type string)
    (send-ident :type string)
    (recv-spec :type string)
-   (recv-ident :type string)
+   (recv-ident :type string
+               :initform "")
    (raw-payload :type integer
                 :initform 0)
    (protocol :type string

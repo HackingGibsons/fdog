@@ -144,7 +144,9 @@
    (index-file :type string
                :initarg :index
                :initform "index.html")
-   (default-ctype :type string))
+   (default-ctype :type string
+                  :initarg :default-ctype
+                  :initform "text/html"))
   (:base-table directory
    :documentation
    "Mongrel2 Directory endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-290003.4.4"))

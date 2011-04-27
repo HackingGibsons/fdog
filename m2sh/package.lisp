@@ -78,7 +78,11 @@ Omitted, all servers are returned"
   server)
 
 ;; Actual construction of components
-(defun make-handler (&rest args)
-  (let ((handler (apply 'make-instance `(fdog-models:mongrel2-handler ,@args))))
+(defun make-handler (&rest initargs)
+  (let ((handler (apply 'make-instance `(mongrel2-handler ,@initargs))))
     (clsql:update-records-from-instance handler)
     handler))
+
+(defun make-proxy (addr port)
+  (let ((proxy (make-instance 'mongrel2-proxy :addr addr :port port)))
+    (clsql:update-records-from-instance proxy)))

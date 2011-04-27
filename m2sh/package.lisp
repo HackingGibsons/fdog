@@ -39,3 +39,46 @@ Omitted, all servers are returned"
 
 
 
+;;; TODO: WIP: Construction of configuration construction
+`(defun sketch! ()
+  (server% (:name "default" :addr "localhost" :port 1337 :chroot "./")
+    (host% ("superlocalhost")
+            (route% "/dir/" (dir% "data/")))
+    (host% ("localhost")
+           (route% "/proxy/" (proxy% "localhost" 31337))
+           (route% "/handler/" (handler% :send-spec "tcp://127.0.0.1:9999"
+                                         :send-ident "54c6755b-9658-40f4-9c2a-fe81a816345e"
+                                         :recv-spec "tcp://127.0.0.1:9998")))))
+
+;; vv- Macroexpansion of a nested server definiton should compile to something resembling this
+'(let ((server '(make-server :name "default" :addr "localhost" :port 1337 :chroot "./")))
+  (defun attach-server-to-host (host)
+    (setf (slot-value host 'server) server))
+
+  (mapc #'attach-server-to-host
+        `(,(let ((host (make-host "superlocalhost")))
+                (defun attach-host-to-route (route)
+                  (setf (slot-value route 'host-id)
+                        (slot-value host 'id)))
+
+                (mapc #'attach-host-to-route
+                      `(,(make-route "/dir/" (make-dir "data/"))))
+                host)
+          ,(let ((host (make-host "localhost")))
+                (defun attach-host-to-route (route)
+                  (setf (slot-value route 'host-id)
+                        (slot-value host 'id)))
+
+                (mapc #'attach-host-to-route
+                      `(,(make-route "/proxy/" (make-proxy "localhost" 31337))
+                        ,(make-route "/handler/" (make-handler :send-spec "tcp://127.0.0.1:9999"
+                                                               :send-ident "54c6755b-9658-40f4-9c2a-fe81a816345e"
+                                                               :recv-spec "tcp://127.0.0.1:9998"))))
+                host)))
+  server)
+
+;; Actual construction of components
+(defun make-handler (&rest args)
+  (let ((handler (apply 'make-instance `(fdog-models:mongrel2-handler ,@args))))
+    (clsql:update-records-from-instance handler)
+    handler))

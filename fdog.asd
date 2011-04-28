@@ -6,7 +6,8 @@
                #:external-program
                #:log5
                #:uuid
-               #:cl-ppcre)
+               #:cl-ppcre
+               #:uffi)
   :components ((:file "package")
                (:file "models/package")
                (:file "m2sh/package")

@@ -57,7 +57,7 @@
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
    (server-id :type integer)
-   (maintenance :type boolean)
+   (maintenance :type boolean :initform 0)
    (name :type string)
    (matching :type string)
 
@@ -101,7 +101,7 @@
          :initform "/")
    (reversed :type boolean
              :initarg :reversed
-             :initform nil)
+             :initform 0)
    (host-id :type integer)
 
    (target :db-kind :virtual :allocation :virtual

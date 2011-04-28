@@ -107,8 +107,6 @@
 
 
 ;;; Database tweaks
-#.(clsql:initialize-database-type :database-type :sqlite3)
-
 (defmethod clsql-sys:database-get-type-specifier
     ((type (eql 'integer)) args database (db-type (eql :sqlite3)))
   (declare (ignore database db-type))
@@ -125,6 +123,16 @@
            (remove-if #'(lambda (c) (member c blacklist)) constraints)))
     (let ((constraints (filter-constraints constraint-list)))
       (call-next-method constraints database))))
+
+(defmethod clsql-sys::query :around ((query-expression string) &rest args &key database &allow-other-keys)
+  "Fix the query to find the last inserted ID for sqlite3"
+  (let ((sql (typecase database
+               (clsql-sqlite3::database
+                (if (search "LAST_INSERT_ID()" query-expression)
+                    (cl-ppcre:regex-replace "LAST_INSERT_ID\\(\\)" query-expression "LAST_INSERT_ROWID()")
+                  query-expression))
+               (otherwise query-expression))))
+    (apply #'call-next-method `(,sql ,@args))))
 
 ;;; Just helpers
 (defun make-uuid4 (&optional (as :string))

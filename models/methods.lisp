@@ -87,6 +87,12 @@ lisp more easily accepts as a relative path"
                      (update-template-from-instance server val)))))
       (mapc #'update-slot slots))))
 
+(defmethod initialize-instance :after ((host mongrel2-host) &rest initargs)
+  (declare (ignorable initargs))
+  (unless (slot-boundp host 'matching)
+    (setf (slot-value host 'matching)
+          (slot-value host 'name))))
+
 (defmethod clsql-sys::%install-class :after ((view-class (eql (find-class 'mongrel2-mimetype))) db &rest ignore)
   "Load in the known mimetypes when the mimetype table is created"
   (declare (ignorable ignore))

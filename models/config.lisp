@@ -57,7 +57,8 @@
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
    (server-id :type integer)
-   (maintenance :type boolean :initform 0)
+   (maintenance :type integer :db-type "BOOLEAN"
+                :initform 0)
    (name :type string
          :initarg :name)
    (matching :type string
@@ -101,7 +102,7 @@
    (path :type string
          :initarg :path
          :initform "/")
-   (reversed :type boolean
+   (reversed :type integer :db-type "BOOLEAN"
              :initarg :reversed
              :initform 0)
    (host-id :type integer)

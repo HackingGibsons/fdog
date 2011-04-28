@@ -140,7 +140,7 @@
 
 (clsql:def-view-class mongrel2-directory ()
   ((id :type integer
-       :db-constraints :auto-increment
+       :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
    (base :type string
          :initarg :base)

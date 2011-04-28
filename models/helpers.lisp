@@ -107,12 +107,24 @@
 
 
 ;;; Database tweaks
+#.(clsql:initialize-database-type :database-type :sqlite3)
+
 (defmethod clsql-sys:database-get-type-specifier
     ((type (eql 'integer)) args database (db-type (eql :sqlite3)))
   (declare (ignore database db-type))
   (if args
       (format nil "INTEGER(~A)" (car args))
       "INTEGER"))
+
+(defmethod clsql-sys::database-pkey-constraint ((class clsql-sys::standard-db-class)
+						(database clsql-sqlite3::database)))
+
+(defmethod clsql-sys::database-constraint-statement :around (constraint-list (database clsql-sqlite3::database))
+  (flet ((filter-constraints (constraints
+                              &optional (blacklist '(:auto-increment)))
+           (remove-if #'(lambda (c) (member c blacklist)) constraints)))
+    (let ((constraints (filter-constraints constraint-list)))
+      (call-next-method constraints database))))
 
 ;;; Just helpers
 (defun make-uuid4 (&optional (as :string))

@@ -58,8 +58,10 @@
        :db-kind :key)
    (server-id :type integer)
    (maintenance :type boolean :initform 0)
-   (name :type string)
-   (matching :type string) ; TODO: Should default to name
+   (name :type string
+         :initarg :name)
+   (matching :type string
+             :name :initarg)
 
    (server :db-kind :join
            :db-info (:join-class mongrel2-server

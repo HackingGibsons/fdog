@@ -19,7 +19,7 @@
 ;;;                                                                          ;;;
 ;;; Requirements:                                                            ;;;
 ;;;   * SBCL 1.0.47                                                          ;;;
-;;;   * patched CLSQL TODO: Link to repo                                     ;;;
+;;;   * patched CLSQL from https://github.com/nikodemus/clsql.git            ;;;
 ;;;   * Quicklisp                                                            ;;;
 ;;;   * Fdog path in the ASDF registry (see: user-tools/asdf-loader.lisp)    ;;;
 ;;;                                                                          ;;;

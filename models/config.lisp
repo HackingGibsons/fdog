@@ -15,8 +15,8 @@
 ;;; Mongrel2 Configuration models
 (clsql:def-view-class mongrel2-server ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (name :type string
          :initform "default"
          :accessor mongrel2-server-name)
@@ -54,8 +54,8 @@
 
 (clsql:def-view-class mongrel2-host ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (server-id :type integer)
    (maintenance :type boolean)
    (name :type string)
@@ -94,8 +94,8 @@
 
 (clsql:def-view-class mongrel2-route ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (path :type string
          :initarg :path
          :initform "/")
@@ -119,8 +119,8 @@
 
 (clsql:def-view-class mongrel2-handler ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (send-spec :type string
               :initarg :send-spec)
    (send-ident :type string
@@ -156,8 +156,8 @@
 
 (clsql:def-view-class mongrel2-proxy ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (addr :type string
          :initarg :addr)
    (port :type integer
@@ -168,8 +168,8 @@
 
 (clsql:def-view-class mongrel2-setting ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (key :type string)
    (value :type string))
   (:base-table setting
@@ -178,8 +178,8 @@
 
 (clsql:def-view-class mongrel2-log ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (who :type string)
    (what :type string)
    (location :type string)
@@ -191,8 +191,8 @@
 
 (clsql:def-view-class mongrel2-mimetype ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
    (mimetype :type string)
    (extension :type string))
   (:base-table mimetype
@@ -202,8 +202,8 @@
 ;; (maybe)
 (clsql:def-view-class mongrel2-statistic ()
   ((id :type integer
-       :db-kind :base
-       :db-constraints (:primary-key))
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key)
 
    ;; These /should/ be a c-pk
    (other-type :type string)

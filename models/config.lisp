@@ -96,9 +96,12 @@
   ((id :type integer
        :db-kind :base
        :db-constraints (:primary-key))
-   (path :type string)
+   (path :type string
+         :initarg :path
+         :initform "/")
    (reversed :type boolean
-             :initform 0)
+             :initarg :reversed
+             :initform nil)
    (host-id :type integer)
 
    (target :db-kind :virtual :allocation :virtual
@@ -107,8 +110,8 @@
                                    :foreign-key 'target-id))
 
 
-   (target-id :type integer)
-   (target-type :type string))
+   (target-id :type integer :initform nil)
+   (target-type :type string :initform nil))
   (:metaclass db-with-virtual-slots-class)
   (:base-table route
    :documentation

@@ -78,17 +78,27 @@ Omitted, all servers are returned"
   server)
 
 ;; Actual construction of components
+(defun make-route (path target)
+  (let ((route (make-instance 'mongrel2-route :path path)))
+    (setf (slot-value route 'fdog-models::target) target)
+    (clsql:update-records-from-instance route)
+    (clsql:update-instance-from-records route)
+    route))
+
 (defun make-handler (&rest initargs)
   (let ((handler (apply 'make-instance `(mongrel2-handler ,@initargs))))
     (clsql:update-records-from-instance handler)
+    (clsql:update-instance-from-records handler)
     handler))
 
 (defun make-proxy (addr port)
   (let ((proxy (make-instance 'mongrel2-proxy :addr addr :port port)))
     (clsql:update-records-from-instance proxy)
+    (clsql:update-instance-from-records proxy)
     proxy))
 
 (defun make-dir (base &optional (index "index.html"))
   (let ((dir (make-instance 'mongrel2-directory :base base :index index)))
     (clsql:update-records-from-instance dir)
+    (clsql:update-instance-from-records dir)
     dir))

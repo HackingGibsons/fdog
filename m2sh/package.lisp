@@ -51,35 +51,45 @@ Omitted, all servers are returned"
                                          :recv-spec "tcp://127.0.0.1:9998")))))
 
 ;; vv- Macroexpansion of a nested server definiton should compile to something resembling this
-'(let ((server '(make-server :name "default" :addr "localhost" :port 1337 :chroot "./")))
+'(let ((server (make-server "default" :addr "localhost" :port 1337 :chroot "./")))
   (defun attach-server-to-host (host)
-    (setf (slot-value host 'server) server))
+    (setf (slot-value host 'fdog-models::server-id)
+          (slot-value server 'fdog-models::id))
+    (clsql:update-records-from-instance host))
 
   (mapc #'attach-server-to-host
         `(,(let ((host (make-host "superlocalhost")))
                 (defun attach-host-to-route (route)
+                  (describe host)
                   (setf (slot-value route 'fdog-models::host-id)
                         (slot-value host 'fdog-models::id))
-                  (clsql:update-instance-from-records host))
+                  (clsql:update-records-from-instance route))
 
                 (mapc #'attach-host-to-route
                       `(,(make-route "/dir/" (make-dir "data/"))))
                 host)
-          ,(let ((host (make-host "localhost")))
-                (defun attach-host-to-route (route)
-                  (setf (slot-value route 'fdog-models::host-id)
-                        (slot-value host 'fdog-models::id))
-                  (clsql:update-instance-from-records host))
+           ,(let ((host (make-host "localhost")))
+                 (defun attach-host-to-route (route)
+                   (setf (slot-value route 'fdog-models::host-id)
+                         (slot-value host 'fdog-models::id))
+                   (clsql:update-records-from-instance route))
 
-                (mapc #'attach-host-to-route
-                      `(,(make-route "/proxy/" (make-proxy "localhost" 31337))
-                        ,(make-route "/handler/" (make-handler :send-spec "tcp://127.0.0.1:9999"
-                                                               :send-ident "54c6755b-9658-40f4-9c2a-fe81a816345e"
-                                                               :recv-spec "tcp://127.0.0.1:9998"))))
-                host)))
+                 (mapc #'attach-host-to-route
+                       `(,(make-route "/proxy/" (make-proxy "localhost" 31337))
+                          ,(make-route "/handler/" (make-handler :send-spec "tcp://127.0.0.1:9999"
+                                                                 :send-ident "54c6755b-9658-40f4-9c2a-fe81a816345e"
+                                                                 :recv-spec "tcp://127.0.0.1:9998"))))
+                 host)))
   server)
 
 ;; Actual construction of components
+(defun make-server (name &rest args &key addr port
+                    (chroot (merge-pathnames fdog:*default-server-path* fdog:*default-root-path*))
+                    &allow-other-keys)
+  (let ((server (apply 'make-instance `(mongrel2-server :name ,name ,@args))))
+    (clsql:update-records-from-instance server)
+    server))
+
 (defun make-host (name &optional matching)
   (let ((host (make-instance 'mongrel2-host :name name)))
     (when matching

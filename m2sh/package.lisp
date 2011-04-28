@@ -58,16 +58,18 @@ Omitted, all servers are returned"
   (mapc #'attach-server-to-host
         `(,(let ((host (make-host "superlocalhost")))
                 (defun attach-host-to-route (route)
-                  (setf (slot-value route 'host-id)
-                        (slot-value host 'id)))
+                  (setf (slot-value route 'fdog-models::host-id)
+                        (slot-value host 'fdog-models::id))
+                  (clsql:update-instance-from-records host))
 
                 (mapc #'attach-host-to-route
                       `(,(make-route "/dir/" (make-dir "data/"))))
                 host)
           ,(let ((host (make-host "localhost")))
                 (defun attach-host-to-route (route)
-                  (setf (slot-value route 'host-id)
-                        (slot-value host 'id)))
+                  (setf (slot-value route 'fdog-models::host-id)
+                        (slot-value host 'fdog-models::id))
+                  (clsql:update-instance-from-records host))
 
                 (mapc #'attach-host-to-route
                       `(,(make-route "/proxy/" (make-proxy "localhost" 31337))
@@ -78,6 +80,13 @@ Omitted, all servers are returned"
   server)
 
 ;; Actual construction of components
+(defun make-host (name &optional matching)
+  (let ((host (make-instance 'mongrel2-host :name name)))
+    (when matching
+      (setf (slot-value host 'fdog-models::matching) matching))
+    (clsql:update-records-from-instance host)
+    host))
+
 (defun make-route (path target)
   (let ((route (make-instance 'mongrel2-route :path path)))
     (setf (slot-value route 'fdog-models::target) target)

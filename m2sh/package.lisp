@@ -9,10 +9,15 @@
            :init))
 (in-package :fdog-m2sh)
 
-(defun server-hosts (server)
-  "Returns a list of hosts configured for a given server"
-  :TODO
-  ())
+(defun server-hosts (server &key (refresh nil))
+  "Returns a list of hosts configured for a given server with name server-name"
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (let (hosts)
+    (dolist (host (clsql:select 'mongrel2-host :flatp t :refresh refresh
+                                :where [= 'server_id (mongrel2-server-id server)])
+             hosts)
+      (push host hosts)))
+  #.(clsql:restore-sql-reader-syntax-state))
 
 (defun servers (&key uuid host name (refresh nil))
   "Return a list of servers given a :uuid and :host

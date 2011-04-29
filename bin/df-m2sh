@@ -32,24 +32,45 @@ an entry to the `*commands*' table"
     `(defun ,cmd-name ,args
        ,@body)))
 
-(defmethod call-command (name &rest args)
-  (let ((cmd (cdr (assoc name *commands* :test #'string-equal))))
-    (apply cmd args)))
+(defun get-command (name &optional (what :both))
+  (let ((cmd (assoc name *commands* :test #'string-equal)))
+    (and cmd
+         (ecase what
+           (:both cmd)
+           (:name (car cmd))
+           (:function (cdr cmd))))))
+
+(defun call-command (name &rest args)
+  (apply (get-command name :function) args))
+
+(defun command-p (name)
+  (get-command name))
 
 ;; Commands
 (defcommand help (&optional command)
+  "General help functionality. Give a command for help with a specific thing"
   (if command
       (format t "Help for: ~A~%" command)
     (usage)))
 
 ;; Commands
-(defun usage ()
+(defun usage (&key exit (message "Usage information"))
+  (when message (format t "~A~%" message))
   (format t "Usage: ~A command [command-options]~%" *me*)
   (format t "Commands:~%")
   (dolist (command *commands*)
-    (format t "  ~A~%" (car command))))
+    (format t "  ~A~%" (car command)))
+  (when exit (quit :unix-status exit)))
 
 ;; Aaand go
-(unless (car *argv*)
-  (usage)
-  (quit :unix-status 1))
+(flet ((run (root self argv)
+         (unless (car argv)
+           (usage :exit 1 :message "Invalid usage"))
+
+         (destructuring-bind (command &rest args) argv
+           (if (command-p command)
+               (call-command command args)
+             (usage :exit 1 :message (format nil "Unknown command `~A'" command))))
+
+         (quit :unix-status 0)))
+  (run *root* *me* *argv*))

@@ -81,7 +81,7 @@ Lists the hosts for the given `server-name'"
              (format t "--------~%")
              (dolist (host (server-hosts server) hosts)
                (push host hosts)
-               (format t "  ~A ~A~%" (mongrel2-host-id host)
+               (format t "  ~A   ~A~%" (mongrel2-host-id host)
                                      (mongrel2-host-name host)))))))
 
 (defcommand! servers (&key uuid host name)

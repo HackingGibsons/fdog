@@ -1,0 +1,32 @@
+#!/usr/bin/env sbcl --script
+
+;; Load an RC if we can find it
+(let ((rc (probe-file #P"~/.sbclrc")))
+  (when rc (load rc)))
+
+;; Load up
+(ql:quickload :fdog)
+(use-package :fdog-m2sh)
+
+;; Setup Env Constants
+(defvar *exe* (first sb-ext:*posix-argv*))
+(defvar *argv* (rest sb-ext:*posix-argv*))
+(defvar *me* (make-pathname :directory `(:relative ,(car (last (pathname-directory *load-pathname*))))
+                            :name (pathname-name *load-pathname*)))
+(defvar *root* (merge-pathnames ".."
+                                (make-pathname :directory (pathname-directory *load-pathname*))))
+
+;; Script constants
+(defvar *commands* '(:help :servers))
+
+;; Commands
+(defun usage ()
+  (format t "~A command [command-options]~%" *me*)
+  (format t "Commands:~%")
+  (dolist (command *commands*)
+    (format t "  ~A~%" command)))
+
+;; Aaand go
+(unless (car *argv*)
+  (usage)
+  (quit :unix-status 1))

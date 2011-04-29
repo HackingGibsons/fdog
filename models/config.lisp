@@ -16,6 +16,7 @@
 (clsql:def-view-class mongrel2-server ()
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
+       :reader mongrel2-server-id
        :db-kind :key)
    (name :type string
          :initform "default"
@@ -56,13 +57,13 @@
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key
-       :reader :mongrel2-host-id)
+       :reader mongrel2-host-id)
    (server-id :type integer)
    (maintenance :type integer :db-type "BOOLEAN"
                 :initform 0)
    (name :type string
          :initarg :name
-         :accessor :mongrel2-host-name)
+         :accessor mongrel2-host-name)
    (matching :type string
              :name :initarg)
 

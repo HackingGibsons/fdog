@@ -8,15 +8,8 @@
 (ql:quickload :fdog)
 (use-package :fdog-m2sh)
 
-;; Setup Env Constants
-(defvar *exe* (first sb-ext:*posix-argv*))
-(defvar *argv* (rest sb-ext:*posix-argv*))
-(defvar *me* (make-pathname :directory `(:relative ,(car (last (pathname-directory *load-pathname*))))
-                            :name (pathname-name *load-pathname*)))
-(defvar *root* (merge-pathnames ".."
-                                (make-pathname :directory (pathname-directory *load-pathname*))))
-
 ;; Script constants
+(defvar *self* "df-m2sh")
 (defvar *commands* ())
 
 ;; Command definition helpers
@@ -52,7 +45,8 @@ an entry to the `*commands*' table"
 General help functionality. Give a command for help with a specific thing"
   (let ((cmd (get-command command)))
     (unless cmd
-      (usage :message (format nil "Unknown command: ~A" command) :exit 2))
+      (usage :message (if command (format nil "Unknown command: ~A" command))
+             :exit (if command 2 0)))
 
     (format t "Help for: ~A~%" (car cmd))
     (format t "  :~A~%" (documentation (cdr cmd) 'function))))
@@ -61,14 +55,15 @@ General help functionality. Give a command for help with a specific thing"
 ;; Helers
 (defun usage (&key exit (message "Usage information"))
   (when message (format t "~A~%" message))
-  (format t "Usage: ~A command [command-options]~%" *me*)
+  (format t "Usage: ~A command [command-options]~%" *self*)
   (format t "Commands:~%")
   (dolist (command *commands*)
     (format t "  ~A~%" (car command)))
   (when exit (quit :unix-status exit)))
 
 ;; Aaand go
-(flet ((run (root self argv)
+(flet ((run (&key root self argv)
+         (when self (setf *self* self))
          (unless (car argv)
            (usage :exit 1 :message "Invalid usage"))
 
@@ -78,4 +73,8 @@ General help functionality. Give a command for help with a specific thing"
              (usage :exit 1 :message (format nil "Unknown command `~A'" command))))
 
          (quit :unix-status 0)))
-  (run *root* *me* *argv*))
+  (run
+   :root (merge-pathnames ".." (make-pathname :directory (pathname-directory *load-pathname*)))
+   :self (make-pathname :directory `(:relative ,(car (last (pathname-directory *load-pathname*))))
+                  :name (pathname-name *load-pathname*))
+   :argv (rest sb-ext:*posix-argv*)))

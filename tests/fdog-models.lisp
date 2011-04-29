@@ -8,4 +8,5 @@
                          ("handler" . mongrel2-handler)
                          ("dir" . mongrel2-directory))))
         (mapc (lambda (endpoint)
-                (is (equal (fdog-models::endpoint-by-name (car endpoint)) (cdr endpoint)))) endpoints)))
+                (is (equal (fdog-models::endpoint-by-name (car endpoint)) (cdr endpoint)))) 
+              endpoints)))

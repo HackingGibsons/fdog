@@ -21,4 +21,11 @@
                (:file "models/config")
                (:file "models/methods")))
 
+(asdf:defsystem #:fdog-tests
+  :serial t
+  :depends-on (#:fdog
+               #:fiveam)
+  :components ((:file "tests/package")
+               (:file "tests/fdog-models")))
+
 

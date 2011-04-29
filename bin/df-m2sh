@@ -21,7 +21,7 @@
 
 ;; Commands
 (defun usage ()
-  (format t "~A command [command-options]~%" *me*)
+  (format t "Usage: ~A command [command-options]~%" *me*)
   (format t "Commands:~%")
   (dolist (command *commands*)
     (format t "  ~A~%" command)))

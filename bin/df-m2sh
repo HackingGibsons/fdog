@@ -33,7 +33,7 @@ an entry to the `*commands*' table"
            (:name (car cmd))
            (:function (cdr cmd))))))
 
-(defun call-command (name &rest args)
+(defun call-command (name &optional args)
   (apply (get-command name :function) args))
 
 (defun command-p (name)
@@ -51,6 +51,10 @@ General help functionality. Give a command for help with a specific thing"
     (format t "Help for: ~A~%" (car cmd))
     (format t "  :~A~%" (documentation (cdr cmd) 'function))))
 
+(defcommand servers (&key uuid host name)
+  "servers [:uuid <uuid> [:host <host>] [:name <name>]]
+List the available servers"
+  (format t "Servers: ~A ~A ~A~%" uuid host name))
 
 ;; Helers
 (defun usage (&key exit (message "Usage information"))
@@ -62,14 +66,16 @@ General help functionality. Give a command for help with a specific thing"
   (when exit (quit :unix-status exit)))
 
 ;; Aaand go
-(flet ((run (&key root self argv)
+(labels ((keyword-or-string (arg) (cond ((eql (char arg 0) #\:) (read-from-string arg))
+                                        (t arg)))
+         (run (&key root self argv)
          (when self (setf *self* self))
          (unless (car argv)
            (usage :exit 1 :message "Invalid usage"))
 
-         (destructuring-bind (command &optional args) argv
+         (destructuring-bind (command &rest args) argv
            (if (command-p command)
-               (call-command command args)
+               (call-command command (mapcar #'keyword-or-string args))
              (usage :exit 1 :message (format nil "Unknown command `~A'" command))))
 
          (quit :unix-status 0)))

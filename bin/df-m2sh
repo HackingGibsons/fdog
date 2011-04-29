@@ -48,11 +48,15 @@ an entry to the `*commands*' table"
 
 ;; Commands
 (defcommand help (&optional command &rest args)
-  "General help functionality. Give a command for help with a specific thing"
+  "help [command]
+General help functionality. Give a command for help with a specific thing"
   (let ((cmd (get-command command)))
-    (if cmd
-        (format t "Help for: ~A~%" (car cmd))
-      (usage :message (format nil "Unknown command: ~A" command) :exit 2))))
+    (unless cmd
+      (usage :message (format nil "Unknown command: ~A" command) :exit 2))
+
+    (format t "Help for: ~A~%" (car cmd))
+    (format t "  :~A~%" (documentation (cdr cmd) 'function))))
+
 
 ;; Helers
 (defun usage (&key exit (message "Usage information"))

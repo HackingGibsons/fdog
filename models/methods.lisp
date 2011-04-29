@@ -89,7 +89,8 @@ lisp more easily accepts as a relative path"
 
 (defmethod initialize-instance :after ((host mongrel2-host) &rest initargs)
   (declare (ignorable initargs))
-  (unless (slot-boundp host 'matching)
+  (when (and (slot-boundp host 'name)
+             (not (slot-boundp host 'matching)))
     (setf (slot-value host 'matching)
           (slot-value host 'name))))
 

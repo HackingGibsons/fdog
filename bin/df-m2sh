@@ -17,14 +17,37 @@
                                 (make-pathname :directory (pathname-directory *load-pathname*))))
 
 ;; Script constants
-(defvar *commands* '(:help :servers))
+(defvar *commands* ())
+
+;; Command definition helpers
+(defmacro defcommand (name args &body body)
+  "Create a function named m2sh-cmd-`name' and add
+an entry to the `*commands*' table"
+  (let* ((title name)
+        (prefix "m2sh-cmd-")
+        (cmd-name (intern (string-upcase (concatenate 'string prefix (symbol-name title))))))
+
+    (pushnew `(,title . ,cmd-name) *commands* :test #'(lambda (a b) (and (eql (car a) (car b))
+                                                                         (eql (cdr a) (cdr b)))))
+    `(defun ,cmd-name ,args
+       ,@body)))
+
+(defmethod call-command (name &rest args)
+  (let ((cmd (cdr (assoc name *commands* :test #'string-equal))))
+    (apply cmd args)))
+
+;; Commands
+(defcommand help (&optional command)
+  (if command
+      (format t "Help for: ~A~%" command)
+    (usage)))
 
 ;; Commands
 (defun usage ()
   (format t "Usage: ~A command [command-options]~%" *me*)
   (format t "Commands:~%")
   (dolist (command *commands*)
-    (format t "  ~A~%" command)))
+    (format t "  ~A~%" (car command))))
 
 ;; Aaand go
 (unless (car *argv*)

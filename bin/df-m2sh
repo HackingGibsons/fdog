@@ -9,6 +9,9 @@
 (use-package :fdog-models)
 (use-package :fdog-m2sh)
 
+;; Shut up the logger
+(log5:stop-all-senders)
+
 ;; Script constants
 (defvar *self* "df-m2sh")
 (defvar *commands* ())

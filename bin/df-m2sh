@@ -69,7 +69,7 @@ List the available servers"
   (format t "--------~%")
   (let ((servers (servers :uuid uuid :host host :name name)))
     (dolist (server servers servers)
-      (format t "~A   ~A   ~A~%" (mongrel2-server-name server)
+      (format t "  ~A   ~A   ~A~%" (mongrel2-server-name server)
                              (mongrel2-server-default-host server)
                              (mongrel2-server-uuid server)))))
 

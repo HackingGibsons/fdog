@@ -31,9 +31,14 @@ an entry to the `*commands*' table"
 
 (defmacro defcommand! (name args &body body)
   "Create a function that first initializes the databases before executing."
+  (let* ((body-val body)
+         (doc (and (typep (car body-val) 'string)
+                   (car body-val)))
+         (g!doc (gensym "doc")))
   `(defcommand ,name ,args
+     ,@(if doc (list doc) (values))
      (unless (fdog-models:connected-p) (fdog:init))
-     ,@body))
+     ,@(if doc (rest body) body))))
 
 
 (defun get-command (name &optional (what :both))

@@ -96,7 +96,6 @@ lisp more easily accepts as a relative path"
 (defmethod clsql-sys::%install-class :after ((view-class (eql (find-class 'mongrel2-mimetype))) db &rest ignore)
   "Load in the known mimetypes when the mimetype table is created"
   (declare (ignorable ignore))
-  (log-for (trace) "Created mongrel2-mimetype table, loading ~A mimetypes." (length *default-mimetypes*))
   (clsql:with-transaction ()
     (dolist (mimetype *default-mimetypes* (length *default-mimetypes*))
       (destructuring-bind (ext . type) mimetype

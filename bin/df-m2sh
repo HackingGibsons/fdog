@@ -95,6 +95,11 @@ List the available servers"
                              (mongrel2-server-default-host server)
                              (mongrel2-server-uuid server)))))
 
+(defcommand! routes (server-name &key host-name host-id)
+  "routes <server-name> [:host-name <host-name> :host-id <host-id>]
+List the routes for the server named by `server-name' belonging to host named by `host-name' and/or `host-id'"
+  (format t "Unimplemented :(~%"))
+
 ;; Helers
 (defun usage (&key exit (message "Usage information"))
   (when message (format t "~A~%" message))

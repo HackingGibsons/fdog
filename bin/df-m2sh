@@ -47,11 +47,12 @@ an entry to the `*commands*' table"
   (get-command name))
 
 ;; Commands
-(defcommand help (&optional command)
+(defcommand help (&optional command &rest args)
   "General help functionality. Give a command for help with a specific thing"
-  (if command
-      (format t "Help for: ~A~%" command)
-    (usage)))
+  (let ((cmd (get-command command)))
+    (if cmd
+        (format t "Help for: ~A~%" (car cmd))
+      (usage :message (format nil "Unknown command: ~A" command) :exit 2))))
 
 ;; Commands
 (defun usage (&key exit (message "Usage information"))
@@ -67,7 +68,7 @@ an entry to the `*commands*' table"
          (unless (car argv)
            (usage :exit 1 :message "Invalid usage"))
 
-         (destructuring-bind (command &rest args) argv
+         (destructuring-bind (command &optional args) argv
            (if (command-p command)
                (call-command command args)
              (usage :exit 1 :message (format nil "Unknown command `~A'" command))))

@@ -5,8 +5,14 @@
   (:shadowing-import-from :log5
                           :log-for :info :warn :error)
   (:export :servers
+           :server-hosts
            :init))
 (in-package :fdog-m2sh)
+
+(defun server-hosts (server)
+  "Returns a list of hosts configured for a given server"
+  :TODO
+  ())
 
 (defun servers (&key uuid host name (refresh nil))
   "Return a list of servers given a :uuid and :host

@@ -67,6 +67,23 @@ General help functionality. Give a command for help with a specific thing"
     (format t "Help for: ~A~%" (car cmd))
     (format t "  :~A~%" (documentation (cdr cmd) 'function))))
 
+(defcommand! hosts (&optional server-name)
+  "hosts <server-name>
+Lists the hosts for the given `server-name'"
+  (let (hosts
+        (server (car (servers :name server-name))))
+    (cond ((not server-name)
+             (call-command 'help '(hosts)))
+          ((not server)
+             (format t "No servers found named: '~A'~%" server-name))
+          (t
+             (format t "Hosts in server named '~A'~%" server-name)
+             (format t "--------~%")
+             (dolist (host (server-hosts server) hosts)
+               (push host hosts)
+               (format t "  ~A ~A~%" (mongrel2-host-id host)
+                                     (mongrel2-host-name host)))))))
+
 (defcommand! servers (&key uuid host name)
   "servers [:uuid <uuid> [:host <host>] [:name <name>]]
 List the available servers"

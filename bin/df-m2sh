@@ -6,6 +6,7 @@
 
 ;; Load up
 (ql:quickload :fdog)
+(use-package :fdog-models)
 (use-package :fdog-m2sh)
 
 ;; Script constants
@@ -24,6 +25,13 @@ an entry to the `*commands*' table"
                                                                          (eql (cdr a) (cdr b)))))
     `(defun ,cmd-name ,args
        ,@body)))
+
+(defmacro defcommand! (name args &body body)
+  "Create a function that first initializes the databases before executing."
+  `(defcommand ,name ,args
+     (unless (fdog-models:connected-p) (fdog:init))
+     ,@body))
+
 
 (defun get-command (name &optional (what :both))
   (let ((cmd (assoc name *commands* :test #'string-equal)))
@@ -51,10 +59,16 @@ General help functionality. Give a command for help with a specific thing"
     (format t "Help for: ~A~%" (car cmd))
     (format t "  :~A~%" (documentation (cdr cmd) 'function))))
 
-(defcommand servers (&key uuid host name)
+(defcommand! servers (&key uuid host name)
   "servers [:uuid <uuid> [:host <host>] [:name <name>]]
 List the available servers"
-  (format t "Servers: ~A ~A ~A~%" uuid host name))
+  (format t "Servers matching: (:uuid ~A) (:host ~A) (:name ~A)~%" uuid host name)
+  (format t "--------~%")
+  (let ((servers (servers :uuid uuid :host host :name name)))
+    (dolist (server servers servers)
+      (format t "~A   ~A   ~A~%" (mongrel2-server-name server)
+                             (mongrel2-server-default-host server)
+                             (mongrel2-server-uuid server)))))
 
 ;; Helers
 (defun usage (&key exit (message "Usage information"))

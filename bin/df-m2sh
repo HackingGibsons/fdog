@@ -54,7 +54,7 @@ an entry to the `*commands*' table"
         (format t "Help for: ~A~%" (car cmd))
       (usage :message (format nil "Unknown command: ~A" command) :exit 2))))
 
-;; Commands
+;; Helers
 (defun usage (&key exit (message "Usage information"))
   (when message (format t "~A~%" message))
   (format t "Usage: ~A command [command-options]~%" *me*)

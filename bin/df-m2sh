@@ -67,6 +67,16 @@ General help functionality. Give a command for help with a specific thing"
     (format t "Help for: ~A~%" (car cmd))
     (format t "  :~A~%" (documentation (cdr cmd) 'function))))
 
+(defcommand! init (&rest args &key file (drop t))
+  "init :file <path-to-lisp-config> [:drop nil]
+Create the configuration databases according to the contents of the file named by `file'.
+If drop is non-nil, the configuration database won't be cleared before the config is loaded."
+  (if (and file (probe-file file))
+      (load file)
+    (progn
+      (format t "Configuration file required.~%")
+      (call-command 'help '(init)))))
+
 (defcommand! hosts (&optional server-name)
   "hosts <server-name>
 Lists the hosts for the given `server-name'"

@@ -69,9 +69,18 @@
 
    (server :db-kind :join
            :db-info (:join-class mongrel2-server
-                                 :home-key server-id
-                                 :foreign-key id
-                                 :set nil)))
+                     :home-key server-id
+                     :foreign-key id
+                     :set nil))
+
+   (routes :db-kind :join
+           :reader mongrel2-host-routes
+           :db-info (:join-class mongrel2-route
+                     :home-key id
+                     :foreign-key host-id
+                     :set t)))
+
+
   (:base-table host
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
@@ -103,6 +112,7 @@
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
    (path :type string
+         :accessor mongrel2-route-path
          :initarg :path
          :initform "/")
    (reversed :type integer :db-type "BOOLEAN"

@@ -95,10 +95,21 @@ List the available servers"
                              (mongrel2-server-default-host server)
                              (mongrel2-server-uuid server)))))
 
-(defcommand! routes (server-name &key host-name host-id)
-  "routes <server-name> [:host-name <host-name> :host-id <host-id>]
+(defcommand! routes (&rest args &key server-name host-name host-id)
+  "routes [:server-name <server-name> [:host-name <host-name> :host-id <host-id>]]
 List the routes for the server named by `server-name' belonging to host named by `host-name' and/or `host-id'"
-  (format t "Unimplemented :(~%"))
+  (let* ((server (car (servers :name server-name)))
+         (host (car (remove-if-not #'(lambda (h) (string-equal (mongrel2-host-name h)
+                                                              host-name))
+                                  (server-hosts server))))
+         routes)
+    (cond ((not (and server-name (or host-name host-id)))
+           (call-command 'help args))
+          (t
+           (format t "ROUTES in host ~A, server ~A:~%" host-name server-name)
+           (dolist (route (mongrel2-host-routes host) routes)
+             (push route routes)
+             (format t " ~A~%" (mongrel2-route-path route)))))))
 
 ;; Helers
 (defun usage (&key exit (message "Usage information"))

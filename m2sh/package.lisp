@@ -76,8 +76,13 @@ appears in the `servers' list."
        server)))
 
 (defmacro with-host ((name) &body routes)
-  `(let ((host :undefined))
-     host))
+  `(let ((host (make-host ,name)))
+     (flet ((attach-host-to-route (route)
+              (setf (slot-value route 'fdog-models::host-id)
+                    (slot-value host 'fdog-models::id))
+              (clsql:update-records-from-instance route)))
+       (mapc #'attach-host-to-route (list ,@routes))
+       host)))
 
 ;; vv- Macroexpansion of a nested server definiton should compile to something resembling this
 '(let ((server (make-server "default" :addr "localhost" :port 1337 :chroot "./")))
@@ -116,6 +121,8 @@ appears in the `servers' list."
                     (chroot (merge-pathnames fdog:*default-server-path* fdog:*default-root-path*))
                     &allow-other-keys)
   (let ((server (apply 'make-instance `(mongrel2-server :name ,name ,@args))))
+    (format t "Made server: ~A~%" server)
+    (describe server)
     (clsql:update-records-from-instance server)
     server))
 

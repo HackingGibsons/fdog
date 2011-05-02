@@ -72,7 +72,9 @@ General help functionality. Give a command for help with a specific thing"
 Create the configuration databases according to the contents of the file named by `file'.
 If drop is non-nil, the configuration database won't be cleared before the config is loaded."
   (if (and file (probe-file file))
-      (let ((*package* (find-package :fdog-m2sh)))
+      (let ((*package* (find-package :fdog-m2sh))
+            (wipe (or (eq drop t) (read-from-string drop))))
+        (when wipe (fdog-m2sh:init))
         (load file))
     (progn
       (format t "Configuration file required.~%")

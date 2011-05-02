@@ -4,4 +4,5 @@
         #:fdog-models))
 
 (in-package :fdog-tests)
-(run! 'fdog-models)
+
+

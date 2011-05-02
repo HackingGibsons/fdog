@@ -111,6 +111,51 @@ List the routes for the server named by `server-name' belonging to host named by
              (push route routes)
              (format t " ~A~%" (mongrel2-route-path route)))))))
 
+(defcommand! start (&rest args &key name uuid)
+  "start [:name server-name [:uuid server-uuid]]
+Start the mongrel2 server named by either name or uuid. If search
+parameters are omitted, assumes all that would have been returend
+by an empty `servers' command"
+  (let (servers)
+    (dolist (server (apply #'servers args) servers)
+      (push server servers)
+      (format t "Starting: ~A (~A)~%" (mongrel2-server-uuid server) (mongrel2-server-name server))
+      (mongrel2-server-signal server :start))))
+
+(defcommand! stop (&rest args &key name uuid)
+  "stop [:name server-name [:uuid server-uuid]]
+Stop the mongrel2 server named by either name or uuid. If search
+parameters are omitted, assumes all that would have been returend
+by an empty `servers' command"
+  (let (servers)
+    (dolist (server (apply #'servers args) servers)
+      (push server servers)
+      (format t "Stopping: ~A (~A)~%" (mongrel2-server-uuid server) (mongrel2-server-name server))
+      (mongrel2-server-signal server :stop))))
+
+(defcommand! reload (&rest args &key name uuid)
+  "reload [:name server-name [:uuid server-uuid]]
+Reloads the mongrel2 server named by either name or uuid. If search
+parameters are omitted, assumes all that would have been returend
+by an empty `servers' command"
+  (let (servers)
+    (dolist (server (apply #'servers args) servers)
+      (push server servers)
+      (format t "Stopping: ~A (~A)~%" (mongrel2-server-uuid server) (mongrel2-server-name server))
+      (mongrel2-server-signal server :reload))))
+
+(defcommand! running (&rest args &key name uuid)
+  "running [:name server-name [:uuid server-uuid]]
+Query the mongrel2 server named by either name or uuid. If search
+parameters are omitted, assumes all that would have been returend
+by an empty `servers' command"
+  (let (servers)
+    (dolist (server (apply #'servers args) servers)
+      (push server servers)
+      (format t " ~A (~A): ~A~%" (mongrel2-server-uuid server) (mongrel2-server-name server)
+              (if (mongrel2-server-running-p server) :running
+                                                     :stopped)))))
+
 ;; Helers
 (defun usage (&key exit (message "Usage information"))
   (when message (format t "~A~%" message))

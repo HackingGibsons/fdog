@@ -19,6 +19,7 @@
        :reader mongrel2-server-id
        :db-kind :key)
    (name :type string
+         :initarg :name
          :initform "default"
          :accessor mongrel2-server-name)
    (uuid :type string

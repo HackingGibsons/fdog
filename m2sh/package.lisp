@@ -61,6 +61,24 @@ Omitted, all servers are returned"
                                          :send-ident "54c6755b-9658-40f4-9c2a-fe81a816345e"
                                          :recv-spec "tcp://127.0.0.1:9998")))))
 
+(defun using-configuration! (&rest servers)
+  "Clear the configuration and install the configuration of each server that
+appears in the `servers' list."
+  :undefined)
+
+(defmacro with-server ((name &rest args &key addr port chroot) &body hosts)
+  `(let ((server (make-server ,name ,@args)))
+     (flet ((attach-server-to-host (host)
+              (setf (slot-value host 'fdog-models::server-id)
+                    (slot-value server 'fdog-models::id))
+              (clsql:update-records-from-instance host)))
+       (mapc #'attach-server-to-host (list ,@hosts))
+       server)))
+
+(defmacro with-host ((name) &body routes)
+  `(let ((host :undefined))
+     host))
+
 ;; vv- Macroexpansion of a nested server definiton should compile to something resembling this
 '(let ((server (make-server "default" :addr "localhost" :port 1337 :chroot "./")))
   (defun attach-server-to-host (host)

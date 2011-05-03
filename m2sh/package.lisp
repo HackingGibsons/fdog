@@ -121,8 +121,6 @@ appears in the `servers' list."
                     (chroot (merge-pathnames fdog:*default-server-path* fdog:*default-root-path*))
                     &allow-other-keys)
   (let ((server (apply 'make-instance `(mongrel2-server :name ,name ,@args))))
-    (format t "Made server: ~A~%" server)
-    (describe server)
     (clsql:update-records-from-instance server)
     server))
 

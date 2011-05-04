@@ -7,6 +7,7 @@
                #:log5
                #:uuid
                #:cl-ppcre
+               #:m2cl
                #:uffi)
   :components ((:file "package")
                (:file "models/package")

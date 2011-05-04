@@ -6,7 +6,16 @@
                           :log-for :info :warn :error)
   (:export :servers
            :server-hosts
-           :init))
+           :init
+
+           :with-server
+           :with-host
+           :make-server
+           :make-host
+           :make-route
+           :make-handler
+           :make-proxy
+           :make-dir))
 (in-package :fdog-m2sh)
 
 (defun server-hosts (server &key (refresh nil))

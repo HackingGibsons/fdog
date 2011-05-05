@@ -42,10 +42,10 @@
   (m2cl:with-handler (handler *ident* *m2-send* *m2-recv*)
     (loop
        (log-for (trace) "Waiting for request!")
-       (let ((request (m2cl:handler-receive handler)))
+       (multiple-value-bind (request raw) (m2cl:handler-receive handler)
+         (log-for (trace) "Raw: ~A" (flexi-streams:octets-to-string raw))
          (log-for (trace) "Got request!")
          (m2cl:handler-send-http handler "I WIN!" :request request)
          (m2cl:handler-close handler :request request)
          (log-for (trace) "Response sent.")))))
-
 

@@ -2,12 +2,13 @@
 
 (asdf:defsystem #:fdog
   :serial t
-  :depends-on (#:clsql
-               #:external-program
+  :depends-on (#:external-program
                #:log5
                #:uuid
                #:cl-ppcre
                #:m2cl
+               #:bordeaux-threads
+               #:clsql
                #:uffi)
   :components ((:file "package")
                (:file "models/package")

@@ -13,6 +13,7 @@
   :components ((:file "package")
                (:file "models/package")
                (:file "m2sh/package")
+               (:file "control/package")
 
                ;; Main package
                (:file "fdog")

@@ -15,7 +15,7 @@
    (pub-address :initarg :pub-address
                 :initarg :pub)
 
-   (processor :initform (lambda (handler request &optional raw) (declare (ignorable handler request raw)))
+   (processor :initform (lambda (handler request raw) (declare (ignorable handler request raw)))
               :initarg :processor
               :initarg :proc)
 

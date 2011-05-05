@@ -20,7 +20,8 @@
               :initarg :proc)
 
    (responder :initform nil
-              :accessor request-handler-thread)
+              :accessor request-handler-thread
+              :accessor request-handler-responder)
    (responder-lock :initform nil
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
@@ -34,8 +35,10 @@
     :undef))
 
 (defmethod request-handler-running-p ((handler request-handler))
-  :undef)
-
+  (with-slots (responder) handler
+    (and responder
+         (threadp responder)
+         (thread-alive-p responder))))
 
 (defun run (&rest args &key &allow-other-keys)
   (log-for (trace) "Booting control handler with: ~A" args)

@@ -8,6 +8,21 @@
 (defparameter *m2-send* "tcp://127.0.0.1:13375")
 (defparameter *m2-recv* "tcp://127.0.0.1:13372")
 
+(defclass request-handler ()
+  (ident
+   sub-address
+   pub-address
+
+   (processor :initform (lambda (request) "")
+              :initarg :processor)
+
+   (thread :initform nil
+           :accessor request-handler-thread)
+   (thread-lock :initform nil
+                :accessor request-handler-lock))
+  (:documentation "Class wrapping the creation of request handlers"))
+
+
 (defun run (&rest args &key &allow-other-keys)
   (log-for (trace) "Booting control handler with: ~A" args)
   (m2cl:with-handler (handler *ident* *m2-send* *m2-recv*)

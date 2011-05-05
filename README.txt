@@ -20,7 +20,7 @@
 ;;; Requirements:                                                            ;;;
 ;;;   * SBCL 1.0.47                                                          ;;;
 ;;;   * patched CLSQL from https://github.com/nikodemus/clsql.git            ;;;
-;;;   * M2CL from https://github.com/galdor/m2cl.git                         ;;;
+;;;   * M2CL (forked) from https://github.com/sshirokov/m2cl.git             ;;;
 ;;;   * Quicklisp                                                            ;;;
 ;;;   * Fdog path in the ASDF registry (see: user-tools/asdf-loader.lisp)    ;;;
 ;;;                                                                          ;;;

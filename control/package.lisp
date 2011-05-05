@@ -15,7 +15,7 @@
    (pub-address :initarg :pub-address
                 :initarg :pub)
 
-   (processor :initform (lambda (request) "")
+   (processor :initform (lambda (request) (declare (ignorable request)) "")
               :initarg :processor
               :initarg :proc)
 

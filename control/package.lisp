@@ -15,24 +15,38 @@
    (pub-address :initarg :pub-address
                 :initarg :pub)
 
-   (processor :initform (lambda (request) (declare (ignorable request)) "")
+   (processor :initform (lambda (handler request &optional raw) (declare (ignorable handler request raw)))
               :initarg :processor
               :initarg :proc)
 
    (responder :initform nil
               :accessor request-handler-thread
               :accessor request-handler-responder)
-   (responder-lock :initform nil
+   (responder-lock :initform (make-lock "Responder Loop Lock")
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
 
 (defmethod request-handler-stop ((handler request-handler))
   (when (request-handler-running-p handler)
-    :undef))
+    (with-lock-held ((request-handler-lock handler))
+      (join-thread (request-handler-thread handler))
+      :stopped)))
 
-(defmethod request-handler-start ((handler request-handler))
-  (unless (request-handler-running-p handler)
-    :undef))
+(defmethod request-handler-start ((req-handler request-handler))
+  (unless (request-handler-running-p req-handler)
+    (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
+      (labels ((wait-get-process-request (handler)
+                 (log-for (trace) "Waiting for request on handler: ~A" ident)
+                 (multiple-value-bind (req raw) (m2cl:handler-receive handler)
+                   (funcall processor handler req raw)))
+
+               (poller () (m2cl:with-handler (handler ident sub-address pub-address)
+                            (log-for (trace) "Starting to handle things")
+                            (loop while (acquire-lock responder-lock nil) do
+                                 (unwind-protect
+                                      (wait-get-process-request handler)
+                                   (release-lock responder-lock))))))
+        (setf responder (make-thread #'poller :name (format nil "fdog-handler-poller(~A)" ident)))))))
 
 (defmethod request-handler-running-p ((handler request-handler))
   (with-slots (responder) handler

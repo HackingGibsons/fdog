@@ -1,5 +1,5 @@
 (defpackage :fdog-control
-  (:use :cl :fdog-models)
+  (:use :cl :fdog-models :bordeaux-threads)
   (:shadowing-import-from :log5 :log-for)
   (:export :run))
 (in-package :fdog-control)
@@ -9,18 +9,32 @@
 (defparameter *m2-recv* "tcp://127.0.0.1:13372")
 
 (defclass request-handler ()
-  (ident
-   sub-address
-   pub-address
+  ((ident :initarg :ident)
+   (sub-address :initarg :sub-address
+                :initarg :sub)
+   (pub-address :initarg :pub-address
+                :initarg :pub)
 
    (processor :initform (lambda (request) "")
-              :initarg :processor)
+              :initarg :processor
+              :initarg :proc)
 
-   (thread :initform nil
-           :accessor request-handler-thread)
-   (thread-lock :initform nil
-                :accessor request-handler-lock))
+   (responder :initform nil
+              :accessor request-handler-thread)
+   (responder-lock :initform nil
+                   :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
+
+(defmethod request-handler-stop ((handler request-handler))
+  (when (request-handler-running-p handler)
+    :undef))
+
+(defmethod request-handler-start ((handler request-handler))
+  (unless (request-handler-running-p handler)
+    :undef))
+
+(defmethod request-handler-running-p ((handler request-handler))
+  :undef)
 
 
 (defun run (&rest args &key &allow-other-keys)

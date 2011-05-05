@@ -26,6 +26,7 @@
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
 
+;; TODO: Handler won't stop until next request, if we're going to try to be polite about it
 (defmethod request-handler-stop ((handler request-handler))
   (when (request-handler-running-p handler)
     (with-lock-held ((request-handler-lock handler))
@@ -55,14 +56,14 @@
          (thread-alive-p responder))))
 
 (defun run (&rest args &key &allow-other-keys)
-  (log-for (trace) "Booting control handler with: ~A" args)
-  (m2cl:with-handler (handler *ident* *m2-send* *m2-recv*)
-    (loop
-       (log-for (trace) "Waiting for request!")
-       (multiple-value-bind (request raw) (m2cl:handler-receive handler)
-         (log-for (trace) "Raw: ~A" (flexi-streams:octets-to-string raw))
-         (log-for (trace) "Got request!")
-         (m2cl:handler-send-http handler "I WIN!" :request request)
-         (m2cl:handler-close handler :request request)
-         (log-for (trace) "Response sent.")))))
+  (labels ((response () (format nil "~A:~A" (get-universal-time) (current-thread)))
+           (req-fun (handler request raw) (declare (ignorable raw))
+             (m2cl:handler-send-http handler (response) :request request)
+             (m2cl:handler-close handler :request request)))
+    (let ((handler (make-instance 'request-handler :ident *ident* :proc #'req-fun
+                                  :sub *m2-send* :pub *m2-recv*)))
+      (log-for (dribble) "Starting request responder")
+      (request-handler-start handler)
+      handler)))
+
 

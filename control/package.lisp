@@ -56,6 +56,7 @@
          (thread-alive-p responder))))
 
 (defun run (&rest args &key &allow-other-keys)
+  (declare (ignorable args))
   (labels ((response () (format nil "~A:~A" (get-universal-time) (current-thread)))
            (req-fun (handler request raw) (declare (ignorable raw))
              (m2cl:handler-send-http handler (response) :request request)

@@ -167,7 +167,9 @@
                :initform "index.html")
    (default-ctype :type string
                   :initarg :default-ctype
-                  :initform "text/html"))
+                  :initform "text/html")
+   (cache-ttl :type integer :initform 0
+              :initarg :cache-ttl))
   (:base-table directory
    :documentation
    "Mongrel2 Directory endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-290003.4.4"))

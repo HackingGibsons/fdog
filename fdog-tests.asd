@@ -1,3 +1,4 @@
+;; -*- mode: Lisp;  -*-
 (asdf:defsystem #:fdog-tests
   :serial t
   :depends-on (#:fdog

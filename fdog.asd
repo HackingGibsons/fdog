@@ -1,5 +1,4 @@
-;;;; fdog.asd
-
+;; -*- mode: Lisp;  -*-
 (asdf:defsystem #:fdog
   :serial t
   :depends-on (#:external-program

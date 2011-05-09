@@ -10,16 +10,19 @@
                #:bordeaux-threads
                #:clsql
                #:uffi)
-  :components ((:file "package")
-               (:file "models/package")
-               (:file "m2sh/package")
-               (:file "control/package")
+  :components ((:module "src"
+                :components ((:file "package")
+                             (:file "fdog" :depends-on ("models"))
 
-               ;; Main package
-               (:file "fdog")
+                             (:module "models" :depends-on ("package")
+                              :components ((:file "package")
+                                           (:file "data"    :depends-on ("package"))
+                                           (:file "helpers" :depends-on ("package"))
+                                           (:file "config"  :depends-on ("helpers"))
+                                           (:file "methods" :depends-on ("config"))))
 
-               ;; Models package
-               (:file "models/data")
-               (:file "models/helpers")
-               (:file "models/config")
-               (:file "models/methods")))
+                             (:module "m2sh" :depends-on ("models")
+                              :components ((:file "package")))
+
+                             (:module "control" :depends-on ("m2sh")
+                              :components  ((:file "package")))))))

@@ -2,8 +2,10 @@
   :serial t
   :depends-on (#:fdog
                #:fiveam)
-  :components ((:file "tests/package")
-               (:file "tests/fdog-models")
+  :components ((:module "tests"
+                :components ((:file "package")
+                             (:file "suites" :depends-on ("package"))
 
-               ;; runner has to come after all the test suites are loaded
-               (:file "tests/runner")))
+                             (:module "tests" :depends-on ("suites")
+                              :components ((:file "fdog-models")))))))
+

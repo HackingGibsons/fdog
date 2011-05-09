@@ -5,6 +5,9 @@
 (test (can-find-test-db-and-connect :fixture db/connected)
   (is (fdog-models:connected-p)))
 
+(test (configured-db-has-mimetypes :fixture db/configured)
+  (fail "TODO: Make sure we have mimetypes"))
+
 (test valid-endpoints-are-defined
       (let ((endpoints '(("proxy" . mongrel2-proxy)
                          ("handler" . mongrel2-handler)

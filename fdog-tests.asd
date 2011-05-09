@@ -4,8 +4,8 @@
                #:fiveam)
   :components ((:module "tests"
                 :components ((:file "package")
-                             (:file "runner" :depends-on ("tests"))
+                             (:file "suites" :depends-on ("package"))
 
-                             (:module "tests" :depends-on ("package")
+                             (:module "tests" :depends-on ("suites")
                               :components ((:file "fdog-models")))))))
 

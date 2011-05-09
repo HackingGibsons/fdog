@@ -10,6 +10,7 @@
                #:bordeaux-threads
                #:clsql
                #:uffi)
+  :in-order-to ((test-op (load-op fdog-tests)))
   :components ((:module "src"
                 :components ((:file "package")
                              (:file "fdog" :depends-on ("models"))
@@ -26,3 +27,9 @@
 
                              (:module "control" :depends-on ("m2sh")
                               :components  ((:file "package")))))))
+
+
+;; Test operation
+(defmethod perform ((o asdf:test-op) (c (eql (asdf:find-system :fdog))))
+  (funcall (intern "RUN!" :5am)
+           (intern "MAIN" :fdog-tests)))

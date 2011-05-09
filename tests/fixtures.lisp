@@ -1,7 +1,11 @@
 (in-package :fdog-tests)
 
 ;;; Mixin macros here
-;; TODO: Placeholder
+(defmacro +db/connected (&body body)
+  `(let ()
+     ,@body))
 
 ;;; Foxtures/Mixtures
-;; TODO: Placeholder
+(def-mixture db/connected ()
+    (+db/connected)
+  (&body))

@@ -1,4 +1,5 @@
 #!/usr/bin/env sbcl --script
+;; -*- mode: Lisp;  -*-
 
 ;; Load an RC if we can find it
 (let ((rc (probe-file #P"~/.sbclrc")))

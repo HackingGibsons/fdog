@@ -23,7 +23,7 @@
 
 ;; Parameters of project-wide relevance
 (defparameter *default-root-path*
-  (truename (make-pathname :directory '(:relative ".")))
+  (truename (probe-file (asdf:system-relative-pathname :fdog ".")))
   "Default for the root of the project: [Defaults to location of this file at load, if possible]")
 
 (defparameter *default-server-path*

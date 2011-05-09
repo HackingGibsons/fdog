@@ -30,11 +30,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;[ Development Bootstrap ];;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Knobs
-(defparameter *checkout-root* #P"~/src/work/fdog/")
 (defparameter *echo-queries* t)
-
-;; Sanity
-(setf *default-pathname-defaults* (truename *checkout-root*))
 
 ;; Load and init
 (ql:quickload :fdog)

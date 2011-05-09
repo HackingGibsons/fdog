@@ -2,6 +2,9 @@
 
 (in-suite main)
 
+(test (can-find-test-db-and-connect :fixture db/connected)
+  (is (fdog-models:connected-p)))
+
 (test valid-endpoints-are-defined
       (let ((endpoints '(("proxy" . mongrel2-proxy)
                          ("handler" . mongrel2-handler)

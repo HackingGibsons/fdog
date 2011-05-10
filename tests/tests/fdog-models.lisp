@@ -19,7 +19,7 @@
 (test (can-connect-and-disconnect :fixture db/connected)
   (disconnect) ; incase we're already connected
   (is (null (connected-p)))
-  (connect db-path)
+  (connect)
   (is (connected-p))
   (disconnect)
   (is (null (connected-p))))

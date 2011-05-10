@@ -16,16 +16,14 @@
                 (is (equal (fdog-models::endpoint-by-name (car endpoint)) (cdr endpoint))))
               endpoints)))
 
-(setf fdog:*default-server-database-path* (make-pathname :name "test" :type "sqlite"))
-
-(test can-connect-and-disconnect-to-db
+(test (can-connect-and-disconnect :fixture db/connected)
   (disconnect) ; incase we're already connected
   (is (null (connected-p)))
-  (connect)
+  (connect db-path)
   (is (connected-p))
   (disconnect)
   (is (null (connected-p))))
 
-(test can-reconnect
-  (reconnect)
-  (is (connected-p)))
+;; (test can-reconnect
+;;   (reconnect)
+;;   (is (connected-p)))

@@ -5,7 +5,8 @@
   (let* ((base-db-path (reduce #'merge-pathnames (list *default-server-path* *default-root-path*)))
          (base-db-name (namestring base-db-path)))
     `(let* ((db-name (make-pathname :name "test" :type "sqlite"))
-            (db-path (merge-pathnames db-name ,base-db-path)))
+            (db-path (merge-pathnames db-name ,base-db-path))
+            (*default-server-database-path* db-name))
        (fdog-models:connect db-path)
 
        ,@body

@@ -24,6 +24,7 @@
   (disconnect)
   (is (null (connected-p))))
 
-;; (test can-reconnect
-;;   (reconnect)
-;;   (is (connected-p)))
+(test (can-reconnect :fixture db/connected)
+  (is (connected-p) "We should be connected before we try to reconnect")
+  (reconnect)
+  (is (connected-p)))

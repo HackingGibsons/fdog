@@ -26,6 +26,10 @@
         (fdog-m2sh:with-host ("localhost"))))
      ,@body))
 
+(defmacro +m2/with-server (&body body)
+  `(let ((server (car (clsql:select 'mongrel2-server :flatp t :refresh t))))
+     ,@body))
+
 ;;; Foxtures/Mixtures
 (def-mixture db/connected ()
     (+db/connected)
@@ -37,4 +41,8 @@
 
 (def-mixture db/configured ()
     (+db/connected +db/inited +db/configured)
+  (&body))
+
+(def-mixture m2/with-server ()
+    (+db/connected +db/inited +db/configured +m2/with-server)
   (&body))

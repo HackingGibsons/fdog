@@ -12,5 +12,7 @@
                               :components ((:file "utils")))
 
                              (:module "tests" :depends-on ("suites")
-                              :components ((:file "fdog-models")))))))
+                              :components ((:file "main")
+                                           (:file "mongrel2.db")
+                                           (:file "basic")))))))
 

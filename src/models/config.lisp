@@ -40,9 +40,11 @@
                  :initform "localhost"
                  :reader mongrel2-server-default-host)
    (bind-addr :type string
+              :initarg :bind
               :initform "0.0.0.0"
               :accessor mongrel2-server-addr)
    (port :type integer
+         :initarg :port
          :initform 6767
          :accessor mongrel2-server-port)
 

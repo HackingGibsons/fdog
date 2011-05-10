@@ -8,6 +8,7 @@
            :server-hosts
            :init
 
+           :using-configuration!
            :with-server
            :with-host
            :make-server
@@ -75,7 +76,7 @@ Omitted, all servers are returned"
 appears in the `servers' list."
   :undefined)
 
-(defmacro with-server ((name &rest args &key addr port chroot) &body hosts)
+(defmacro with-server ((name &rest args &key bind port chroot) &body hosts)
   `(let ((server (make-server ,name ,@args)))
      (flet ((attach-server-to-host (host)
               (setf (slot-value host 'fdog-models::server-id)
@@ -94,7 +95,7 @@ appears in the `servers' list."
        host)))
 
 ;; Actual construction of components
-(defun make-server (name &rest args &key addr port
+(defun make-server (name &rest args &key bind port
                     (chroot (merge-pathnames fdog:*default-server-path* fdog:*default-root-path*))
                     &allow-other-keys)
   (let ((server (apply 'make-instance `(mongrel2-server :name ,name ,@args))))

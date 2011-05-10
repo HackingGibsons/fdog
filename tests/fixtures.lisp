@@ -19,6 +19,12 @@
      (fdog-m2sh:init)
      ,@body))
 
+(defmacro +db/configured (&body body)
+  `(progn
+     (fdog-m2sh:using-configuration!
+      (fdog-m2sh:with-server ("testing" :bind "127.0.0.1" :port 7357 :chroot "./")
+        (fdog-m2sh:with-host ("localhost"))))
+     ,@body))
 
 ;;; Foxtures/Mixtures
 (def-mixture db/connected ()
@@ -26,5 +32,9 @@
   (&body))
 
 (def-mixture db/inited ()
-    (+db/connected +db/configured)
+    (+db/connected +db/inited)
+  (&body))
+
+(def-mixture db/configured ()
+    (+db/connected +db/inited +db/configured)
   (&body))

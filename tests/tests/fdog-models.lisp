@@ -40,11 +40,11 @@
                                       :depends-on can-find-test-server)
   (is-false (null server) "We should have a server when we use the server fixture")
 
-  (is (string-equal (mongrel2-server-name server) "testing")
+  (is (string-equal (mongrel2-server-name server) +server-name+)
       "I have reason to suspect you're using the wrong server.")
 
   (is (ppcre:scan "^127\." (mongrel2-server-addr server))
       "The test server should only listen on localhost")
 
-  (is (= (mongrel2-server-port server) 7357)
+  (is (= (mongrel2-server-port server) +server-port+)
       "The test server needs to use the test port"))

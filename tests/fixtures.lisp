@@ -22,7 +22,7 @@
 (defmacro +db/configured (&body body)
   `(progn
      (fdog-m2sh:using-configuration!
-      (fdog-m2sh:with-server ("testing" :bind "127.0.0.1" :port 7357 :chroot "./")
+      (fdog-m2sh:with-server (+server-name+ :bind +server-bind+ :port +server-port+ :chroot "./")
         (fdog-m2sh:with-host ("localhost"))))
      ,@body))
 

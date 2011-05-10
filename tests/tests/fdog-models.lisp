@@ -30,3 +30,8 @@
   (is (connected-p) "We should be connected before we try to reconnect")
   (reconnect)
   (is (connected-p)))
+
+(test (can-find-test-server :fixture db/configured)
+  (let ((server (clsql:select 'mongrel2-server :flatp t :refresh t)))
+    (is-false (null server))
+    (is (= (length server) 1) "We really only should have the one test server")))

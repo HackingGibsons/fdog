@@ -1,6 +1,5 @@
 (in-package :fdog-tests)
 
-#+sbcl
 (defmacro def-fixture (name args &body body)
   "Defines a fixture named NAME. A fixture is very much like a
 macro but is used only for simple templating. A fixture created

@@ -4,8 +4,8 @@
 (defmacro +db/connected (&body body)
   (let* ((base-db-path (reduce #'merge-pathnames (list *default-server-path* *default-root-path*)))
          (base-db-name (namestring base-db-path)))
-    `(let ((db-path (make-pathname :directory '(:absolute ,base-db-name)
-                                   :name "test" :type "sqlite")))
+    `(let* ((db-name (make-pathname :name "test" :type "sqlite"))
+            (db-path (merge-pathnames db-name ,base-db-path)))
        (fdog-models:connect db-path)
 
        ,@body

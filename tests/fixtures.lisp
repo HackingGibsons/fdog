@@ -14,7 +14,7 @@
        (fdog-models:disconnect)
        (delete-file db-path))))
 
-(defmacro +db/configured (&body body)
+(defmacro +db/inited (&body body)
   `(progn
      (fdog-m2sh:init)
      ,@body))
@@ -25,6 +25,6 @@
     (+db/connected)
   (&body))
 
-(def-mixture db/configured ()
+(def-mixture db/inited ()
     (+db/connected +db/configured)
   (&body))

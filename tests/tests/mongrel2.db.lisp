@@ -6,7 +6,7 @@
     (is-false (null server))
     (is (= (length server) 1) "We really only should have the one test server")))
 
-(test (test-server-correct-p :fixture m2/with-server
+(test (test-server-correct :fixture m2/with-server
                                       :depends-on can-find-test-server)
   (is-false (null server) "We should have a server when we use the server fixture")
 

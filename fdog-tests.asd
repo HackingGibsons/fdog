@@ -14,5 +14,6 @@
                              (:module "tests" :depends-on ("suites")
                               :components ((:file "main")
                                            (:file "mongrel2.db")
+                                           (:file "mongrel2.proc" :depends-on ("mongrel2.db"))
                                            (:file "basic")))))))
 

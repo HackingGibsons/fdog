@@ -11,8 +11,8 @@
 
        ,@body
 
-       (fdog-models:disconnect)
-       (delete-file db-path))))
+       (fdog-models:disconnect))))
+;       (delete-file db-path))))
 
 (defmacro +db/inited (&body body)
   `(progn
@@ -30,7 +30,15 @@
   `(let ((server (car (clsql:select 'mongrel2-server :flatp t :refresh t))))
      ,@body))
 
-;;; Foxtures/Mixtures
+(defmacro +m2/running (&body body)
+  `(progn
+     (if (eql :timeout (progn (mongrel2-server-signal/block server :stop)
+                              (mongrel2-server-signal/block server :start)))
+         (skip "Server spawn has timed out")
+         (progn ,@body))
+     (mongrel2-server-signal/block server :stop)))
+
+;;; Fixtures/Mixtures
 (def-mixture db/connected ()
     (+db/connected)
   (&body))
@@ -45,4 +53,8 @@
 
 (def-mixture m2/with-server ()
     (+db/connected +db/inited +db/configured +m2/with-server)
+  (&body))
+
+(def-mixture m2/with-running-server ()
+    (+db/connected +db/inited +db/configured +m2/with-server +m2/running)
   (&body))

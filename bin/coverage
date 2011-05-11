@@ -1,0 +1,37 @@
+#!/usr/bin/env sbcl --script
+;; -*- mode: Lisp; -*-
+
+
+#-sbcl 
+(progn 
+  (write-line "Requires SBCL")
+  (quit :unix-status 1))
+
+;; Load an RC if we can find it
+(let ((rc (probe-file #P"~/.sbclrc")))
+  (when rc (load rc)))
+
+(require :sb-cover)
+
+;; huge thanks to nikodemus from #lisp coming up this
+(defun call-with-coverage (thunk system)
+  ;; Make sure it's dependencies are OK.
+  (asdf:load-system system)
+  (unwind-protect
+       (with-compilation-unit
+           (:policy `(optimize sb-cover:store-coverage-data))
+         ;; Recompile with coverage instrumentation.
+         (asdf:load-system system :force `(,system))
+         (funcall thunk))
+    ;; Remove coverage instrumentation.
+    (asdf:load-system system :force (list system))))
+
+(defmacro with-coverage ((system) &body body)
+  `(call-with-coverage (lambda () ,@body) ,system))
+
+
+(with-coverage (:fdog)
+  (load (asdf:system-relative-pathname :fdog "src/package.lisp"))
+  (asdf:test-system :fdog)
+  (sb-cover:report (asdf:system-relative-pathname :fdog "coverage/")))
+  

@@ -1,8 +1,8 @@
 (in-package :fdog-models)
 ;;; Aux
-(let ((endpoints '(("proxy" . mongrel2-proxy)
-                   ("handler" . mongrel2-handler)
-                   ("dir" . mongrel2-directory))))
+(let ((endpoints (list (cons "proxy" 'mongrel2-proxy)
+                       (cons "handler"  'mongrel2-handler)
+                       (cons "dir"  'mongrel2-directory))))
 
   (defun endpoint-by-name (name)
     (cdr (assoc name endpoints :test 'equal)))

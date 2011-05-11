@@ -49,6 +49,7 @@
          :accessor mongrel2-server-port)
 
    (hosts :db-kind :join
+          :accessor mongrel2-server-hosts
           :db-info (:join-class mongrel2-host
                     :home-key id
                     :foreign-key server-id

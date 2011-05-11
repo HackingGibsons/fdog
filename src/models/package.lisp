@@ -24,6 +24,7 @@
              :mongrel2-server-default-host
              :mongrel2-server-addr
              :mongrel2-server-port
+             :mongrel2-server-hosts
              ;; More proper methods
              :mongrel2-server-pid
              :mongrel2-server-running-p

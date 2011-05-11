@@ -24,7 +24,7 @@
      (fdog-m2sh:using-configuration!
       (fdog-m2sh:with-server (+server-name+ :bind +server-bind+ :port +server-port+ :chroot "./")
         (fdog-m2sh:with-host ("localhost")
-          (fdog-m2sh:make-route "/static/" (make-dir "./tests/")))))
+          (fdog-m2sh:make-route "/static/" (fdog-m2sh:make-dir "./tests/")))))
      ,@body))
 
 (defmacro +m2/with-server (&body body)

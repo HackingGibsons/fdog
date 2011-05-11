@@ -28,6 +28,7 @@
              :mongrel2-server-pid
              :mongrel2-server-running-p
              :mongrel2-server-signal
+             :mongrel2-server-signal/block
            :mongrel2-host
              :mongrel2-host-id
              :mongrel2-host-name

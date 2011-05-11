@@ -14,6 +14,32 @@
   (:documentation "Get the path of the config for a given mongrel2 server"))
 
 ;;; Method specializations
+(defmethod mongrel2-server-signal/block ((server mongrel2-server) signal
+                                         &key (until-p 'mongrel2-server-running-p)
+                                         invert (timeout 10) (pause 0.01))
+  "Poll for a maximum `timeout' seconds waiting for `until-p' to become true
+ (or false if `invert' is nonnil) at a poll interval of `pause' after sending the
+`server' `signal'
+
+If (and (eql `signal' :stop) (eql until-p 'mongrel2-server-running-p)) invert is automatically true.
+
+`until-p' is called with `server' as the only parameter"
+  (and (eql signal :stop)
+       (eql until-p 'mongrel2-server-running-p)
+       (setf invert t))
+
+  (do ((sig-res (mongrel2-server-signal server signal) sig-res)
+       (elapsed 0 (incf elapsed pause))
+       (ready? (funcall until-p server) (funcall until-p server)))
+
+      ((or (> elapsed timeout)
+           (if invert (not ready?) ready?))
+
+       (or (and (> elapsed timeout) :timeout)
+           sig-res))
+
+    (sleep pause)))
+
 (defmethod mongrel2-server-signal ((server mongrel2-server) signal)
   (let ((running (mongrel2-server-running-p server)))
     (ecase signal
@@ -22,6 +48,7 @@
                       (config (mongrel2-server-config server))
                       (uuid (mongrel2-server-uuid server)))
                   (chdir root)
+                  (log-for (trace) "Running (in: ~A): ~A ~A" root "mongrel2" `(,config ,uuid))
                   (start "mongrel2" `(,config ,uuid)))
                 :started))
 

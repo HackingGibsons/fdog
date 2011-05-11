@@ -27,6 +27,14 @@
              (equal (mongrel2-host-matching host) (mongrel2-server-default-host-name server)))
         (format nil "The default host should be ~A and should exist" +default-host+))))
 
+(test (server-default-host-has-routes :fixture m2/with-server
+                                      :depends-on server-host-localhost-exists)
+  (skip "TODO: :UNDEF"))
+
+(test (server-default-host-has-/static/-route :fixture m2/with-server
+                                              :depends-on server-default-host-has-routes)
+  (skip "TODO: :UNDEF"))
+
 (test (test-server-correct :fixture m2/with-server
                                       :depends-on (and can-find-test-server
                                                        server-can-find-hosts

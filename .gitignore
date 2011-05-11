@@ -2,3 +2,4 @@
 scratch.lisp
 *.sqlite
 *.old
+/coverage/

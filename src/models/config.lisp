@@ -48,6 +48,12 @@
          :initform 6767
          :accessor mongrel2-server-port)
 
+   (hosts :db-kind :join
+          :db-info (:join-class mongrel2-host
+                    :home-key id
+                    :foreign-key server-id
+                    :set t))
+
    (root :type string :db-kind :virtual
          :reader mongrel2-server-root
          ;; TODO: Consider the relativity of the chroot slot when computing this slot.

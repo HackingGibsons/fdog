@@ -1,6 +1,5 @@
 ;; -*- mode: Lisp;  -*-
 (asdf:defsystem #:fdog
-  :serial t
   :depends-on (#:external-program
                #:log5
                #:uuid

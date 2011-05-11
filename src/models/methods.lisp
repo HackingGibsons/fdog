@@ -94,6 +94,14 @@ Returns true of it can find a pidfile, and a process is running there."
   (merge-pathnames fdog:*default-server-database-path*
                    (mongrel2-server-root server)))
 
+(defmethod mongrel2-server-default-host ((server mongrel2-server))
+  "The default host object for a given server"
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (car (clsql:select 'mongrel2-host :flatp t :refresh t
+                     :where [= 'name (mongrel2-server-default-host-name server)]))
+
+  #.(clsql:restore-sql-reader-syntax-state))
+
 ;;; Model API Wrappers
 (defmethod mongrel2-server-pidfile :around ((server mongrel2-server))
   "Wrap the query for a servers pidfile field to return a string

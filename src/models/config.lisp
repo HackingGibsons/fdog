@@ -38,7 +38,7 @@
              :initform "/run/mongrel2-{name}.pid")
    (default-host :type string
                  :initform "localhost"
-                 :reader mongrel2-server-default-host)
+                 :reader mongrel2-server-default-host-name)
    (bind-addr :type string
               :initarg :bind
               :initform "0.0.0.0"

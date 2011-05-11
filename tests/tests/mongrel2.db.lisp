@@ -12,16 +12,26 @@
     (is (= (length hosts) 1)
         "The server should have one host")))
 
+(test (server-default-host-fetchable :fixture m2/with-server
+                                     :depends-on server-can-find-hosts)
+  (let ((host (mongrel2-server-default-host server)))
+    (is-false (null host)
+              "I should be able to fetch the default host")
+    (is (equal (mongrel2-host-matching host) +default-host+)
+        "The default host should match the defined default host")))
+
 (test (server-host-localhost-exists :fixture m2/with-server
                                     :depends-on server-can-find-hosts)
   (let ((host (car (mongrel2-server-hosts server))))
     (is (and (equal (mongrel2-host-matching host) +default-host+)
-             (equal (mongrel2-host-matching host) (mongrel2-server-default-host server)))
+             (equal (mongrel2-host-matching host) (mongrel2-server-default-host-name server)))
         (format nil "The default host should be ~A and should exist" +default-host+))))
 
 (test (test-server-correct :fixture m2/with-server
                                       :depends-on (and can-find-test-server
-                                                       server-can-find-hosts))
+                                                       server-can-find-hosts
+                                                       server-host-localhost-exists
+                                                       server-default-host-fetchable))
   (is-false (null server) "We should have a server when we use the server fixture")
 
   (is (string-equal (mongrel2-server-name server) +server-name+)

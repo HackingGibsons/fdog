@@ -11,8 +11,8 @@
 
        ,@body
 
-       (fdog-models:disconnect))))
-;       (delete-file db-path))))
+       (fdog-models:disconnect)
+       (delete-file db-path))))
 
 (defmacro +db/inited (&body body)
   `(progn

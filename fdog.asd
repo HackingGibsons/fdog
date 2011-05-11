@@ -1,6 +1,7 @@
 ;; -*- mode: Lisp;  -*-
 (asdf:defsystem #:fdog
-  :depends-on (#:external-program
+  :depends-on (#:drakma
+               #:external-program
                #:log5
                #:uuid
                #:cl-ppcre

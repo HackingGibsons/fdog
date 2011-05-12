@@ -53,6 +53,7 @@ If (and (eql `signal' :stop) (eql until-p 'mongrel2-server-running-p)) invert is
                 :started))
 
       (:stop (when running
+               (log-for (trace) "Stopping ~A" server)
                (handler-case (progn
                                (kill (mongrel2-server-pid server) sigint) ;; TODO: Accept &optionals to upgrade to sigterm
                                :stopped)

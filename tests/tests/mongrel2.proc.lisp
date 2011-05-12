@@ -9,9 +9,9 @@
 (test (can-reach-test-static-content-over-HTTP :fixture m2/with-running-server
                                                :depends-on can-have-running-server)
   (let* ((url (format nil "http://~A:~A/static/"
-                                               (mongrel2-server-default-host-name server)
-                                               (mongrel2-server-port server)))
-         response)
-    (setf response (drakma:http-request url))
+                      (mongrel2-server-default-host-name server)
+                      (mongrel2-server-port server)))
+         (response (or (http->string url) "")))
+
     (is (ppcre:scan "^FDOG/OK" response) ;; TODO: Maybe slurp this from disk yourself?
-        "Did not get the expected responce.")))
+          "Did not get the expected responce.")))

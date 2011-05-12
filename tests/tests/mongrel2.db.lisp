@@ -35,7 +35,6 @@
     (is (< 0 (length routes))
         "The default host needs to have routes")))
 
-
 (test (server-default-host-has-/static/-route :fixture m2/with-server
                                               :depends-on server-default-host-has-routes)
   (let* ((routes (mongrel2-host-routes (mongrel2-server-default-host server)))
@@ -47,12 +46,18 @@
     (is-false (null /static/-route)
               "One of the routes should be /static/")))
 
+(test (server-/static/-route-is-a-directory :fixture m2/with-server+default-host
+                                            :depends-on server-default-host-has-/static/-route)
+  (let* ((route (car (mongrel2-host-routes default-host :path "/static/")))
+         (target (mongrel2-route-target route)))
+    (is-true target
+             "There should be a target of at least some kind attached to the static route.")
+    (is (typep target 'mongrel2-directory)
+        "The /static/ route should be pointing to a directory")))
 
 
 (test (test-server-correct :fixture m2/with-server
                                       :depends-on (and can-find-test-server
-                                                       server-can-find-hosts
-                                                       server-host-localhost-exists
                                                        server-default-host-fetchable))
   (is-false (null server) "We should have a server when we use the server fixture")
 

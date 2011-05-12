@@ -111,6 +111,13 @@ lisp more easily accepts as a relative path"
         (subseq result 1)
       result)))
 
+(defmethod mongrel2-host-routes ((host mongrel2-host) &key path)
+  (let ((routes (mongrel2-host-routes-set host)))
+    (remove-if-not #'(lambda (route)
+                       (or (not path)
+                           (equal path (mongrel2-route-path route))))
+                   routes)))
+
 ;;; Model hooks
 (defmethod initialize-instance :after ((server mongrel2-server) &rest initargs)
   "Update some instance slots based on other slot values"

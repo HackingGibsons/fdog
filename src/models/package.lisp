@@ -41,6 +41,7 @@
            :mongrel2-directory
            :mongrel2-route
              :mongrel2-route-path
+             :mongrel2-route-target
            :mongrel2-setting
            :mongrel2-mimetype
              :*default-mimetypes*

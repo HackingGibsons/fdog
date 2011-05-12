@@ -86,7 +86,7 @@
                      :set nil))
 
    (routes :db-kind :join
-           :reader mongrel2-host-routes
+           :reader mongrel2-host-routes-set
            :db-info (:join-class mongrel2-route
                      :home-key id
                      :foreign-key host-id
@@ -133,6 +133,7 @@
    (host-id :type integer)
 
    (target :db-kind :virtual :allocation :virtual
+           :accessor mongrel2-route-target
            :function (complex-join :find-model 'endpoint-by-name
                                    :model-field 'target-type
                                    :foreign-key 'target-id))

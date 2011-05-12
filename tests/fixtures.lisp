@@ -7,6 +7,7 @@
     `(let* ((db-name (make-pathname :name "test" :type "sqlite"))
             (db-path (merge-pathnames db-name ,base-db-path))
             (*default-server-database-path* db-name))
+       (fdog-models:disconnect) ;; Let's make sure we don't trash the flow of data in a testrun
        (fdog-models:connect db-path)
 
        ,@body

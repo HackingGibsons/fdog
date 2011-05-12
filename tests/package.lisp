@@ -4,7 +4,8 @@
         #:fdog
         #:fdog-models)
   (:shadowing-import-from :log5
-                          :log-for))
+                          :log-for)
+  (:export :*verbose*))
 (in-package :fdog-tests)
 
 (defvar +server-name+ "testing")

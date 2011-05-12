@@ -19,12 +19,19 @@
 ;;; This README serves as the bootstrap, eval it after you read it!          ;;;
 ;;;                                                                          ;;;
 ;;; Requirements:                                                            ;;;
-;;;   * SBCL 1.0.47                                                          ;;;
+;;;   * Mongrel2 1.6                                                         ;;;
+;;;   * 0MQ 2.1.7                                                            ;;;
+;;;   * SBCL 1.0.48                                                          ;;;
 ;;;   * patched CLSQL from https://github.com/nikodemus/clsql.git            ;;;
 ;;;   * M2CL (forked) from https://github.com/sshirokov/m2cl.git             ;;;
 ;;;   * Quicklisp                                                            ;;;
 ;;;   * Fdog path in the ASDF registry (see: user-tools/asdf-loader.lisp)    ;;;
 ;;;                                                                          ;;;
+;;; Testing:                                                                 ;;;
+;;;   * The test suite can be run with (asdf:test-system :fdog)              ;;;
+;;;     It should run the unit and integration tests, some of which          ;;;
+;;;     will spin up a Mongrel2 and send requests from the code              ;;;
+;;;     so I'm not kidding at all in the requirements. ;)                    ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

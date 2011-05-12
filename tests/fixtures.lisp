@@ -31,6 +31,10 @@
   `(let ((server (car (clsql:select 'mongrel2-server :flatp t :refresh t))))
      ,@body))
 
+(defmacro +m2/with-default-host (&body body)
+  `(let ((default-host (mongrel2-server-default-host server)))
+     ,@body))
+
 (defmacro +m2/running (&body body)
   `(progn
      (if (eql :timeout (progn (mongrel2-server-signal/block server :stop)
@@ -55,6 +59,11 @@
 (def-mixture m2/with-server ()
     (+db/connected +db/inited +db/configured +m2/with-server)
   (&body))
+
+(def-mixture m2/with-server+default-host ()
+    (+db/connected +db/inited +db/configured +m2/with-server +m2/with-default-host)
+  (&body))
+
 
 (def-mixture m2/with-running-server ()
     (+db/connected +db/inited +db/configured +m2/with-server +m2/running)

@@ -12,7 +12,13 @@
 (defvar +server-port+ 7357)
 (defvar +default-host+ "localhost")
 
+(defvar *verbose* t)
+
 (defmethod 5am::%run :around (test-spec)
-  (log-for (dribble) "About to run test: ~S" test-spec)
+  (when *verbose*
+    (log-for (dribble) "About to run test: ~S" test-spec))
+
   (let ((result (call-next-method)))
-    (log-for (dribble) "Finished running test: ~S" test-spec)))
+    (when *verbose*
+      (log-for (dribble) "Finished running test: ~S" test-spec))
+    result))

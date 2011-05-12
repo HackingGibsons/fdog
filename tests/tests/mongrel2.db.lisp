@@ -28,12 +28,26 @@
         (format nil "The default host should be ~A and should exist" +default-host+))))
 
 (test (server-default-host-has-routes :fixture m2/with-server
-                                      :depends-on server-host-localhost-exists)
-  (skip "TODO: :UNDEF"))
+                                      :depends-on (and server-host-localhost-exists
+                                                       server-default-host-fetchable))
+  (let* ((host (mongrel2-server-default-host server))
+         (routes (mongrel2-host-routes host)))
+    (is (< 0 (length routes))
+        "The default host needs to have routes")))
+
 
 (test (server-default-host-has-/static/-route :fixture m2/with-server
                                               :depends-on server-default-host-has-routes)
-  (skip "TODO: :UNDEF"))
+  (let* ((routes (mongrel2-host-routes (mongrel2-server-default-host server)))
+         (/static/-route (car (remove-if-not #'(lambda (r) (equal (mongrel2-route-path r) "/static/"))
+                                             routes))))
+    (is (< 0 (length routes))
+        "I should have routes at this point. This violates dependency!")
+
+    (is-false (null /static/-route)
+              "One of the routes should be /static/")))
+
+
 
 (test (test-server-correct :fixture m2/with-server
                                       :depends-on (and can-find-test-server

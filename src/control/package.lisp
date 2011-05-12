@@ -55,16 +55,29 @@
          (threadp responder)
          (thread-alive-p responder))))
 
+
+;;; Scaffold
+(defun response ()
+  (format nil "~A:~A" (get-universal-time) (current-thread)))
+
+(defun req-fun (handler request raw)
+  (log-for (dribble) "Raw request: ~A" (flex:octets-to-string raw))
+  (log-for (dribble) "Cooked request: ~A" (or (and request
+                                                   (list
+                                                    :headers (m2cl:request-headers request)
+                                                    :body (m2cl:request-body request)
+                                                    :data (m2cl:request-data request)))
+                                              "Is nil"))
+  (unless (m2cl::request-disconnect? request)
+    (m2cl:handler-send-http handler (response) :request request)
+    (m2cl:handler-close handler :request request)))
+
+
+
 (defun run (&rest args &key &allow-other-keys)
   (declare (ignorable args))
-  (labels ((response () (format nil "~A:~A" (get-universal-time) (current-thread)))
-           (req-fun (handler request raw) (declare (ignorable raw))
-             (m2cl:handler-send-http handler (response) :request request)
-             (m2cl:handler-close handler :request request)))
-    (let ((handler (make-instance 'request-handler :ident *ident* :proc #'req-fun
-                                  :sub *m2-send* :pub *m2-recv*)))
-      (log-for (dribble) "Starting request responder")
-      (request-handler-start handler)
-      handler)))
-
-
+  (let ((handler (make-instance 'request-handler :ident *ident* :proc 'req-fun
+                                :sub *m2-send* :pub *m2-recv*)))
+    (log-for (dribble) "Starting request responder")
+    (request-handler-start handler)
+    handler))

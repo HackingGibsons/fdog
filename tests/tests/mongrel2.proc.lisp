@@ -11,6 +11,7 @@
   (let* ((url (format nil "http://~A:~A/static/"
                                                (mongrel2-server-default-host-name server)
                                                (mongrel2-server-port server)))
-         (response (drakma:http-request url)))
+         response)
+    (setf response (drakma:http-request url))
     (is (ppcre:scan "^FDOG/OK" response) ;; TODO: Maybe slurp this from disk yourself?
         "Did not get the expected responce.")))

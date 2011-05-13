@@ -15,10 +15,10 @@
    (pub-address :initarg :pub-address
                 :initarg :pub)
 
-   (processor :initform (lambda (handler request raw) (declare (ignorable handler request raw)))
+   (processor :initform (lambda (req-handler request raw) (declare (ignorable req-handler request raw)))
               :initarg :processor
               :initarg :proc
-              :accessor handler-processor)
+              :accessor request-handler-processor)
 
    (responder :initform nil
               :accessor request-handler-thread
@@ -29,27 +29,21 @@
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
 
-;; TODO: Handler won't stop until next request, if we're going to try to be polite about it
-(defmethod request-handler-stop ((handler request-handler))
-  (when (request-handler-running-p handler)
-    (with-lock-held ((request-handler-lock handler))
-      (join-thread (request-handler-thread handler))
-      :stopped)))
+(defmethod request-handler-wait-get-process ((req-handler request-handler))
+  (flet ((s2us (s) (round (* s 1000000))))
+    (let ((m2-handler (request-handler-responder-handler req-handler)))
+      (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us 0.01))
+        (when req
+          (funcall (request-handler-processor req-handler) req-handler req raw))))))
 
 (defmethod request-handler-start ((req-handler request-handler))
   (when (request-handler-running-p req-handler) (return-from request-handler-start))
   (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
-    (labels ((s2us (s) (round (* s 1000000)))
-             (wait-get-process-request (handler)
-               (multiple-value-bind (req raw) (m2cl:handler-receive handler (s2us 0.01))
-                 (if req
-                   (funcall processor handler req raw))))
-
-             (poller () (m2cl:with-handler (handler ident sub-address pub-address)
+    (labels ((poller () (m2cl:with-handler (handler ident sub-address pub-address)
                           (setf (request-handler-responder-handler req-handler) handler)
                           (loop while (acquire-lock responder-lock nil) do
                                (unwind-protect
-                                    (handler-case (wait-get-process-request handler)
+                                    (handler-case (request-handler-wait-get-process req-handler)
                                       (simple-error (c) (let ((r (find-restart :terminate-thread c)))
                                                           (format t "Restart: ~A Cond: ~A" r c)
                                                           (signal c))))
@@ -57,6 +51,14 @@
                           (setf (request-handler-responder-handler req-handler) nil))))
 
       (setf responder (make-thread #'poller :name (format nil "fdog-handler-poller(~A)" ident))))))
+
+;; TODO: Handler won't stop until next request, if we're going to try to be polite about it
+;;       Though we now default to a 10ms poll interval, giving us a max 10ms pause...
+(defmethod request-handler-stop ((handler request-handler))
+  (when (request-handler-running-p handler)
+    (with-lock-held ((request-handler-lock handler))
+      (join-thread (request-handler-thread handler))
+      :stopped)))
 
 (defmethod request-handler-running-p ((handler request-handler))
   (with-slots (responder) handler
@@ -69,7 +71,7 @@
 (defun response ()
   (format nil "~A:~A" (get-universal-time) (current-thread)))
 
-(defun req-fun (handler request raw)
+(defun req-fun (req-handler request raw)
   ;; (log-for (dribble) "Raw request: ~A" (flex:octets-to-string raw))
   ;; (log-for (dribble) "Cooked request: ~A" (or (and request
   ;;                                                  (list
@@ -77,9 +79,10 @@
   ;;                                                   :body (m2cl:request-body request)
   ;;                                                   :data (m2cl:request-data request)))
   ;;                                             "Is nil"))
-  (unless (m2cl::request-disconnect? request)
-    (m2cl:handler-send-http handler (response) :request request)
-    (m2cl:handler-close handler :request request)))
+  (let ((m2-handler (request-handler-responder-handler req-handler)))
+    (unless (m2cl::request-disconnect? request)
+      (m2cl:handler-send-http m2-handler (response) :request request)
+      (m2cl:handler-close m2-handler :request request))))
 
 
 

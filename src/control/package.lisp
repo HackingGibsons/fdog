@@ -39,8 +39,9 @@
 (defmethod request-handler-start ((req-handler request-handler))
   (when (request-handler-running-p req-handler) (return-from request-handler-start))
   (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
-    (labels ((wait-get-process-request (handler)
-               (multiple-value-bind (req raw) (m2cl:handler-receive handler 1000000)
+    (labels ((s2us (s) (round (* s 1000000)))
+             (wait-get-process-request (handler)
+               (multiple-value-bind (req raw) (m2cl:handler-receive handler (s2us 0.01))
                  (if req
                    (funcall processor handler req raw))))
 

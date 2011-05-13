@@ -21,6 +21,10 @@
                                            (:file "config"  :depends-on ("helpers"))
                                            (:file "methods" :depends-on ("config"))))
 
+                             (:module "handler" :depends-on ("models")
+                              :components ((:file "package")
+                                           (:file "request-handler" :depends-on ("package"))))
+
                              (:module "m2sh" :depends-on ("models")
                               :components ((:file "package")))
 

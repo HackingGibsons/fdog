@@ -40,17 +40,12 @@
   (when (request-handler-running-p req-handler) (return-from request-handler-start))
   (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
     (labels ((wait-get-process-request (handler)
-               (log-for (trace) "Waiting for request on handler: ~A" ident)
                (multiple-value-bind (req raw) (m2cl:handler-receive handler 1000000)
                  (if req
-                   (funcall processor handler req raw)
-                   (log-for (dribble) "Timout, looping"))))
+                   (funcall processor handler req raw))))
 
              (poller () (m2cl:with-handler (handler ident sub-address pub-address)
                           (setf (request-handler-responder-handler req-handler) handler)
-                          (log-for (trace) "Here: ~A There: ~A" handler
-                                   (request-handler-responder-handler req-handler))
-                          (log-for (trace) "Starting to handle things")
                           (loop while (acquire-lock responder-lock nil) do
                                (unwind-protect (wait-get-process-request handler)
                                  (release-lock responder-lock)))

@@ -32,7 +32,7 @@
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
 
-(defmethod request-handler-wait-get-process ((req-handler request-handler))
+(defmethod request-handler-wait->get->process ((req-handler request-handler))
   (flet ((s2us (s) (round (* s 1000000))))
     (let ((m2-handler (request-handler-responder-handler req-handler)))
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us 0.01))
@@ -49,7 +49,7 @@ for the given request handler."
       (setf (request-handler-responder-handler req-handler) handler)
       (loop while (acquire-lock (request-handler-lock req-handler) nil) do
            (unwind-protect
-                (handler-case (request-handler-wait-get-process req-handler)
+                (handler-case (request-handler-wait->get->process req-handler)
                   (simple-error (c) (let ((r (find-restart :terminate-thread c)))
                                       (format t "Restart: ~A Cond: ~A" r c)
                                       (signal c))))

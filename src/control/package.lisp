@@ -70,13 +70,13 @@
   (format nil "~A:~A" (get-universal-time) (current-thread)))
 
 (defun req-fun (handler request raw)
-  (log-for (dribble) "Raw request: ~A" (flex:octets-to-string raw))
-  (log-for (dribble) "Cooked request: ~A" (or (and request
-                                                   (list
-                                                    :headers (m2cl:request-headers request)
-                                                    :body (m2cl:request-body request)
-                                                    :data (m2cl:request-data request)))
-                                              "Is nil"))
+  ;; (log-for (dribble) "Raw request: ~A" (flex:octets-to-string raw))
+  ;; (log-for (dribble) "Cooked request: ~A" (or (and request
+  ;;                                                  (list
+  ;;                                                   :headers (m2cl:request-headers request)
+  ;;                                                   :body (m2cl:request-body request)
+  ;;                                                   :data (m2cl:request-data request)))
+  ;;                                             "Is nil"))
   (unless (m2cl::request-disconnect? request)
     (m2cl:handler-send-http handler (response) :request request)
     (m2cl:handler-close handler :request request)))

@@ -23,6 +23,11 @@
               :initarg :proc
               :accessor request-handler-processor)
 
+   (interval :initform 0.01
+             :initarg :interval
+             :accessor request-handler-interval
+             :accessor request-handler-timeout)
+
    (responder :initform nil
               :accessor request-handler-thread
               :accessor request-handler-responder)
@@ -34,10 +39,12 @@
 
 (defmethod request-handler-wait->get->process ((req-handler request-handler))
   (flet ((s2us (s) (round (* s 1000000))))
-    (let ((m2-handler (request-handler-responder-handler req-handler)))
-      (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us 0.01))
+    (let ((m2-handler (request-handler-responder-handler req-handler))
+          (timeout (request-handler-timeout req-handler))
+          (processor (request-handler-processor req-handler)))
+      (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
         (when req
-          (funcall (request-handler-processor req-handler) req-handler req raw))))))
+          (funcall processor req-handler req raw))))))
 
 (defmethod make-request-handler-poller ((req-handler request-handler))
   "Generate a closure to be used to create the polling thread

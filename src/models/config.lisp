@@ -157,17 +157,22 @@
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
    (send-spec :type string
+              :accessor mongrel2-handler-send-spec
               :initarg :send-spec)
    (send-ident :type string
+               :accessor mongrel2-handler-send-ident
                :initarg :send-ident)
    (recv-spec :type string
+              :accessor mongrel2-handler-recv-spec
               :initarg :recv-spec)
    (recv-ident :type string
+               :accessor mongrel2-handler-recv-ident
                :initarg :recv-ident
                :initform "")
    (raw-payload :type integer
                 :initform 0)
    (protocol :type string
+             :accessor mongrel2-handler-protocol
              :initform "json"))
   (:base-table handler
    :documentation

@@ -22,6 +22,8 @@
    (responder :initform nil
               :accessor request-handler-thread
               :accessor request-handler-responder)
+   (responder-handler :initform nil
+                      :accessor request-handler-responder-handler)
    (responder-lock :initform (make-lock "Responder Loop Lock")
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
@@ -34,20 +36,26 @@
       :stopped)))
 
 (defmethod request-handler-start ((req-handler request-handler))
-  (unless (request-handler-running-p req-handler)
-    (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
-      (labels ((wait-get-process-request (handler)
-                 (log-for (trace) "Waiting for request on handler: ~A" ident)
-                 (multiple-value-bind (req raw) (m2cl:handler-receive handler)
-                   (funcall processor handler req raw)))
+  (when (request-handler-running-p req-handler) (return-from request-handler-start))
+  (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
+    (labels ((wait-get-process-request (handler)
+               (log-for (trace) "Waiting for request on handler: ~A" ident)
+               (multiple-value-bind (req raw) (m2cl:handler-receive handler 1000000)
+                 (if req
+                   (funcall processor handler req raw)
+                   (log-for (dribble) "Timout, looping"))))
 
-               (poller () (m2cl:with-handler (handler ident sub-address pub-address)
-                            (log-for (trace) "Starting to handle things")
-                            (loop while (acquire-lock responder-lock nil) do
-                                 (unwind-protect
-                                      (wait-get-process-request handler)
-                                   (release-lock responder-lock))))))
-        (setf responder (make-thread #'poller :name (format nil "fdog-handler-poller(~A)" ident)))))))
+             (poller () (m2cl:with-handler (handler ident sub-address pub-address)
+                          (setf (request-handler-responder-handler req-handler) handler)
+                          (log-for (trace) "Here: ~A There: ~A" handler
+                                   (request-handler-responder-handler req-handler))
+                          (log-for (trace) "Starting to handle things")
+                          (loop while (acquire-lock responder-lock nil) do
+                               (unwind-protect (wait-get-process-request handler)
+                                 (release-lock responder-lock)))
+                          (setf (request-handler-responder-handler req-handler) nil))))
+
+      (setf responder (make-thread #'poller :name (format nil "fdog-handler-poller(~A)" ident))))))
 
 (defmethod request-handler-running-p ((handler request-handler))
   (with-slots (responder) handler

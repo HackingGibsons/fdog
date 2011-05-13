@@ -20,7 +20,7 @@
 ;;;                                                                          ;;;
 ;;; Requirements:                                                            ;;;
 ;;;   * Mongrel2 1.6                                                         ;;;
-;;;   * 0MQ 2.1.7                                                            ;;;
+;;;   * 0MQ 2.1.4                                                            ;;;
 ;;;   * SBCL 1.0.48                                                          ;;;
 ;;;   * patched CLSQL from https://github.com/nikodemus/clsql.git            ;;;
 ;;;   * M2CL (forked) from https://github.com/sshirokov/m2cl.git             ;;;

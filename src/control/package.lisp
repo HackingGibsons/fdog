@@ -17,7 +17,8 @@
 
    (processor :initform (lambda (handler request raw) (declare (ignorable handler request raw)))
               :initarg :processor
-              :initarg :proc)
+              :initarg :proc
+              :accessor handler-processor)
 
    (responder :initform nil
               :accessor request-handler-thread

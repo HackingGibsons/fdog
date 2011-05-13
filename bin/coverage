@@ -14,8 +14,9 @@
 (require :sb-cover)
 
 ;; huge thanks to nikodemus from #lisp coming up this
-(defun call-with-coverage (thunk system)
+(defun call-with-coverage (thunk system setup)
   ;; Make sure it's dependencies are OK.
+  (funcall setup)
   (asdf:load-system system)
   (unwind-protect
        (with-compilation-unit
@@ -26,11 +27,13 @@
     ;; Remove coverage instrumentation.
     (asdf:load-system system :force (list system))))
 
-(defmacro with-coverage ((system) &body body)
-  `(call-with-coverage (lambda () ,@body) ,system))
+(defmacro with-coverage ((system &optional (setup #'(lambda ()))) &body body)
+  `(call-with-coverage (lambda () ,@body) ,system ,setup))
 
+(defun coverage-setup ()
+  (asdf:load-system :fiveam))
 
-(with-coverage (:fdog)
+(with-coverage (:fdog #'coverage-setup)
   (load (asdf:system-relative-pathname :fdog "src/package.lisp"))
   (asdf:test-system :fdog)
   (sb-cover:report (asdf:system-relative-pathname :fdog "coverage/")))

@@ -9,11 +9,14 @@
 (defparameter *m2-recv* "tcp://127.0.0.1:13372")
 
 (defclass request-handler ()
-  ((ident :initarg :ident)
+  ((ident :initarg :ident
+          :reader request-handler-ident)
    (sub-address :initarg :sub-address
-                :initarg :sub)
+                :initarg :sub
+                :accessor request-handler-sub)
    (pub-address :initarg :pub-address
-                :initarg :pub)
+                :initarg :pub
+                :accessor request-handler-pub)
 
    (processor :initform (lambda (req-handler request raw) (declare (ignorable req-handler request raw)))
               :initarg :processor
@@ -36,21 +39,28 @@
         (when req
           (funcall (request-handler-processor req-handler) req-handler req raw))))))
 
+(defmethod make-request-handler-poller ((req-handler request-handler))
+  "Generate a closure to be used to create the polling thread
+for the given request handler."
+  (lambda ()
+    (m2cl:with-handler (handler (request-handler-ident req-handler)
+                                (request-handler-sub req-handler)
+                                (request-handler-pub req-handler))
+      (setf (request-handler-responder-handler req-handler) handler)
+      (loop while (acquire-lock (request-handler-lock req-handler) nil) do
+           (unwind-protect
+                (handler-case (request-handler-wait-get-process req-handler)
+                  (simple-error (c) (let ((r (find-restart :terminate-thread c)))
+                                      (format t "Restart: ~A Cond: ~A" r c)
+                                      (signal c))))
+             (release-lock (request-handler-lock req-handler))))
+      (setf (request-handler-responder-handler req-handler) nil))))
+
 (defmethod request-handler-start ((req-handler request-handler))
   (when (request-handler-running-p req-handler) (return-from request-handler-start))
-  (with-slots (ident sub-address pub-address responder responder-lock processor) req-handler
-    (labels ((poller () (m2cl:with-handler (handler ident sub-address pub-address)
-                          (setf (request-handler-responder-handler req-handler) handler)
-                          (loop while (acquire-lock responder-lock nil) do
-                               (unwind-protect
-                                    (handler-case (request-handler-wait-get-process req-handler)
-                                      (simple-error (c) (let ((r (find-restart :terminate-thread c)))
-                                                          (format t "Restart: ~A Cond: ~A" r c)
-                                                          (signal c))))
-                                 (release-lock responder-lock)))
-                          (setf (request-handler-responder-handler req-handler) nil))))
-
-      (setf responder (make-thread #'poller :name (format nil "fdog-handler-poller(~A)" ident))))))
+  (setf (request-handler-responder req-handler)
+        (make-thread (make-request-handler-poller req-handler)
+                     :name (format nil "fdog-handler-poller(~A)" (request-handler-ident req-handler)))))
 
 ;; TODO: Handler won't stop until next request, if we're going to try to be polite about it
 ;;       Though we now default to a 10ms poll interval, giving us a max 10ms pause...

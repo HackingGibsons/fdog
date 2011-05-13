@@ -119,6 +119,11 @@ lisp more easily accepts as a relative path"
                            (equal path (mongrel2-route-path route))))
                    routes)))
 
+(defmethod mongrel2-target-route ((target mongrel2-target))
+  "Returns the mongrel2-route instance that binds to this target, or nil."
+  :undefined)
+
+
 ;;; Model hooks
 (defmethod initialize-instance :after ((server mongrel2-server) &rest initargs)
   "Update some instance slots based on other slot values"

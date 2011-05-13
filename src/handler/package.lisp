@@ -12,7 +12,5 @@
              :request-handler-start
              :request-handler-stop
              :request-handler-running-p))
-
 (in-package :fdog-handler)
-
 

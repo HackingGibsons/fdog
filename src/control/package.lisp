@@ -48,7 +48,11 @@
              (poller () (m2cl:with-handler (handler ident sub-address pub-address)
                           (setf (request-handler-responder-handler req-handler) handler)
                           (loop while (acquire-lock responder-lock nil) do
-                               (unwind-protect (wait-get-process-request handler)
+                               (unwind-protect
+                                    (handler-case (wait-get-process-request handler)
+                                      (simple-error (c) (let ((r (find-restart :terminate-thread c)))
+                                                          (format t "Restart: ~A Cond: ~A" r c)
+                                                          (signal c))))
                                  (release-lock responder-lock)))
                           (setf (request-handler-responder-handler req-handler) nil))))
 

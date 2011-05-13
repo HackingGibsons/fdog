@@ -20,7 +20,7 @@
   ;;                                                   :body (m2cl:request-body request)
   ;;                                                   :data (m2cl:request-data request)))
   ;;                                             "Is nil"))
-  (let ((m2-handler (request-handler-responder-handler req-handler)))
+  (let ((m2-handler (request-handler-m2-handler req-handler)))
     (unless (m2cl::request-disconnect? request)
       (m2cl:handler-send-http m2-handler (response) :request request)
       (m2cl:handler-close m2-handler :request request))))

@@ -8,7 +8,7 @@
              :request-handler-processor
              :request-handler-interval
              ;; Methods
-             :request-handler-responder-handler
+             :request-handler-m2-handler
              :request-handler-start
              :request-handler-stop
              :request-handler-running-p))

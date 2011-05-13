@@ -24,7 +24,8 @@
               :accessor request-handler-thread
               :accessor request-handler-responder)
    (responder-handler :initform nil
-                      :accessor request-handler-responder-handler)
+                      :accessor request-handler-responder-handler
+                      :reader request-handler-m2-handler)
    (responder-lock :initform (make-lock "Responder Loop Lock")
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))

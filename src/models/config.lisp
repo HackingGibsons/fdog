@@ -146,7 +146,13 @@
    :documentation
    "Mongrel2 Route configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-280003.4.3"))
 
-(clsql:def-view-class mongrel2-handler ()
+
+;; TODO: The closures mapping targets at the top should
+;;       probably be methods spcialized on target :|
+(defclass mongrel2-target nil nil
+  (:documentation "A base class for directory targets"))
+
+(clsql:def-view-class mongrel2-handler (mongrel2-target)
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
@@ -167,7 +173,7 @@
    :documentation
    "Mongrel2 Handler endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-310003.4.6"))
 
-(clsql:def-view-class mongrel2-directory ()
+(clsql:def-view-class mongrel2-directory (mongrel2-target)
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
@@ -185,7 +191,7 @@
    :documentation
    "Mongrel2 Directory endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-290003.4.4"))
 
-(clsql:def-view-class mongrel2-proxy ()
+(clsql:def-view-class mongrel2-proxy (mongrel2-target)
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)

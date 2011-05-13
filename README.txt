@@ -32,6 +32,10 @@
 ;;;     It should run the unit and integration tests, some of which          ;;;
 ;;;     will spin up a Mongrel2 and send requests from the code              ;;;
 ;;;     so I'm not kidding at all in the requirements. ;)                    ;;;
+;;;   * Coverage Reporting                                                   ;;;
+;;;     $ bin/coverage                                                       ;;;
+;;;     [ This will churn for a while ]                                      ;;;
+;;;     $ open coverage/cover-index.html                                     ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 

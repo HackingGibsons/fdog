@@ -39,13 +39,14 @@
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
         (when (and req (not (m2cl:request-disconnect-p req)))
           (dolist (processor processors proc-results)
-            (setf proc-results
-                  (append proc-results
-                          `(,(cond ((eql processor :close)
-                                    (m2cl:handler-close m2-handler :request req)
-                                    :closed)
-                                   (t
-                                    (funcall processor req-handler req raw))))))))))))
+            (destructuring-bind (proc . proc-type) (if (consp processor) processor `(,processor . :special))
+              (setf proc-results
+                    (append proc-results
+                            `(,(cond ((eql proc :close)
+                                      (m2cl:handler-close m2-handler :request req)
+                                      :closed)
+                                     (t
+                                      (funcall proc req-handler req raw)))))))))))))
 
 (defmethod make-request-handler-poller ((req-handler request-handler))
   "Generate a closure to be used to create the polling thread
@@ -96,5 +97,5 @@ for the given request handler."
              (m2cl:handler-send-http
               responder-handler (funcall handler-fun request) :request request)))
       (ecase position
-        (:beginning (start #'string-responder))
-        (:end (end #'string-responder))))))
+        (:beginning (start (cons #'string-responder :string)))
+        (:end (end (cons #'string-responder :string)))))))

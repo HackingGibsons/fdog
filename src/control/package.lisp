@@ -36,5 +36,7 @@
     (let ((handler (configure-bridges-for *handler*)))
       (request-handler-add-chunked/stop handler)
 
+      (request-handler-add-chunked/chunk handler 'response)
+
       (request-handler-add-chunked/start handler 'chunk-info/start)
       handler)))

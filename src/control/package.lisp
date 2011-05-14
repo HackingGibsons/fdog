@@ -10,19 +10,20 @@
 
 ;;; Scaffold
 ;; Some varsdefs
-(defparameter *server* (car (fdog-m2sh:servers :refresh t)))
-(defparameter *host* (mongrel2-server-default-host *server*))
-(defparameter *routes* (mongrel2-host-routes *host*))
-(defparameter *handler* (car (remove-if-not (lambda (tr) (typep tr 'mongrel2-handler))
-                                            (mapcar #'mongrel2-route-target *routes*))))
-(defparameter *dir* (car (remove-if-not (lambda (tr) (typep tr 'mongrel2-directory))
-                                        (mapcar #'mongrel2-route-target *routes*))))
+(defun scaffold ()
+  (defparameter *server* (car (fdog-m2sh:servers :refresh t)))
+  (defparameter *host* (mongrel2-server-default-host *server*))
+  (defparameter *routes* (mongrel2-host-routes *host*))
+  (defparameter *handler* (car (remove-if-not (lambda (tr) (typep tr 'mongrel2-handler))
+                                              (mapcar #'mongrel2-route-target *routes*))))
+  (defparameter *dir* (car (remove-if-not (lambda (tr) (typep tr 'mongrel2-directory))
+                                          (mapcar #'mongrel2-route-target *routes*))))
 
 
-(defun response (r)
-  (format nil "~A:~A" (get-universal-time) (current-thread)))
+  (defun response (r)
+    (format nil "~A:~A" (get-universal-time) (current-thread)))
 
-(defparameter *control-handler*
-  (let ((handler (configure-bridges-for *handler*)))
-    (request-handler-add-string-responder handler 'response)
-    handler))
+  (defparameter *control-handler*
+    (let ((handler (configure-bridges-for *handler*)))
+      (request-handler-add-string-responder handler 'response)
+      handler)))

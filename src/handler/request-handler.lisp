@@ -125,13 +125,16 @@ return an Alist of headers/status params in the form ((:code . 200) (:status . \
 Any parameters not specified will be defaulted with no extra headers and a 200/OK response"
   (with-slots (responder-handler) req-handler
     (labels ((aval-of (key alist) (cdr (assoc key alist)))
+             (a2plist (alist) (reduce (lambda (a i) (append a `(,(car i) ,(cdr i))))
+                                        alist :initial-value nil))
              (chunked-start-responder (handler request raw)
                (let* ((params (append (funcall chunk-start-fun request)
-                                      '((:code 200) (:status "OK"))))
+                                      '((:code . 200) (:status . "OK"))))
                       (codes `((:code . ,(aval-of :code params))
                                (:status . ,(aval-of :code params))))
                       (headers (remove-if (lambda (param) (member (car param) (mapcar #'car codes)))
-                                          params)))
+                                          params))
+                      (codes (a2plist codes)))
                  (format t "Codes: ~S~%" codes)
                  (format t "Headers: ~S~%" headers)
                  )))

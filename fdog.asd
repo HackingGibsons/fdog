@@ -29,7 +29,7 @@
                              (:module "m2sh" :depends-on ("models")
                               :components ((:file "package")))
 
-                             (:module "control" :depends-on ("m2sh")
+                             (:module "control" :depends-on ("m2sh" "handler")
                               :components  ((:file "package")))))))
 
 

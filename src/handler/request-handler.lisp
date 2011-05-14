@@ -136,7 +136,7 @@ Any parameters not specified will be defaulted with no extra headers and a 200/O
 
 
 
-(defmethod request-handler-add-chunked/chunk-responder ((req-handler request-handler) chunk-func &key (position :beginning))
+(defmethod request-handler-add-chunked/chunk ((req-handler request-handler) chunk-func &key (position :beginning))
   "Add a responder lambda `chunk-func' the result of which will be chunk encoded and sent
 to the client."
   :undef)

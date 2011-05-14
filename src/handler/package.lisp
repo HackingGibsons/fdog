@@ -3,6 +3,7 @@
   (:shadowing-import-from :log5 :log-for)
   (:export :request-handler
              ;;Slot Access
+             :request-handler-db-handler
              :request-handler-sub
              :request-handler-pub
              :request-handler-processors

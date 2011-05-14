@@ -3,6 +3,8 @@
 (defclass request-handler ()
   ((ident :initarg :ident
           :reader request-handler-ident)
+   (db-handler :initarg :db-handler
+               :reader request-handler-db-handler)
    (sub-address :initarg :sub-address
                 :initarg :sub
                 :accessor request-handler-sub)

@@ -12,7 +12,7 @@
 
    (processors :initform '(:close)
                :initarg :processors
-               :initarg :proc
+               :initarg :procs
                :accessor request-handler-processors)
 
    (interval :initform 0.01
@@ -83,3 +83,18 @@ for the given request handler."
     (and responder
          (threadp responder)
          (thread-alive-p responder))))
+
+(defmethod request-handler-add-string-responder ((req-handler request-handler) handler-fun
+                                                 &key (position :beginning))
+  "Add a method to the top of the responce processor list"
+  (unless (or (functionp handler-fun) (fboundp handler-fun))
+    (error "Handler must be funcallable"))
+  (with-slots (processors responder-handler) req-handler
+    (flet ((start (thing) (push thing processors))
+           (end (thing) (append processors `(,thing)))
+           (string-responder (handler request raw)
+             (m2cl:handler-send-http
+              responder-handler (funcall handler-fun request) :request request)))
+      (ecase position
+        (:beginning (start #'string-responder))
+        (:end (end #'string-responder))))))

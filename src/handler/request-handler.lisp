@@ -124,14 +124,17 @@ from simpler lambdas"
 return an Alist of headers/status params in the form ((:code . 200) (:status . \"OK\") ... (\"X-Some-Header\" . \"Sucks\"))
 Any parameters not specified will be defaulted with no extra headers and a 200/OK response"
   (with-slots (responder-handler) req-handler
-    (flet ((aval-of (key alist) (cdr (assoc key alist)))
-           (chunked-start-responder (handler request raw)
-             (let* ((params (append (funcall chunk-start-fun request)
-                                    '((:code 200) (:status "OK"))))
-                    (codes nil)
-                    (headers nil))
-               (format t "Going to stat chunked encoding with: ~A~%" params)
-               )))
+    (labels ((aval-of (key alist) (cdr (assoc key alist)))
+             (chunked-start-responder (handler request raw)
+               (let* ((params (append (funcall chunk-start-fun request)
+                                      '((:code 200) (:status "OK"))))
+                      (codes `((:code . ,(aval-of :code params))
+                               (:status . ,(aval-of :code params))))
+                      (headers (remove-if (lambda (param) (member (car param) (mapcar #'car codes)))
+                                          params)))
+                 (format t "Codes: ~S~%" codes)
+                 (format t "Headers: ~S~%" headers)
+                 )))
       (request-handler-add-responder req-handler #'chunked-start-responder :position position))))
 
 

@@ -4,18 +4,25 @@
   (:export :run))
 (in-package :fdog-control)
 
+(defvar *interface-bridges* ()
+  "Bridges configured as part of the web UI")
+
 (defun init-web-ui (&key (name "control") uuid)
-  (let ((server (car (fdog-m2sh:servers :uuid uuid :name name :refresh t)))
-        (engines ()))
+  (let ((server (car (fdog-m2sh:servers :uuid uuid :name name :refresh t))))
     (unless server (error "Can't find a server!"))
     (unless (mongrel2-server-running-p server)
       (if (eq (mongrel2-server-signal/block server :start) :timeout)
           (error "Timeout starting Mongrel2")))
-    (dolist (route (mongrel2-host-routes (mongrel2-server-default-host server)) engines)
+
+    (mapcar #'request-handler-stop *interface-bridges*)
+    (setf *interface-bridges* ())
+
+    (dolist (route (mongrel2-host-routes (mongrel2-server-default-host server)) *interface-bridges*)
       (with-accessors ((target mongrel2-route-target)) route
         (typecase target
           (mongrel2-handler
-           (log-for (trace) "Found handler: ~A" target))
+           (log-for (trace) "Found handler: ~A" target)
+           (pushnew (configure-bridges-for target) *interface-bridges*))
           (otherwise
            (if target
                (log-for (trace) "Let it be known there exists: ~A" target)

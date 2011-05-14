@@ -4,10 +4,6 @@
   (:export :run))
 (in-package :fdog-control)
 
-(defparameter *ident* "control-ident")
-(defparameter *m2-send* "tcp://127.0.0.1:13375")
-(defparameter *m2-recv* "tcp://127.0.0.1:13372")
-
 ;;; Scaffold
 ;; Some varsdefs
 (defun scaffold ()

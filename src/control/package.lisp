@@ -38,7 +38,6 @@
 
   (defparameter *chunked-handler*
     (let ((handler (configure-bridges-for *handler*)))
-      (setf (request-handler-processors *chunked-handler*) nil)
       (request-handler-add-chunked/stop handler)
 
       (request-handler-add-chunked/chunk handler 'chunk-two)

@@ -26,4 +26,13 @@
   (defparameter *control-handler*
     (let ((handler (configure-bridges-for *handler*)))
       (request-handler-add-string-responder handler 'response)
+      handler))
+  ;; Chunky
+  (defun chunk-info/start (request)
+    (declare (ignorable request))
+    '((:X-hello-world . "I am awesome")))
+
+  (defparameter *chunked-handler*
+    (let ((handler (configure-bridges-for *handler*)))
+      (request-handler-add-chunked/start handler 'chunk-info/start)
       handler)))

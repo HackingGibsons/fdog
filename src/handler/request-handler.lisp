@@ -151,7 +151,11 @@ to the client."
 
 (defmethod request-handler-add-chunked/stop ((req-handler request-handler) &key (position :beginning))
   "Add a stop of chunked responses responder to the chain"
-  :undef)
+  (with-slots (responder-handler) req-handler
+    (labels ((chunked-stop-responder (handler request raw)
+               (m2cl:handler-send-http-chunk responder-handler "" :request request)))
+
+      (request-handler-add-responder req-handler #'chunked-stop-responder :position position))))
 
 (defmethod request-handler-add-chunked/trailer ((req-handler request-handler) trailer-func &key (position :beginning))
   "Add a processor lambda `trailer-fun' which when called returns an alist of trailer fields in the form

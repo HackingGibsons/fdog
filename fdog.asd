@@ -23,12 +23,13 @@
 
                              (:module "handler" :depends-on ("models")
                               :components ((:file "package")
-                                           (:file "request-handler" :depends-on ("package"))))
+                                           (:file "request-handler" :depends-on ("package"))
+                                           (:file "bridges" :depends-on ("request-handler"))))
 
                              (:module "m2sh" :depends-on ("models")
                               :components ((:file "package")))
 
-                             (:module "control" :depends-on ("m2sh")
+                             (:module "control" :depends-on ("m2sh" "handler")
                               :components  ((:file "package")))))))
 
 

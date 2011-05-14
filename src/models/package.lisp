@@ -37,6 +37,10 @@
              :mongrel2-host-matching
              :mongrel2-host-routes
            :mongrel2-handler
+             :mongrel2-handler-send-ident
+             :mongrel2-handler-recv-ident
+             :mongrel2-handler-send-spec
+             :mongrel2-handler-recv-spec
            :mongrel2-proxy
            :mongrel2-directory
            :mongrel2-route

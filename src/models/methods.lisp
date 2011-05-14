@@ -119,6 +119,19 @@ lisp more easily accepts as a relative path"
                            (equal path (mongrel2-route-path route))))
                    routes)))
 
+(defmethod mongrel2-target-route ((target mongrel2-target))
+  "Returns the mongrel2-route instance that binds to this target, or nil."
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (let ((routes (clsql:select 'mongrel2-route :flatp t :refresh t :where
+                              [and [= [slot-value 'mongrel2-route 'target-type]
+                                      (name-by-endpoint target)]
+                                   [= [slot-value 'mongrel2-route 'target-id]
+                                      (slot-value target 'id)]])))
+    (car routes))
+  #.(clsql:locally-disable-sql-reader-syntax))
+
+
+
 ;;; Model hooks
 (defmethod initialize-instance :after ((server mongrel2-server) &rest initargs)
   "Update some instance slots based on other slot values"

@@ -11,9 +11,9 @@
                 :accessor request-handler-pub)
 
    (processors :initform '(:close)
-              :initarg :processors
-              :initarg :proc
-              :accessor request-handler-processors)
+               :initarg :processors
+               :initarg :proc
+               :accessor request-handler-processors)
 
    (interval :initform 0.01
              :initarg :interval

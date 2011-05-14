@@ -117,3 +117,35 @@ from simpler lambdas"
              (m2cl:handler-send-http
               responder-handler (funcall handler-fun request) :request request)))
       (request-handler-add-responder req-handler #'string-responder :position position))))
+
+(defmethod request-handler-add-chunked/start ((req-handler request-handler) chunk-start-fun &key (position :beginning))
+
+  "Add a responder that will send chunked-encoding headers. The function `chunk-start-fun' must
+return an Alist of headers/status params in the form ((:code . 200) (:status . \"OK\") ... (\"X-Some-Header\" . \"Sucks\"))
+Any parameters not specified will be defaulted with no extra headers and a 200/OK response"
+  (with-slots (responder-handler) req-handler
+    (flet ((aval-of (key alist) (cdr (assoc key alist)))
+           (chunked-start-responder (handler request raw)
+             (let* ((params (append (funcall chunk-start-fun request)
+                                    '((:code 200) (:status "OK"))))
+                    (codes nil)
+                    (headers nil))
+               (format t "Going to stat chunked encoding with: ~A~%" params)
+               )))
+      (request-handler-add-responder req-handler #'chunked-start-responder :position position))))
+
+
+
+(defmethod request-handler-add-chunked/chunk-responder ((req-handler request-handler) chunk-func &key (position :beginning))
+  "Add a responder lambda `chunk-func' the result of which will be chunk encoded and sent
+to the client."
+  :undef)
+
+(defmethod request-handler-add-chunked/stop ((req-handler request-handler) &key (position :beginning))
+  "Add a stop of chunked responses responder to the chain"
+  :undef)
+
+(defmethod request-handler-add-chunked/trailer ((req-handler request-handler) trailer-func &key (position :beginning))
+  "Add a processor lambda `trailer-fun' which when called returns an alist of trailer fields in the form
+ ((key . value)..(keyn . valuen)) which will be encoded and sent to the client"
+  :undef)

@@ -96,17 +96,24 @@ for the given request handler."
          (threadp responder)
          (thread-alive-p responder))))
 
+(defmethod request-handler-add-responder ((req-handler request-handler) responder &key (position :beginning))
+  "Add a well-formed request processor `responder' to `position' in the responder chain.
+Intended to be the driver for wrapper methods that construct well-formed responders
+from simpler lambdas"
+  (with-slots (processors) req-handler
+    (flet ((start (thing) (push thing processors))
+           (end (thing) (append processors `(,thing))))
+      (ecase position
+        (:beginning (start (cons responder :string)))
+        (:end (end (cons responder :string)))))))
+
 (defmethod request-handler-add-string-responder ((req-handler request-handler) handler-fun
                                                  &key (position :beginning))
   "Add a method to the top of the responce processor list"
   (unless (or (functionp handler-fun) (fboundp handler-fun))
     (error "Handler must be funcallable"))
-  (with-slots (processors responder-handler) req-handler
-    (flet ((start (thing) (push thing processors))
-           (end (thing) (append processors `(,thing)))
-           (string-responder (handler request raw)
+  (with-slots (responder-handler) req-handler
+    (flet ((string-responder (handler request raw)
              (m2cl:handler-send-http
               responder-handler (funcall handler-fun request) :request request)))
-      (ecase position
-        (:beginning (start (cons #'string-responder :string)))
-        (:end (end (cons #'string-responder :string)))))))
+      (request-handler-add-responder req-handler #'string-responder :position position))))

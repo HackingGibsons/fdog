@@ -30,7 +30,11 @@
   ;; Chunky
   (defun chunk-info/start (request)
     (declare (ignorable request))
-    '((:X-hello-world . "I am awesome")))
+    '((:X-hello-world . "I am awesome")
+      ("Trailer" . "X-Magic")))
+
+  (defun chunk-trailer (request)
+    `(("X-Magic" . "Totally")))
 
   (defun chunk-two (request)
     (declare (ignorable request))
@@ -38,6 +42,7 @@
 
   (defparameter *chunked-handler*
     (let ((handler (configure-bridges-for *handler*)))
+      (request-handler-add-chunked/trailer handler 'chunk-trailer)
       (request-handler-add-chunked/stop handler)
 
       (request-handler-add-chunked/chunk handler 'chunk-two)

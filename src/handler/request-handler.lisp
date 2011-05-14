@@ -10,7 +10,7 @@
                 :initarg :pub
                 :accessor request-handler-pub)
 
-   (processors :initform ();'(:close)
+   (processors :initform '(:close)
                :initarg :processors
                :initarg :procs
                :accessor request-handler-processors)

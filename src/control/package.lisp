@@ -32,10 +32,15 @@
     (declare (ignorable request))
     '((:X-hello-world . "I am awesome")))
 
+  (defun chunk-two (request)
+    (declare (ignorable request))
+    "  Verily, this is the second reply!")
+
   (defparameter *chunked-handler*
     (let ((handler (configure-bridges-for *handler*)))
       (request-handler-add-chunked/stop handler)
 
+      (request-handler-add-chunked/chunk handler 'chunk-two)
       (request-handler-add-chunked/chunk handler 'response)
 
       (request-handler-add-chunked/start handler 'chunk-info/start)

@@ -30,8 +30,21 @@
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
 
+(defmethod request-handler-process-request-with ((req-handler request-handler) processor request raw)
+  "Process `request' in the context of `request-handler' with the given `processor'. Raw request
+data available at `raw'"
+  (let ((m2-handler (request-handler-responder-handler req-handler)))
+    (destructuring-bind (proc . proc-type) processor
+      (cond ((eql proc :close)
+             (m2cl:handler-close m2-handler :request request)
+             :closed)
+            (t
+             (funcall proc req-handler request raw))))))
+
 (defmethod request-handler-wait->get->process ((req-handler request-handler))
-  (flet ((s2us (s) (round (* s 1000000))))
+  (flet ((s2us (s) (round (* s 1000000)))
+         (form-proc-proper (procish)
+           (if (consp procish) procish `(,procish . :special))))
     (let ((m2-handler (request-handler-responder-handler req-handler))
           (timeout (request-handler-timeout req-handler))
           (processors (request-handler-processors req-handler))
@@ -39,14 +52,12 @@
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
         (when (and req (not (m2cl:request-disconnect-p req)))
           (dolist (processor processors proc-results)
-            (destructuring-bind (proc . proc-type) (if (consp processor) processor `(,processor . :special))
-              (setf proc-results
-                    (append proc-results
-                            `(,(cond ((eql proc :close)
-                                      (m2cl:handler-close m2-handler :request req)
-                                      :closed)
-                                     (t
-                                      (funcall proc req-handler req raw)))))))))))))
+            (setf proc-results
+                  (append proc-results
+                          `(,(request-handler-process-request-with req-handler
+                                                                   (form-proc-proper processor)
+                                                                   req raw))))))))))
+
 
 (defmethod make-request-handler-poller ((req-handler request-handler))
   "Generate a closure to be used to create the polling thread

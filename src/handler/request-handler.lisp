@@ -10,10 +10,10 @@
                 :initarg :pub
                 :accessor request-handler-pub)
 
-   (processor :initform (lambda (req-handler request raw) (declare (ignorable req-handler request raw)))
-              :initarg :processor
+   (processors :initform '(:close)
+              :initarg :processors
               :initarg :proc
-              :accessor request-handler-processor)
+              :accessor request-handler-processors)
 
    (interval :initform 0.01
              :initarg :interval
@@ -34,10 +34,18 @@
   (flet ((s2us (s) (round (* s 1000000))))
     (let ((m2-handler (request-handler-responder-handler req-handler))
           (timeout (request-handler-timeout req-handler))
-          (processor (request-handler-processor req-handler)))
+          (processors (request-handler-processors req-handler))
+          proc-results)
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
-        (when req
-          (funcall processor req-handler req raw))))))
+        (when (and req (not (m2cl:request-disconnect? req)))
+          (dolist (processor processors proc-results)
+            (setf proc-results
+                  (append proc-results
+                          `(,(cond ((eql processor :close)
+                                    (m2cl:handler-close m2-handler :request req)
+                                    :closed)
+                                   (t
+                                    (funcall processor req-handler req raw))))))))))))
 
 (defmethod make-request-handler-poller ((req-handler request-handler))
   "Generate a closure to be used to create the polling thread

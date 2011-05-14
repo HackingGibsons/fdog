@@ -5,7 +5,7 @@
              ;;Slot Access
              :request-handler-sub
              :request-handler-pub
-             :request-handler-processor
+             :request-handler-processors
              :request-handler-interval
              ;; Methods
              :request-handler-m2-handler

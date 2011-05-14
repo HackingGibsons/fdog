@@ -127,17 +127,19 @@ Any parameters not specified will be defaulted with no extra headers and a 200/O
     (labels ((aval-of (key alist) (cdr (assoc key alist)))
              (a2plist (alist) (reduce (lambda (a i) (append a `(,(car i) ,(cdr i))))
                                         alist :initial-value nil))
+
              (chunked-start-responder (handler request raw)
                (let* ((params (append (funcall chunk-start-fun request)
                                       '((:code . 200) (:status . "OK"))))
                       (codes `((:code . ,(aval-of :code params))
-                               (:status . ,(aval-of :code params))))
+                               (:status . ,(aval-of :status params))))
                       (headers (remove-if (lambda (param) (member (car param) (mapcar #'car codes)))
                                           params))
                       (codes (a2plist codes)))
-                 (format t "Codes: ~S~%" codes)
-                 (format t "Headers: ~S~%" headers)
-                 )))
+
+                 (apply 'm2cl:handler-send-http-chunked
+                        `(,responder-handler :request ,request ,@codes :headers ,headers)))))
+
       (request-handler-add-responder req-handler #'chunked-start-responder :position position))))
 
 

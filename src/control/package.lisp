@@ -4,6 +4,24 @@
   (:export :run))
 (in-package :fdog-control)
 
+(defun init-web-ui (&key (name "control") uuid)
+  (let ((server (car (fdog-m2sh:servers :uuid uuid :name name :refresh t)))
+        (engines ()))
+    (unless server (error "Can't find a server!"))
+    (unless (mongrel2-server-running-p server)
+      (if (eq (mongrel2-server-signal/block server :start) :timeout)
+          (error "Timeout starting Mongrel2")))
+    (dolist (route (mongrel2-host-routes (mongrel2-server-default-host server)) engines)
+      (with-accessors ((target mongrel2-route-target)) route
+        (typecase target
+          (mongrel2-handler
+           (log-for (trace) "Found handler: ~A" target))
+          (otherwise
+           (if target
+               (log-for (trace) "Let it be known there exists: ~A" target)
+               (log-for (warn) "NIL TARGET FOR ROUTE ~A(~A)" route (slot-value route 'fdog-models::id)))))))))
+
+
 ;;; Scaffold
 ;; Some varsdefs
 (defun scaffold ()

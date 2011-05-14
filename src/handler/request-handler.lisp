@@ -37,7 +37,7 @@
           (processors (request-handler-processors req-handler))
           proc-results)
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
-        (when (and req (not (m2cl:request-disconnect? req)))
+        (when (and req (not (m2cl:request-disconnect-p req)))
           (dolist (processor processors proc-results)
             (setf proc-results
                   (append proc-results

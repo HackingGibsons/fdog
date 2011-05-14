@@ -70,6 +70,8 @@ for the given request handler."
       (loop while (acquire-lock (request-handler-lock req-handler) nil) do
            (unwind-protect
                 (handler-case (request-handler-wait->get->process req-handler)
+                  ;; TODO: This thing down here, while helping, hides some errors.
+                  ;;       I need to make sure I only handler interrupted syscalls
                   (simple-error (c) (let ((r (find-restart :terminate-thread c)))
                                       (format t "Restart: ~A Cond: ~A" r c)
                                       (signal c))))
@@ -167,4 +169,9 @@ in a boolean context to imply that the function should be called again, recursiv
 (defmethod request-handler-add-chunked/trailer ((req-handler request-handler) trailer-func &key (position :beginning))
   "Add a processor lambda `trailer-fun' which when called returns an alist of trailer fields in the form
  ((key . value)..(keyn . valuen)) which will be encoded and sent to the client"
-  :undef)
+  (with-slots (responder-handler) req-handler
+    (flet ((write-trailer-responder (handler request raw)
+             (let ((trailers (funcall trailer-func request)))
+               (m2cl:handler-send-http-trailers responder-handler trailers :request request))))
+
+      (request-handler-add-responder req-handler #'write-trailer-responder :position position))))

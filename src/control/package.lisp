@@ -9,28 +9,20 @@
 (defparameter *m2-recv* "tcp://127.0.0.1:13372")
 
 ;;; Scaffold
-(defun response ()
+;; Some varsdefs
+(defparameter *server* (car (fdog-m2sh:servers :refresh t)))
+(defparameter *host* (mongrel2-server-default-host *server*))
+(defparameter *routes* (mongrel2-host-routes *host*))
+(defparameter *handler* (car (remove-if-not (lambda (tr) (typep tr 'mongrel2-handler))
+                                            (mapcar #'mongrel2-route-target *routes*))))
+(defparameter *dir* (car (remove-if-not (lambda (tr) (typep tr 'mongrel2-directory))
+                                        (mapcar #'mongrel2-route-target *routes*))))
+
+
+(defun response (r)
   (format nil "~A:~A" (get-universal-time) (current-thread)))
 
-(defun req-fun (req-handler request raw)
-  ;; (log-for (dribble) "Raw request: ~A" (flex:octets-to-string raw))
-  ;; (log-for (dribble) "Cooked request: ~A" (or (and request
-  ;;                                                  (list
-  ;;                                                   :headers (m2cl:request-headers request)
-  ;;                                                   :body (m2cl:request-body request)
-  ;;                                                   :data (m2cl:request-data request)))
-  ;;                                             "Is nil"))
-  (let ((m2-handler (request-handler-m2-handler req-handler)))
-    (unless (m2cl::request-disconnect? request)
-      (m2cl:handler-send-http m2-handler (response) :request request)
-      (m2cl:handler-close m2-handler :request request))))
-
-
-
-(defun run (&rest args &key &allow-other-keys)
-  (declare (ignorable args))
-  (let ((handler (make-instance 'request-handler :ident *ident* :proc 'req-fun
-                                :sub *m2-send* :pub *m2-recv*)))
-    (log-for (dribble) "Starting request responder")
-    (request-handler-start handler)
+(defparameter *control-handler*
+  (let ((handler (configure-bridges-for *handler*)))
+    (request-handler-add-string-responder handler 'response)
     handler))

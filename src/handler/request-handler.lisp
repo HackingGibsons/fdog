@@ -162,7 +162,7 @@ in a boolean context to imply that the function should be called again, recursiv
   "Add a stop of chunked responses responder to the chain"
   (with-slots (responder-handler) req-handler
     (labels ((chunked-stop-responder (handler request raw)
-               (m2cl:handler-send-http-chunk responder-handler "" :request request)))
+               (m2cl:handler-send-http-chunked-finish responder-handler :request request)))
 
       (request-handler-add-responder req-handler #'chunked-stop-responder :position position))))
 

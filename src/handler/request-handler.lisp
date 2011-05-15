@@ -109,40 +109,52 @@ from simpler lambdas"
         (:beginning (start (cons responder :string)))
         (:end (end (cons responder :string)))))))
 
-(defmethod request-handler-add-string-responder ((req-handler request-handler) handler-fun
-                                                 &key (position :beginning))
-  "Add a method to the top of the responce processor list"
+(defmethod make-request-handler-string-responder ((req-handler request-handler) handler-fun)
+  "Make a responder that calls `handler-fun' with the request and responds fully with the
+return value"
   (unless (or (functionp handler-fun) (fboundp handler-fun))
     (error "Handler must be funcallable"))
   (with-slots (responder-handler) req-handler
-    (flet ((string-responder (handler request raw)
-             (m2cl:handler-send-http
-              responder-handler (funcall handler-fun request) :request request)))
-      (request-handler-add-responder req-handler #'string-responder :position position))))
+    (lambda (handler request raw)
+      (m2cl:handler-send-http
+       responder-handler (funcall handler-fun request) :request request))))
+
+(defmethod request-handler-add-string-responder ((req-handler request-handler) handler-fun
+                                                 &key (position :beginning))
+  "Add a string-responding method to the processing list"
+  (request-handler-add-responder req-handler
+                                 (make-request-handler-string-responder req-handler handler-fun)
+                                 :position position))
+
+(defmethod request-handler-make-chunked-responder/start ((req-handler request-handler) &optional chunk-start-fun)
+
+  "Make a responder that will send chunked-encoding headers. The function `chunk-start-fun' must
+return an Alist of headers/status params in the form ((:code . 200) (:status . \"OK\") ... (\"X-Some-Header\" . \"Sucks\"))
+Any parameters not specified will be defaulted with no extra headers and a 200/OK response"
+  (with-slots (responder-handler) req-handler
+    (flet ((aval-of (key alist) (cdr (assoc key alist)))
+           (a2plist (alist) (reduce (lambda (a i) (append a `(,(car i) ,(cdr i))))
+                                        alist :initial-value nil)))
+      (lambda (handler request raw)
+        (let* ((params (append (and chunk-start-fun (funcall chunk-start-fun request))
+                               '((:code . 200) (:status . "OK"))))
+               (codes `((:code . ,(aval-of :code params))
+                        (:status . ,(aval-of :status params))))
+               (headers (remove-if (lambda (param) (member (car param) (mapcar #'car codes)))
+                                   params))
+               (codes (a2plist codes)))
+
+          (apply 'm2cl:handler-send-http-chunked
+                 `(,responder-handler :request ,request ,@codes :headers ,headers)))))))
 
 (defmethod request-handler-add-chunked/start ((req-handler request-handler) chunk-start-fun &key (position :beginning))
 
   "Add a responder that will send chunked-encoding headers. The function `chunk-start-fun' must
 return an Alist of headers/status params in the form ((:code . 200) (:status . \"OK\") ... (\"X-Some-Header\" . \"Sucks\"))
 Any parameters not specified will be defaulted with no extra headers and a 200/OK response"
-  (with-slots (responder-handler) req-handler
-    (labels ((aval-of (key alist) (cdr (assoc key alist)))
-             (a2plist (alist) (reduce (lambda (a i) (append a `(,(car i) ,(cdr i))))
-                                        alist :initial-value nil))
-
-             (chunked-start-responder (handler request raw)
-               (let* ((params (append (funcall chunk-start-fun request)
-                                      '((:code . 200) (:status . "OK"))))
-                      (codes `((:code . ,(aval-of :code params))
-                               (:status . ,(aval-of :status params))))
-                      (headers (remove-if (lambda (param) (member (car param) (mapcar #'car codes)))
-                                          params))
-                      (codes (a2plist codes)))
-
-                 (apply 'm2cl:handler-send-http-chunked
-                        `(,responder-handler :request ,request ,@codes :headers ,headers)))))
-
-      (request-handler-add-responder req-handler #'chunked-start-responder :position position))))
+  (request-handler-add-responder req-handler
+                                 (request-handler-make-chunked-responder/start req-handler chunk-start-fun)
+                                 :position position))
 
 
 

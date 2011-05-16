@@ -175,13 +175,18 @@ in a boolean context to imply that the function should be called again, recursiv
                                  (request-handler-make-chunked-responder/chunk req-handler chunk-func)
                                  :position position))
 
+(defmethod request-handler-make-chunked-responder/stop ((req-handler request-handler))
+  "Make a stop of chunked responses responder"
+  (with-slots (responder-handler) req-handler
+    (lambda (handler request raw)
+      (m2cl:handler-send-http-chunked-finish responder-handler :request request))))
+
+
 (defmethod request-handler-add-chunked/stop ((req-handler request-handler) &key (position :beginning))
   "Add a stop of chunked responses responder to the chain"
-  (with-slots (responder-handler) req-handler
-    (labels ((chunked-stop-responder (handler request raw)
-               (m2cl:handler-send-http-chunked-finish responder-handler :request request)))
-
-      (request-handler-add-responder req-handler #'chunked-stop-responder :position position))))
+  (request-handler-add-responder req-handler
+                                 (request-handler-make-chunked-responder/stop req-handler)
+                                 :position position))
 
 (defmethod request-handler-add-chunked/trailer ((req-handler request-handler) trailer-func &key (position :beginning))
   "Add a processor lambda `trailer-fun' which when called returns an alist of trailer fields in the form

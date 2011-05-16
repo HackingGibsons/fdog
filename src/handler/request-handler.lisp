@@ -35,6 +35,7 @@
 data available at `raw'"
   (let ((m2-handler (request-handler-responder-handler req-handler)))
     (destructuring-bind (proc . proc-type) processor
+      (declare (ignorable proc-type))
       (cond ((eql proc :close)
              (m2cl:handler-close m2-handler :request request)
              :closed)
@@ -140,6 +141,7 @@ Any parameters not specified will be defaulted with no extra headers and a 200/O
            (a2plist (alist) (reduce (lambda (a i) (append a `(,(car i) ,(cdr i))))
                                         alist :initial-value nil)))
       (lambda (handler request raw)
+        (declare (ignorable handler raw))
         (let* ((params (append (and chunk-start-fun (funcall chunk-start-fun request))
                                '((:code . 200) (:status . "OK"))))
                (codes `((:code . ,(aval-of :code params))
@@ -185,6 +187,7 @@ in a boolean context to imply that the function should be called again, recursiv
   "Make a stop of chunked responses responder"
   (with-slots (responder-handler) req-handler
     (lambda (handler request raw)
+      (declare (ignore handler raw))
       (m2cl:handler-send-http-chunked-finish responder-handler :request request))))
 
 
@@ -200,6 +203,7 @@ in a boolean context to imply that the function should be called again, recursiv
  ((key . value)..(keyn . valuen)) which will be encoded and sent to the client"
   (with-slots (responder-handler) req-handler
     (lambda (handler request raw)
+      (declare (ignore handler raw))
       (let ((trailers (funcall trailer-func request)))
         (m2cl:handler-send-http-trailers responder-handler trailers :request request)))))
 

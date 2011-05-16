@@ -98,7 +98,7 @@ for the given request handler."
          (threadp responder)
          (thread-alive-p responder))))
 
-(defmethod request-handler-add-responder ((req-handler request-handler) responder &key (position :beginning))
+(defmethod request-handler-add-responder ((req-handler request-handler) responder type &key (position :beginning))
   "Add a well-formed request processor `responder' to `position' in the responder chain.
 Intended to be the driver for wrapper methods that construct well-formed responders
 from simpler lambdas"
@@ -106,8 +106,8 @@ from simpler lambdas"
     (flet ((start (thing) (push thing processors))
            (end (thing) (append processors `(,thing))))
       (ecase position
-        (:beginning (start (cons responder :string)))
-        (:end (end (cons responder :string)))))))
+        (:beginning (start (cons responder type)))
+        (:end (end (cons responder type)))))))
 
 (defmethod make-request-handler-string-responder ((req-handler request-handler) handler-fun)
   "Make a responder that calls `handler-fun' with the request and responds fully with the
@@ -124,6 +124,7 @@ return value"
   "Add a string-responding method to the processing list"
   (request-handler-add-responder req-handler
                                  (make-request-handler-string-responder req-handler handler-fun)
+                                 :string
                                  :position position))
 
 (defmethod request-handler-make-chunked-responder/start ((req-handler request-handler) &optional chunk-start-fun)
@@ -154,6 +155,7 @@ return an Alist of headers/status params in the form ((:code . 200) (:status . \
 Any parameters not specified will be defaulted with no extra headers and a 200/OK response"
   (request-handler-add-responder req-handler
                                  (request-handler-make-chunked-responder/start req-handler chunk-start-fun)
+                                 :chunked/start
                                  :position position))
 
 (defmethod request-handler-make-chunked-responder/chunk ((req-handler request-handler) chunk-func)
@@ -173,6 +175,7 @@ encoded and sent to the client.  If `chunk-func' returns multiple values, the se
 in a boolean context to imply that the function should be called again, recursively."
   (request-handler-add-responder req-handler
                                  (request-handler-make-chunked-responder/chunk req-handler chunk-func)
+                                 :chunked/chunk
                                  :position position))
 
 (defmethod request-handler-make-chunked-responder/stop ((req-handler request-handler))
@@ -186,6 +189,7 @@ in a boolean context to imply that the function should be called again, recursiv
   "Add a stop of chunked responses responder to the chain"
   (request-handler-add-responder req-handler
                                  (request-handler-make-chunked-responder/stop req-handler)
+                                 :chunked/stop
                                  :position position))
 
 (defmethod request-handler-make-chunked-responder/trailer ((req-handler request-handler) trailer-func)
@@ -202,4 +206,5 @@ in a boolean context to imply that the function should be called again, recursiv
  ((key . value)..(keyn . valuen)) which will be encoded and sent to the client"
   (request-handler-add-responder req-handler
                                  (request-handler-make-chunked-responder/trailer req-handler trailer-func)
+                                 :chunked/trailer
                                  :position position))

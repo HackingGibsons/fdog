@@ -21,13 +21,38 @@ Only the first is returned as the first value"
                (if regex
                    (ppcre:scan route-path path)
                    (string= route-path path))))))
-    (with-slots (bridges) self
-      (remove-if-not #'matching-bridge-p bridges))))
+    (let ((bridges (with-slots (bridges) self
+                     (remove-if-not #'matching-bridge-p bridges))))
+      (values (car bridges)
+              bridges))))
 
+(defmacro interface-configure-bridges ((interface) &rest configs)
+  "Helper for calling a specific configuration function with a bridge
+for a route you expect to exist with a given path, e.g.:
 
+ (defun configure-default-response (bridge)
+   (request-handler-add-string-responder bridge (lambda (r) \"Hello world\")))
+
+ (let ((interface (make-instance 'fdog-interface ....)))
+    (interface-configure-bridges (interface)
+     \"/\" :mount-bridge 'configure-default-response))
+
+Will configure a Hello World responder for the bridge mounted on a route
+with an exact pathname of / on the server configured for `interface'"
+  `(progn
+     ,@(loop for config in configs collecting
+            (destructuring-bind (path &rest spec) config
+              `(let* ((path ,path) (spec ',spec) (interface ,interface)
+                      (bridge (interface-bridge-matching interface path)))
+                 (log-for (trace) "Configuration: ~A => ~A" path spec)
+                 (log-for (trace) "Bridge: ~A" bridge)
+                 (if bridge
+                     (funcall (eval (getf spec :mount-bridge))
+                              bridge)
+                     (error (format nil "No bridge found for route ~A" path))))))))
 
 (defmethod interface-stop ((self fdog-interface))
-  (interface-start-server self)
+  (interface-stop-bridges self)
   (interface-stop-server self))
 
 (defmethod interface-start-server ((self fdog-interface))

@@ -31,7 +31,8 @@
 
                              (:module "control" :depends-on ("m2sh" "handler")
                               :components  ((:file "package")
-                                            (:file "interface" :depends-on ("package"))))))))
+                                            (:file "interface" :depends-on ("package"))
+                                            (:file "app" :depends-on ("interface"))))))))
 
 
 ;; Test operation

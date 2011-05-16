@@ -10,9 +10,21 @@
            :accessor fdog-interface-routes))
   (:documentation "An interface for interacting with fdog through Mongrel2"))
 
-(defmethod interface-bridge-matching ((self fdog-interface) route-path-regex)
-  "Find the bridge configured for the route with a path matching `route-path-regex'"
-  nil)
+(defmethod interface-bridge-matching ((self fdog-interface) route-path &optional regex)
+  "Find the bridge configured for the route with a path matching `route-path-regex'.
+All bridges found are returned as the second value, in case of multiple results.
+Only the first is returned as the first value"
+  (flet ((matching-bridge-p (bridge)
+           (let* ((handler (handler-bridge-db-handler bridge))
+                  (route (mongrel2-target-route handler)))
+             (with-accessors ((path mongrel2-route-path)) route
+               (if regex
+                   (ppcre:scan route-path path)
+                   (string= route-path path))))))
+    (with-slots (bridges) self
+      (remove-if-not #'matching-bridge-p bridges))))
+
+
 
 (defmethod interface-stop ((self fdog-interface))
   (interface-start-server self)

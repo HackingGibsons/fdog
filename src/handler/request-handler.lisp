@@ -156,19 +156,24 @@ Any parameters not specified will be defaulted with no extra headers and a 200/O
                                  (request-handler-make-chunked-responder/start req-handler chunk-start-fun)
                                  :position position))
 
-
+(defmethod request-handler-make-chunked-responder/chunk ((req-handler request-handler) chunk-func)
+  "Make a responder lambda `chunk-func' called with the parsed `m2cl:request', the result of which will be chunk
+encoded and sent to the client.  If `chunk-func' returns multiple values, the second value will be considered
+in a boolean context to imply that the function should be called again, recursively."
+  (with-slots (responder-handler) req-handler
+    (labels ((recur (handler request raw)
+               (multiple-value-bind (data again-p) (funcall chunk-func request)
+                 (m2cl:handler-send-http-chunk responder-handler data :request request)
+                 (when again-p (recur handler request raw)))))
+      #'recur)))
 
 (defmethod request-handler-add-chunked/chunk ((req-handler request-handler) chunk-func &key (position :beginning))
   "Add a responder lambda `chunk-func' called with the parsed `m2cl:request', the result of which will be chunk
 encoded and sent to the client.  If `chunk-func' returns multiple values, the second value will be considered
 in a boolean context to imply that the function should be called again, recursively."
-  (with-slots (responder-handler) req-handler
-    (labels ((write-chunk-responder (handler request raw)
-               (multiple-value-bind (data again-p) (funcall chunk-func request)
-                 (m2cl:handler-send-http-chunk responder-handler data :request request)
-                 (when again-p (write-chunk-responder handler request raw)))))
-
-      (request-handler-add-responder req-handler #'write-chunk-responder :position position))))
+  (request-handler-add-responder req-handler
+                                 (request-handler-make-chunked-responder/chunk req-handler chunk-func)
+                                 :position position))
 
 (defmethod request-handler-add-chunked/stop ((req-handler request-handler) &key (position :beginning))
   "Add a stop of chunked responses responder to the chain"

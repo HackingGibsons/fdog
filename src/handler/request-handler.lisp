@@ -188,12 +188,18 @@ in a boolean context to imply that the function should be called again, recursiv
                                  (request-handler-make-chunked-responder/stop req-handler)
                                  :position position))
 
+(defmethod request-handler-make-chunked-responder/trailer ((req-handler request-handler) trailer-func)
+  "Make a processor lambda `trailer-fun' which when called returns an alist of trailer fields in the form
+ ((key . value)..(keyn . valuen)) which will be encoded and sent to the client"
+  (with-slots (responder-handler) req-handler
+    (lambda (handler request raw)
+      (let ((trailers (funcall trailer-func request)))
+        (m2cl:handler-send-http-trailers responder-handler trailers :request request)))))
+
+
 (defmethod request-handler-add-chunked/trailer ((req-handler request-handler) trailer-func &key (position :beginning))
   "Add a processor lambda `trailer-fun' which when called returns an alist of trailer fields in the form
  ((key . value)..(keyn . valuen)) which will be encoded and sent to the client"
-  (with-slots (responder-handler) req-handler
-    (flet ((write-trailer-responder (handler request raw)
-             (let ((trailers (funcall trailer-func request)))
-               (m2cl:handler-send-http-trailers responder-handler trailers :request request))))
-
-      (request-handler-add-responder req-handler #'write-trailer-responder :position position))))
+  (request-handler-add-responder req-handler
+                                 (request-handler-make-chunked-responder/trailer req-handler trailer-func)
+                                 :position position))

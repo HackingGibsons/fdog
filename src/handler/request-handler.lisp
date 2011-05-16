@@ -84,13 +84,15 @@ for the given request handler."
         (make-thread (make-request-handler-poller req-handler)
                      :name (format nil "fdog-handler-poller(~A)" (request-handler-ident req-handler)))))
 
-;; TODO: Handler won't stop until next request, if we're going to try to be polite about it
-;;       Though we now default to a 10ms poll interval, giving us a max 10ms pause...
 (defmethod request-handler-stop ((handler request-handler))
   (when (request-handler-running-p handler)
-    (with-lock-held ((request-handler-lock handler))
-      (join-thread (request-handler-thread handler))
-      :stopped)))
+    (handler-case (with-timeout (1)
+                    (with-lock-held ((request-handler-lock handler))
+                      (join-thread (request-handler-thread handler))
+                      :stopped))
+      (timeout (c)
+        (destroy-thread (request-handler-thread handler))
+        :killed))))
 
 (defmethod request-handler-running-p ((handler request-handler))
   (with-slots (responder) handler

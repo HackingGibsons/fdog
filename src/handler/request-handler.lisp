@@ -90,7 +90,7 @@ for the given request handler."
                     (with-lock-held ((request-handler-lock handler))
                       (join-thread (request-handler-thread handler))
                       :stopped))
-      (timeout (c)
+      (timeout ()
         (destroy-thread (request-handler-thread handler))
         :killed))))
 
@@ -118,6 +118,7 @@ return value"
     (error "Handler must be funcallable"))
   (with-slots (responder-handler) req-handler
     (lambda (handler request raw)
+      (declare (ignore handler raw))
       (m2cl:handler-send-http
        responder-handler (funcall handler-fun request) :request request))))
 

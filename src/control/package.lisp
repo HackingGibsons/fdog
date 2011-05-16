@@ -5,7 +5,8 @@
   (:export :*control-interface*
            :fdog-interface
            :fdog-interface-server
-           :fdog-interface-routes))
+           :fdog-interface-routes
+           :interface-bridge-matching))
 (in-package :fdog-control)
 
 (defparameter *control-interface* nil

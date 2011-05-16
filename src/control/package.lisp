@@ -10,6 +10,7 @@
 
 (defclass fdog-interface ()
   ((server :initarg :server
+           :initform "control"
            :accessor fdog-interface-server)
    (bridges :initform ()
             :accessor fdog-interface-bridges)
@@ -17,30 +18,31 @@
            :accessor fdog-interface-routes))
   (:documentation "An interface for interacting with fdog through Mongrel2"))
 
-(defmethod initialize-instance :around ((self fdog-interface) &rest initargs)
-  (log-for (trace) "Initializing an interface: ~A" initargs)
-  (call-next-method))
+(defmethod initialize-instance :after ((self fdog-interface) &rest initargs)
+  (declare (ignore initargs))
+  (with-slots (server) self
+    (unless (typep server 'mongrel2-server)
+      (let ((servers (fdog-m2sh:servers :name server :refresh t)))
+        (if servers
+            (setf server (car servers))
+            (error (format nil "Could not initialize server from value: ~A" server))))))
+  (initialize-interface self))
 
-(defun init-interface-bridges (&key (name "control") uuid)
-  (let ((server (car (fdog-m2sh:servers :uuid uuid :name name :refresh t))))
-    (unless server (error "Can't find a server!"))
-    (unless (mongrel2-server-running-p server)
-      (if (eq (mongrel2-server-signal/block server :start) :timeout)
-          (error "Timeout starting Mongrel2")))
+(defmethod initialize-interface ((self fdog-interface))
+  (with-slots (server bridges routes) self
+    (mapcar #'request-handler-stop bridges)
+    (setf bridges ()
+          routes ())
 
-    (mapcar #'request-handler-stop *interface-bridges*)
-    (setf *interface-bridges* ())
-
-    (dolist (route (mongrel2-host-routes (mongrel2-server-default-host server)) *interface-bridges*)
+    (dolist (route (mongrel2-host-routes (mongrel2-server-default-host server)) self)
+      (pushnew route routes)
       (with-accessors ((target mongrel2-route-target)) route
         (typecase target
           (mongrel2-handler
-           (log-for (trace) "Found handler: ~A" target)
-           (pushnew (configure-bridges-for target) *interface-bridges*))
+           (pushnew (configure-bridges-for target) bridges))
           (otherwise
-           (if target
-               (log-for (trace) "Let it be known there exists: ~A" target)
-               (log-for (warn) "NIL TARGET FOR ROUTE ~A(~A)" route (slot-value route 'fdog-models::id)))))))))
+           (unless target
+             (log-for (warn) "NIL TARGET FOR ROUTE ~A(~A)" route (slot-value route 'fdog-models::id)))))))))
 
 
 ;;; Scaffold

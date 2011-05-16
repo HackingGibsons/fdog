@@ -28,18 +28,21 @@
 
     (request-handler-add-chunked/start bridge #'chunk-info/start)))
 
+(defmethod configure-control-routes (&optional (interface *control-interface*))
+  (interface-configure-bridges (interface)
+     ("/" :mount-bridge 'mount-control-application)))
+
 (defmethod init-control-interface (&key (server "control"))
   "Creates a new control interface, killing the old, and starts it."
   (when *control-interface*
     (log-for (warn) "Already have a control interface, shutting down..")
     (interface-stop *control-interface*))
   (let ((interface (setf *control-interface* (make-instance 'fdog-interface :server server))))
-    (interface-start-server interface))
 
-  (interface-configure-bridges (*control-interface*)
-     ("/" :mount-bridge 'mount-control-application))
+    (configure-control-routes interface)
 
-  (interface-start-bridges *control-interface*)
+    (interface-start-server interface)
+    (interface-start-bridges *control-interface*))
 
   *control-interface*)
 

@@ -32,7 +32,11 @@
                              (:module "control" :depends-on ("m2sh" "handler")
                               :components  ((:file "package")
                                             (:file "interface" :depends-on ("package"))
-                                            (:file "app" :depends-on ("interface"))))))))
+
+                                            (:module "app" :depends-on ("interface")
+                                             :components ((:file "bootstrap")
+                                                          (:file "router" :depends-on ("bootstrap"))))))))))
+
 
 
 ;; Test operation

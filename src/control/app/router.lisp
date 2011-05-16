@@ -38,9 +38,12 @@
           (g!regex (gensym "regex"))
           (g!error (gensym "error"))
           (g!match (gensym "match")))
-      `(let ()
+      `(let ((,g!route ,route) (,g!exact ,exact) (,g!regex ,regex) (,g!error ,errors)
+             ,g!match)
          (log-for (trace) "Dispatch begin")
-
+         ;; Try exact matches first
+         (dolist (e-route ,g!exact)
+           (log-for (dribble) "Checking exact route: ~A" e-route))
          (log-for (trace) "Dispatch end")))))
 
 (defun root/router% (handler request raw)

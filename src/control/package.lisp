@@ -1,4 +1,5 @@
 (defpackage :fdog-control
+  (:use :sb-mop)
   (:use :cl :fdog-models :bordeaux-threads :fdog-handler)
   (:shadowing-import-from :log5 :log-for)
   (:export :run))
@@ -7,7 +8,20 @@
 (defvar *interface-bridges* ()
   "Bridges configured as part of the web UI")
 
-(defun init-web-ui (&key (name "control") uuid)
+(defclass fdog-interface ()
+  ((server :initarg :server
+           :accessor fdog-interface-server)
+   (bridges :initform ()
+            :accessor fdog-interface-bridges)
+   (routes :initform ()
+           :accessor fdog-interface-routes))
+  (:documentation "An interface for interacting with fdog through Mongrel2"))
+
+(defmethod initialize-instance :around ((self fdog-interface) &rest initargs)
+  (log-for (trace) "Initializing an interface: ~A" initargs)
+  (call-next-method))
+
+(defun init-interface-bridges (&key (name "control") uuid)
   (let ((server (car (fdog-m2sh:servers :uuid uuid :name name :refresh t))))
     (unless server (error "Can't find a server!"))
     (unless (mongrel2-server-running-p server)

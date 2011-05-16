@@ -93,6 +93,9 @@ for the given request handler."
                       :stopped))
       (timeout ()
         (destroy-thread (request-handler-thread handler))
+        (setf ;; Since we're nuking the thread, the lock might be deadlocked
+         (request-handler-lock handler)
+         (make-lock "Responder Loop Lock"))
         :killed))))
 
 (defmethod request-handler-running-p ((handler request-handler))

@@ -11,7 +11,27 @@
   (:documentation "An interface for interacting with fdog through Mongrel2"))
 
 (defmethod interface-stop ((self fdog-interface))
-  (mapcar #'request-handler-stop bridges))
+  (interface-start-server self)
+  (interface-stop-server self))
+
+(defmethod interface-start-server ((self fdog-interface))
+  (with-slots (server) self
+    (unless (mongrel2-server-running-p server)
+      (interface-stop-server self)
+    (mongrel2-server-signal/block server :start))))
+
+(defmethod interface-stop-server ((self fdog-interface))
+  (with-slots (server) self
+    (mongrel2-server-signal/block server :stop)))
+
+(defmethod interface-stop-bridges ((self fdog-interface))
+  (with-slots (bridges) self
+    (mapcar #'request-handler-stop bridges)))
+
+(defmethod interface-start-bridges ((self fdog-interface))
+  (with-slots (bridges) self
+    (interface-stop-bridges self)
+    (mapcar #'request-handler-start bridges)))
 
 (defmethod initialize-instance :after ((self fdog-interface) &rest initargs)
   (declare (ignore initargs))

@@ -16,7 +16,9 @@
   (when *control-interface*
     (interface-stop *control-interface*))
   (let ((interface (setf *control-interface* (make-instance 'fdog-interface :server server))))
-    (interface-start-server interface)))
+    (interface-start-server interface))
+
+  *control-interface*)
 
 ;;; Scaffold
 ;; Some varsdefs

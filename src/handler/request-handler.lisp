@@ -25,7 +25,8 @@
               :accessor request-handler-responder)
    (responder-handler :initform nil
                       :accessor request-handler-responder-handler
-                      :reader request-handler-m2-handler)
+                      :reader request-handler-m2-handler
+                      :reader request-handler-m2cl)
    (responder-lock :initform (make-lock "Responder Loop Lock")
                    :accessor request-handler-lock))
   (:documentation "Class wrapping the creation of request handlers"))
@@ -42,22 +43,25 @@ data available at `raw'"
             (t
              (funcall proc req-handler request raw))))))
 
-(defmethod request-handler-wait->get->process ((req-handler request-handler))
-  (flet ((s2us (s) (round (* s 1000000)))
-         (form-proc-proper (procish)
+(defmethod request-handler-respond-with-chain ((req-handler request-handler) chain req raw)
+  (flet ((form-proc-proper (procish)
            (if (consp procish) procish `(,procish . :special))))
+    (let (proc-results)
+      (dolist (processor chain proc-results)
+        (setf proc-results
+              (append proc-results
+                      `(,(request-handler-process-request-with req-handler
+                                                               (form-proc-proper processor)
+                                                               req raw))))))))
+
+(defmethod request-handler-wait->get->process ((req-handler request-handler))
+  (flet ((s2us (s) (round (* s 1000000))))
     (let ((m2-handler (request-handler-responder-handler req-handler))
           (timeout (request-handler-timeout req-handler))
-          (processors (request-handler-processors req-handler))
-          proc-results)
+          (processors (request-handler-processors req-handler)))
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
         (when (and req (not (m2cl:request-disconnect-p req)))
-          (dolist (processor processors proc-results)
-            (setf proc-results
-                  (append proc-results
-                          `(,(request-handler-process-request-with req-handler
-                                                                   (form-proc-proper processor)
-                                                                   req raw))))))))))
+          (request-handler-respond-with-chain req-handler processors req raw))))))
 
 
 (defmethod make-request-handler-poller ((req-handler request-handler))

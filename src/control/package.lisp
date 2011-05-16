@@ -59,7 +59,8 @@
 
   (defun chunk-two (request)
     (declare (ignorable request))
-    "  Verily, this is the second reply!")
+    (values "  Verily, this is the second reply!"
+            (not (= (random 10) 0))))
 
   (defparameter *chunked-handler*
     (let ((handler (configure-bridges-for *handler*)))

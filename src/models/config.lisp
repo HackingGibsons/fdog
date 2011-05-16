@@ -146,6 +146,11 @@
    :documentation
    "Mongrel2 Route configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-280003.4.3"))
 
+(defmethod print-object ((route mongrel2-route) stream)
+  (with-slots (id reversed path target-type target-id) route
+    (format stream "#<Route(~A)::~:[~;(reversed)~]~A => ~A(~A)>"
+            id (/= reversed 0) path target-type target-id)))
+
 
 ;; TODO: The closures mapping targets at the top should
 ;;       probably be methods spcialized on target :|
@@ -177,6 +182,11 @@
   (:base-table handler
    :documentation
    "Mongrel2 Handler endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-310003.4.6"))
+
+(defmethod print-object ((handler mongrel2-handler) stream)
+  (with-slots (id protocol recv-ident recv-spec send-ident send-spec) handler
+  (format stream "#<Handler(~A):~A::[recv(~A):~A] => [send(~A):~A]>"
+          id protocol recv-ident recv-spec send-ident send-spec)))
 
 (clsql:def-view-class mongrel2-directory (mongrel2-target)
   ((id :type integer

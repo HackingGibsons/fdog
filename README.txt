@@ -46,6 +46,7 @@
 ;; Load and init
 (ql:quickload :fdog)
 (fdog:init)
+(fdog-control:init-control-interface)
 
 ;; Some developer noise that considers the above knobs
 (when *echo-queries*

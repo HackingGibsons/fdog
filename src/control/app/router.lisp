@@ -26,7 +26,22 @@
     (dolist (rule rules)
       (log-for (trace) "Considering: ~A" rule)
       (destructuring-bind (type &rest options) rule
-        nil))))
+        (case type
+          (:exact (log-for (trace) "Exact route: ~A" options)
+                  (push options exact))
+          (:regex (log-for (trace) "Regex route: ~A" options)
+                  (push options regex))
+          (otherwise (log-for (trace) "Error: ~A" rule)
+                     (push rule errors)))))
+    (let ((g!route (gensym "route"))
+          (g!exact (gensym "exact"))
+          (g!regex (gensym "regex"))
+          (g!error (gensym "error"))
+          (g!match (gensym "match")))
+      `(let ()
+         (log-for (trace) "Dispatch begin")
+
+         (log-for (trace) "Dispatch end")))))
 
 (defun root/router% (handler request raw)
   (dispatch-on (m2cl:request-path request)

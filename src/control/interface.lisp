@@ -10,6 +10,10 @@
            :accessor fdog-interface-routes))
   (:documentation "An interface for interacting with fdog through Mongrel2"))
 
+(defmethod interface-bridge-matching ((self fdog-interface) route-path-regex)
+  "Find the bridge configured for the route with a path matching `route-path-regex'"
+  nil)
+
 (defmethod interface-stop ((self fdog-interface))
   (interface-start-server self)
   (interface-stop-server self))

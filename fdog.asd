@@ -36,8 +36,8 @@
 
                                             (:module "app" :depends-on ("interface")
                                              :components ((:file "bootstrap")
-                                                          (:file "router" :depends-on ("bootstrap"))
-                                                          (:module "controllers" :depends-on ("router")
+                                                          (:file "routes" :depends-on ("bootstrap"))
+                                                          (:module "controllers" :depends-on ("bootstrap")
                                                            :components ((:file "root")))))))))))
 
 

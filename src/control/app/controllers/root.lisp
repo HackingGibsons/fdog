@@ -10,6 +10,17 @@
 
       (log-for (trace) "Attempting to route for ~A" path))))
 
+(defmacro with-chunked-reply ((handler &key (code 200) (status "OK")) &body body)
+  `(let ()
+     :undef))
+
+(defun root/404% (handler request raw)
+  (flet ((404-response (req)
+           (format nil "~A Not Found" (m2cl:request-path req))))
+    (let ((404-responer (request-handler-make-chunked-responder/chunk handler 404-response)))
+      (with-chunked-reply (handler :code 404 :status "NOT FOUND")
+        (funcall 404-responer handler request raw)))))
+
 (defun root/404 (handler request raw)
   (flet ((string-responder (req)
            (format nil "404 Not Found: ~A" (m2cl:request-path req))))

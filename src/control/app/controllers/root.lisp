@@ -10,15 +10,17 @@
 
       (log-for (trace) "Attempting to route for ~A" path))))
 
-(defmacro with-handler-chunked-reply-chain ((handler &key (code 200) (status "OK")) &body body)
+(defmacro with-handler-chunked-reply-chain ((handler &key (code 200) (status "OK") (headers nil)) &body body)
   (let ((g!handler (gensym "handler"))
         (g!header-fun (gensym "header-fun"))
         (g!code (gensym "code"))
-        (g!status (gensym "status")))
-    `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status))
+        (g!status (gensym "status"))
+        (g!headers (gensym "headers")))
+    `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
        (flet ((,g!header-fun (req)
                 (declare (ignore req))
-                `((:code . ,,g!code) (:status . ,,g!status))))
+                `((:code . ,,g!code) (:status . ,,g!status)
+                  ,@,g!headers)))
          (list
           (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
           ,@body

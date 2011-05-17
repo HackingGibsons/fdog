@@ -39,7 +39,7 @@
           (g!error (gensym "error"))
           (g!match (gensym "match")))
       (log-for (trace) "Exacts: ~A" exact)
-      `(let ((,g!route ,route) (,g!exact ,exact) (,g!regex ,regex) (,g!error ,errors)
+      `(let ((,g!route ,route) (,g!exact ',exact) (,g!regex ',regex) (,g!error ',errors)
              (,g!match (or (dolist (e-route ,g!exact)
                              (destructuring-bind (path &rest options) e-route
                                (log-for (dribble) "Checking exact route: ~A" path)

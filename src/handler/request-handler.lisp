@@ -43,7 +43,7 @@ data available at `raw'"
             (t
              (funcall proc req-handler request raw))))))
 
-(defmethod request-handler-respond-with-chain ((req-handler request-handler) chain req raw)
+(defmethod request-handler-respond-with-chain ((req-handler request-handler) req raw chain)
   (flet ((form-proc-proper (procish)
            (if (consp procish) procish `(,procish . :special))))
     (let (proc-results)
@@ -61,7 +61,7 @@ data available at `raw'"
           (processors (request-handler-processors req-handler)))
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
         (when (and req (not (m2cl:request-disconnect-p req)))
-          (request-handler-respond-with-chain req-handler processors req raw))))))
+          (request-handler-respond-with-chain req-handler req raw processors))))))
 
 
 (defmethod make-request-handler-poller ((req-handler request-handler))

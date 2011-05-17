@@ -28,6 +28,6 @@
              ;; Bridge builders
              :configure-bridges-for
              ;; Utils
-             :dispatch-on))
+             :with-dispatch-on))
 (in-package :fdog-handler)
 

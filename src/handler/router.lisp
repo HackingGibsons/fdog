@@ -1,6 +1,6 @@
 (in-package :fdog-handler)
 
-(defmacro dispatch-on (route &rest rules)
+(defmacro with-dispatch-on (route binding matched-form &rest rules)
   (log-for (trace) "Dispatching on ~A" route)
   (let (exact regex errors)
     (dolist (rule rules)
@@ -19,6 +19,7 @@
           (g!error (gensym "error"))
           (g!match (gensym "match")))
       (log-for (trace) "Exacts: ~A" exact)
+
       `(let* ((,g!route ,route) (,g!exact ',exact) (,g!regex ',regex) (,g!error ',errors)
               (,g!match (or (dolist (e-route ,g!exact)
                               (log-for (dribble) "=> Current Exact test: ~A" e-route)
@@ -36,7 +37,10 @@
                                   (log-for (dribble) "Matched regex route: ~A => ~A" path options)
                                   (return options))))
 
-                            (or (find :default ,g!error :key #'car)
-                                (find :404 ,g!error :key #'car)))))
+                            (cdr (or (find :default ,g!error :key #'car)
+                                     (find :404 ,g!error :key #'car))))))
          (log-for (dribble) "Matched route: ~A" ,g!match)
-         ,g!match))))
+         (when ,g!match
+           (let ((,binding (eval (getf ,g!match :responder))))
+             ,matched-form)))
+)))

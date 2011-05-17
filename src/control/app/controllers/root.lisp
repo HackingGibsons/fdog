@@ -13,8 +13,6 @@
 (defmacro with-handler-chunked-reply-chain ((handler &key (code 200) (status "OK")) &body body)
   (let ((g!handler (gensym "handler"))
         (g!header-fun (gensym "header-fun"))
-        (g!start-c (gensym "start-c"))
-        (g!stop-c (gensym "stop-c"))
         (g!code (gensym "code"))
         (g!status (gensym "status")))
     `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status))

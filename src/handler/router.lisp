@@ -42,5 +42,4 @@
          (log-for (dribble) "Matched route: ~A" ,g!match)
          (when ,g!match
            (let ((,binding (eval (getf ,g!match :responder))))
-             ,matched-form)))
-)))
+             ,matched-form))))))

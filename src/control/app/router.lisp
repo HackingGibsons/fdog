@@ -54,7 +54,10 @@
                                 (log-for (dribble) "Checking regex route: ~A" path)
                                 (when (ppcre:scan path ,g!route)
                                   (log-for (dribble) "Matched regex route: ~A => ~A" path options)
-                                  (return options)))))))
+                                  (return options))))
+
+                            (or (find :default ,g!error :key #'car)
+                                (find :404 ,g!error :key #'car)))))
          (log-for (dribble) "Matched route: ~A" ,g!match)
          ,g!match))))
 

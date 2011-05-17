@@ -39,14 +39,16 @@
           (g!error (gensym "error"))
           (g!match (gensym "match")))
       (log-for (trace) "Exacts: ~A" exact)
-      `(let ((,g!route ,route) (,g!exact ',exact) (,g!regex ',regex) (,g!error ',errors)
-             (,g!match (or (dolist (e-route ,g!exact)
-                             (destructuring-bind (path &rest options) e-route
-                               (log-for (dribble) "Checking exact route: ~A" path)
-                               (when (string= path ,g!route)
-                                 (log-for (dribble) "Matched exact route: ~A => ~A" path options)
-                                 (return options)))))))
-         (log-for (dribble) "Matched route: ~A" ,g!match)))))
+      `(let* ((,g!route ,route) (,g!exact ',exact) (,g!regex ',regex) (,g!error ',errors)
+              (,g!match (or (dolist (e-route ,g!exact)
+                              (log-for (dribble) "=> Current test: ~A" e-route)
+                              (destructuring-bind (path &rest options) e-route
+                                (log-for (dribble) "Checking exact route: ~A" path)
+                                (when (string= path ,g!route)
+                                  (log-for (dribble) "Matched exact route: ~A => ~A" path options)
+                                  (return options)))))))
+         (log-for (dribble) "Matched route: ~A" ,g!match)
+         ,g!match))))
 
 
 
@@ -64,5 +66,6 @@
 
       (funcall full-responder handler request raw)
 
+      (log-for (trace) "new-router: ~A" (root/router% handler request raw))
       (log-for (trace) "Attempting to route for ~A" path))))
 

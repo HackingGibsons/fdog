@@ -222,3 +222,29 @@ in a boolean context to imply that the function should be called again, recursiv
                                  (request-handler-make-chunked-responder/trailer req-handler trailer-func)
                                  :chunked/trailer
                                  :position position))
+
+(defmacro with-chunked-reply-chain ((handler &key (code 200) (status "OK") (headers nil)) &body body)
+  (let ((g!handler (gensym "handler"))
+        (g!header-fun (gensym "header-fun"))
+        (g!code (gensym "code"))
+        (g!status (gensym "status"))
+        (g!headers (gensym "headers")))
+    `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
+       (flet ((,g!header-fun (req)
+                (declare (ignore req))
+                `((:code . ,,g!code) (:status . ,,g!status)
+                  ,@,g!headers)))
+         (list
+          (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
+          ,@body
+          (request-handler-make-chunked-responder/stop ,g!handler))))))
+
+(defmacro with-chunked-reply-chain-response ((handler request raw
+                                              &rest keys &key &allow-other-keys)
+                                              &body body)
+  (let ((g!handler (gensym "handler")) (g!request (gensym "request")) (g!raw (gensym "raw")))
+    `(let ((,g!handler ,handler) (,g!request ,request) (,g!raw ,raw))
+       (request-handler-respond-with-chain ,g!handler ,g!request ,g!raw
+         (with-chunked-reply-chain (,g!handler ,@keys)
+           ,@body)))))
+

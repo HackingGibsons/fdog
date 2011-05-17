@@ -26,6 +26,8 @@
                  :request-handler-add-chunked/chunk
                  :request-handler-add-chunked/stop
                  :request-handler-add-chunked/trailer
+                 :with-chunked-reply-chain
+                 :with-chunked-reply-chain-response
              ;; Bridge builders
              :configure-bridges-for
              ;; Utils

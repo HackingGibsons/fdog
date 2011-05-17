@@ -10,26 +10,10 @@
 
       (log-for (trace) "Attempting to route for ~A" path))))
 
-(defmacro with-chunked-reply-chain ((handler &key (code 200) (status "OK") (headers nil)) &body body)
-  (let ((g!handler (gensym "handler"))
-        (g!header-fun (gensym "header-fun"))
-        (g!code (gensym "code"))
-        (g!status (gensym "status"))
-        (g!headers (gensym "headers")))
-    `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
-       (flet ((,g!header-fun (req)
-                (declare (ignore req))
-                `((:code . ,,g!code) (:status . ,,g!status)
-                  ,@,g!headers)))
-         (list
-          (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
-          ,@body
-          (request-handler-make-chunked-responder/stop ,g!handler))))))
-
 (defun root/404 (handler request raw)
   (flet ((404-response (req)
            (format nil "~A Not Found" (m2cl:request-path req))))
 
-    (request-handler-respond-with-chain handler request raw
-      (with-chunked-reply-chain (handler :code 404 :status "NOT FOUND")
-        (request-handler-make-chunked-responder/chunk handler #'404-response)))))
+    (with-chunked-reply-chain-response (handler request raw
+                                        :code 404 :status "NOT FOUND")
+      (request-handler-make-chunked-responder/chunk handler #'404-response))))

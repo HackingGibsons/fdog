@@ -41,11 +41,19 @@
       (log-for (trace) "Exacts: ~A" exact)
       `(let* ((,g!route ,route) (,g!exact ',exact) (,g!regex ',regex) (,g!error ',errors)
               (,g!match (or (dolist (e-route ,g!exact)
-                              (log-for (dribble) "=> Current test: ~A" e-route)
+                              (log-for (dribble) "=> Current Exact test: ~A" e-route)
                               (destructuring-bind (path &rest options) e-route
                                 (log-for (dribble) "Checking exact route: ~A" path)
                                 (when (string= path ,g!route)
                                   (log-for (dribble) "Matched exact route: ~A => ~A" path options)
+                                  (return options))))
+
+                            (dolist (r-route ,g!regex)
+                              (log-for (dribble) "=> Current Regex test: ~A" r-route)
+                              (destructuring-bind (path &rest options) r-route
+                                (log-for (dribble) "Checking regex route: ~A" path)
+                                (when (ppcre:scan path ,g!route)
+                                  (log-for (dribble) "Matched regex route: ~A => ~A" path options)
                                   (return options)))))))
          (log-for (dribble) "Matched route: ~A" ,g!match)
          ,g!match))))
@@ -55,6 +63,7 @@
 (defun root/router% (handler request raw)
   (dispatch-on (m2cl:request-path request)
                (:exact "/" :responder 'root/respond)
+               (:regex "^/section/[\\w_-]+/?" :responder 'root/section)
 
                (:404 :responder 'root/404)))
 

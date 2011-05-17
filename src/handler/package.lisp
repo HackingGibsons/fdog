@@ -14,6 +14,7 @@
              :request-handler-stop
              :request-handler-running-p
              ;; Responder chain builders
+             :request-handler-respond-with-chain
              :request-handler-add-responder
                :make-request-handler-string-responder
                  :request-handler-add-string-responder

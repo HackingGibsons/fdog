@@ -23,6 +23,7 @@
 
                              (:module "handler" :depends-on ("models")
                               :components ((:file "package")
+                                           (:file "router" :depends-on ("package"))
                                            (:file "request-handler" :depends-on ("package"))
                                            (:file "bridges" :depends-on ("request-handler"))))
 
@@ -35,7 +36,9 @@
 
                                             (:module "app" :depends-on ("interface")
                                              :components ((:file "bootstrap")
-                                                          (:file "router" :depends-on ("bootstrap"))))))))))
+                                                          (:file "router" :depends-on ("bootstrap"))
+                                                          (:module "controllers" :depends-on ("router")
+                                                           :components ((:file "root")))))))))))
 
 
 

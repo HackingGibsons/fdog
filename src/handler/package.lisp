@@ -26,6 +26,8 @@
                  :request-handler-add-chunked/stop
                  :request-handler-add-chunked/trailer
              ;; Bridge builders
-             :configure-bridges-for))
+             :configure-bridges-for
+             ;; Utils
+             :dispatch-on))
 (in-package :fdog-handler)
 

@@ -11,11 +11,6 @@
       (log-for (trace) "Attempting to route for ~A" path))))
 
 (defun root/404 (handler request raw)
-  (flet ((404-response (req)
-           (format nil "~A Not Found" (m2cl:request-path req))))
-
-    (with-chunked-reply-chain-response (handler request raw
-                                        :code 404 :status "NOT FOUND")
-      (&chunk (format nil "~A Not Found" (m2cl:request-path request))))))
-
-;      (request-handler-make-chunked-responder/chunk handler #'404-response))))
+  (with-chunked-reply-chain-response (handler request raw
+                                      :code 404 :status "NOT FOUND")
+    (&chunk (format nil "~A Not Found" (m2cl:request-path request)))))

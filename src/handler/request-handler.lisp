@@ -224,28 +224,25 @@ in a boolean context to imply that the function should be called again, recursiv
                                  :position position))
 
 (defmacro with-chunked-reply-chain ((handler &key (code 200) (status "OK") (headers nil)) &body body)
-  (let ((g!handler (gensym "handler"))
+  (let ((g!handler (gensym "wcrc-handler"))
         (g!header-fun (gensym "header-fun"))
         (g!code (gensym "code"))
         (g!status (gensym "status"))
         (g!headers (gensym "headers")))
     (log-for (trace) "Pre-Package: ~A" *package*)
+
     `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
        (flet ((,g!header-fun (req)
                 (declare (ignore req))
                 `((:code . ,,g!code) (:status . ,,g!status)
                   ,@,g!headers)))
+         (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (chunk-form &environment env)
+                      `(request-handler-make-chunked-responder/chunk ,',g!handler
+                         (lambda (r) ,chunk-form))))
          (list
           (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
-          (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (form) form))
-            ,@(mapcar (lambda (chunk)
-                        (log-for (trace) "Examining: ~A" chunk)
-                        (log-for (trace) "Type: ~A" (type-of chunk))
-                        (log-for (trace) "Package: ~A" *package*)
-                        `(request-handler-make-chunked-responder/chunk ,g!handler
-                          (lambda (r) (format nil "Myyep"))))
-                      body))
-          (request-handler-make-chunked-responder/stop ,g!handler))))))
+            ,@body
+          (request-handler-make-chunked-responder/stop ,g!handler)))))))
 
 (defmacro with-chunked-reply-chain-response ((handler request raw
                                               &rest keys &key &allow-other-keys)

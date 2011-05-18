@@ -238,11 +238,11 @@ in a boolean context to imply that the function should be called again, recursiv
                   ,@,g!headers)))
          (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (chunk-form)
                       `(request-handler-make-chunked-responder/chunk ,',g!handler
-                         (lambda (r) ,chunk-form))))
-         (list
-          (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
+                                                                     (lambda (r) ,chunk-form))))
+           (list
+            (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
             ,@body
-          (request-handler-make-chunked-responder/stop ,g!handler)))))))
+            (request-handler-make-chunked-responder/stop ,g!handler)))))))
 
 (defmacro with-chunked-reply-chain-response ((handler request raw
                                               &rest keys &key &allow-other-keys)

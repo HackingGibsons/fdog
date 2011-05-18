@@ -228,7 +228,8 @@ in a boolean context to imply that the function should be called again, recursiv
         (g!header-fun (gensym "header-fun"))
         (g!code (gensym "code"))
         (g!status (gensym "status"))
-        (g!headers (gensym "headers")))
+        (g!headers (gensym "headers"))
+        (!&chunk (intern (symbol-name '#:&chunk) *package*)))
     (log-for (trace) "Pre-Package: ~A" *package*)
 
     `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
@@ -236,7 +237,7 @@ in a boolean context to imply that the function should be called again, recursiv
                 (declare (ignore req))
                 `((:code . ,,g!code) (:status . ,,g!status)
                   ,@,g!headers)))
-         (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (chunk-form)
+         (macrolet ((,!&chunk (chunk-form)
                       `(request-handler-make-chunked-responder/chunk ,',g!handler
                                                                      (lambda (r) ,chunk-form))))
            (list

@@ -236,7 +236,11 @@ in a boolean context to imply that the function should be called again, recursiv
                   ,@,g!headers)))
          (list
           (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
-          ,@body
+          ,@(mapcar (lambda (chunk)
+                      (log-for (trace) "Examining: ~A" chunk)
+                      (log-for (trace) "Type: ~A" (type-of chunk))
+                      chunk)
+                    body)
           (request-handler-make-chunked-responder/stop ,g!handler))))))
 
 (defmacro with-chunked-reply-chain-response ((handler request raw

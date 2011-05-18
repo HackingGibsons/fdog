@@ -236,7 +236,7 @@ in a boolean context to imply that the function should be called again, recursiv
                 (declare (ignore req))
                 `((:code . ,,g!code) (:status . ,,g!status)
                   ,@,g!headers)))
-         (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (chunk-form &environment env)
+         (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (chunk-form)
                       `(request-handler-make-chunked-responder/chunk ,',g!handler
                          (lambda (r) ,chunk-form))))
          (list

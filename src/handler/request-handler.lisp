@@ -229,6 +229,7 @@ in a boolean context to imply that the function should be called again, recursiv
         (g!code (gensym "code"))
         (g!status (gensym "status"))
         (g!headers (gensym "headers")))
+    (log-for (trace) "Pre-Package: ~A" *package*)
     `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
        (flet ((,g!header-fun (req)
                 (declare (ignore req))
@@ -236,11 +237,14 @@ in a boolean context to imply that the function should be called again, recursiv
                   ,@,g!headers)))
          (list
           (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
-          ,@(mapcar (lambda (chunk)
-                      (log-for (trace) "Examining: ~A" chunk)
-                      (log-for (trace) "Type: ~A" (type-of chunk))
-                      chunk)
-                    body)
+          (macrolet ((,(intern (symbol-name '#:&chunk) *package*) (form) form))
+            ,@(mapcar (lambda (chunk)
+                        (log-for (trace) "Examining: ~A" chunk)
+                        (log-for (trace) "Type: ~A" (type-of chunk))
+                        (log-for (trace) "Package: ~A" *package*)
+                        `(request-handler-make-chunked-responder/chunk ,g!handler
+                          (lambda (r) (format nil "Myyep"))))
+                      body))
           (request-handler-make-chunked-responder/stop ,g!handler))))))
 
 (defmacro with-chunked-reply-chain-response ((handler request raw

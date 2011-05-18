@@ -16,4 +16,6 @@
 
     (with-chunked-reply-chain-response (handler request raw
                                         :code 404 :status "NOT FOUND")
-      (request-handler-make-chunked-responder/chunk handler #'404-response))))
+      (&chunk (format nil "~A Not Found" (m2cl:request-path request))))))
+
+;      (request-handler-make-chunked-responder/chunk handler #'404-response))))

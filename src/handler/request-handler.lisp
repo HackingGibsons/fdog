@@ -75,11 +75,11 @@ for the given request handler."
       (loop while (acquire-lock (request-handler-lock req-handler) nil) do
            (unwind-protect
                 (handler-case (request-handler-wait->get->process req-handler)
-                  ;; TODO: This thing down here, while helping, hides some errors.
-                  ;;       I need to make sure I only handler interrupted syscalls
-                  (simple-error (c) (let ((r (find-restart :terminate-thread c)))
-                                      (format t "Restart: ~A Cond: ~A" r c)
-                                      (signal c))))
+                  (simple-error (c) (cond ((= (sb-alien:get-errno) sb-posix:eintr)
+                                           (log-for (trace) "Syscall interrupted in poll loop. Ignoring"))
+                                          (t
+                                           (log-for (trace) "Condition from poller: ~A" c)
+                                           (signal c)))))
              (release-lock (request-handler-lock req-handler))))
       (setf (request-handler-responder-handler req-handler) nil))))
 

@@ -238,8 +238,14 @@ in a boolean context to imply that the function should be called again, recursiv
                 `((:code . ,,g!code) (:status . ,,g!status)
                   ,@,g!headers)))
          (macrolet ((,!&chunk (chunk-form)
-                      `(request-handler-make-chunked-responder/chunk ,',g!handler
-                                                                     (lambda (r) ,chunk-form))))
+                      (let ((g!result (gensym "result")))
+                        `(let ((,g!result ,chunk-form))
+                           (log-for (dribble) "Result: ~A" ,g!result)
+                           (request-handler-make-chunked-responder/chunk ,',g!handler
+                            (typecase ,g!result
+                              ((or symbol function) ,g!result)
+                              (otherwise (lambda (r) (declare (ignore r))
+                                                 ,g!result))))))))
            (list
             (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
             ,@body

@@ -4,7 +4,7 @@
   (let ((default '((:code . 200) (:status . "OK")
                    ("Content-Type" . "text/html")
                    ("X-Fdog" . "request-handler"))))
-    (remove-duplicates (append default headers)
+    (remove-duplicates (append default (remove-if #'null headers :key #'cdr))
                        :key #'car :test #'string=)))
 
 (defclass request-handler ()
@@ -137,7 +137,7 @@ first return value as the body and an optional second value with a headers alist
       (let ((body-headers (multiple-value-list (funcall handler-fun request))))
         (m2cl:handler-send-http
          responder-handler (first body-headers)
-         :headers (second body-headers)
+         :headers (merge-headers (second body-headers))
          :request request)))))
 
 (defmethod request-handler-add-string-responder ((req-handler request-handler) handler-fun
@@ -233,7 +233,7 @@ in a boolean context to imply that the function should be called again, recursiv
                                  :chunked/trailer
                                  :position position))
 
-(defmacro with-chunked-reply-chain ((handler &key (code 200) (status "OK") (headers nil)) &body body)
+(defmacro with-chunked-reply-chain ((handler &key code status headers) &body body)
   (let ((g!handler (gensym "wcrc-handler"))
         (g!header-fun (gensym "header-fun"))
         (g!code (gensym "code"))

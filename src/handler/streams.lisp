@@ -10,6 +10,10 @@
     :accessor chanked-stream-request))
   (:documentation "A stream for providing chunked HTTP output"))
 
+(defmethod close ((stream chunked-http-output-stream) &key abort)
+  (with-slots (handler request) stream
+    (m2cl:handler-send-http-chunked-finish responder-handler :request request)))
+
 (defmethod stream-write-char ((stream chunked-http-output-stream) char)
   (stream-write-sequence stream
    (with-output-to-string (cheating) (format cheating "~C" char))))

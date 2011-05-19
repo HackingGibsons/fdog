@@ -1,5 +1,9 @@
 (in-package :fdog-handler)
 
+(defparameter *default-headers*
+  '(("Content-Type" . "text/html")
+    ("X-Fdog" . "request-handler")))
+
 (defclass request-handler ()
   ((ident :initarg :ident
           :reader request-handler-ident)
@@ -121,14 +125,17 @@ from simpler lambdas"
 
 (defmethod make-request-handler-string-responder ((req-handler request-handler) handler-fun)
   "Make a responder that calls `handler-fun' with the request and responds fully with the
-return value"
+first return value as the body and an optional second value with a headers alist"
   (unless (or (functionp handler-fun) (fboundp handler-fun))
     (error "Handler must be funcallable"))
   (with-slots (responder-handler) req-handler
     (lambda (handler request raw)
       (declare (ignore handler raw))
-      (m2cl:handler-send-http
-       responder-handler (funcall handler-fun request) :request request))))
+      (let ((body-headers (multiple-value-list (funcall handler-fun request))))
+        (m2cl:handler-send-http
+         responder-handler (first body-headers)
+         :headers (second body-headers)
+         :request request)))))
 
 (defmethod request-handler-add-string-responder ((req-handler request-handler) handler-fun
                                                  &key (position :beginning))
@@ -240,7 +247,8 @@ in a boolean context to imply that the function should be called again, recursiv
            ,g!chunks)
        (flet ((,g!header-fun (req) (declare (ignore req))
                 `((:code . ,,g!code) (:status . ,,g!status)
-                  ,@,g!headers)))
+                  ,@(remove-duplicates (append *default-headers* ,g!headers)
+                                       :key #'car :test #'string=))))
 
          (macrolet ((,!&chunk (chunk-form)
                       (let ((g!result (gensym "result")))

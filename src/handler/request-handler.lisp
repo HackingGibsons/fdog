@@ -1,8 +1,11 @@
 (in-package :fdog-handler)
 
-(defparameter *default-headers*
-  '(("Content-Type" . "text/html")
-    ("X-Fdog" . "request-handler")))
+(defun merge-headers (headers)
+  (let ((default '((:code . 200) (:status . "OK")
+                   ("Content-Type" . "text/html")
+                   ("X-Fdog" . "request-handler"))))
+    (remove-duplicates (append default headers)
+                       :key #'car :test #'string=)))
 
 (defclass request-handler ()
   ((ident :initarg :ident
@@ -246,9 +249,9 @@ in a boolean context to imply that the function should be called again, recursiv
     `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers)
            ,g!chunks)
        (flet ((,g!header-fun (req) (declare (ignore req))
-                `((:code . ,,g!code) (:status . ,,g!status)
-                  ,@(remove-duplicates (append *default-headers* ,g!headers)
-                                       :key #'car :test #'string=))))
+                (merge-headers
+                 `((:code . ,,g!code) (:status . ,,g!status)
+                   ,@,g!headers))))
 
          (macrolet ((,!&chunk (chunk-form)
                       (let ((g!result (gensym "result")))

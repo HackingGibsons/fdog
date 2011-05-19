@@ -1,6 +1,6 @@
 (in-package :fdog-handler)
 
-(defclass chunked-http-output-stream (fundamental-output-stream fundamental-character-stream)
+(defclass chunked-http-output-stream (fundamental-character-output-stream)
   ((handler
     :initarg :handler
     :accessor chunked-stream-handler

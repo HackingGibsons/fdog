@@ -1,5 +1,7 @@
 (defpackage :fdog-handler
-  (:use :cl :bordeaux-threads
+  (:use :cl
+        :sb-gray
+        :bordeaux-threads
         :fdog-models :fdog-utils)
   (:shadowing-import-from :log5 :log-for)
   (:export :request-handler
@@ -29,6 +31,7 @@
                  :request-handler-add-chunked/trailer
                  :with-chunked-reply-chain
                  :with-chunked-reply-chain-response
+                 :with-chunked-stream-reply
              ;; Bridge builders
              :configure-bridges-for
              ;; Utils

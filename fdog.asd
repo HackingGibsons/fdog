@@ -25,8 +25,9 @@
 
                              (:module "handler" :depends-on ("models")
                               :components ((:file "package")
+                                           (:file "streams" :depends-on ("package"))
                                            (:file "router" :depends-on ("package"))
-                                           (:file "request-handler" :depends-on ("package"))
+                                           (:file "request-handler" :depends-on ("package" "streams"))
                                            (:file "bridges" :depends-on ("request-handler"))))
 
                              (:module "m2sh" :depends-on ("models")

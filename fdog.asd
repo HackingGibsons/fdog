@@ -11,7 +11,8 @@
                #:uffi)
   :in-order-to ((test-op (load-op fdog-tests)))
   :components ((:module "src"
-                :components ((:file "package")
+                :components ((:file "utils")
+                             (:file "package" :depends-on ("utils"))
                              (:file "fdog" :depends-on ("models"))
 
                              (:module "models" :depends-on ("package")

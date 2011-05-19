@@ -229,9 +229,15 @@ in a boolean context to imply that the function should be called again, recursiv
         (g!code (gensym "code"))
         (g!status (gensym "status"))
         (g!headers (gensym "headers"))
+
+        (g!chunks (gensym "chunks"))
+
+        ;; &chunk symbol in the right package.
+        ;; Used by the macrolet walker
         (!&chunk (intern (symbol-name '#:&chunk) *package*)))
 
-    `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
+    `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers)
+           ,g!chunks)
        (flet ((,g!header-fun (req) (declare (ignore req))
                 `((:code . ,,g!code) (:status . ,,g!status)
                   ,@,g!headers)))
@@ -245,12 +251,16 @@ in a boolean context to imply that the function should be called again, recursiv
                                              (otherwise (lambda (r) (declare (ignore r))
                                                                 ,g!result)))))
                            (when ,g!result
-                             (request-handler-make-chunked-responder/chunk ,',g!handler ,g!result))))))
-           (remove nil
-             (list
-              (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
-              ,@body
-              (request-handler-make-chunked-responder/stop ,g!handler))))))))
+                             (setf ,',g!chunks
+                                   (append ,',g!chunks (list
+                                                        (request-handler-make-chunked-responder/chunk ,',g!handler ,g!result))))
+                             ,g!result)))))
+           (progn ,@body))
+
+         (append
+          (list (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun))
+          ,g!chunks
+          (list (request-handler-make-chunked-responder/stop ,g!handler)))))))
 
 (defmacro with-chunked-reply-chain-response ((handler request raw
                                               &rest keys &key &allow-other-keys)

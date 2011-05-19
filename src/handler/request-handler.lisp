@@ -230,26 +230,27 @@ in a boolean context to imply that the function should be called again, recursiv
         (g!status (gensym "status"))
         (g!headers (gensym "headers"))
         (!&chunk (intern (symbol-name '#:&chunk) *package*)))
-    (log-for (trace) "Pre-Package: ~A" *package*)
 
     `(let ((,g!handler ,handler) (,g!code ,code) (,g!status ,status) (,g!headers ,headers))
-       (flet ((,g!header-fun (req)
-                (declare (ignore req))
+       (flet ((,g!header-fun (req) (declare (ignore req))
                 `((:code . ,,g!code) (:status . ,,g!status)
                   ,@,g!headers)))
+
          (macrolet ((,!&chunk (chunk-form)
                       (let ((g!result (gensym "result")))
-                        `(let ((,g!result ,chunk-form))
-                           (log-for (dribble) "Result: ~A" ,g!result)
-                           (request-handler-make-chunked-responder/chunk ,',g!handler
-                            (typecase ,g!result
-                              ((or symbol function) ,g!result)
-                              (otherwise (lambda (r) (declare (ignore r))
-                                                 ,g!result))))))))
-           (list
-            (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
-            ,@body
-            (request-handler-make-chunked-responder/stop ,g!handler)))))))
+                        `(let* ((,g!result ,chunk-form)
+                                (,g!result (typecase ,g!result
+                                             (null nil)
+                                             ((or symbol function) ,g!result)
+                                             (otherwise (lambda (r) (declare (ignore r))
+                                                                ,g!result)))))
+                           (when ,g!result
+                             (request-handler-make-chunked-responder/chunk ,',g!handler ,g!result))))))
+           (remove nil
+             (list
+              (request-handler-make-chunked-responder/start ,g!handler #',g!header-fun)
+              ,@body
+              (request-handler-make-chunked-responder/stop ,g!handler))))))))
 
 (defmacro with-chunked-reply-chain-response ((handler request raw
                                               &rest keys &key &allow-other-keys)

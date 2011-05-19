@@ -1,5 +1,6 @@
 (defpackage :fdog-handler
-  (:use :cl :fdog-models :bordeaux-threads)
+  (:use :cl :bordeaux-threads
+        :fdog-models :fdog-utils)
   (:shadowing-import-from :log5 :log-for)
   (:export :request-handler
              ;;Slot Access

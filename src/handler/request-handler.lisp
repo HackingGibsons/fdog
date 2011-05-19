@@ -233,6 +233,24 @@ in a boolean context to imply that the function should be called again, recursiv
                                  :chunked/trailer
                                  :position position))
 
+(defmacro with-chunked-stream-reply ((handler request stream &key code status headers) &body body)
+  (let ((g!handler (gensym "handler"))
+        (g!request (gensym "request"))
+        (g!m2-handler (gensym "m2-handler")))
+    `(let* ((,g!handler ,handler) (,g!request ,request)
+            (,g!m2-handler (request-handler-m2cl ,g!handler)))
+       (with-open-stream (,stream (make-instance 'chunked-http-output-stream
+                                                 :handler ,g!m2-handler :request ,g!request))
+         ;; TODO: This should sit somewhere in the stream class?
+         (m2cl:handler-send-http-chunked ,g!m2-handler :request ,g!request
+                                         :code ,code :status ,status
+                                         :headers (remove-if (lambda (x) (member x '(:code :status)))
+                                                             (merge-headers ,headers)
+                                                             :key #'car))
+         ,@body))))
+
+
+
 (defmacro with-chunked-reply-chain ((handler &key code status headers) &body body)
   (let ((g!handler (gensym "wcrc-handler"))
         (g!header-fun (gensym "header-fun"))

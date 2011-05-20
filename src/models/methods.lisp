@@ -13,6 +13,10 @@
 (defgeneric mongrel2-server-config (server)
   (:documentation "Get the path of the config for a given mongrel2 server"))
 
+;; Helper
+(defmethod model-pk (obj)
+  (slot-value obj 'id))
+
 ;;; Method specializations
 (defmethod mongrel2-server-signal/block ((server mongrel2-server) signal
                                          &key (until-p 'mongrel2-server-running-p)

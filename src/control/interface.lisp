@@ -4,6 +4,8 @@
   ((server :initarg :server
            :initform "control"
            :accessor fdog-interface-server)
+   (host :initarg :host
+         :accessor fdog-interface-host)
    (bridges :initform ()
             :accessor fdog-interface-bridges)
    (routes :initform ()
@@ -76,12 +78,25 @@ with an exact pathname of / on the server configured for `interface'"
 
 (defmethod initialize-instance :after ((self fdog-interface) &rest initargs)
   (declare (ignore initargs))
-  (with-slots (server) self
+  (with-slots (server host) self
     (unless (typep server 'mongrel2-server)
       (let ((servers (fdog-m2sh:servers :name server :refresh t)))
         (if servers
             (setf server (car servers))
-            (error (format nil "Could not initialize server from value: ~A" server))))))
+            (error (format nil "Could not initialize server from value: ~A" server)))))
+
+    (unless (slot-boundp self 'host)
+      (setf host (mongrel2-server-default-host server)))
+    (unless (typep host 'mongrel2-host)
+      (setf host
+            (find host (fdog-m2sh:server-hosts server :refresh t)
+                  :key #'mongrel2-host-name :test #'string=)))
+    (unless (and host (member (model-pk host) (fdog-m2sh:server-hosts server :refresh t)
+                              :test #'= :key #'model-pk))
+      (log-for (dribble) "Configured host: ~A" (mongrel2-host-name host))
+      (log-for (dribble) "Server: ~A" (mongrel2-server-name server))
+      (log-for (dribble) "Hosts: ~A" (mapcar #'mongrel2-host-name (fdog-m2sh:server-hosts server :refresh t)))
+      (error (format nil "Configured host ~A not found or not in hosts of ~A" host server))))
   (initialize-interface self))
 
 (defmethod initialize-interface ((self fdog-interface))
@@ -90,7 +105,7 @@ with an exact pathname of / on the server configured for `interface'"
     (setf bridges ()
           routes ())
 
-    (dolist (route (mongrel2-host-routes (mongrel2-server-default-host server)) self)
+    (dolist (route (mongrel2-host-routes (fdog-interface-host self)) self)
       (pushnew route routes)
       (with-accessors ((target mongrel2-route-target)) route
         (typecase target

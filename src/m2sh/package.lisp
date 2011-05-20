@@ -29,7 +29,7 @@
       (push host hosts)))
   #.(clsql:restore-sql-reader-syntax-state))
 
-(defun servers (&key uuid host name (refresh nil))
+(defun servers (&key uuid host name (refresh nil) one)
   "Return a list of servers given a :uuid and :host
 Omitted, all servers are returned"
   #.(clsql:locally-enable-sql-reader-syntax)
@@ -44,8 +44,9 @@ Omitted, all servers are returned"
     (when params
       (setf params `(:where ,(eval (car `([and ,@params]))))))
 
-    (apply 'clsql:select `(mongrel2-server ,@defaults ,@params)))
-  #.(clsql:restore-sql-reader-syntax-state))
+    (let ((the-servers (apply 'clsql:select `(mongrel2-server ,@defaults ,@params))))
+      (if one (car the-servers) the-servers))
+  #.(clsql:restore-sql-reader-syntax-state)))
 
 (defun init ()
   "Drops, thenc creates all the tables of the config"

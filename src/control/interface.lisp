@@ -28,7 +28,7 @@ Only the first is returned as the first value"
       (values (car bridges)
               bridges))))
 
-(defmacro interface-configure-bridges ((interface) &rest configs)
+(defmacro interface-configure-bridges ((interface) &body configs)
   "Helper for calling a specific configuration function with a bridge
 for a route you expect to exist with a given path, e.g.:
 

@@ -38,6 +38,7 @@
              :mongrel2-host-name
              :mongrel2-host-matching
              :mongrel2-host-routes
+             :mongrel2-host-server
            :mongrel2-handler
              :mongrel2-handler-send-ident
              :mongrel2-handler-recv-ident
@@ -48,6 +49,7 @@
            :mongrel2-route
              :mongrel2-route-path
              :mongrel2-route-target
+             :mongrel2-route-host
            :mongrel2-target-route
            :mongrel2-setting
            :mongrel2-mimetype

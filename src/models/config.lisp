@@ -80,6 +80,7 @@
              :accessor mongrel2-host-matching)
 
    (server :db-kind :join
+           :accessor mongrel2-host-server
            :db-info (:join-class mongrel2-server
                      :home-key server-id
                      :foreign-key id
@@ -135,6 +136,12 @@
              :initarg :reversed
              :initform 0)
    (host-id :type integer)
+   (host :db-kind :join
+         :accessor mongrel2-route-host
+         :db-info (:join-class mongrel2-host
+                   :home-key host-id
+                   :foreign-key id
+                   :set nil))
 
    (target :db-kind :virtual :allocation :virtual
            :accessor mongrel2-route-target

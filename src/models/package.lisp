@@ -11,6 +11,8 @@
   (:export :connected-p :connect :disconnect :reconnect
            :*server-database*
 
+           ;; Helpers
+           :model-pk
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
              ;; Data access

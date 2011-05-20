@@ -187,7 +187,8 @@ in a boolean context to imply that the function should be called again, recursiv
   (with-slots (responder-handler) req-handler
     (labels ((recur (handler request raw)
                (multiple-value-bind (data again-p) (funcall chunk-func request)
-                 (m2cl:handler-send-http-chunk responder-handler data :request request)
+                 (m2cl:handler-send-http-chunk responder-handler data :request request
+                                               :binary-body-p (not (stringp data)))
                  (when again-p (recur handler request raw)))))
       #'recur)))
 

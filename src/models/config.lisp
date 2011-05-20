@@ -97,6 +97,10 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
+(defmethod print-object ((host mongrel2-host) stream)
+  (with-slots (id name matching routes) host
+    (format stream "#<Host(~A:~A)::~A ~A route>" id name matching (length routes))))
+
 (defun complex-join (&key find-model model-field foreign-key (foreign-field 'id))
   (lambda (action object &optional value)
     #.(clsql:locally-enable-sql-reader-syntax)

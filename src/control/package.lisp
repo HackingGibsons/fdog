@@ -8,6 +8,7 @@
            ;;; Data access
            :fdog-interface
            :fdog-interface-server
+           :fdog-interface-host
            :fdog-interface-routes
            ;;; General
            :interface-stop

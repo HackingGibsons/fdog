@@ -23,7 +23,10 @@ quicklisp: sanity-check
 	if [ "$?" -ne "0" ]; then \
 	  echo "=> QL is missing. Installing"; \
 	  curl -L $(QL_URL) > /tmp/quicklisp.lisp; \
-	  echo | $(LISP) --eval '(sb-ext:disable-debugger)' --load /tmp/quicklisp.lisp --eval '(quicklisp-quickstart:install)' --eval '(ql:add-to-init-file)'; \
+	  $(LISP) --eval '(sb-ext:disable-debugger)' --load /tmp/quicklisp.lisp \
+	    --eval '(quicklisp-quickstart:install)' \
+	    --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
+	    --eval '(quit)'; \
 	fi
 
 # Dependency targets

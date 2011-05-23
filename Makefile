@@ -48,7 +48,7 @@ ubuntu-sbcl:
 	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
 	@echo "=> Round one of dependancies"
-	yes Y | sudo aptitude install curl build-essential git sqlite3 libsqlite3-dev
+	yes Y | sudo aptitude install curl build-essential
 	@echo "=> Fetching/extracting/installing SBCL binary"
 	mkdir -p /tmp/sbcl-build && \
 	  cd /tmp/sbcl-build && \

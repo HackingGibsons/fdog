@@ -53,9 +53,9 @@ ubuntu-0mq: ubuntu-basics
 	rm -rf /tmp/0mq-build && \
 	mkdir -p /tmp/0mq-build && \
 	  cd /tmp/0mq-build && \
-	  curl $(0MQ_URL_SRC) | tar xzf - &&
-	  cd zeromq* &&
-	  ./configure &&
+	  curl $(0MQ_URL_SRC) | tar xzf - && \
+	  cd zeromq* && \
+	  ./configure && \
 	  make && sudo make install
 
 

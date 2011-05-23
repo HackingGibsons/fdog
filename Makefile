@@ -10,12 +10,12 @@ VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 
 
 # Inteded UI targets
-init: submodules sanity-check configured-asdf
+init: submodules sanity-check quicklisp configured-asdf
 
 submodules:
 	git submodule update --init --recursive
 
-# WIP
+# Dependency targets
 QL_TEST ?= $(LISP) --eval '(quit :unix-status (if (find-package :ql) 0 1))'
 QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"
 quicklisp: sanity-check
@@ -28,7 +28,6 @@ quicklisp: sanity-check
 	    --eval '(quit)'; \
 	}
 
-# Dependency targets
 configured-asdf: configure-asdf-registry $(FDOG_ASDF_CONF_NAME) $(VENDOR_ASDF_CONF_NAME)
 
 configure-asdf-registry:

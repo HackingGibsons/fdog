@@ -1,6 +1,7 @@
 ROOT ?= $(shell pwd)
 LISP ?= $(shell which sbcl)
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d
+BUILDAPP ?= $(ROOT)/bin/buildapp
 
 FDOG_ASDF_CONF = (:directory \"$(ROOT)/\")
 FDOG_ASDF_CONF_NAME = $(REGISTRYD)/"01-fdog.conf"
@@ -16,6 +17,13 @@ submodules:
 	git submodule update --init --recursive
 
 # Dependency targets
+buildapp: quicklisp $(BUILDAPP)
+$(BUILDAPP):
+	$(LISP) --eval '(sb-ext:disable-debugger)' \
+	        --eval '(ql:quickload :buildapp)' \
+	        --eval '(buildapp:build-buildapp "$(BUILDAPP)")' \
+	        --eval '(quit)'
+
 QL_TEST ?= $(LISP) --eval '(quit :unix-status (if (find-package :ql) 0 1))'
 QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"
 quicklisp: sanity-check

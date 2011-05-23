@@ -59,7 +59,7 @@ ubuntu-sbcl: ubuntu-basics
 	@echo "=> Cleaning up"
 	rm -rf /tmp/sbcl-build
 
-ubuntu-baics:
+ubuntu-basics:
 	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
 	@echo "=> Round one of dependancies"

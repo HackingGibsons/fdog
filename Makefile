@@ -1,4 +1,6 @@
 ROOT ?= $(shell pwd)
+LISP ?= $(shell which sbcl)
+QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d
 
 FDOG_ASDF_CONF = (:directory \"$(ROOT)/\")
@@ -13,6 +15,11 @@ init: submodules sanity-check configured-asdf
 
 submodules:
 	git submodule update --init --recursive
+
+# WIP
+quicklisp: sanity-check
+	@echo "Lisp: " $(LISP)
+	@echo "Quicklisp: " $(QL_URL)
 
 # Dependency targets
 configured-asdf: configure-asdf-registry $(FDOG_ASDF_CONF_NAME) $(VENDOR_ASDF_CONF_NAME)
@@ -32,5 +39,5 @@ $(VENDOR_ASDF_CONF_NAME):
 	echo "$(VENDOR_ASDF_CONF)" > $(VENDOR_ASDF_CONF_NAME)
 
 # Utility targets
-sanity-check: $(ROOT)/fdog.asd
+sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."

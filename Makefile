@@ -50,12 +50,13 @@ ubuntu-mongrel2:
 SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"
 ubuntu-sbcl: ubuntu-basics
 	@echo "=> Fetching/extracting/installing SBCL binary"
-	[[ -e "$(LISP)" ]] && echo "SBCL Already installed." || \
-	mkdir -p /tmp/sbcl-build && \
-	  cd /tmp/sbcl-build && \
-	  curl -L $(SBCL_URL_BIN) | tar xjf - && \
-	  cd sbcl* && \
-	  sudo sh install.sh
+	[ -e "$(LISP)" ] && echo "SBCL Already installed." || { \
+	  mkdir -p /tmp/sbcl-build && \
+	    cd /tmp/sbcl-build && \
+	    curl -L $(SBCL_URL_BIN) | tar xjf - && \
+	    cd sbcl* && \
+	    sudo sh install.sh; \
+	}
 	@echo "=> Cleaning up"
 	rm -rf /tmp/sbcl-build
 

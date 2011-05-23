@@ -56,6 +56,7 @@ $(VENDOR_ASDF_CONF_NAME):
 sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."
 
+# Ubuntu buildout
 ubuntu: ubuntu-sbcl ubuntu-mongrel2
 
 MONGREL2_URL_SRC ?= "http://mongrel2.org/static/downloads/mongrel2-1.6.tar.bz2"

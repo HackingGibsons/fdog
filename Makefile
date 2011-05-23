@@ -43,14 +43,28 @@ sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."
 
 # Quick helper to build all ubuntu deps
-ubuntu-mongrel2:
-	@echo "=> Installing 0mq and mongrel2"
+ubuntu-mongrel2: ubuntu-0mq
+	@echo "=> Installing mongrel2"
+
+0MQ_URL_SRC ?= "http://download.zeromq.org/zeromq-2.1.7.tar.gz"
+ubuntu-0mq:
+	@echo "=> Installing 0mq"
+	yes Y | sudo aptitude install uuid-dev
+	rm -rf /tmp/0mq-build && \
+	mkdir -p /tmp/0mq-build && \
+	  cd /tmp/0mq-build && \
+	  curl $(0MQ_URL_SRC) | tar xzf - &&
+	  cd zeromq* &&
+	  ./configure &&
+	  make && sudo make install
+
 
 
 SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"
 ubuntu-sbcl: ubuntu-basics
 	@echo "=> Fetching/extracting/installing SBCL binary"
 	[ -e "$(LISP)" ] && echo "SBCL Already installed." || { \
+	  rm -rf /tmp/sbcl-build &&
 	  mkdir -p /tmp/sbcl-build && \
 	    cd /tmp/sbcl-build && \
 	    curl -L $(SBCL_URL_BIN) | tar xjf - && \

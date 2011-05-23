@@ -8,11 +8,13 @@ VENDOR_ASDF_CONF = (:tree \"$(ROOT)/vendor/\")
 VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 
 
-init: update-submodules sanity-check configured-asdf
+# Inteded UI targets
+init: submodules sanity-check configured-asdf
 
-update-submodules:
+submodules:
 	git submodule update --init --recursive
 
+# Dependency targets
 configured-asdf: configure-asdf-registry $(FDOG_ASDF_CONF_NAME) $(VENDOR_ASDF_CONF_NAME)
 
 configure-asdf-registry:

@@ -47,7 +47,7 @@ ubuntu-mongrel2: ubuntu-0mq
 	@echo "=> Installing mongrel2"
 
 0MQ_URL_SRC ?= "http://download.zeromq.org/zeromq-2.1.7.tar.gz"
-ubuntu-0mq:
+ubuntu-0mq: ubuntu-basics
 	@echo "=> Installing 0mq"
 	yes Y | sudo aptitude install uuid-dev
 	rm -rf /tmp/0mq-build && \

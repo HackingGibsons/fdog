@@ -44,7 +44,7 @@ sanity-check: $(ROOT)/fdog.asd $(LISP)
 
 # Quick helper to build all ubuntu deps
 SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"
-ubuntu-req:
+ubuntu-sbcl:
 	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
 	@echo "=> Round one of dependancies"

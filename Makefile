@@ -80,7 +80,7 @@ SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linu
 ubuntu-sbcl: ubuntu-basics
 	@echo "=> Fetching/extracting/installing SBCL binary"
 	[ -e "$(LISP)" ] && echo "SBCL Already installed." || { \
-	  rm -rf /tmp/sbcl-build &&
+	  rm -rf /tmp/sbcl-build && \
 	  mkdir -p /tmp/sbcl-build && \
 	    cd /tmp/sbcl-build && \
 	    curl -L $(SBCL_URL_BIN) | tar xjf - && \

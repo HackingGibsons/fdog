@@ -11,7 +11,7 @@ VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 
 
 # Inteded UI targets
-init: submodules sanity-check quicklisp configured-asdf
+init: sanity-check submodules quicklisp configured-asdf
 
 submodules:
 	git submodule update --init --recursive

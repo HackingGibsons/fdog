@@ -43,13 +43,14 @@ sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."
 
 # Quick helper to build all ubuntu deps
+ubuntu-mongrel2:
+	@echo "=> Installing 0mq and mongrel2"
+
+
 SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"
-ubuntu-sbcl:
-	@echo "=> Making sure we have aptitude"
-	yes Y | sudo apt-get install aptitude
-	@echo "=> Round one of dependancies"
-	yes Y | sudo aptitude install curl build-essential
+ubuntu-sbcl: ubuntu-basics
 	@echo "=> Fetching/extracting/installing SBCL binary"
+	[[ -e "$(LISP)" ]] && echo "SBCL Already installed." || \
 	mkdir -p /tmp/sbcl-build && \
 	  cd /tmp/sbcl-build && \
 	  curl -L $(SBCL_URL_BIN) | tar xjf - && \
@@ -58,5 +59,8 @@ ubuntu-sbcl:
 	@echo "=> Cleaning up"
 	rm -rf /tmp/sbcl-build
 
-
-
+ubuntu-baics:
+	@echo "=> Making sure we have aptitude"
+	yes Y | sudo apt-get install aptitude
+	@echo "=> Round one of dependancies"
+	yes Y | sudo aptitude install curl build-essential

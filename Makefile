@@ -42,9 +42,18 @@ $(VENDOR_ASDF_CONF_NAME):
 sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."
 
-# Quick helper to build all ubuntu deps
+ubuntu: ubuntu-mongrel2
+
+MONGREL2_URL_SRC ?= "http://mongrel2.org/static/downloads/mongrel2-1.6.tar.bz2"
 ubuntu-mongrel2: ubuntu-0mq
 	@echo "=> Installing mongrel2"
+	yes Y | sudo aptitude install sqlite3 libsqlite3-dev
+	rm -rf /tmp/mongrel2-build && \
+	mkdir -p /tmp/mongrel2-build && \
+	  cd /tmp/mongrel2-build && \
+	  curl $(MONGREL2_URL_SRC) | tar xjf - && \
+	  cd mongrel2* && \
+	  make && sudo make install
 
 0MQ_URL_SRC ?= "http://download.zeromq.org/zeromq-2.1.7.tar.gz"
 ubuntu-0mq: ubuntu-basics
@@ -56,7 +65,8 @@ ubuntu-0mq: ubuntu-basics
 	  curl $(0MQ_URL_SRC) | tar xzf - && \
 	  cd zeromq* && \
 	  ./configure && \
-	  make && sudo make install
+	  make && sudo make install && \
+	  sudo ldconfig
 
 
 

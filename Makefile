@@ -1,6 +1,5 @@
 ROOT ?= $(shell pwd)
 LISP ?= $(shell which sbcl)
-QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d
 
 FDOG_ASDF_CONF = (:directory \"$(ROOT)/\")
@@ -17,11 +16,14 @@ submodules:
 	git submodule update --init --recursive
 
 # WIP
-QL_TEST ?= sbcl --eval '(quit :unix-status (if (find-package :ql) 0 1))'
+QL_TEST ?= $(LISP) --eval '(quit :unix-status (if (find-package :ql) 0 1))'
+QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"
 quicklisp: sanity-check
 	$(QL_TEST) \
 	if [ "$?" -ne "0" ]; then \
 	  echo "=> QL is missing. Installing"; \
+	  curl -L $(QL_URL) > /tmp/quicklisp.lisp \
+	  echo | $(LISP) --load /tmp/quicklisp.lisp --eval '(quicklisp-quickstart:install) (ql:add-to-init-file) (quit)' \
 	fi
 
 # Dependency targets

@@ -43,7 +43,20 @@ sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."
 
 # Quick helper to build all ubuntu deps
+SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"
 ubuntu-req:
+	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
-	yes Y | sudo aptitude install clisp build-essential git sqlite3 libsqlite3-dev
+	@echo "=> Round one of dependancies"
+	yes Y | sudo aptitude install curl build-essential git sqlite3 libsqlite3-dev
+	@echo "=> Fetching/extracting SBCL binary"
+	mkdir -p /tmp/sbcl-build && cd /tmp/sbcl-build
+	curl -L $(SBCL_URL_BIN) | tar xjf -
+	@echo "=> Installing SBCL"
+	cd sbcl*
+	sudo sh install.sh
+	@echo "=> Cleaning up"
+	rm -rf /tmp/sbcl-build
+
+
 

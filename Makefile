@@ -41,3 +41,9 @@ $(VENDOR_ASDF_CONF_NAME):
 # Utility targets
 sanity-check: $(ROOT)/fdog.asd $(LISP)
 	@echo "!> Environment looks sane. I'll allow this."
+
+# Quick helper to build all ubuntu deps
+ubuntu-req:
+	yes Y | sudo apt-get install aptitude
+	yes Y | sudo aptitude install clisp build-essential git sqlite3 libsqlite3-dev
+

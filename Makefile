@@ -17,9 +17,12 @@ submodules:
 	git submodule update --init --recursive
 
 # WIP
+QL_TEST ?= sbcl --eval '(quit :unix-status (if (find-package :ql) 0 1))'
 quicklisp: sanity-check
-	@echo "Lisp: " $(LISP)
-	@echo "Quicklisp: " $(QL_URL)
+	$(QL_TEST) \
+	if [ "$?" -ne "0" ]; then \
+	  echo "=> QL is missing. Installing"; \
+	fi
 
 # Dependency targets
 configured-asdf: configure-asdf-registry $(FDOG_ASDF_CONF_NAME) $(VENDOR_ASDF_CONF_NAME)

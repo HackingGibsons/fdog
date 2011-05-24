@@ -41,7 +41,7 @@ $(FDOG):
 	            --eval '(ql:quickload :fdog)' \
 	            --dispatched-entry '/fdog-cli:fdog-main' \
 	|| { echo '[ERROR] Build failed!'; \
-	     rm $(FDOG); exit 1; }
+	     rm -f $(FDOG); exit 1; }
 
 clean-build:
 	@echo "=> Removing fdog builds"

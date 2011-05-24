@@ -3,6 +3,8 @@ LISP ?= $(shell which sbcl || echo /sbcl/does/not/exist)
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d
 BUILDAPP ?= $(ROOT)/bin/buildapp
 
+FDOG ?= $(ROOT)/bin/fdog
+
 FDOG_ASDF_CONF = (:directory \"$(ROOT)/\")
 FDOG_ASDF_CONF_NAME = $(REGISTRYD)/"01-fdog.conf"
 
@@ -15,6 +17,19 @@ init: sanity-check submodules quicklisp configured-asdf
 
 submodules:
 	git submodule update --init --recursive
+
+fdog: init buildapp $(FDOG)
+$(FDOG):
+	@echo "=> Building fdog"
+	$(BUILDAPP) --output $(FDOG) \
+	            --asdf-path $(ROOT) \
+	            --asdf-tree $(ROOT)/vendor \
+	            --load ~/.sbclrc \
+	            --eval '(ql:quickload :fdog)' \
+	            --eval '(defun %%default-main (argv) \
+	                      (format t "Default main: Args: ~A~%" argv))' \
+	            --dispatched-entry '/%%default-main'
+
 
 # Dependency targets
 buildapp: quicklisp $(BUILDAPP)

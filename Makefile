@@ -1,5 +1,5 @@
 ROOT ?= $(shell pwd)
-LISP ?= $(shell which sbcl || echo /bin/does/not/exist)
+LISP ?= $(shell which sbcl || echo /sbcl/does/not/exist)
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d
 BUILDAPP ?= $(ROOT)/bin/buildapp
 

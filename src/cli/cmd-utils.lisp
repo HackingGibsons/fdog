@@ -26,5 +26,6 @@ an entry to the `*commands*' table"
          (ecase what
            (:both cmd)
            (:name (car cmd))
-           (:function (cdr cmd))))))
+           (:function (cdr cmd))
+           (:doc (documentation (get-command name :function) 'function))))))
 

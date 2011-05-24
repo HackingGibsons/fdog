@@ -11,6 +11,9 @@ FDOG_ASDF_CONF_NAME = $(REGISTRYD)/"01-fdog.conf"
 VENDOR_ASDF_CONF = (:tree \"$(ROOT)/vendor/\")
 VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 
+QL_ROOT_NAME ?= "quicklisp"
+QL_ROOT_PATH = "~/$(QL_ROOT_NAME)"
+
 
 # Inteded UI targets
 init: sanity-check submodules quicklisp configured-asdf
@@ -24,12 +27,17 @@ $(FDOG):
 	$(BUILDAPP) --output $(FDOG) \
 	            --asdf-path $(ROOT) \
 	            --asdf-tree $(ROOT)/vendor \
-	            --load ~/.sbclrc \
+		    --eval '(sb-ext:disable-debugger)' \
+	            --eval '(declaim (optimize (debug 0)))' \
+	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \
 	            --eval '(defun %%default-main (argv) \
 	                      (format t "Default main: Args: ~A~%" argv))' \
-	            --dispatched-entry '/%%default-main'
+	            --dispatched-entry '/%%default-main' || { rm $(FDOG); exit 1; }
 
+clean:
+	rm -rf $(BUILDAPP)
+	rm -rf $(FDOG)
 
 # Dependency targets
 buildapp: quicklisp $(BUILDAPP)
@@ -46,7 +54,7 @@ quicklisp: sanity-check
 	  echo "=> QL is missing. Installing"; \
 	  curl -L $(QL_URL) > /tmp/quicklisp.lisp; \
 	  $(LISP) --eval '(sb-ext:disable-debugger)' --load /tmp/quicklisp.lisp \
-	    --eval '(quicklisp-quickstart:install)' \
+	    --eval '(quicklisp-quickstart:install :path "$(QL_ROOT_NAME)")' \
 	    --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
 	    --eval '(quit)'; \
 	}

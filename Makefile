@@ -60,9 +60,8 @@ sanity-check: $(ROOT)/fdog.asd $(LISP)
 ubuntu: ubuntu-sbcl ubuntu-mongrel2
 
 MONGREL2_URL_SRC ?= "http://mongrel2.org/static/downloads/mongrel2-1.6.tar.bz2"
-ubuntu-mongrel2: ubuntu-0mq
+mongrel2: 0mq
 	@echo "=> Installing mongrel2"
-	yes Y | sudo aptitude install sqlite3 libsqlite3-dev
 	rm -rf /tmp/mongrel2-build && \
 	mkdir -p /tmp/mongrel2-build && \
 	  cd /tmp/mongrel2-build && \
@@ -71,9 +70,8 @@ ubuntu-mongrel2: ubuntu-0mq
 	  make && sudo make install
 
 0MQ_URL_SRC ?= "http://download.zeromq.org/zeromq-2.1.7.tar.gz"
-ubuntu-0mq: ubuntu-basics
+0mq:
 	@echo "=> Installing 0mq"
-	yes Y | sudo aptitude install uuid-dev
 	rm -rf /tmp/0mq-build && \
 	mkdir -p /tmp/0mq-build && \
 	  cd /tmp/0mq-build && \
@@ -83,6 +81,15 @@ ubuntu-0mq: ubuntu-basics
 	  make && sudo make install && \
 	  sudo ldconfig
 
+ubuntu-mongrel2: ubuntu-0mq
+	@echo "=> Installing Ubuntu mongrel2 deps"
+	yes Y | sudo aptitude install sqlite3 libsqlite3-dev
+	$(MAKE) mongrel2
+
+ubuntu-0mq: ubuntu-basics
+	@echo "=> Installing Ubuntu 0mq deps"
+	yes Y | sudo aptitude install uuid-dev
+	$(MAKE) 0mq
 
 
 SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"

@@ -3,6 +3,7 @@
   :depends-on (#:drakma
                #:cl-who
                #:external-program
+               #:unix-options
                #:log5
                #:uuid
                #:cl-ppcre

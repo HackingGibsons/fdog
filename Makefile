@@ -14,6 +14,8 @@ VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 QL_ROOT_NAME ?= "quicklisp"
 QL_ROOT_PATH = "~/$(QL_ROOT_NAME)"
 
+DEBUG ?= 1 # (declaim (debug 1)) is the SBCL default
+
 
 # Inteded UI targets
 init: sanity-check submodules quicklisp configured-asdf
@@ -28,12 +30,12 @@ $(FDOG):
 	            --asdf-path $(ROOT) \
 	            --asdf-tree $(ROOT)/vendor \
 		    --eval '(sb-ext:disable-debugger)' \
-	            --eval '(declaim (optimize (debug 0)))' \
+	            --eval '(declaim (optimize (debug $(DEBUG))))' \
 	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \
-	            --eval '(defun %%default-main (argv) \
-	                      (format t "Default main: Args: ~A~%" argv))' \
-	            --dispatched-entry '/%%default-main' || { rm $(FDOG); exit 1; }
+	            --dispatched-entry '/fdog-cli:fdog-main' \
+	|| { echo '[ERROR] Build failed!'; \
+	     rm $(FDOG); exit 1; }
 
 clean:
 	rm -rf $(BUILDAPP)

@@ -41,7 +41,11 @@
                                              :components ((:file "bootstrap")
                                                           (:file "routes" :depends-on ("bootstrap"))
                                                           (:module "controllers" :depends-on ("bootstrap")
-                                                           :components ((:file "root")))))))))))
+                                                           :components ((:file "root")))))))
+
+                             (:module "cli" :depends-on ("control" "m2sh" "models" "utils" "fdog" "package")
+                              :components ((:file "package")
+                                           (:file "main" :depends-on ("package"))))))))
 
 
 

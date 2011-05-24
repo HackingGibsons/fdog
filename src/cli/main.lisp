@@ -9,10 +9,10 @@
   (format t "Initializing ~A~%" argv))
 
 
-(defcommand help (&key (exit 0) command)
+(defcommand help (argv &key (exit 0))
   "Show help"
-  (if command
-      (format t "Help on command ~A:~%" command)
+  (if argv
+      (format t "Help on command ~A:~%" (car argv))
       (progn
         (format t "Usage: ~A <command> [command-options]~%" *self*)
         (list-commands)))
@@ -32,12 +32,11 @@
     (setf *self* self)
 
     (unless args
-      (funcall (get-command :help :function)))
+      (funcall (get-command :help :function) nil))
 
     (let ((cmd (get-command (first args))))
       (if (not cmd)
           (progn
             (format t "~A is not a valid command.~%" (first args))
-            (funcall (get-command :help :function)))
-          (handler-case (apply (cdr cmd) (rest args))
-            (program-error (c) (funcall (get-command :help :function) :command (car cmd))))))))
+            (funcall (get-command :help :function) nil))
+          (funcall (cdr cmd) (rest args))))))

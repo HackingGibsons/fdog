@@ -43,13 +43,16 @@ $(FDOG):
 	|| { echo '[ERROR] Build failed!'; \
 	     rm $(FDOG); exit 1; }
 
+clean-build:
+	@echo "=> Removing fdog builds"
+	rm -rf $(FDOG)
+
 clean:
 	@echo "=> Clearing common-lisp cache"
 	rm -rf ~/.cache/common-lisp/
 	@echo "=> Cleaning up buildapp"
 	rm -rf $(BUILDAPP)
-	@echo "=> Removing fdog builds"
-	rm -rf $(FDOG)
+	$(MAKE) clean-build
 
 # Dependency targets
 buildapp: quicklisp $(BUILDAPP)

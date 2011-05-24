@@ -12,7 +12,7 @@ VENDOR_ASDF_CONF = (:tree \"$(ROOT)/vendor/\")
 VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 
 QL_ROOT_NAME ?= "quicklisp"
-QL_ROOT_PATH = "~/$(QL_ROOT_NAME)"
+QL_ROOT_PATH = "$(HOME)/$(QL_ROOT_NAME)"
 
 DEBUG ?= 1 # (declaim (debug 1)) is the SBCL default
 
@@ -25,6 +25,12 @@ submodules:
 
 fdog: init buildapp $(FDOG)
 $(FDOG):
+	@echo "=> Assuring subsystem build"
+	$(LISP) --eval '(sb-ext:disable-debugger)' \
+	        --eval '(declaim (optimize (debug $(DEBUG))))' \
+	        --load $(QL_ROOT_PATH)/setup.lisp \
+	        --eval '(ql:quickload :fdog)' \
+	        --eval '(quit)'
 	@echo "=> Building fdog"
 	$(BUILDAPP) --output $(FDOG) \
 	            --asdf-path $(ROOT) \
@@ -38,7 +44,11 @@ $(FDOG):
 	     rm $(FDOG); exit 1; }
 
 clean:
+	@echo "=> Clearing common-lisp cache"
+	rm -rf ~/.cache/common-lisp/
+	@echo "=> Cleaning up buildapp"
 	rm -rf $(BUILDAPP)
+	@echo "=> Removing fdog builds"
 	rm -rf $(FDOG)
 
 # Dependency targets

@@ -1,0 +1,15 @@
+#!/usr/bin/env sbcl --script
+;; -*- mode: Lisp;  -*-
+
+;; Load an RC if we can find it
+(let ((rc (probe-file #P"~/.sbclrc")))
+  (when rc (load rc)))
+
+;; Load up the app
+(ql:quickload :fdog)
+
+(defvar *me* (namestring (make-pathname :name (pathname-name *load-pathname*)
+                                        :type (pathname-type *load-pathname*))))
+
+;; Call the entry
+(fdog-cli:fdog-main `(,*me* ,@(rest sb-ext:*posix-argv*)))

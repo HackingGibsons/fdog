@@ -22,7 +22,14 @@
                            (mapcar (lambda (d) (create-dir d :base (merge-pathnames (car dir) base)))
                                    (cdr dir)))
                      (string (ensure-directories-exist (merge-pathnames dir base) :verbose t)))))
-          (mapcar #'create-dir dirs))))))
+          (mapcar #'create-dir dirs)))
+
+      (fdog-models:disconnect)
+      (unwind-protect (let ((db-path (merge-pathnames (make-pathname :name "config" :type "sqlite"
+                                                                     :directory '(:relative "server"))
+                                                      (parse-namestring path))))
+                        (fdog-models:connect db-path)))
+        (fdog-models:disconnect))))
 
 (defcommand help (argv &key (exit 0))
   "Show help"

@@ -80,18 +80,21 @@ the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
           (format t "ERROR: This instance is already running!~%")
           (quit :unix-status 1))
 
-      (fdog:start)
+      (let ((forked (sb-posix:fork)))
+        (if (= forked 0)
+          (flet ((process-stop (&rest args)
+                   (declare (ignore args))
+                   (setf finished t)))
 
-      (flet ((process-stop (&rest args)
-               (declare (ignore args))
-               (setf finished t)))
+            (fdog:start)
 
-        (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
-        (sb-sys:enable-interrupt sb-posix:sigint #'process-stop))
+            (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
+            (sb-sys:enable-interrupt sb-posix:sigint #'process-stop)
 
-      (loop do (sleep 0.25) (when finished
-                              (format t "Terminating...~%")
-                              (quit :unix-status 0))))))
+            (loop do (sleep 0.25) (when finished
+                                    (format t "Terminating...~%")
+                                    (quit :unix-status 0))))
+          (format t "Started process at pid: ~A~%" forked))))))
 
 
 (defcommand status (argv)

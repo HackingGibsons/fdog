@@ -42,6 +42,24 @@
                (install-default-configuration)))
         (fdog-models:disconnect)))))
 
+(defcommand start (argv)
+  "Initialize an installation given by a path."
+  (with-cli-options (argv "Usage: start [options] [path]~%~@{~A~%~}~%")
+      (&free path)
+    (let* ((path (path-or-cwd path))
+           (db-path (fdog:make-fdog-server-db-pathname :root path)))
+      (unless (probe-file db-path)
+        (format t "ERROR: No configuration found at ~A~%" path)
+        (quit :unix-status 1))
+      (fdog:init :root path)
+
+      (when (fdog-running-p)
+          (format t "ERROR: This instance is already running!~%")
+          (quit :unix-status 1))
+
+      (format t "TODO: Start!~%"))))
+
+
 (defcommand status (argv)
   "Determine the status of the fdog installation at the given path."
   (with-cli-options (argv "Usage: status [path]~%~@{~A~%~}~%")

@@ -47,7 +47,8 @@
   (with-cli-options (argv "Usage: start [options] [path]~%~@{~A~%~}~%")
       (&free path)
     (let* ((path (path-or-cwd path))
-           (db-path (fdog:make-fdog-server-db-pathname :root path)))
+           (db-path (fdog:make-fdog-server-db-pathname :root path))
+           finished)
       (unless (probe-file db-path)
         (format t "ERROR: No configuration found at ~A~%" path)
         (quit :unix-status 1))
@@ -57,17 +58,19 @@
           (format t "ERROR: This instance is already running!~%")
           (quit :unix-status 1))
 
+      (fdog:start)
+
       ;; TODO: Handle the syscall error that happens if we can't daemonize
       ;;       and wait to die
       (handler-case
-          (cl-daemonize:daemonize :out "/tmp/out.log"
-                                  :err "/tmp/err.log"
-                                  :pid "/tmp/testproof.pid"
+          (cl-daemonize:daemonize :pid "/tmp/testproof.pid"
                                   :stop (lambda (&rest args)
                                           (declare (ignorable args))
-                                          (format t "I am so awesome")))
+                                          (setf finished t)))
         (syscall-error (c)
-          (format t "ERROR: I cannot daemonize on this platform!~%"))))))
+          (format t "ERROR: I cannot daemonize on this platform, won't detach!~%")))
+
+      (loop do (sleep 0.25) (when finished (quit :unix-status 0))))))
 
 
 (defcommand status (argv)

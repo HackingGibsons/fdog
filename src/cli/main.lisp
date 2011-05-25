@@ -92,9 +92,11 @@
             (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
             (sb-sys:enable-interrupt sb-posix:sigint #'process-stop))))
 
+      (format t "Polling for sweet death~%")
       (loop do (sleep 0.25) (when finished
                               (format t "Terminating..~%")
-                              (quit :unix-status 0))))))
+                              (quit :unix-status 0)))
+      (format t "Leaving start function.~%"))))
 
 
 (defcommand status (argv)

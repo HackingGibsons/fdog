@@ -4,7 +4,14 @@
   (:export :init
            :make-fdog-server-db-pathname
            :*root-path* :*default-root-path* :*default-server-path* :*default-server-database-path*
-           :log-for :info :warn :error)
+           :*fdog-run-dirname*
+           :*fdog-master-pidfile*
+           :probe-fdog-pidfile
+           :probe-fdog-pid
+           :fdog-running-p)
+  (:shadowing-import-from :sb-posix
+                          :syscall-error
+                          :kill)
   (:shadowing-import-from :log5
                           :log-for :info :warn :error)
   (:shadowing-import-from #:clsql))

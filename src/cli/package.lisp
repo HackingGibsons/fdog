@@ -8,7 +8,10 @@
                           :make-route :make-handler :make-dir :make-proxy)
   (:shadowing-import-from :fdog
                           :*fdog-run-dirname*
-                          :*fdog-master-pidfile*)
+                          :*fdog-master-pidfile*
+                          :probe-fdog-pidfile
+                          :probe-fdog-pid
+                          :fdog-running-p)
   (:shadowing-import-from :sb-ext
                           :quit)
   (:shadowing-import-from :sb-posix

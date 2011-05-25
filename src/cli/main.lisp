@@ -64,7 +64,8 @@
           (format t "Sending SIGTERM => ~A~%" pid))))))
 
 (defcommand start (argv)
-  "Start an installation named by the path"
+  "Start an installation named by the path. Run with nohup and detach from
+the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
   (with-cli-options (argv "Usage: start [options] [path]~%~@{~A~%~}~%")
       (&free path)
     (let* ((path (path-or-cwd path))

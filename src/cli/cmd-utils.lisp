@@ -31,7 +31,9 @@ an entry to the `*commands*' table"
 
 
 (defun path-or-cwd (maybe-path)
-  (let* ((path (or (car maybe-path)
+  (let* ((path (or (if (listp maybe-path)
+                       (car maybe-path)
+                       maybe-path)
                    (getcwd)))
          (path (if (ppcre:scan "/$" path) path (format nil "~A/" path))))
     path))

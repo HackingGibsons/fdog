@@ -42,8 +42,23 @@
                (install-default-configuration)))
         (fdog-models:disconnect)))))
 
+(defcommand stop (argv)
+  "Stop an installation named by the path"
+  (with-cli-options (argv "Usage: stop [options] [path]~%~@{~A~%~}~%")
+      (&free path)
+    (let* ((path (path-or-cwd path))
+           (db-path (fdog:make-fdog-server-db-pathname :root path)))
+      (unless (probe-file db-path)
+        (format t "ERROR: No configuration found at ~A~%" path)
+        (quit :unix-status 1))
+      (unless (fdog-running-p path)
+        (format t "WARNING: That instance (~A) is not running!~%" path)
+        (quit :unix-status 1))
+
+      (format t "Will stop it righteously!~%"))))
+
 (defcommand start (argv)
-  "Initialize an installation given by a path."
+  "Start an installation named by the path"
   (with-cli-options (argv "Usage: start [options] [path]~%~@{~A~%~}~%")
       (&free path)
     (let* ((path (path-or-cwd path))

@@ -60,8 +60,6 @@
 
       (fdog:start)
 
-      ;; TODO: Handle the syscall error that happens if we can't daemonize
-      ;;       and wait to die
       (flet ((process-stop (&rest args)
                (declare (ignore args))
                (setf finished t)))

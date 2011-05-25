@@ -1,7 +1,7 @@
 ;;;; package.lisp
 (defpackage #:fdog
   (:use #:cl)
-  (:export :init
+  (:export :init :start
            :make-fdog-server-db-pathname
            :*root-path* :*default-root-path* :*default-server-path* :*default-server-database-path*
            :*fdog-run-dirname*

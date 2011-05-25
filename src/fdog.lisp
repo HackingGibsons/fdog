@@ -16,13 +16,10 @@ Should find and assert the correctness of the project root, server dir, and then
   (setf *root-path* root)
   (fdog-models:connect (make-fdog-server-db-pathname :root root :server server :database database)))
 
-(defmethod start (&key swank (until (lambda () t)))
+(defmethod start ()
   (if (not (fdog-models:connected-p))
       (error "Cannot start, not initialized."))
-  (format t "Starting..")
-  (loop while (funcall until) do
-       (sleep 0.25)))
-
+  (fdog-control:init-control-interface))
 
 (defun probe-fdog-pidfile (&optional path)
   "Probe for the pid of the current initialized fdog instance,

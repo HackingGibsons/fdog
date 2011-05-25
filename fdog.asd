@@ -16,7 +16,7 @@
   :components ((:module "src"
                 :components ((:file "utils")
                              (:file "package" :depends-on ("utils"))
-                             (:file "fdog" :depends-on ("models"))
+                             (:file "fdog" :depends-on ("models" "control"))
 
                              (:module "models" :depends-on ("package")
                               :components ((:file "package")

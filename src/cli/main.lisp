@@ -12,8 +12,8 @@
       (format t "Initializing in: ~A~%" path)
       (setf path (ensure-directories-exist path :verbose t))
 
-      (let ((dirs '(("server/" . ("logs/" "run/" "tmp/"))
-                    *fdog-run-dirname*)))
+      (let ((dirs `(("server/" . ("logs/" "run/" "tmp/"))
+                    ,*fdog-run-dirname*)))
         (labels ((create-dir (dir &key (base path))
                    (etypecase dir
                      (list (create-dir (car dir) :base base)

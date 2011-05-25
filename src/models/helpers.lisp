@@ -113,7 +113,9 @@
       (call-next-method constraints database))))
 
 (defmethod clsql-sys::query :around ((query-expression string) &rest args &key database &allow-other-keys)
-  "Fix the query to find the last inserted ID for sqlite3"
+  "Fix the query to find the last inserted ID for sqlite3
+TODO: May be no longer called anymore in the currently pinned version of CLSQL
+see `clsql-sys:database-last-auto-increment-id' below"
   (let ((sql (typecase database
                (clsql-sqlite3::database
                 (if (search "LAST_INSERT_ID()" query-expression)
@@ -122,6 +124,10 @@
                (otherwise query-expression))))
     (apply #'call-next-method `(,sql ,@args))))
 
+(defmethod clsql-sys:database-last-auto-increment-id ((database clsql-sqlite3:sqlite3-database) table column)
+  "Return the last inserted PK for an sqlite 3 database"
+  (car (clsql:query (format nil "select last_insert_rowid() from ~A" (symbol-name table))
+                    :flatp t :field-names nil)))
 ;;; Just helpers
 (defun make-uuid4 (&optional (as :string))
   (let ((uuid (uuid:make-v4-uuid)))

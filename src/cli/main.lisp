@@ -38,7 +38,9 @@
                   (delete-file db-path))
              (fdog-models:connect db-path)
              (when init
-               (fdog-m2sh:init)))
+               (fdog-m2sh:init)
+               (fdog-models:reconnect)
+               (install-default-configuration)))
         (fdog-models:disconnect)))))
 
 (defcommand help (argv &key (exit 0))

@@ -6,8 +6,8 @@
 ;; Commands
 (defcommand init (argv)
   "Initialize an installation given by a path."
-  (with-cli-options (argv "Usage: init [path]~%~@{~A~%~}~%")
-      (&free path)
+  (with-cli-options (argv "Usage: [options] init [path]~%~@{~A~%~}~%")
+      ((no-input "Don't prompt for input.") &free path)
     (let* ((path (or (car path)
                      (getcwd)))
            (path (if (ppcre:scan "/$" path) path (format nil "~A/" path))))
@@ -31,7 +31,8 @@
                                            (parse-namestring path)))
                  init)
              (if (probe-file db-path)
-                 (setf init (yes-or-no-p "Server database exists, remove?"))
+                 (setf init (or no-input
+                                (yes-or-no-p "Server database exists, remove?")))
                  (setf init t))
              (and init
                   (probe-file db-path)

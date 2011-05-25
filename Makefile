@@ -13,8 +13,8 @@ FDOG_ASDF_CONF_NAME = $(REGISTRYD)/"01-fdog.conf"
 VENDOR_ASDF_CONF = (:tree \"$(ROOT)/vendor/\")
 VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"02-fdog-vendor.conf"
 
-QL_ROOT_NAME ?= "quicklisp"
-QL_ROOT_PATH = "$(HOME)/$(QL_ROOT_NAME)"
+QL_ROOT_NAME ?= quicklisp
+QL_ROOT_PATH = $(HOME)/$(QL_ROOT_NAME)
 
 DEBUG ?= 1 # (declaim (debug 1)) is the SBCL default
 
@@ -93,7 +93,7 @@ quicklisp: sanity-check
 	  echo "=> QL is missing. Installing"; \
 	  curl -L $(QL_URL) > /tmp/quicklisp.lisp; \
 	  $(LISP) --eval '(sb-ext:disable-debugger)' --load /tmp/quicklisp.lisp \
-	    --eval '(quicklisp-quickstart:install :path $(QL_ROOT_NAME))' \
+	    --eval '(quicklisp-quickstart:install :path "$(QL_ROOT_PATH)")' \
 	    --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
 	    --eval '(quit)'; \
 	}

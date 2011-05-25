@@ -2,6 +2,7 @@
 (asdf:defsystem #:fdog
   :depends-on (#:drakma
                #:cl-who
+               #:cl-daemonize
                #:external-program
                #:unix-options
                #:log5

@@ -57,7 +57,12 @@
           (format t "ERROR: This instance is already running!~%")
           (quit :unix-status 1))
 
-      (format t "TODO: Start!~%"))))
+      (cl-daemonize:daemonize :out "/tmp/out.log"
+                              :err "/tmp/err.log"
+                              :pid "/tmp/testproof.pid"
+                              :stop (lambda (&rest args)
+                                      (declare (ignorable args))
+                                      (format t "I am so awesome"))))))
 
 
 (defcommand status (argv)

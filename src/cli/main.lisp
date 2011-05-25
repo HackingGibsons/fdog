@@ -51,7 +51,15 @@
       (unless (probe-file db-path)
         (format t "ERROR: No configuration found at ~A~%" path)
         (quit :unix-status 1))
-      (format t "Status of fdog at ~A:~%" path))))
+      (format t "Status of fdog at ~A:~%" path)
+      (fdog:init :root path)
+      (let ((servers (fdog-m2sh:servers)))
+        (when servers
+          (format t "Mongrel2 Servers:~%"))
+        (dolist (server servers servers)
+          (format t "  Name: ~A  Status: ~:[not running~;running~]~%"
+                  (fdog-models:mongrel2-server-name server)
+                  (fdog-models:mongrel2-server-running-p server)))))))
 
 
 (defcommand help (argv &key (exit 0))

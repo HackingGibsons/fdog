@@ -8,10 +8,15 @@
   "Initialize an installation given by a path."
   (with-cli-options (argv "Usage: init [path]~%~@{~A~%~}~%")
       (&free path)
-    (let ((path (or (car path)
-                    (getcwd))))
-      (format t "Initializing in: ~A~%" path))))
+    (let* ((path (or (car path)
+                     (getcwd)))
+           (path (if (ppcre:scan "/$" path) path (format nil "~A/" path))))
+      (format t "Initializing in: ~A~%" path)
+      (setf path (ensure-directories-exist path :verbose t))
 
+      (let ((dirs '(("server" ("logs" "run" "tmp"))
+                    "run")))
+        (format t "Need to create: ~A~%" dirs)))))
 
 (defcommand help (argv &key (exit 0))
   "Show help"

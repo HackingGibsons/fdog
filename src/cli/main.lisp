@@ -63,15 +63,13 @@
       (flet ((process-stop (&rest args)
                (declare (ignore args))
                (setf finished t)))
+
         (handler-case
-            (cl-daemonize:daemonize :pid "/tmp/testproof.pid"
-                                    :stop #'process-stop)
+            (cl-daemonize:daemonize :stop #'process-stop)
           (syscall-error (c)
             (format t "ERROR: I cannot daemonize on this platform, won't detach!~%")
             (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
             (sb-sys:enable-interrupt sb-posix:sigint #'process-stop))))
-
-      (format t "Write a pidfile to: ~A~%" (fdog-pidfile-path))
 
       (loop do (sleep 0.25) (when finished
                               (format t "Terminating..~%")

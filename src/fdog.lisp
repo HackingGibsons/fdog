@@ -20,6 +20,23 @@ Should find and assert the correctness of the project root, server dir, and then
   "Start the fdog daemon and run the control interface"
   (if (not (fdog-models:connected-p))
       (error "Cannot start, not initialized."))
+  (when (fdog-running-p)
+    (error "Cannot start, already running."))
+
+  (log-for (trace) "Wrote a pidfile(~A) to: ~A" (sb-posix:getpid) (fdog-pidfile-path))
+  (with-open-file (out (fdog-pidfile-path)
+                       :direction :output
+                       :if-exists :supersede
+                       :if-does-not-exist :create)
+    (format out "~A" (sb-posix:getpid)))
+
+  ;; Nuke the pidfile on exit
+  (push (lambda ()
+          (and (probe-fdog-pidfile)
+               (delete-file (fdog-pidfile-path))))
+        sb-ext:*exit-hooks*)
+
+
   (fdog-control:init-control-interface))
 
 (defun fdog-pidfile-path (&optional path)

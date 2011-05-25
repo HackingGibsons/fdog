@@ -25,11 +25,17 @@
           (mapcar #'create-dir dirs)))
 
       (fdog-models:disconnect)
-      (unwind-protect (let ((db-path (merge-pathnames (make-pathname :name "config" :type "sqlite"
-                                                                     :directory '(:relative "server"))
-                                                      (parse-namestring path))))
-                        (fdog-models:connect db-path)))
-        (fdog-models:disconnect))))
+      (unwind-protect
+           (let ((db-path (merge-pathnames (make-pathname :name "config" :type "sqlite"
+                                                          :directory '(:relative "server"))
+                                           (parse-namestring path)))
+                 init)
+             (if (probe-file db-path)
+                 (setf init (yes-or-no-p "Server database exists, remove?"))
+                 (setf init t))
+             (format t "Remove? ~A~%" init)
+             (fdog-models:connect db-path)))
+      (fdog-models:disconnect))))
 
 (defcommand help (argv &key (exit 0))
   "Show help"

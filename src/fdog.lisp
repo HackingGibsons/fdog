@@ -22,12 +22,17 @@ Should find and assert the correctness of the project root, server dir, and then
       (error "Cannot start, not initialized."))
   (fdog-control:init-control-interface))
 
+(defun fdog-pidfile-path (&optional path)
+  "Return where the pidfile should be for either the given fdog path
+or the current connected path."
+  (let* ((path (merge-pathnames *fdog-run-dirname* (or path *root-path*)))
+         (path (merge-pathnames *fdog-master-pidfile* path)))
+    path))
+
 (defun probe-fdog-pidfile (&optional path)
   "Probe for the pid of the current initialized fdog instance,
 or seek it from the path"
-  (let* ((path (merge-pathnames *fdog-run-dirname* (or path *root-path*)))
-         (path (merge-pathnames *fdog-master-pidfile* path)))
-    (probe-file path)))
+  (probe-file (fdog-pidfile-path path)))
 
 (defun probe-fdog-pid (&optional path)
   "Given a path, it will attempt to find a PIDfile then

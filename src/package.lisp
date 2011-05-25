@@ -6,6 +6,7 @@
            :*root-path* :*default-root-path* :*default-server-path* :*default-server-database-path*
            :*fdog-run-dirname*
            :*fdog-master-pidfile*
+           :fdog-pidfile-path
            :probe-fdog-pidfile
            :probe-fdog-pid
            :fdog-running-p)

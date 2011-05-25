@@ -16,7 +16,7 @@ an entry to the `*commands*' table"
 
     `(progn
        (pushnew '(,title . ,cmd-name) *commands* :test #'(lambda (a b) (and (eql (car a) (car b))
-                                                                           (eql (cdr a) (cdr b)))))
+                                                                            (eql (cdr a) (cdr b)))))
        (defun ,cmd-name ,args
          ,@body))))
 

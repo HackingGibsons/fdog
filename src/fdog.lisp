@@ -17,6 +17,7 @@ Should find and assert the correctness of the project root, server dir, and then
   (fdog-models:connect (make-fdog-server-db-pathname :root root :server server :database database)))
 
 (defmethod start ()
+  "Start the fdog daemon and run the control interface"
   (if (not (fdog-models:connected-p))
       (error "Cannot start, not initialized."))
   (fdog-control:init-control-interface))

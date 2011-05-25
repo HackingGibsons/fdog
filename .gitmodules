@@ -4,6 +4,3 @@
 [submodule "vendor/clsql"]
 	path = vendor/clsql
 	url = git://git.b9.com/clsql.git
-[submodule "vendor/cl-daemonize"]
-	path = vendor/cl-daemonize
-	url = https://github.com/mishoo/cl-daemonize.git

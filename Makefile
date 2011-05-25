@@ -93,7 +93,7 @@ quicklisp: sanity-check
 	  echo "=> QL is missing. Installing"; \
 	  curl -L $(QL_URL) > /tmp/quicklisp.lisp; \
 	  $(LISP) --eval '(sb-ext:disable-debugger)' --load /tmp/quicklisp.lisp \
-	    --eval '(quicklisp-quickstart:install :path "$(QL_ROOT_NAME)")' \
+	    --eval '(quicklisp-quickstart:install :path $(QL_ROOT_NAME))' \
 	    --eval '(ql-util:without-prompting (ql:add-to-init-file))' \
 	    --eval '(quit)'; \
 	}

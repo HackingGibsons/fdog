@@ -59,12 +59,15 @@
 
       ;; TODO: Handle the syscall error that happens if we can't daemonize
       ;;       and wait to die
-      (cl-daemonize:daemonize :out "/tmp/out.log"
-                              :err "/tmp/err.log"
-                              :pid "/tmp/testproof.pid"
-                              :stop (lambda (&rest args)
-                                      (declare (ignorable args))
-                                      (format t "I am so awesome"))))))
+      (handler-case
+          (cl-daemonize:daemonize :out "/tmp/out.log"
+                                  :err "/tmp/err.log"
+                                  :pid "/tmp/testproof.pid"
+                                  :stop (lambda (&rest args)
+                                          (declare (ignorable args))
+                                          (format t "I am so awesome")))
+        (syscall-error (c)
+          (format t "ERROR: I cannot daemonize on this platform!~%"))))))
 
 
 (defcommand status (argv)

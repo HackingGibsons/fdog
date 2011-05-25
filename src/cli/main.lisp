@@ -13,7 +13,7 @@
       (setf path (ensure-directories-exist path :verbose t))
 
       (let ((dirs '(("server/" . ("logs/" "run/" "tmp/"))
-                    "run/")))
+                    *fdog-run-dirname*)))
         (labels ((create-dir (dir &key (base path))
                    (etypecase dir
                      (list (create-dir (car dir) :base base)
@@ -51,8 +51,14 @@
       (unless (probe-file db-path)
         (format t "ERROR: No configuration found at ~A~%" path)
         (quit :unix-status 1))
-      (format t "Status of fdog at ~A:~%" path)
       (fdog:init :root path)
+
+      (format t "Status of fdog at ~A:~%" path)
+      (if (fdog-running-p)
+          (format t " Running: pid: ~A~%" (probe-fdog-pid))
+          (format t " Not Running.~%"))
+      (terpri)
+
       (let ((servers (fdog-m2sh:servers)))
         (when servers
           (format t "Mongrel2 Servers:~%"))

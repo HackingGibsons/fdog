@@ -6,6 +6,9 @@
                           :using-configuration!
                           :with-server :with-host
                           :make-route :make-handler :make-dir :make-proxy)
+  (:shadowing-import-from :fdog
+                          :*fdog-run-dirname*
+                          :*fdog-master-pidfile*)
   (:shadowing-import-from :sb-ext
                           :quit)
   (:shadowing-import-from :sb-posix
@@ -15,6 +18,3 @@
   (:shadowing-import-from :log5
                           :log-for :info :warn :error))
 (in-package :fdog-cli)
-
-(defparameter *fdog-run-dirname* "run/")
-(defparameter *fdog-master-pidfile* "fdog.master.pid")

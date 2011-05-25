@@ -15,3 +15,10 @@
 Should find and assert the correctness of the project root, server dir, and then connect to the server database"
   (setf *root-path* root)
   (fdog-models:connect (make-fdog-server-db-pathname :root root :server server :database database)))
+
+(defmethod start (&key swank)
+  (if (not (fdog-models:connected-p))
+      (error "Cannot start, not initialized."))
+  (format t "Starting.."))
+
+

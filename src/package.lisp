@@ -40,3 +40,8 @@
   "The default name of Mongrel2's database file")
 
 
+(defparameter *fdog-run-dirname* "run/"
+  "Directory containing the fdog run information such as PID files and run locks")
+
+(defparameter *fdog-master-pidfile* "fdog.master.pid"
+  "The name of the pid file to store in the run directory for the master instance")

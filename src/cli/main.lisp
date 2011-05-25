@@ -57,6 +57,8 @@
           (format t "ERROR: This instance is already running!~%")
           (quit :unix-status 1))
 
+      ;; TODO: Handle the syscall error that happens if we can't daemonize
+      ;;       and wait to die
       (cl-daemonize:daemonize :out "/tmp/out.log"
                               :err "/tmp/err.log"
                               :pid "/tmp/testproof.pid"

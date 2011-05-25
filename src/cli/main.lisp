@@ -62,15 +62,20 @@
 
       ;; TODO: Handle the syscall error that happens if we can't daemonize
       ;;       and wait to die
-      (handler-case
-          (cl-daemonize:daemonize :pid "/tmp/testproof.pid"
-                                  :stop (lambda (&rest args)
-                                          (declare (ignorable args))
-                                          (setf finished t)))
-        (syscall-error (c)
-          (format t "ERROR: I cannot daemonize on this platform, won't detach!~%")))
+      (flet ((process-stop (&rest args)
+               (declare (ignore args))
+               (setf finished t)))
+        (handler-case
+            (cl-daemonize:daemonize :pid "/tmp/testproof.pid"
+                                    :stop #'process-stop)
+          (syscall-error (c)
+            (format t "ERROR: I cannot daemonize on this platform, won't detach!~%")
+            (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
+            (sb-sys:enable-interrupt sb-posix:sigint #'process-stop))))
 
-      (loop do (sleep 0.25) (when finished (quit :unix-status 0))))))
+      (loop do (sleep 0.25) (when finished
+                              (format t "Terminating..~%")
+                              (quit :unix-status 0))))))
 
 
 (defcommand status (argv)

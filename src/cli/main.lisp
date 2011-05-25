@@ -6,13 +6,21 @@
 ;; Commands
 (defcommand init (argv)
   "Initialize an installation given by a path."
-  (format t "Initializing ~A~%" argv))
+  (with-cli-options (argv "Usage: init [path]~%~@{~A~%~}~%")
+      (&free path)
+    (let ((path (or (car path)
+                    (getcwd))))
+      (format t "Initializing in: ~A~%" path))))
 
 
 (defcommand help (argv &key (exit 0))
   "Show help"
   (if argv
-      (format t "Help on command ~A:~%" (car argv))
+      (progn
+        (format t "Help on command ~A:~%" (car argv))
+        (let ((doc (get-command (car argv) :doc)))
+          (when doc (format t "~A~%~%" doc)))
+        (funcall (get-command (car argv) :function) '("-h")))
       (progn
         (format t "Usage: ~A <command> [command-options]~%" *self*)
         (list-commands)))

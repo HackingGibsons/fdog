@@ -71,6 +71,8 @@
             (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
             (sb-sys:enable-interrupt sb-posix:sigint #'process-stop))))
 
+      (format t "Write a pidfile to: ~A~%" (fdog-pidfile-path))
+
       (loop do (sleep 0.25) (when finished
                               (format t "Terminating..~%")
                               (quit :unix-status 0))))))

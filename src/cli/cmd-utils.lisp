@@ -29,3 +29,9 @@ an entry to the `*commands*' table"
            (:function (cdr cmd))
            (:doc (documentation (get-command name :function) 'function))))))
 
+
+(defun path-or-cwd (maybe-path)
+  (let* ((path (or (car maybe-path)
+                   (getcwd)))
+         (path (if (ppcre:scan "/$" path) path (format nil "~A/" path))))
+    path))

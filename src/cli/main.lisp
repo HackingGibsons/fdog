@@ -33,7 +33,6 @@
              (if (probe-file db-path)
                  (setf init (yes-or-no-p "Server database exists, remove?"))
                  (setf init t))
-             (format t "Remove? ~A~%" init)
              (and init
                   (probe-file db-path)
                   (delete-file db-path))

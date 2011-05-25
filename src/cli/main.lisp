@@ -46,8 +46,12 @@
   "Determine the status of the fdog installation at the given path."
   (with-cli-options (argv "Usage: status [path]~%~@{~A~%~}~%")
       (&free path)
-    (let ((path (path-or-cwd path)))
-      (format t "Status of ~A~%" path))))
+    (let* ((path (path-or-cwd path))
+           (db-path (fdog:make-fdog-server-db-pathname :root path)))
+      (unless (probe-file db-path)
+        (format t "ERROR: No configuration found at ~A~%" path)
+        (quit :unix-status 1))
+      (format t "Status of fdog at ~A:~%" path))))
 
 
 (defcommand help (argv &key (exit 0))

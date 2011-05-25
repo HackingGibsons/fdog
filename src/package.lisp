@@ -2,6 +2,7 @@
 (defpackage #:fdog
   (:use #:cl)
   (:export :init
+           :make-fdog-server-db-pathname
            :*default-root-path* :*default-server-path* :*default-server-database-path*
            :log-for :info :warn :error)
   (:shadowing-import-from :log5

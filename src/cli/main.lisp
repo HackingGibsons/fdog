@@ -6,11 +6,9 @@
 ;; Commands
 (defcommand init (argv)
   "Initialize an installation given by a path."
-  (with-cli-options (argv "Usage: [options] init [path]~%~@{~A~%~}~%")
+  (with-cli-options (argv "Usage: init [options] [path]~%~@{~A~%~}~%")
       ((no-input "Don't prompt for input.") &free path)
-    (let* ((path (or (car path)
-                     (getcwd)))
-           (path (if (ppcre:scan "/$" path) path (format nil "~A/" path))))
+    (let ((path (path-or-cwd path)))
       (format t "Initializing in: ~A~%" path)
       (setf path (ensure-directories-exist path :verbose t))
 
@@ -43,6 +41,14 @@
                (fdog-models:reconnect)
                (install-default-configuration)))
         (fdog-models:disconnect)))))
+
+(defcommand status (argv)
+  "Determine the status of the fdog installation at the given path."
+  (with-cli-options (argv "Usage: status [path]~%~@{~A~%~}~%")
+      (&free path)
+    (let ((path (path-or-cwd path)))
+      (format t "Status of ~A~%" path))))
+
 
 (defcommand help (argv &key (exit 0))
   "Show help"

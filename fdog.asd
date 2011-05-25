@@ -47,6 +47,7 @@
                              (:module "cli" :depends-on ("control" "m2sh" "models" "utils" "fdog" "package")
                               :components ((:file "package")
                                            (:file "cmd-utils" :depends-on ("package"))
+                                           (:file "proc-utils" :depends-on ("package"))
                                            (:file "configuration" :depends-on ("package"))
                                            (:file "main" :depends-on ("cmd-utils"))))))))
 

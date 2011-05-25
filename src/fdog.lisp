@@ -36,7 +36,6 @@ Should find and assert the correctness of the project root, server dir, and then
                (delete-file (fdog-pidfile-path))))
         sb-ext:*exit-hooks*)
 
-
   (fdog-control:init-control-interface))
 
 (defun fdog-pidfile-path (&optional path)

@@ -55,7 +55,13 @@
         (format t "WARNING: That instance (~A) is not running!~%" path)
         (quit :unix-status 1))
 
-      (format t "Will stop it righteously!~%"))))
+      (let ((pid (probe-fdog-pid path)))
+        (unless pid
+          (format t "ERROR: Somehow I can't find the PID that should exist.~%")
+          (quit :unix-status 1))
+        (ignore-errors
+          (kill pid sb-posix:sigterm)
+          (format t "Sending SIGTERM => ~A~%" pid))))))
 
 (defcommand start (argv)
   "Start an installation named by the path"

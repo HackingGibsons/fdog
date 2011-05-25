@@ -14,9 +14,15 @@
       (format t "Initializing in: ~A~%" path)
       (setf path (ensure-directories-exist path :verbose t))
 
-      (let ((dirs '(("server" ("logs" "run" "tmp"))
-                    "run")))
-        (format t "Need to create: ~A~%" dirs)))))
+      (let ((dirs '(("server/" . ("logs/" "run/" "tmp/"))
+                    "run/")))
+        (labels ((create-dir (dir &key (base path))
+                   (etypecase dir
+                     (list (create-dir (car dir) :base base)
+                           (mapcar (lambda (d) (create-dir d :base (merge-pathnames (car dir) base)))
+                                   (cdr dir)))
+                     (string (ensure-directories-exist (merge-pathnames dir base) :verbose t)))))
+          (mapcar #'create-dir dirs))))))
 
 (defcommand help (argv &key (exit 0))
   "Show help"

@@ -9,6 +9,7 @@
   (:shadowing-import-from :fdog
                           :*fdog-run-dirname*
                           :*fdog-master-pidfile*
+                          :fdog-pidfile-path
                           :probe-fdog-pidfile
                           :probe-fdog-pid
                           :fdog-running-p)

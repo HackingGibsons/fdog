@@ -59,7 +59,7 @@
          :reader mongrel2-server-root
          ;; TODO: Consider the relativity of the chroot slot when computing this slot.
          ;;       or outright move this to a method
-         :initform (merge-pathnames fdog:*default-server-path* fdog:*default-root-path*)))
+         :initform (merge-pathnames fdog:*default-server-path* fdog:*root-path*)))
   (:base-table server
    :documentation
    "Mongrel2 Server configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-260003.4.1"))

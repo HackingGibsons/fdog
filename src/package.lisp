@@ -3,7 +3,7 @@
   (:use #:cl)
   (:export :init
            :make-fdog-server-db-pathname
-           :*default-root-path* :*default-server-path* :*default-server-database-path*
+           :*root-path* :*default-root-path* :*default-server-path* :*default-server-database-path*
            :log-for :info :warn :error)
   (:shadowing-import-from :log5
                           :log-for :info :warn :error)
@@ -26,6 +26,10 @@
 (defparameter *default-root-path*
   (truename (probe-file (asdf:system-relative-pathname :fdog ".")))
   "Default for the root of the project: [Defaults to location of this file at load, if possible]")
+
+(defparameter *root-path*
+  *default-root-path*
+  "The currently configured root path.")
 
 (defparameter *default-server-path*
   (make-pathname :directory '(:relative "server"))

@@ -34,8 +34,13 @@
                  (setf init (yes-or-no-p "Server database exists, remove?"))
                  (setf init t))
              (format t "Remove? ~A~%" init)
-             (fdog-models:connect db-path)))
-      (fdog-models:disconnect))))
+             (and init
+                  (probe-file db-path)
+                  (delete-file db-path))
+             (fdog-models:connect db-path)
+             (when init
+               (fdog-m2sh:init)))
+        (fdog-models:disconnect)))))
 
 (defcommand help (argv &key (exit 0))
   "Show help"

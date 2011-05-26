@@ -20,4 +20,6 @@
            :interface-stop-bridges
            ;;; Query and configuration
            :interface-bridge-matching
-           :interface-configure-bridges))
+           :interface-configure-bridges
+           ;;; API creation
+           :api/endpoint))

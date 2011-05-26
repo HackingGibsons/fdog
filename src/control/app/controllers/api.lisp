@@ -20,22 +20,24 @@
     (json:encode-json `((:error . ,(format nil "Endpoint ~A not found." (api-subpath request)))) stream)))
 
 ;; Router
+(defgeneric api/endpoint (method sub-path handler request raw)
+  (:documentation "Generic api endpoint. Things wishing to provide an API specialize on this method."))
+
 (defun api/router (handler request raw)
-  (with-dispatch-on (api-subpath request) &route
-    (funcall &route handler request raw)
+  (let* ((sub-path (api-subpath request))
+         (sub-sym (intern sub-path :keyword))
+         (method (intern (m2cl:request-header request :method) :keyword))
+         (ef-meth (compute-applicable-methods #'api/endpoint (list method sub-sym handler request raw))))
 
-    ;; TODO: Should return version or call a generic method
-    ;;       with a subpath
-    (:default :responder 'api/root)
-
-    ;; TODO: Should not be in the routes, but be in the root responder
-    ;;       and should fire when no generic method can be found
-    (:404 :responder 'api/404)))
+    (if ef-meth
+        (api/endpoint method sub-sym handler request raw)
+        (progn
+          (unintern sub-sym)
+          (api/404 handler request raw)))))
 
 ;; Endpoints
-(defun api/root (handler request raw)
-  (declare (ignorable raw))
-
+(defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
     (json:encode-json `((:version . ,*api-version*)) stream)))
+

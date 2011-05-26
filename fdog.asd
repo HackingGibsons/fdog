@@ -15,7 +15,7 @@
   :components ((:module "src"
                 :components ((:file "utils")
                              (:file "package" :depends-on ("utils"))
-                             (:file "fdog" :depends-on ("models" "control"))
+                             (:file "fdog" :depends-on ("models" "control" "services"))
 
                              (:module "models" :depends-on ("package")
                               :components ((:file "package")
@@ -52,8 +52,9 @@
                                            (:file "configuration" :depends-on ("package"))
                                            (:file "main" :depends-on ("cmd-utils"))))
 
-                             (:module "services" :depends-on ("models" "control" "m2sh" "utils" "fdog" "package")
-                              :components ((:module "forwarder"
+                             (:module "services" :depends-on ("models" "control" "m2sh" "utils" "package")
+                              :components ((:file "package" :depends-on ("forwarder"))
+                                           (:module "forwarder"
                                             :components ((:file "package")))))))))
 
 

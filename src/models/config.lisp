@@ -76,7 +76,7 @@
          :initarg :name
          :accessor mongrel2-host-name)
    (matching :type string
-             :name :initarg
+             :initarg :matching
              :accessor mongrel2-host-matching)
 
    (server :db-kind :join

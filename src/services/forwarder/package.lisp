@@ -19,10 +19,13 @@
        :db-kind :key
        :reader fdog-forwarder-id)
    (host :type string
+         :initarg :host
          :initform nil)
    (path :type string
+         :initarg :path
          :initform "/")
    (forward-to :type string
+               :initarg :forward-to
                :initform "tcp://localhost:9999"))
   (:base-table fdog-forwarder
    :documentation "Database model describing a forwarder endpoint."))

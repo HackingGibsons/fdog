@@ -1,0 +1,14 @@
+(defpackage #:fdog-forwarder
+  (:use #:cl)
+  (:shadowing-import-from :log5 :log-for)
+  (:shadowing-import-from :clsql)
+
+  (:shadowing-import-from :fdog-control
+                          :fdog-interface)
+
+  (:export))
+
+(in-package :fdog-forwarder)
+
+(defvar *forwarders* ()
+  "List of the loaded forwarders")

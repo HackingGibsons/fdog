@@ -49,7 +49,11 @@
                                            (:file "cmd-utils" :depends-on ("package"))
                                            (:file "proc-utils" :depends-on ("package"))
                                            (:file "configuration" :depends-on ("package"))
-                                           (:file "main" :depends-on ("cmd-utils"))))))))
+                                           (:file "main" :depends-on ("cmd-utils"))))
+
+                             (:module "services" :depends-on ("models" "control" "m2sh" "utils" "fdog" "package")
+                              :components ((:module "forwarder"
+                                            :components ((:file "package")))))))))
 
 
 

@@ -24,8 +24,12 @@
   (with-dispatch-on (api-subpath request) &route
     (funcall &route handler request raw)
 
-    (:exact "/" :responder 'api/root)
+    ;; TODO: Should return version or call a generic method
+    ;;       with a subpath
+    (:default :responder 'api/root)
 
+    ;; TODO: Should not be in the routes, but be in the root responder
+    ;;       and should fire when no generic method can be found
     (:404 :responder 'api/404)))
 
 ;; Endpoints

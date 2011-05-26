@@ -27,6 +27,9 @@
 ;;;   * Quicklisp                                                            ;;;
 ;;;   * Fdog path in the ASDF registry (see: user-tools/asdf-loader.lisp)    ;;;
 ;;;                                                                          ;;;
+;;; Note:                                                                    ;;;
+;;;   * This readme is somewhat stale, see the Makefile                      ;;;
+;;;                                                                          ;;;
 ;;; Testing:                                                                 ;;;
 ;;;   * The test suite can be run with (asdf:test-system :fdog)              ;;;
 ;;;     It should run the unit and integration tests, some of which          ;;;

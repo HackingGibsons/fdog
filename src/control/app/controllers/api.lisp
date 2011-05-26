@@ -8,12 +8,15 @@
     (ppcre:regex-replace (format nil "^~A" prefix)
                          (m2cl:request-path request) "")))
 
+(defun header-json-type ()
+  '("Content-Type" . "application/json"))
+
 ;; Common
 (defun api/404 (handler request raw)
   (declare (ignorable raw))
   (with-chunked-stream-reply (handler request stream
                               :code 404 :status "NOT FOUND"
-                              :headers ('("Content-Type" . "application/json")))
+                              :headers ((header-json-type)))
     (json:encode-json `((:error . ,(format nil "Endpoint ~A not found." (api-subpath request)))) stream)))
 
 ;; Router
@@ -30,5 +33,5 @@
   (declare (ignorable raw))
 
   (with-chunked-stream-reply (handler request stream
-                              :headers ('("Content-Type" . "application/json")))
+                              :headers ((header-json-type)))
     (json:encode-json `((:version . ,*api-version*)) stream)))

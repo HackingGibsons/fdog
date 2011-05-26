@@ -57,6 +57,7 @@ run-tests:
 	$(LISP) --no-userinit \
 	        --load $(QL_ROOT_PATH)/setup.lisp \
 	        --eval '(ql:quickload :fdog)' \
+	        --eval '(ql:quickload :fdog-tests)' \
 	        --eval '(asdf:test-system :fdog)' \
 	        --eval '(quit)'
 

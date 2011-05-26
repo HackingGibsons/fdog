@@ -12,3 +12,8 @@
 
 (defvar *forwarders* ()
   "List of the loaded forwarders")
+
+(defclass fdog-forwarding-interface (fdog-interface)
+  ((upstream :initarg :upstream
+             :accessor forwarder-upstream))
+  (:documentation "An interface for forwarding requests to upstream 0mq endpoints."))

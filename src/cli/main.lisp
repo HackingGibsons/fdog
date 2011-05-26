@@ -67,7 +67,7 @@
   "Start an installation named by the path. Run with nohup and detach from
 the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
   (with-cli-options (argv "Usage: start [options] [path]~%~@{~A~%~}~%")
-      (&free path)
+      ((no-fork "Don't try to fork and detach.") &free path)
     (let* ((path (path-or-cwd path))
            (db-path (fdog:make-fdog-server-db-pathname :root path))
            finished)
@@ -80,22 +80,27 @@ the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
           (format t "ERROR: This instance is already running!~%")
           (quit :unix-status 1))
 
-      (let ((forked (sb-posix:fork)))
-        (if (= forked 0)
-          (flet ((process-stop (&rest args)
-                   (declare (ignore args))
-                   (setf finished t)))
+      (labels ((process-stop (&rest args)
+                 (declare (ignore args))
+                 (setf finished t))
+               (process-start ()
+                 (fdog:start)
 
-            (fdog:start)
+                 (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
+                 (sb-sys:enable-interrupt sb-posix:sigint #'process-stop)
 
-            (sb-sys:enable-interrupt sb-posix:sigterm #'process-stop)
-            (sb-sys:enable-interrupt sb-posix:sigint #'process-stop)
+                 (loop do (sleep 0.25) (when finished
+                                         (format t "~%Fdog Terminating...~%")
+                                         (quit :unix-status 0)))))
+        (if no-fork
+            (let ((pid (sb-posix:getpid)))
+              (format t "Fork disabled. Running with pid: ~A. (SIGINT) C-c to stop.~%" pid)
+              (process-start))
 
-            (loop do (sleep 0.25) (when finished
-                                    (format t "Terminating...~%")
-                                    (quit :unix-status 0))))
-          (format t "Started process at pid: ~A~%" forked))))))
-
+            (let ((forked (sb-posix:fork)))
+              (if (= forked 0)
+                (process-start)
+                (format t "Started process at pid: ~A~%" forked))))))))
 
 (defcommand status (argv)
   "Determine the status of the fdog installation at the given path."

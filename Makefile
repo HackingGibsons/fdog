@@ -28,16 +28,37 @@ help:
 	@echo "        init the git submodules, test for"
 	@echo "        and possibly install quicklisp"
 	@echo "        and configures ASDF to find this repository"
+	@echo
+	@echo " test - Cleans everything, runs the test suite, and cleans"
+	@echo "        everything one more time."
+	@echo
 	@echo " all - Builds a distribution to $(TARGET)"
+	@echo
 	@echo " install - Install the distribution to $(DESTDIR)"
+	@echo
 	@echo " clean-build - Clean out any built artifacts"
+	@echo
 	@echo " clean - Sanitize the environment, removing the common-lisp cache"
+	@echo
 	@echo " ubuntu - Build out all the dependencies on an ubuntu system"
+	@echo
 	@echo
 	@echo "Some interesting options:"
 	@echo " QL_ROOT_NAME = $(QL_ROOT_NAME)"
 	@echo '   Directory relative to $$HOME of the quicklisp install'
 all: fdog
+
+test: clean init
+	@echo "=> Running tests."
+	$(MAKE) run-tests
+	$(MAKE) clean
+
+run-tests:
+	$(LISP) --no-userinit \
+	        --load $(QL_ROOT_PATH)/setup.lisp \
+	        --eval '(ql:quickload :fdog)' \
+	        --eval '(asdf:test-system :fdog)' \
+	        --eval '(quit)'
 
 install: all
 	sudo install -B prev -b $(FDOG) $(DESTDIR)

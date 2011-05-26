@@ -190,6 +190,7 @@ ubuntu-sbcl: ubuntu-basics
 	rm -rf /tmp/sbcl-build
 
 ubuntu-basics:
+	sudo apt-get update
 	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
 	@echo "=> Round one of dependancies"

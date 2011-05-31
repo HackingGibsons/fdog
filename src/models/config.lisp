@@ -163,7 +163,8 @@
 (defmethod print-object ((route mongrel2-route) stream)
   (with-slots (id reversed path target-type target-id) route
     (format stream "#<Route(~A)::~:[~;(reversed)~]~A => ~A(~A)>"
-            id (/= reversed 0) path target-type target-id)))
+            (and (slot-boundp route 'id) id)
+            (/= reversed 0) path target-type target-id)))
 
 
 ;; TODO: The closures mapping targets at the top should

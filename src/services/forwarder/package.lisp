@@ -1,9 +1,18 @@
 (defpackage #:fdog-forwarder
   (:use #:cl)
-  (:shadowing-import-from :fdog-control
-                          :api/endpoint)
   (:shadowing-import-from :log5 :log-for)
 
+  (:shadowing-import-from :fdog-models
+                          :model-pk
+                          :mongrel2-server
+                          :mongrel2-server-default-host
+                          :mongrel2-server-default-host-name
+                          :mongrel2-host
+                          :mongrel2-host-server)
+  (:shadowing-import-from :fdog-control
+                          :api/endpoint)
+  (:shadowing-import-from :fdog-m2sh
+                          :servers :make-server)
   (:shadowing-import-from :fdog-control
                           :interface-start :interface-stop
                           :interface-configure-bridges
@@ -72,6 +81,31 @@
 
 (defmethod make-forwarder-interface ((forwarder fdog-forwarder))
   (log-for (trace) "Making interface from forwarder ~A" forwarder)
+  (make-instance 'fdog-forwarding-interface
+                 :server (ensure-server-exists "forwarder" 13374)
+                 :upstream forwarder))
+
+(defun ensure-server-exists (name port &key (bind "0.0.0.0"))
+  (log-for (trace) "Making sure we have a server named ~A binding to ~A" name port)
+  (let ((server (or (servers :name name :refresh t :one t)
+                    (make-server name :port port :bind bind))))
+    (log-for (dribble) "Server with name so far: ~A" server)
+    (ensure-server-default-host-exists server)
+    server))
+
+(defmethod ensure-server-default-host-exists ((server mongrel2-server))
+  (log-for (trace) "Making sure we have a default host for ~A" server)
+  (let* ((host (mongrel2-server-default-host server))
+         (correct (and host
+                       (= (model-pk server)
+                          (model-pk (mongrel2-host-server host))))))
+    (unless correct
+      (setf host (make-instance 'mongrel2-host
+                                :name (mongrel2-server-default-host-name server)
+                                :server-id (model-pk server)))
+      (clsql:update-records-from-instance host))
+    (describe server)
+    (describe host))
   :undef)
 
 (defmethod init-forwarders ()

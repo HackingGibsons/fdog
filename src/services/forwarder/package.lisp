@@ -80,5 +80,16 @@
   (when (not (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder))))
     (log-for (trace) "Forwarder table does not exist.. creating.")
     (clsql:create-view-from-class 'fdog-forwarder))
-  (dolist (forwarder (clsql:select 'fdog-forwarder :flatp t :refresh t))
-    (make-forwarder-interface forwarder)))
+
+  ;; Turn off any that we already have running
+  (log-for (trace) "Removing current forwarders..")
+  (setf *forwarders*
+        (dolist (forwarder *forwarders* nil)
+          (when (typep forwarder 'fdog-forwarder)
+            (interface-stop forwarder))
+          (log-for (trace) "Removed: ~A" forwarder)))
+
+  (log-for (trace) "Adding forwarders..")
+  (setf *forwarders*
+        (mapcar #'make-forwarder-interface
+                (clsql:select 'fdog-forwarder :flatp t :refresh t))))

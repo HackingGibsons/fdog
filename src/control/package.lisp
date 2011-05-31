@@ -11,6 +11,7 @@
            :fdog-interface-host
            :fdog-interface-routes
            ;;; General
+           :interface-start
            :interface-stop
            ;;; Server control
            :interface-start-server

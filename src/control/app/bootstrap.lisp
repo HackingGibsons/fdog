@@ -21,8 +21,7 @@
 
     (configure-control-routes interface)
 
-    (interface-start-server interface)
-    (interface-start-bridges *control-interface*))
+    (interface-start interface))
 
   *control-interface*)
 

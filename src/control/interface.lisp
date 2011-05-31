@@ -57,6 +57,10 @@ with an exact pathname of / on the server configured for `interface'"
   (interface-stop-bridges self)
   (interface-stop-server self))
 
+(defmethod interface-start ((self fdog-interface))
+  (interface-start-bridges self)
+  (interface-start-server self))
+
 (defmethod interface-start-server ((self fdog-interface))
   (with-slots (server) self
     (unless (mongrel2-server-running-p server)

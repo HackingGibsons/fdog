@@ -46,6 +46,11 @@
                     :accessor forwarding-interface-response-writer))
   (:documentation "An interface for forwarding requests to upstream 0mq endpoints."))
 
+(defmethod initialize-instance :after ((self fdog-forwarding-interface) &rest initargs)
+  "Initialize the forwarder"
+  (declare (ignorable initargs))
+  :undef)
+
 (defmethod init-forwarders ()
   "Search for, init and start all known forwarders"
   (log-for (dribble) "Initializing forwarders..")

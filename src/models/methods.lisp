@@ -103,7 +103,8 @@ Returns true of it can find a pidfile, and a process is running there."
   "The default host object for a given server"
   #.(clsql:locally-enable-sql-reader-syntax)
   (car (clsql:select 'mongrel2-host :flatp t :refresh t
-                     :where [= 'name (mongrel2-server-default-host-name server)]))
+                     :where [and [= 'server_id (model-pk server)]
+                                 [= 'name (mongrel2-server-default-host-name server)]]))
 
   #.(clsql:restore-sql-reader-syntax-state))
 

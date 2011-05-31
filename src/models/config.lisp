@@ -137,7 +137,8 @@
    (reversed :type integer :db-type "BOOLEAN"
              :initarg :reversed
              :initform 0)
-   (host-id :type integer)
+   (host-id :type integer
+            :initarg :host-id)
    (host :db-kind :join
          :accessor mongrel2-route-host
          :db-info (:join-class mongrel2-host

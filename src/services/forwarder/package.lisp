@@ -91,6 +91,7 @@
                     (make-server name :port port :bind bind))))
     (log-for (dribble) "Server with name so far: ~A" server)
     (ensure-server-default-host-exists server)
+
     server))
 
 (defmethod ensure-server-default-host-exists ((server mongrel2-server))
@@ -104,9 +105,7 @@
                                 :name (mongrel2-server-default-host-name server)
                                 :server-id (model-pk server)))
       (clsql:update-records-from-instance host))
-    (describe server)
-    (describe host))
-  :undef)
+    host))
 
 (defmethod init-forwarders ()
   "Search for, init and start all known forwarders"

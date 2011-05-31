@@ -10,7 +10,8 @@
                           :mongrel2-host
                             :mongrel2-host-server
                             :mongrel2-host-routes
-                          :mongrel2-route-path)
+                          :mongrel2-route
+                            :mongrel2-route-path)
   (:shadowing-import-from :fdog-control
                           :api/endpoint)
   (:shadowing-import-from :fdog-m2sh

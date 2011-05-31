@@ -35,6 +35,11 @@
   (:base-table fdog-forwarder
    :documentation "Database model describing a forwarder endpoint."))
 
+(defmethod print-object ((self fdog-forwarder) stream)
+  (with-slots (id host path listen-on forward-to) self
+    (format stream "#<DBForwarder(~A): ~A~A ~A => ~A>"
+            id host path listen-on forward-to)))
+
 (defclass fdog-forwarding-interface (fdog-interface)
   ((upstream :initarg :upstream
              :accessor forwarder-upstream)
@@ -75,4 +80,5 @@
   (when (not (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder))))
     (log-for (trace) "Forwarder table does not exist.. creating.")
     (clsql:create-view-from-class 'fdog-forwarder))
-  :undef)
+  (dolist (forwarder (clsql:select 'fdog-forwarder :flatp t :refresh t))
+    (make-forwarder-interface forwarder)))

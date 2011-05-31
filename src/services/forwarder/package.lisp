@@ -24,6 +24,9 @@
    (path :type string
          :initarg :path
          :initform "/")
+   (listen-on :type string
+              :initarg :listen-on
+              :initform "tcp://localhost:9910")
    (forward-to :type string
                :initarg :forward-to
                :initform "tcp://localhost:9999"))
@@ -32,7 +35,15 @@
 
 (defclass fdog-forwarding-interface (fdog-interface)
   ((upstream :initarg :upstream
-             :accessor forwarder-upstream))
+             :accessor forwarder-upstream)
+   (response-sock :initform nil
+                :initarg :listen-sock
+                :accessor forwarding-interface-listen-sock)
+   (request-sock :initform nil
+                 :initarg :request-sock
+                 :accessor forwarding-interface-request-sock)
+   (response-writer :initform nil
+                    :accessor forwarding-interface-response-writer))
   (:documentation "An interface for forwarding requests to upstream 0mq endpoints."))
 
 (defmethod init-forwarders ()

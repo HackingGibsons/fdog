@@ -69,7 +69,8 @@
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key
        :reader mongrel2-host-id)
-   (server-id :type integer)
+   (server-id :type integer
+              :initarg :server-id)
    (maintenance :type integer :db-type "BOOLEAN"
                 :initform 0)
    (name :type string

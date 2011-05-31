@@ -12,7 +12,8 @@
   (:shadowing-import-from :fdog-control
                           :api/endpoint)
   (:shadowing-import-from :fdog-m2sh
-                          :servers :make-server)
+                          :servers :make-server
+                          :make-handler)
   (:shadowing-import-from :fdog-control
                           :interface-start :interface-stop
                           :interface-configure-bridges
@@ -20,6 +21,9 @@
 
   (:export :init-forwarders))
 (in-package :fdog-forwarder)
+
+(defvar *forwarder-server-name* "forwarder")
+(defvar *forwarder-server-port* 13374)
 
 (defvar *forwarders* ()
   "List of the loaded forwarders")
@@ -81,17 +85,28 @@
 
 (defmethod make-forwarder-interface ((forwarder fdog-forwarder))
   (log-for (trace) "Making interface from forwarder ~A" forwarder)
-  (make-instance 'fdog-forwarding-interface
-                 :server (ensure-server-exists "forwarder" 13374)
-                 :upstream forwarder))
+  (let* ((server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*))
+         (host (mongrel2-server-default-host server))
+         (handler (ensure-handler-for-forwarder forwarder :host host :server server)))
 
-(defun ensure-server-exists (name port &key (bind "0.0.0.0"))
+    (make-instance 'fdog-forwarding-interface
+                   :server server
+                   :upstream forwarder)))
+
+(defun ensure-handler-for-forwarder (forwarder &key host server)
+  (let* ((server (or server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*)))
+         (host (or host (mongrel2-server-default-host server))))
+    (log-for (trace) "Ensuring handler for: ~A S: ~A H: ~A"
+             forwarder host server)
+    :undef))
+
+(defun ensure-server-exists (forwarder name port &key (bind "0.0.0.0"))
   (log-for (trace) "Making sure we have a server named ~A binding to ~A" name port)
-  (let ((server (or (servers :name name :refresh t :one t)
-                    (make-server name :port port :bind bind))))
+  (let* ((server (or (servers :name name :refresh t :one t)
+                     (make-server name :port port :bind bind
+                                  :default-host (slot-value forwarder 'host))))
+         (host (ensure-server-default-host-exists server)))
     (log-for (dribble) "Server with name so far: ~A" server)
-    (ensure-server-default-host-exists server)
-
     server))
 
 (defmethod ensure-server-default-host-exists ((server mongrel2-server))

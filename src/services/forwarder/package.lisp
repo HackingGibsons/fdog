@@ -5,6 +5,8 @@
   (:shadowing-import-from :log5 :log-for)
 
   (:shadowing-import-from :fdog-control
+                          :interface-start :interface-stop
+                          :interface-configure-bridges
                           :fdog-interface)
 
   (:export :init-forwarders))
@@ -49,11 +51,19 @@
                     :accessor forwarding-interface-response-writer))
   (:documentation "An interface for forwarding requests to upstream 0mq endpoints."))
 
+(defmethod interface-start :before ((self fdog-forwarding-interface))
+  (log-for (trace) "Starting forwarder ~A" self))
 
+(defmethod interface-stop :before ((self fdog-forwarding-interface))
+  (log-for (trace) "Stopping forwarder ~A" self))
 
 (defmethod initialize-instance :after ((self fdog-forwarding-interface) &rest initargs)
   "Initialize the forwarder"
   (declare (ignorable initargs))
+  :undef)
+
+(defmethod make-forwarder-interface ((forwarder fdog-forwarder))
+  (log-for (trace) "Making interface from forwarder ~A" forwarder)
   :undef)
 
 (defmethod init-forwarders ()

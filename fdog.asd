@@ -55,7 +55,9 @@
                              (:module "services" :depends-on ("models" "control" "m2sh" "utils" "package")
                               :components ((:file "package" :depends-on ("forwarder"))
                                            (:module "forwarder"
-                                            :components ((:file "package")))))))))
+                                            :components ((:file "package")
+                                                         (:file "models" :depends-on ("package"))
+                                                         (:file "interface" :depends-on ("package" "models"))))))))))
 
 
 

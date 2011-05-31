@@ -5,10 +5,12 @@
   (:shadowing-import-from :fdog-models
                           :model-pk
                           :mongrel2-server
-                          :mongrel2-server-default-host
-                          :mongrel2-server-default-host-name
+                            :mongrel2-server-default-host
+                            :mongrel2-server-default-host-name
                           :mongrel2-host
-                          :mongrel2-host-server)
+                            :mongrel2-host-server
+                            :mongrel2-host-routes
+                          :mongrel2-route-path)
   (:shadowing-import-from :fdog-control
                           :api/endpoint)
   (:shadowing-import-from :fdog-m2sh

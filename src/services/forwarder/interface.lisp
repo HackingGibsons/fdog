@@ -41,11 +41,16 @@
                    :upstream forwarder)))
 
 (defun ensure-handler-for-forwarder (forwarder &key host server)
-  (let* ((server (or server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*)))
-         (host (or host (mongrel2-server-default-host server))))
-    (log-for (trace) "Ensuring handler for: ~A S: ~A H: ~A"
-             forwarder host server)
-    :undef))
+  (with-slots (path listen-on forward-to) forwarder
+    (let* ((server (or server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*)))
+           (host (or host (mongrel2-server-default-host server)))
+           (route (find path (mongrel2-host-routes host)
+                        :test #'string= :key #'mongrel2-route-path)))
+      (log-for (dribble) "Do: get-or-create route(path->~A host-id->~A)" path (model-pk host))
+      (log-for (dribble) "Found route: ~A" route)
+      (log-for (trace) "Ensuring handler for: ~A S: ~A H: ~A"
+               forwarder host server)
+      :undef)))
 
 (defun ensure-server-exists (forwarder name port &key (bind "0.0.0.0"))
   (log-for (trace) "Making sure we have a server named ~A binding to ~A" name port)

@@ -16,6 +16,8 @@
   (:shadowing-import-from :fdog-m2sh
                           :servers :make-server
                           :make-handler)
+  (:shadowing-import-from :fdog-handler
+                          :request-handler-processors)
   (:shadowing-import-from :fdog-control
                           :api/endpoint
                           :interface-start :interface-stop

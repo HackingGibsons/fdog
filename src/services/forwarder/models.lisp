@@ -17,10 +17,10 @@
          :initform "/")
    (listen-on :type string
               :initarg :listen-on
-              :initform "tcp://localhost:9910")
+              :initform "tcp://127.0.0.1:9910")
    (forward-to :type string
                :initarg :forward-to
-               :initform "tcp://localhost:9999"))
+               :initform "tcp://127.0.0.1:9999"))
   (:base-table fdog-forwarder
    :documentation "Database model describing a forwarder endpoint."))
 

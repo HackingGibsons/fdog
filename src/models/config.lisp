@@ -112,8 +112,9 @@
            (foreign-key-value (slot-value object foreign-key)))
       (ecase action
         ((:get :is-set)
-         (car (clsql:select model-class :flatp t :limit 1
-                            :where [= foreign-field foreign-key-value])))
+         (when model-class
+           (car (clsql:select model-class :flatp t :limit 1
+                              :where [= foreign-field foreign-key-value]))))
 
         (:set (let ((name (name-by-endpoint value)) ;; TODO: Factor into &key args
                     (key (slot-value value foreign-field)))

@@ -5,6 +5,10 @@
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key
        :reader fdog-forwarder-id)
+   (name :type string
+         :initarg :name
+         :initform "forwarder"
+         :accessor fdog-forwarder-name)
    (host :type string
          :initarg :host
          :initform nil)

@@ -78,7 +78,9 @@
 (defun forward-request-handler (handler request raw &key interface)
   (declare (ignorable handler raw))
   (log-for (trace) "Request: ~A" request)
-  (log-for (trace) "Interface: ~A" interface))
+  (log-for (trace) "Interface: ~A" interface)
+  (with-slots (request-sock) interface
+    (zmq:send request-sock (make-instance 'zmq:msg :data raw))))
 
 (defun mount-forwarder-application (bridge interface)
   (log-for (trace) "Mounting the forwarder application on ~A" bridge)

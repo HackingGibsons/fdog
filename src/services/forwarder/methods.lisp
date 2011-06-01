@@ -2,11 +2,32 @@
 
 (defmethod interface-start :before ((self fdog-forwarding-interface))
   (log-for (trace) "Starting forwarder ~A" self)
-  (init-0mq-endpoints self))
+  (init-0mq-endpoints self)
+  (start-response-writing-thread self))
 
 (defmethod interface-stop :after ((self fdog-forwarding-interface))
   (log-for (trace) "Stopping forwarder ~A" self)
-  (teardown-0mq-endpoints self))
+  (teardown-0mq-endpoints self)
+  (stop-response-writing-thread self))
+
+(defmethod start-response-writing-thread ((interface fdog-forwarding-interface))
+  (flet ((thread-function ()
+           (loop while :forever do
+                (sleep 1)
+                (log-for (dribble) "OMG DO WORK! ~A" (current-thread)))))
+
+    (setf (forwarding-interface-response-writer interface)
+          (bordeaux-threads:make-thread #'thread-function
+                                        :name (format nil "forwarder-response-writer-thread(~A)"
+                                                      (fdog-forwarder-name (forwarder-upstream interface)))))))
+
+(defmethod stop-response-writing-thread ((interface fdog-forwarding-interface))
+  (with-slots (response-writer) interface
+    (and response-writer
+         (threadp response-writer)
+         (thread-alive-p response-writer)
+         (destroy-thread response-writer))
+    (setf response-writer nil)))
 
 (defmethod init-0mq-endpoints ((interface fdog-forwarding-interface))
   (log-for (trace) "Building the 0mq context and forwarding sockets.")

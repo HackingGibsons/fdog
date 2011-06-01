@@ -22,7 +22,7 @@
 ;; Logging
 (log5:defoutput human-time (multiple-value-bind (second minute hour date month year)
                                (decode-universal-time (get-universal-time))
-                             (format nil "[~A-~A-~A ~A:~A:~A]" year month date hour minute second)))
+                             (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
 
 (log5:start-sender 'default
                    (log5:stream-sender :location *error-output*)

@@ -44,9 +44,15 @@
   (with-slots (path listen-on forward-to) forwarder
     (let* ((server (or server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*)))
            (host (or host (mongrel2-server-default-host server)))
-           (route (or (find path (mongrel2-host-routes host)
+           (routes (mongrel2-host-routes host))
+           (route (or (find path routes
                             :test #'string= :key #'mongrel2-route-path)
-                      (make-instance 'mongrel2-route :path path :host-id (model-pk host)))))
+
+                      (let ((r (make-instance 'mongrel2-route :path path :host-id (model-pk host))))
+                        (clsql:update-records-from-instance r)
+                        r))))
+
+      (log-for (dribble) "Routes going in: ~A" routes)
       (log-for (dribble) "Do: get-or-create route(path->~A host-id->~A)" path (model-pk host))
       (log-for (dribble) "Found route: ~A" route)
       (log-for (trace) "Ensuring handler for: ~A S: ~A H: ~A"

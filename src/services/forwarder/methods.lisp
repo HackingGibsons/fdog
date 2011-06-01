@@ -13,7 +13,7 @@
 (defmethod start-response-writing-thread ((interface fdog-forwarding-interface))
   (flet ((thread-function ()
            (loop while :forever do
-                (sleep 1)
+                (sleep 10)
                 (log-for (dribble) "OMG DO WORK! ~A" (current-thread)))))
 
     (setf (forwarding-interface-response-writer interface)

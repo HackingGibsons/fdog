@@ -30,15 +30,24 @@
   (declare (ignorable initargs))
   :undef)
 
+(defun mount-forwarder-application (bridge)
+  (log-for (trace) "Mounting the forwarder application on ~A" bridge)
+  (describe bridge)
+  :undef)
+
 (defmethod make-forwarder-interface ((forwarder fdog-forwarder))
-  (log-for (trace) "Making interface from forwarder ~A" forwarder)
+   (log-for (trace) "Making interface from forwarder ~A" forwarder)
   (let* ((server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*))
          (host (mongrel2-server-default-host server))
-         (handler (ensure-handler-for-forwarder forwarder :host host :server server)))
+         (handler (ensure-handler-for-forwarder forwarder :host host :server server))
+         (interface (make-instance 'fdog-forwarding-interface
+                                   :server server
+                                   :upstream forwarder)))
+    (declare (ignore handler))
+    (interface-configure-bridges (interface)
+      ("/" :mount-bridge 'mount-forwarder-application))
 
-    (make-instance 'fdog-forwarding-interface
-                   :server server
-                   :upstream forwarder)))
+    interface))
 
 
 (defmethod init-forwarders ()

@@ -13,15 +13,15 @@
                           :mongrel2-route
                             :mongrel2-route-path
                             :mongrel2-route-target)
-  (:shadowing-import-from :fdog-control
-                          :api/endpoint)
   (:shadowing-import-from :fdog-m2sh
                           :servers :make-server
                           :make-handler)
   (:shadowing-import-from :fdog-control
+                          :api/endpoint
                           :interface-start :interface-stop
                           :interface-configure-bridges
-                          :fdog-interface)
+                          :fdog-interface
+                          :fdog-interface-bridges)
 
   (:export :init-forwarders))
 (in-package :fdog-forwarder)

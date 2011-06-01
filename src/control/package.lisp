@@ -10,6 +10,7 @@
            :fdog-interface-server
            :fdog-interface-host
            :fdog-interface-routes
+           :fdog-interface-bridges
            ;;; General
            :interface-start
            :interface-stop

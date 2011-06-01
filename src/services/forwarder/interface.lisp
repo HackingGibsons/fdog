@@ -30,12 +30,26 @@
 (defmethod init-0mq-endpoints ((interface fdog-forwarding-interface))
   (log-for (trace) "Building the 0mq context and forwarding sockets.")
   (with-slots (context response-write-sock response-sock request-sock) interface
-    :undef))
+    (setf context (zmq:init 1)
+          request-sock (zmq:socket context zmq:push)
+          response-sock (zmq:socket context zmq:sub)
+          response-write-sock (zmq:socket context zmq:pub)))
+  (log-for (dribble) "Got sockets")
+  (describe interface))
 
 (defmethod teardown-0mq-endpoints ((interface fdog-forwarding-interface))
   (log-for (trace) "Tearing down the 0mq context and forwarding interfaces.")
   (with-slots (context response-write-sock response-sock request-sock) interface
-    :undef))
+    (mapc #'(lambda (maybe-sock) (and maybe-sock
+                                      (zmq:close maybe-sock)
+                                      (setf maybe-sock nil)))
+          `(,response-write-sock ,response-sock ,request-sock))
+
+    (and context
+         (zmq:term context)
+         (setf context nil)))
+  (log-for (dribble) "Teardown complete.")
+  (describe interface))
 
 (defmethod initialize-instance :after ((self fdog-forwarding-interface) &rest initargs)
   "Initialize the forwarder"

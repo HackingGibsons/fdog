@@ -58,6 +58,7 @@
                                             :components ((:file "package")
                                                          (:file "utils" :depends-on ("package"))
                                                          (:file "models" :depends-on ("package"))
+                                                         (:file "ensure-ance" :depends-on ("package" "models" "utils"))
                                                          (:file "interface" :depends-on ("package" "models" "utils"))))))))))
 
 

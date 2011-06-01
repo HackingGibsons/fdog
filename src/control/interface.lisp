@@ -50,7 +50,7 @@ with an exact pathname of / on the server configured for `interface'"
                  (log-for (trace) "Bridge: ~A" bridge)
                  (if bridge
                      (funcall (eval (getf spec :mount-bridge))
-                              bridge)
+                              bridge interface)
                      (error (format nil "No bridge found for route ~A" path))))))))
 
 (defmethod interface-stop ((self fdog-interface))

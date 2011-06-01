@@ -42,8 +42,9 @@
   (declare (ignorable handler raW))
   (log-for (trace) "Request: ~A" request))
 
-(defun mount-forwarder-application (bridge)
+(defun mount-forwarder-application (bridge interface)
   (log-for (trace) "Mounting the forwarder application on ~A" bridge)
+  (log-for (trace) "Using interface: ~A" interface)
   (setf (request-handler-processors bridge)
         '(forward-request-handler))
   (describe bridge)

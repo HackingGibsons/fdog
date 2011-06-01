@@ -3,7 +3,8 @@
 (defvar *control-interface* nil
   "The interface for interacting with FDOG externally")
 
-(defun mount-control-application (bridge)
+(defun mount-control-application (bridge interface)
+  (declare (ignore interface))
   (log-for (trace) "Mounting control application on bridge: ~A" bridge)
   (request-handler-add-responder bridge 'root/router :router)
   (log-for (trace) "Mounted dispatcher on bridge."))

@@ -56,8 +56,9 @@
                               :components ((:file "package" :depends-on ("forwarder"))
                                            (:module "forwarder"
                                             :components ((:file "package")
+                                                         (:file "utils" :depends-on ("package"))
                                                          (:file "models" :depends-on ("package"))
-                                                         (:file "interface" :depends-on ("package" "models"))))))))))
+                                                         (:file "interface" :depends-on ("package" "models" "utils"))))))))))
 
 
 

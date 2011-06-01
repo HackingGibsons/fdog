@@ -17,12 +17,15 @@
                           :servers :make-server
                           :make-handler)
   (:shadowing-import-from :fdog-handler
-                          :request-handler-processors)
+                          :request-handler-processors
+                          :request-handler-sub
+                          :request-handler-pub)
   (:shadowing-import-from :fdog-control
                           :api/endpoint
                           :interface-start :interface-stop
                           :interface-configure-bridges
                           :fdog-interface
+                          :interface-bridge-matching
                           :fdog-interface-bridges)
 
   (:export :init-forwarders))

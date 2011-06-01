@@ -20,10 +20,18 @@
   (:documentation "An interface for forwarding requests to upstream 0mq endpoints."))
 
 (defmethod interface-start :before ((self fdog-forwarding-interface))
-  (log-for (trace) "Starting forwarder ~A" self))
+  (log-for (trace) "Starting forwarder ~A" self)
+  (init-0mq-endpoints self))
 
-(defmethod interface-stop :before ((self fdog-forwarding-interface))
-  (log-for (trace) "Stopping forwarder ~A" self))
+(defmethod interface-stop :after ((self fdog-forwarding-interface))
+  (log-for (trace) "Stopping forwarder ~A" self)
+  (teardown-0mq-endpoints self))
+
+(defmethod init-0mq-endpoints ((interface fdog-forwarding-interface))
+  (log-for (trace) "Building the 0mq context and forwarding sockets."))
+
+(defmethod teardown-0mq-endpoints ((interface fdog-forwarding-interface))
+  (log-for (trace) "Tearing down the 0mq context and forwarding interfaces."))
 
 (defmethod initialize-instance :after ((self fdog-forwarding-interface) &rest initargs)
   "Initialize the forwarder"
@@ -56,7 +64,7 @@
     interface))
 
 
-(defmethod init-forwarders ()
+(defmethod init-forwarders (&key (start t))
   "Search for, init and start all known forwarders"
   (log-for (dribble) "Initializing forwarders..")
   (when (not (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder))))
@@ -67,11 +75,16 @@
   (log-for (trace) "Removing current forwarders..")
   (setf *forwarders*
         (dolist (forwarder *forwarders* nil)
-          (when (typep forwarder 'fdog-forwarder)
-            (interface-stop forwarder))
+          (interface-stop forwarder)
           (log-for (trace) "Removed: ~A" forwarder)))
 
   (log-for (trace) "Adding forwarders..")
   (setf *forwarders*
         (mapcar #'make-forwarder-interface
-                (clsql:select 'fdog-forwarder :flatp t :refresh t))))
+                (clsql:select 'fdog-forwarder :flatp t :refresh t)))
+
+  (when start
+    (log-for (trace) "Starting forwarders..")
+    (mapcar #'interface-start *forwarders*))
+
+  *forwarders*)

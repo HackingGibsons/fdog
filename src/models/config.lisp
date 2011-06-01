@@ -113,7 +113,7 @@
       (ecase action
         ((:get :is-set)
          (when model-class
-           (car (clsql:select model-class :flatp t :limit 1
+           (car (clsql:select model-class :flatp t :limit 1 :refresh t
                               :where [= foreign-field foreign-key-value]))))
 
         (:set (let ((name (name-by-endpoint value)) ;; TODO: Factor into &key args

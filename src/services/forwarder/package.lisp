@@ -1,5 +1,6 @@
 (defpackage #:fdog-forwarder
-  (:use #:cl)
+  (:use #:cl
+        :bordeaux-threads)
   (:shadowing-import-from :log5 :log-for)
 
   (:shadowing-import-from :fdog-models

@@ -38,17 +38,19 @@
   (declare (ignorable initargs))
   :undef)
 
-(defun forward-request-handler (handler request raw)
-  (declare (ignorable handler raW))
-  (log-for (trace) "Request: ~A" request))
+(defun forward-request-handler (handler request raw &key interface)
+  (declare (ignorable handler raw))
+  (log-for (trace) "Request: ~A" request)
+  (log-for (trace) "Interface: ~A" interface))
 
 (defun mount-forwarder-application (bridge interface)
   (log-for (trace) "Mounting the forwarder application on ~A" bridge)
   (log-for (trace) "Using interface: ~A" interface)
-  (setf (request-handler-processors bridge)
-        '(forward-request-handler))
-  (describe bridge)
-  :undef)
+
+  (flet ((handler-closure (handler request raw)
+           (forward-request-handler handler request raw :interface interface)))
+    (setf (request-handler-processors bridge)
+          `(,#'handler-closure))))
 
 (defmethod make-forwarder-interface ((forwarder fdog-forwarder))
   (log-for (trace) "Making interface from forwarder ~A" forwarder)

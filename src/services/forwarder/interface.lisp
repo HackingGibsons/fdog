@@ -52,12 +52,15 @@
                         (clsql:update-records-from-instance r)
                         r))))
 
-      (log-for (dribble) "Routes going in: ~A" routes)
-      (log-for (dribble) "Do: get-or-create route(path->~A host-id->~A)" path (model-pk host))
-      (log-for (dribble) "Found route: ~A" route)
-      (log-for (trace) "Ensuring handler for: ~A S: ~A H: ~A"
-               forwarder host server)
-      :undef)))
+      (unless (mongrel2-route-target route)
+        (setf (mongrel2-route-target route)
+              (make-handler :send-spec (make-handler-send-spec)
+                            :send-ident (make-handler-send-ident forwarder)
+                            :recv-spec (make-handler-recv-spec)
+                            :recv-ident (make-handler-recv-ident forwarder)))
+        (clsql:update-records-from-instance route))
+
+      (mongrel2-route-target route))))
 
 (defun ensure-server-exists (forwarder name port &key (bind "0.0.0.0"))
   (log-for (trace) "Making sure we have a server named ~A binding to ~A" name port)

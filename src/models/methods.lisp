@@ -118,6 +118,7 @@ lisp more easily accepts as a relative path"
       result)))
 
 (defmethod mongrel2-host-routes ((host mongrel2-host) &key path)
+  (clsql:update-objects-joins `(,host) :force-p t)
   (let ((routes (mongrel2-host-routes-set host)))
     (remove-if-not #'(lambda (route)
                        (or (not path)

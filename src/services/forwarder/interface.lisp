@@ -28,10 +28,14 @@
   (teardown-0mq-endpoints self))
 
 (defmethod init-0mq-endpoints ((interface fdog-forwarding-interface))
-  (log-for (trace) "Building the 0mq context and forwarding sockets."))
+  (log-for (trace) "Building the 0mq context and forwarding sockets.")
+  (with-slots (context response-write-sock response-sock request-sock) interface
+    :undef))
 
 (defmethod teardown-0mq-endpoints ((interface fdog-forwarding-interface))
-  (log-for (trace) "Tearing down the 0mq context and forwarding interfaces."))
+  (log-for (trace) "Tearing down the 0mq context and forwarding interfaces.")
+  (with-slots (context response-write-sock response-sock request-sock) interface
+    :undef))
 
 (defmethod initialize-instance :after ((self fdog-forwarding-interface) &rest initargs)
   "Initialize the forwarder"
@@ -39,6 +43,7 @@
   :undef)
 
 (defun forward-request-handler (handler request raw)
+  (declare (ignorable handler raW))
   (log-for (trace) "Request: ~A" request))
 
 (defun mount-forwarder-application (bridge)

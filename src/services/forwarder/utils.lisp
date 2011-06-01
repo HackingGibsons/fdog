@@ -3,11 +3,11 @@
 (defun make-handler-send-spec ()
   "tcp://127.0.0.1:59910")
 
-(defun make-handler-send-ident (route)
-  "forwarder-TODO")
+(defmethod make-handler-send-ident ((forwarder fdog-forwarder))
+  (format nil "forwarder-~A" (fdog-forwarder-name forwarder)))
 
 (defun make-handler-recv-spec ()
   "tcp://127.0.0.1:29999")
 
-(defun make-handler-recv-ident (route)
+(defmethod make-handler-recv-ident ((forwarder fdog-forwarder))
   "")

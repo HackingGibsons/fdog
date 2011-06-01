@@ -11,12 +11,28 @@
 (defmethod init-0mq-endpoints ((interface fdog-forwarding-interface))
   (log-for (trace) "Building the 0mq context and forwarding sockets.")
   (with-slots (context response-write-sock response-sock request-sock) interface
+    ;; Create
     (setf context (zmq:init 1)
           request-sock (zmq:socket context zmq:push)
           response-sock (zmq:socket context zmq:sub)
-          response-write-sock (zmq:socket context zmq:pub)))
-  (log-for (dribble) "Got sockets")
-  (describe interface))
+          response-write-sock (zmq:socket context zmq:pub))
+
+
+    ;; Connect/Bind
+    (log-for (trace) "Connecting (forward-to) request-sock: ~A" (slot-value (forwarder-upstream interface)
+                                                               'forward-to))
+    (zmq:connect request-sock (slot-value (forwarder-upstream interface)
+                                          'forward-to))
+
+    (log-for (trace) "Binding (listen-on) response-sock: ~A" (slot-value (forwarder-upstream interface)
+                                                             'listen-on))
+    (zmq:setsockopt response-sock zmq:subscribe "")
+    (log-for (trace) "Subscribed, binding.")
+    (zmq:bind response-sock (slot-value (forwarder-upstream interface)
+                                        'listen-on))
+
+    (log-for (trace) "Connecting response-write-sock: ~A" (request-handler-pub (interface-bridge-matching interface "/")))
+    (zmq:connect response-write-sock (request-handler-pub (interface-bridge-matching interface "/")))))
 
 (defmethod teardown-0mq-endpoints ((interface fdog-forwarding-interface))
   (log-for (trace) "Tearing down the 0mq context and forwarding interfaces.")

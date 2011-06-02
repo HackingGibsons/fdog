@@ -76,11 +76,11 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                  ((or (not next) found)
 
                   (if found
-                      (progn
-                        (log-for (trace) "Found(~A) for: (~A)~A Rest: ~A" found (type-of next) next rest)
-                        ;; TODO: Run this in a handler-case to catch any bubbling 404
-                        (api/endpoint-with-args method (intern next :keyword) rest
-                                                handler request raw))
+                      (handler-case
+                          (api/endpoint-with-args method (intern next :keyword) rest
+                                                  handler request raw)
+                        (404-condition () (api/404 handler request raw)))
+
                       (api/404 handler request raw)))))))))
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)

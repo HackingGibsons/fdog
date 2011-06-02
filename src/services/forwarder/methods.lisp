@@ -42,6 +42,8 @@
     ;; Connect/Bind
     (log-for (trace) "Binding (forward-to) request-sock: ~A" (slot-value (forwarder-upstream interface)
                                                                'forward-to))
+    ;; TODO: Set linger to something sane so we're not stuck waiting
+    ;; TODO: Patch CL's ZMQ to include linger >:[
     (zmq:bind request-sock (slot-value (forwarder-upstream interface)
                                           'forward-to))
 

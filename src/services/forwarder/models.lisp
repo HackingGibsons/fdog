@@ -29,6 +29,12 @@
     (format stream "#<DBForwarder(~A): ~A~A ~A => ~A>"
             id host path listen-on forward-to)))
 
+(defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders/|)) rest
+                                   handler request raw)
+  (with-chunked-stream-reply (handler request stream
+                                      :headers ((header-json-type)))
+    (json:encode-json `((,rest . ())) stream)))
+
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))

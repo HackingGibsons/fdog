@@ -40,9 +40,9 @@
 
 
     ;; Connect/Bind
-    (log-for (trace) "Connecting (forward-to) request-sock: ~A" (slot-value (forwarder-upstream interface)
+    (log-for (trace) "Binding (forward-to) request-sock: ~A" (slot-value (forwarder-upstream interface)
                                                                'forward-to))
-    (zmq:connect request-sock (slot-value (forwarder-upstream interface)
+    (zmq:bind request-sock (slot-value (forwarder-upstream interface)
                                           'forward-to))
 
     (log-for (trace) "Binding (listen-on) response-sock: ~A" (slot-value (forwarder-upstream interface)

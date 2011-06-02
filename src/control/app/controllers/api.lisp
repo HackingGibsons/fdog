@@ -71,6 +71,7 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                   (if found
                       (progn
                         (log-for (trace) "Found(~A) for: (~A)~A Rest: ~A" found (type-of next) next rest)
+                        ;; TODO: Run this in a handler-case to catch any bubbling 404
                         (api/endpoint-with-args method (intern next :keyword) rest
                                                 handler request raw))
                       (api/404 handler request raw)))))))))

@@ -26,4 +26,5 @@
            ;;; API creation
            :api/endpoint
            :api/endpoint-with-args
+           :404-condition
            :header-json-type))

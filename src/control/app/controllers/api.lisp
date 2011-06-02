@@ -23,6 +23,13 @@
 (defgeneric api/endpoint (method sub-path handler request raw)
   (:documentation "Generic api endpoint. Things wishing to provide an API specialize on this method."))
 
+(define-condition 404-condition ()
+  ((data :initform "Not found"
+         :initarg :data
+         :reader 404-data))
+  (:report (lambda (c s)
+             (format s "404 Raised: ~A" (404-data c)))))
+
 (defgeneric api/endpoint-with-args (method sub-path rest handler request raw)
   (:documentation "Generic api endpoint with subpath for args. Things wishing to provide an API with a
 variable URL component should specialize on this method.

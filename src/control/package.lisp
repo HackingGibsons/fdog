@@ -24,4 +24,5 @@
            :interface-bridge-matching
            :interface-configure-bridges
            ;;; API creation
-           :api/endpoint))
+           :api/endpoint
+           :header-json-type))

@@ -32,4 +32,8 @@
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
-    (json:encode-json `((:hello . :world)) stream)))
+    (json:encode-json `(,(mapcar #'(lambda (forwarder)
+                                     `(:name . ((:host . :host-here)
+                                                (:path . :path-here))))
+                                 (clsql:select 'fdog-forwarder :flatp t :refresh t)))
+                      stream)))

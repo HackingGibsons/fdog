@@ -23,6 +23,8 @@
                           :request-handler-pub)
   (:shadowing-import-from :fdog-control
                           :api/endpoint
+                          :header-json-type
+                          :with-chunked-stream-reply
                           :interface-start :interface-stop
                           :interface-configure-bridges
                           :fdog-interface

@@ -46,7 +46,14 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                  (apply #'values (coerce parts 'list)))))
 
            (applicable-sub (path rest)
-             (log-for (trace) "Checking path: ~A with rest: ~A" path rest)))
+             (log-for (trace) "Checking path: ~A with rest: ~A" path rest)
+             (let* ((sub-sym (intern path :keyword))
+                    (ef-meth (compute-applicable-methods #'api/endpoint-with-args
+                                                         (list method sub-sym rest handler request raw))))
+               (values ef-meth
+                       (if ef-meth
+                           sub-sym
+                           (unintern sub-sym))))))
 
       (multiple-value-bind (exact exact-sym) (applicable-exact sub-path)
         (if exact
@@ -55,10 +62,18 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
             (do* ((next-rest (multiple-value-list (next-sub-path sub-path))
                              (multiple-value-list (next-sub-path next)))
                   (next (car next-rest) (car next-rest))
-                  (rest (cadr next-rest) (concatenate 'string (cadr next-rest) rest)))
-                 ((not next) (api/404 handler request raw))
+                  (rest (cadr next-rest) (concatenate 'string (cadr next-rest) rest))
+                  (found (and next (applicable-sub next rest))
+                         (and next (applicable-sub next rest))))
 
-              (applicable-sub next rest)))))))
+                 ((or (not next) found)
+
+                  (if found
+                      (progn
+                        (log-for (trace) "Found(~A) for: (~A)~A Rest: ~A" found (type-of next) next rest)
+                        (api/endpoint-with-args method (intern next :keyword) rest
+                                                handler request raw))
+                      (api/404 handler request raw)))))))))
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)
   (with-chunked-stream-reply (handler request stream

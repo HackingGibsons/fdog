@@ -43,18 +43,22 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
            (next-sub-path (path)
              (multiple-value-bind (matchp parts) (ppcre:scan-to-strings "(^.+)(/.+)$" path)
                (when matchp
-                 (apply #'values (coerce parts 'list))))))
+                 (apply #'values (coerce parts 'list)))))
+
+           (applicable-sub (path rest)
+             (log-for (trace) "Checking path: ~A with rest: ~A" path rest)))
 
       (multiple-value-bind (exact exact-sym) (applicable-exact sub-path)
-
         (if exact
             (api/endpoint method exact-sym handler request raw)
-            (multiple-value-bind (next rest) (next-sub-path sub-path)
-              (if next
-                  (progn
-                    (log-for (trace) "Can try sub-path: ~A with rest ~A" next rest)
-                    (api/404 handler request raw)))))))))
 
+            (do* ((next-rest (multiple-value-list (next-sub-path sub-path))
+                             (multiple-value-list (next-sub-path next)))
+                  (next (car next-rest) (car next-rest))
+                  (rest (cadr next-rest) (concatenate 'string (cadr next-rest) rest)))
+                 ((not next) (api/404 handler request raw))
+
+              (applicable-sub next rest)))))))
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)
   (with-chunked-stream-reply (handler request stream

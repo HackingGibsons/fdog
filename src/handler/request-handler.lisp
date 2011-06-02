@@ -85,6 +85,7 @@ for the given request handler."
                   (simple-error (c) (cond ((= (sb-alien:get-errno) sb-posix:eintr)
                                            (log-for (trace) "Syscall interrupted in poll loop. Ignoring"))
                                           (t
+                                           ;; TODO: Add a handler case to m2cl to allow defaulting unassigned query args
                                            (log-for (trace) "Condition from poller: ~A" c)
                                            (signal c)))))
              (release-lock (request-handler-lock req-handler))))

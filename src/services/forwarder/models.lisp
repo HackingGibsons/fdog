@@ -28,3 +28,8 @@
   (with-slots (id host path listen-on forward-to) self
     (format stream "#<DBForwarder(~A): ~A~A ~A => ~A>"
             id host path listen-on forward-to)))
+
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json `((:hello . :world)) stream)))

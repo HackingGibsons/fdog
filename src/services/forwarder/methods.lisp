@@ -80,6 +80,7 @@
   (declare (ignorable handler raw))
   (log-for (trace) "Request: ~A" request)
   (log-for (trace) "Interface: ~A" interface)
+  ;; TODO: Rewrite the request to mention a UUID unique to this instance
   (with-slots (request-sock) interface
     (zmq:send request-sock (make-instance 'zmq:msg :data raw))))
 

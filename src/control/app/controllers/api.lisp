@@ -28,16 +28,22 @@
 variable URL component should specialize on this method."))
 
 (defun api/router (handler request raw)
-  (let* ((sub-path (api-subpath request))
-         (sub-sym (intern sub-path :keyword))
-         (method (intern (m2cl:request-header request :method) :keyword))
-         (ef-meth (compute-applicable-methods #'api/endpoint (list method sub-sym handler request raw))))
+  (let ((method (intern (m2cl:request-header request :method) :keyword))
+        (sub-path (api-subpath request)))
 
-    (if ef-meth
-        (api/endpoint method sub-sym handler request raw)
-        (progn
-          (unintern sub-sym)
-          (api/404 handler request raw)))))
+    (flet ((applicable-exact (sub-path)
+             (let* ((sub-sym (intern sub-path :keyword))
+                    (ef-meth (compute-applicable-methods #'api/endpoint (list method sub-sym handler request raw))))
+               (values ef-meth
+                       (if ef-meth
+                           sub-sym
+                           (unintern sub-sym))))))
+
+      (multiple-value-bind (exact exact-sym) (applicable-exact sub-path)
+
+        (if exact
+            (api/endpoint method exact-sym handler request raw)
+            (api/404 handler request raw))))))
 
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)

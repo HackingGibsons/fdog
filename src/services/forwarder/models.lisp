@@ -29,18 +29,40 @@
     (format stream "#<DBForwarder(~A): ~A~A ~A => ~A>"
             id host path listen-on forward-to)))
 
+;; Model methods
+(defmethod find-forwarder (&rest keys &key name host path one)
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (cond (one
+         (car (apply #'find-forwarder (progn (setf (getf keys :one) nil)
+                                             keys))))
+        ((not (or name host path))
+         (clsql:select 'fdog-forwarder :flatp t :refresh t))
+        ((and name (not (or host path)))
+         (clsql:select 'fdog-forwarder :flatp t :refresh t
+                       :where [= [slot-value 'fdog-forwarder 'name] name]))
+        (t
+         (error "TODO: :(")))
+  #.(clsql:restore-sql-reader-syntax-state))
+
+
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)
-  (unless (clsql:select 'fdog-forwarder :flatp t :refresh t
-                        :where [= [slot-value 'fdog-forwarder 'name] rest])
-    (error '404-condition :data (format nil "Forwarder ~A not found" rest)))
+  (ppcre:register-groups-bind (forwarder) ("^/?(.*?)/?$" rest)
+    (setf forwarder (find-forwarder :name forwarder :one t))
+    (unless forwarder
+      (error '404-condition :data (format nil "Forwarder ~A not found" rest)))
 
-  (with-chunked-stream-reply (handler request stream
-                              :headers ((header-json-type)))
-    (json:encode-json `((,rest . ())) stream)))
+    (with-chunked-stream-reply (handler request stream
+                                :headers ((header-json-type)))
+      (with-slots (name host path listen-on forward-to) forwarder
+      (json:encode-json `((:name . ,name)
+                          (:host . ,host)
+                          (:sub . ,listen-on)
+                          (:push . ,forward-to))
+                        stream)))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)
   (with-chunked-stream-reply (handler request stream
@@ -49,7 +71,7 @@
                                      (with-slots (name host path) forwarder
                                        `(,name . ((:host . ,host)
                                                   (:path . ,path)))))
-                                 (clsql:select 'fdog-forwarder :flatp t :refresh t)))
+                                 (find-forwarder)))
                       stream)))
 
 ;; //EOAPI Hooks

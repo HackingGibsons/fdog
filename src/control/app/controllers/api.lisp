@@ -25,7 +25,8 @@
 
 (defgeneric api/endpoint-with-args (method sub-path rest handler request raw)
   (:documentation "Generic api endpoint with subpath for args. Things wishing to provide an API with a
-variable URL component should specialize on this method."))
+variable URL component should specialize on this method.
+The `sub-path' will not have a trailing slash, it will be on the `rest' side of the args."))
 
 (defun api/router (handler request raw)
   (let ((method (intern (m2cl:request-header request :method) :keyword))
@@ -37,13 +38,22 @@ variable URL component should specialize on this method."))
                (values ef-meth
                        (if ef-meth
                            sub-sym
-                           (unintern sub-sym))))))
+                           (unintern sub-sym)))))
+
+           (next-sub-path (path)
+             (multiple-value-bind (matchp parts) (ppcre:scan-to-strings "(^.+)(/.+)$" path)
+               (when matchp
+                 (apply #'values (coerce parts 'list))))))
 
       (multiple-value-bind (exact exact-sym) (applicable-exact sub-path)
 
         (if exact
             (api/endpoint method exact-sym handler request raw)
-            (api/404 handler request raw))))))
+            (multiple-value-bind (next rest) (next-sub-path sub-path)
+              (if next
+                  (progn
+                    (log-for (trace) "Can try sub-path: ~A with rest ~A" next rest)
+                    (api/404 handler request raw)))))))))
 
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)

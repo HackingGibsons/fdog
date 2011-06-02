@@ -33,7 +33,8 @@
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
     (json:encode-json `(,(mapcar #'(lambda (forwarder)
-                                     `(:name . ((:host . :host-here)
-                                                (:path . :path-here))))
+                                     (with-slots (name host path) forwarder
+                                       `(,name . ((:host . ,host)
+                                                  (:path . ,path)))))
                                  (clsql:select 'fdog-forwarder :flatp t :refresh t)))
                       stream)))

@@ -3,7 +3,7 @@
 	url = https://github.com/sshirokov/m2cl.git
 [submodule "vendor/clsql"]
 	path = vendor/clsql
-	url = git://git.b9.com/clsql.git
+	url = https://github.com/sshirokov/CLSQL.git
 [submodule "vendor/cl-zmq"]
 	path = vendor/cl-zmq
-	url = git@github.com:sshirokov/cl-zmq.git
+	url = https://github.com/sshirokov/cl-zmq.git

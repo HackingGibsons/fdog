@@ -12,9 +12,13 @@
 
 (defmethod start-response-writing-thread ((interface fdog-forwarding-interface))
   (flet ((thread-function ()
-           (loop while :forever do
-                (sleep 10)
-                (log-for (dribble) "OMG DO WORK! ~A" (current-thread)))))
+           (let ((msg (make-instance 'zmq:msg)))
+             (loop while :forever do
+                  (log-for (trace) "Waiting for responce message for interface: ~A" interface)
+                  (zmq:recv (forwarder-listen-sock interface) msg)
+                  (log-for (trace) "I have a message: ~A" (zmq:msg-size msg))
+                  (zmq:send (forwarder-response-write-sock interface) msg)
+                  (log-for (trace) "I have written it downstream")))))
 
     (setf (forwarding-interface-response-writer interface)
           (bordeaux-threads:make-thread #'thread-function

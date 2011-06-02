@@ -23,6 +23,10 @@
 (defgeneric api/endpoint (method sub-path handler request raw)
   (:documentation "Generic api endpoint. Things wishing to provide an API specialize on this method."))
 
+(defgeneric api/endpoint-with-args (method sub-path rest handler request raw)
+  (:documentation "Generic api endpoint with subpath for args. Things wishing to provide an API with a
+variable URL component should specialize on this method."))
+
 (defun api/router (handler request raw)
   (let* ((sub-path (api-subpath request))
          (sub-sym (intern sub-path :keyword))

@@ -32,7 +32,7 @@
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
-    (json:encode-json `(,(mapcar #'(lambda (forwarder)
+    (json:encode-json `(,@(mapcar #'(lambda (forwarder)
                                      (with-slots (name host path) forwarder
                                        `(,name . ((:host . ,host)
                                                   (:path . ,path)))))

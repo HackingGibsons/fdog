@@ -29,10 +29,17 @@
     (format stream "#<DBForwarder(~A): ~A~A ~A => ~A>"
             id host path listen-on forward-to)))
 
+;; API hooks
+#.(clsql:locally-enable-sql-reader-syntax)
+
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)
+  (unless (clsql:select 'fdog-forwarder :flatp t :refresh t
+                        :where [= [slot-value 'fdog-forwarder 'name] rest])
+    (error '404-condition :data (format nil "Forwarder ~A not found" rest)))
+
   (with-chunked-stream-reply (handler request stream
-                                      :headers ((header-json-type)))
+                              :headers ((header-json-type)))
     (json:encode-json `((,rest . ())) stream)))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)
@@ -44,3 +51,7 @@
                                                   (:path . ,path)))))
                                  (clsql:select 'fdog-forwarder :flatp t :refresh t)))
                       stream)))
+
+;; //EOAPI Hooks
+#.(clsql:restore-sql-reader-syntax-state)
+

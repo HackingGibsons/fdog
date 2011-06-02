@@ -24,6 +24,7 @@
   (:shadowing-import-from :fdog-control
                           :api/endpoint
                           :api/endpoint-with-args
+                          :404-condition
                           :header-json-type
                           :with-chunked-stream-reply
                           :interface-start :interface-stop

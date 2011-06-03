@@ -2,6 +2,7 @@
 (asdf:defsystem #:fdog-tests
   :serial t
   :depends-on (#:fdog
+               #:nst
                #:fiveam)
   :components ((:module "tests"
                 :components ((:file "package")

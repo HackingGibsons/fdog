@@ -3,6 +3,7 @@
         #:5am
         #:fdog
         #:fdog-models)
+  (:use #:nst)
   (:shadowing-import-from :log5
                           :log-for)
   (:export :*verbose*))

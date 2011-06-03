@@ -15,3 +15,23 @@
 
 (def-suite mongrel2/proc :in mongrel2
            :description "Tests that involve a running Mongrel2")
+
+
+;; NST
+(def-fixtures database/connected
+    (:setup (log-for (trace) "DB Connected setup")
+     :cleanup (log-for (trace) "DB Disconnected"))
+  (db-path "something"))
+
+(def-test-group database-basic-tests (database/connected)
+  (:documentation "'Database baisc tests")
+
+  (def-test test-database-sanity :pass)
+
+  (def-eval-test test-database-insanity
+      (assert-null nil)))
+
+(def-test-group main-tests ()
+  (:documentation "'The' test group.")
+  (:include-groups database-basic-tests))
+

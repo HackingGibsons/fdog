@@ -66,8 +66,14 @@ install: all
 
 init: sanity-check submodules quicklisp configured-asdf
 
-submodules:
+submodules: externals
 	git submodule update --init --recursive
+
+externals-clean:
+	$(MAKE) -C $(ROOT)/vendor clean
+
+externals:
+	$(MAKE) -C $(ROOT)/vendor all
 
 fdog: init buildapp $(FDOG)
 $(FDOG):
@@ -93,7 +99,7 @@ clean-build:
 	@echo "=> Removing fdog builds"
 	rm -rf $(FDOG)
 
-clean:
+clean: externals-clean
 	@echo "=> Clearing common-lisp cache"
 	rm -rf ~/.cache/common-lisp/
 	@echo "=> Cleaning up buildapp"

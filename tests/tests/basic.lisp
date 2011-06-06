@@ -29,10 +29,11 @@
       (disconnect)
       (assert-null (connected-p))))
 
-(def-eval-test (can-reconnect :group database-basic-tests
-                              :fixtures database/connected)
-    (progn
-      (assert-non-nil (connected-p))))
+(def-test (can-reconnect :group database-basic-tests
+                         :fixtures database/connected)
+    :true (progn
+            (reconnect)
+            (connected-p)))
 
 ;; (test (can-connect-and-disconnect :fixture db/connected)
 ;;   (disconnect) ; incase we're already connected

@@ -18,7 +18,7 @@
 (defun run ()
   (format t "Running tests.~%")
   (nst-cmd :run-package :fdog-tests)
-  (junit-results-by-group :dir "/tmp/" :file "junit.xml" :if-dir-does-not-exist t :if-file-exists :supersede))
+  (junit-results-by-group :dir "." :file "junit.xml" :if-dir-does-not-exist t :if-file-exists :supersede))
 
 ;; (defmethod 5am::%run :around (test-spec)
 ;;   (when *verbose*

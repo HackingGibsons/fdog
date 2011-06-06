@@ -1,6 +1,5 @@
 (defpackage #:fdog-tests
   (:use #:cl
-        #:5am
         #:fdog
         #:fdog-models)
   (:use #:nst)
@@ -16,11 +15,16 @@
 
 (defvar *verbose* t)
 
-(defmethod 5am::%run :around (test-spec)
-  (when *verbose*
-    (log-for (dribble) "About to run test: ~S" test-spec))
+(defun run ()
+  (format t "Running tests.~%")
+  (nst-cmd :run-package :fdog-tests)
+  (junit-results-by-group :dir "/tmp/" :file "junit.xml" :if-dir-does-not-exist t :if-file-exists :supersede))
 
-  (let ((result (call-next-method)))
-    (when *verbose*
-      (log-for (dribble) "Finished running test: ~S" test-spec))
-    result))
+;; (defmethod 5am::%run :around (test-spec)
+;;   (when *verbose*
+;;     (log-for (dribble) "About to run test: ~S" test-spec))
+
+;;   (let ((result (call-next-method)))
+;;     (when *verbose*
+;;       (log-for (dribble) "Finished running test: ~S" test-spec))
+;;     result))

@@ -20,7 +20,7 @@
 (def-test-group database-basic-tests (database/connected)
   (:documentation "Database baisc tests")
   (def-test (can-find-test-db-and-connect :group database-basic-tests)
-    :true (fdog-models:connected-p)))
+    :true (not (fdog-models:connected-p))))
 
 (def-test-group mongrel2-database-tests (database/connected database/configured)
   (:documentation "Tests of the mongrel2 database access"))

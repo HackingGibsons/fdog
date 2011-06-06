@@ -17,13 +17,13 @@
 ;;            :description "Tests that involve a running Mongrel2")
 
 
-(def-test-group database-basic-tests (database/connected)
+(def-test-group database-basic-tests ()
   (:documentation "Database baisc tests"))
 
-(def-test-group mongrel2-database-tests (database/connected database/configured)
+(def-test-group mongrel2-database-tests ()
   (:documentation "Tests of the mongrel2 database access"))
 
-(def-test-group mongrel2-process-tests (database/connected database/configured mongrel2/running)
+(def-test-group mongrel2-process-tests ()
   (:documentation "Tests including a running mongrel2."))
 
 (def-test-group main-tests ()

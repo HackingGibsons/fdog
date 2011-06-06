@@ -1,5 +1,4 @@
 (in-package :fdog-tests)
-;(in-suite basic)
 
 (def-test (can-find-test-db-and-connect :group database-basic-tests
                                         :fixtures database/connected)
@@ -34,16 +33,3 @@
     :true (progn
             (reconnect)
             (connected-p)))
-
-;; (test (can-connect-and-disconnect :fixture db/connected)
-;;   (disconnect) ; incase we're already connected
-;;   (is (null (connected-p)))
-;;   (connect)
-;;   (is (connected-p))
-;;   (disconnect)
-;;   (is (null (connected-p))))
-
-;; (test (can-reconnect :fixture db/connected)
-;;   (is (connected-p) "We should be connected before we try to reconnect")
-;;   (reconnect)
-;;   (is (connected-p)))

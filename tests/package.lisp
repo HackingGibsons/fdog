@@ -17,18 +17,12 @@
 (defvar *verbose* t)
 
 (defun run ()
-  (format t "Running tests.~%")
+  (when *verbose*
+    (log-for (trace) "Running tests"))
   (nst-cmd :run-package :fdog-tests)
-  (log-for (trace) "Storing junit in ~A/~A" (asdf:system-source-directory :fdog-tests) "junit.xml")
+
+  (when *verbose*
+    (log-for (trace) "Storing junit in ~A/~A" (asdf:system-source-directory :fdog-tests) "junit.xml"))
   (junit-results-by-group :dir (asdf:system-source-directory :fdog-tests)
                           :file "junit.xml"
                           :if-file-exists :supersede))
-
-;; (defmethod 5am::%run :around (test-spec)
-;;   (when *verbose*
-;;     (log-for (dribble) "About to run test: ~S" test-spec))
-
-;;   (let ((result (call-next-method)))
-;;     (when *verbose*
-;;       (log-for (dribble) "Finished running test: ~S" test-spec))
-;;     result))

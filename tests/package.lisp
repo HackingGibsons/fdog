@@ -19,6 +19,7 @@
 (defun run ()
   (format t "Running tests.~%")
   (nst-cmd :run-package :fdog-tests)
+  (log-for (trace) "Storing junit in ~A/~A" (asdf:system-source-directory :fdog-tests) "junit.xml")
   (junit-results-by-group :dir (asdf:system-source-directory :fdog-tests)
                           :file "junit.xml"
                           :if-file-exists :supersede))

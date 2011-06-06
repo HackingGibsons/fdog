@@ -4,13 +4,13 @@
 (def-test (can-find-test-db-and-connect :group database-basic-tests)
     :true (fdog-models:connected-p))
 
-;; (test (can-find-test-db-and-connect :fixture db/connected)
-;;   (is (fdog-models:connected-p)))
+(def-eval-test (configured-db-has-mimetypes :group database-basic-tests
+                                            :fixtures database/inited)
+    (let ((mimes (clsql:select 'mongrel2-mimetype :flatp t :refresh t)))
+      (assert-non-nil mimes)
+      (assert-non-nil (> (length mimes) 800))))
 
-;; (test (configured-db-has-mimetypes :fixture db/inited)
-;;   (let ((mimes (clsql:select 'mongrel2-mimetype :flatp t :refresh t)))
-;;     (is-false (and (null mimes) (length mimes)))
-;;     (is (> (length mimes) 800) "Mime-type count is NOT OVER 800!!!!!!!!!!!")))
+
 
 ;; (test valid-endpoints-are-defined
 ;;       (let ((endpoints '(("proxy" . mongrel2-proxy)

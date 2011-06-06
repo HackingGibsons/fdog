@@ -18,6 +18,9 @@
   (db-path (merge-pathnames db-name base-db-path))
   (*default-server-database-path* db-name))
 
+(def-fixtures database/inited
+    (:setup (fdog-m2sh:init)))
+
 
 (def-fixtures database/configured
     (:setup (log-for (trace) "DB configured setup")

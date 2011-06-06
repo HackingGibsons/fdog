@@ -19,9 +19,23 @@
 
 ;; NST
 (def-fixtures database/connected
-    (:setup (log-for (trace) "DB Connected setup")
-     :cleanup (log-for (trace) "DB Disconnected"))
-  (db-path "something"))
+    (:setup (progn
+              (log-for (trace) "DB Connected setup")
+              (fdog-models:disconnect) ;; Let's make sure we don't trash the flow of data in a testrun
+              (fdog-models:connect db-path))
+     :cleanup (progn
+                (fdog-models:disconnect)
+                (log-for (trace) "DB Disconnected")
+                (log-for (trace) "Would delete: ~A" db-path)
+;;                (delete-file db-path)
+                ))
+
+  ;; Bindings
+  (base-db-path (reduce #'merge-pathnames (list *default-server-path* *default-root-path*)))
+  (base-db-name (namestring base-db-path))
+  (db-name (make-pathname :name "test" :type "sqlite"))
+  (db-path (merge-pathnames db-name base-db-path))
+  (*default-server-database-path* db-name))
 
 (def-fixtures database/configured
     (:setup (log-for (trace) "DB configured setup")

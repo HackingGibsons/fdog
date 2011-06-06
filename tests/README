@@ -1,0 +1,26 @@
+Jenkins notes:
+
+Include the following in the deescription to change latest build artifacts to lastest stable build artifacts:
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+  $(function() {
+    $('a[href*="lastSuccessfulBuild/artifact/"]').each(function(e) {
+        console.log("Hello world", this);
+        var href = $(this).attr('href');
+        $(this).attr('href',
+                         href.replace('Successful', 'Stable'));
+     });
+  });
+  </script>
+
+The two build steps are:
+  make clean test # Runs tests and compiles jUnit output
+  make clean all  # Builds an artifact if possible
+
+Artifacts should be archived from:
+  bin/fdog
+
+Publish jUnit XML:
+  junit.xml
+

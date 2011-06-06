@@ -17,36 +17,6 @@
 ;;            :description "Tests that involve a running Mongrel2")
 
 
-;; NST
-(def-fixtures database/connected
-    (:setup (progn
-              (log-for (trace) "DB Connected setup")
-              (fdog-models:disconnect) ;; Let's make sure we don't trash the flow of data in a testrun
-              (fdog-models:connect db-path))
-     :cleanup (progn
-                (fdog-models:disconnect)
-                (log-for (trace) "DB Disconnected")
-                (delete-file db-path)))
-
-  ;; Bindings
-  (base-db-path (reduce #'merge-pathnames (list *default-server-path* *default-root-path*)))
-  (base-db-name (namestring base-db-path))
-  (db-name (make-pathname :name "test" :type "sqlite"))
-  (db-path (merge-pathnames db-name base-db-path))
-  (*default-server-database-path* db-name))
-
-(def-fixtures database/configured
-    (:setup (log-for (trace) "DB configured setup")
-     :cleanup (log-for (trace) "DB configured cleanup"))
-  (db-init "something-else"))
-
-(def-fixtures mongrel2/running
-    (:setup (log-for (trace) "Mongrel2 setup")
-     :cleanup (log-for (trace) "Mongrel2 cleanup"))
-  (mongrel2 "something-else-entirely"))
-
-
-
 (def-test-group database-basic-tests (database/connected)
   (:documentation "Database baisc tests")
   (def-test (can-find-test-db-and-connect :group database-basic-tests)

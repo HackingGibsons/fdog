@@ -2,7 +2,7 @@
 ;(in-suite basic)
 
 (def-test (can-find-test-db-and-connect :group database-basic-tests)
-    :true (fdog-models:connected-p))
+    :true (not (fdog-models:connected-p)))
 
 ;; (test (can-find-test-db-and-connect :fixture db/connected)
 ;;   (is (fdog-models:connected-p)))

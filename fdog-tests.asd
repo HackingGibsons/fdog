@@ -12,8 +12,7 @@
                              :components ((:file "utils")))
 
                              (:module "tests" :depends-on ("suites" "fixtures")
-                              :components (;(:file "main")
-                                           ;(:file "mongrel2.db")
+                              :components (;(:file "mongrel2.db")
                                            ;(:file "mongrel2.proc" :depends-on ("mongrel2.db"))
                                            (:file "basic")))))))
 

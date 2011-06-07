@@ -46,27 +46,17 @@
                  (mongrel2-host-routes (mongrel2-server-default-host server))
                  :key #'mongrel2-route-path))
 
-;; (test (server-/static/-route-is-a-directory :fixture m2/with-server+default-host
-;;                                             :depends-on server-default-host-has-/static/-route)
-;;   (let* ((route (car (mongrel2-host-routes default-host :path "/static/")))
-;;          (target (mongrel2-route-target route)))
-;;     (is-true target
-;;              "There should be a target of at least some kind attached to the static route.")
-;;     (is (typep target 'mongrel2-directory)
-;;         "The /static/ route should be pointing to a directory")))
+(def-test+m2/db server-/static/-route-is-a-directory
+  (:all :true
+        (:predicate (lambda (route) (mongrel2-route-target route)))
+        (:predicate (lambda (route) (typep (mongrel2-route-target route)
+                                             'mongrel2-directory))))
+  (find "/static/" (mongrel2-host-routes (mongrel2-server-default-host server))
+        :key #'mongrel2-route-path :test #'string=))
 
-
-;; (test (test-server-correct :fixture m2/with-server
-;;                                       :depends-on (and can-find-test-server
-;;                                                        server-default-host-fetchable
-;;                                                        server-/static/-route-is-a-directory))
-;;   (is-false (null server) "We should have a server when we use the server fixture")
-
-;;   (is (string-equal (mongrel2-server-name server) +server-name+)
-;;       "I have reason to suspect you're using the wrong server.")
-
-;;   (is (ppcre:scan "^127\." (mongrel2-server-addr server))
-;;       "The test server should only listen on localhost")
-
-;;   (is (= (mongrel2-server-port server) +server-port+)
-;;       "The test server needs to use the test port"))
+(def-test+m2/db test-server-correct
+  (:all :true
+        (:predicate (lambda (server) (string= +server-name+ (mongrel2-server-name server))))
+        (:predicate (lambda (server) (ppcre:scan "^127\." (mongrel2-server-addr server))))
+        (:predicate (lambda (server) (= (mongrel2-server-port server) +server-port+))))
+  server)

@@ -17,12 +17,14 @@
 (defvar *verbose* t)
 
 (defun run ()
-  (when *verbose*
-    (log-for (trace) "Running tests"))
-  (nst-cmd :run-package :fdog-tests)
+  (let ((results-dir (merge-pathnames (make-pathname :directory '(:relative "tests" "results"))
+                                      (asdf:system-source-directory :fdog-tests))))
+    (when *verbose*
+      (log-for (trace) "Running tests"))
 
-  (when *verbose*
-    (log-for (trace) "Storing junit in ~A/~A" (asdf:system-source-directory :fdog-tests) "junit.xml"))
-  (junit-results-by-group :dir (asdf:system-source-directory :fdog-tests)
-                          :file "junit.xml"
-                          :if-file-exists :supersede))
+    (nst-cmd :run-package :fdog-tests)
+
+    (when *verbose*
+      (log-for (trace) "Storing junit in ~A" results-dir))
+    (junit-results-by-group :dir results-dir
+                            :if-dir-does-not-exist :create)))

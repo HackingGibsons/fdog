@@ -24,13 +24,13 @@
                                             +default-host+))))
   (mongrel2-server-default-host server))
 
-;; (def-test+m2/db server-default-host-localhost-exists
-;;   (:all :true
-;;         (:predicate (lambda (host) (string= (mongrel2-host-matching host)
-;;                                             +default-host+)))
-;;         (:predicate (lambda (host) (string= (mongrel2-host-matching host)
-;;                                             (mongrel2-server-default-host-name server)))))
-;;   (mongrel2-server-default-host server))
+(def-test+m2/db server-default-host-localhost-exists
+  (:all :true
+        (:predicate (lambda (host) (string= (mongrel2-host-matching host)
+                                            +default-host+)))
+        (:predicate (lambda (host) (string= (mongrel2-host-matching host)
+                                            (mongrel2-server-default-host-name server)))))
+  (mongrel2-server-default-host server))
 
 (def-test+m2/db server-default-host-has-routes
   (:all :true

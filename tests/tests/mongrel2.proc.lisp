@@ -10,7 +10,7 @@
 (def-test+m2/running can-have-running-server
   :true (mongrel2-server-running-p server))
 
-(def-test+m2/running can-reach-test-statuc-content-over-HTTP
+(def-test+m2/running can-reach-test-static-content-over-HTTP
   :eval
   (let* ((url (format nil "http://~A:~A/static/"
                       (mongrel2-server-default-host-name server)

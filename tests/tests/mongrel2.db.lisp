@@ -1,22 +1,22 @@
 (in-package :fdog-tests)
 
+;; Helpers
 (defmacro def-test+m2/db (name &body body)
+  "Utility to shorten the process of writing a mongrel2 db test"
   `(def-test (,name :group mongrel2-database-tests
                     :fixtures (database/connected database/inited database/configured))
        ,@body))
 
-(def-test (can-find-test-server :group mongrel2-database-tests
-                                :fixtures (database/connected database/inited database/configured))
-    :true server)
+;; Tests
+(def-test+m2/db can-find-test-server
+  :true server)
 
-(def-test (only-have-one-server :group mongrel2-database-tests
-                                :fixtures (database/connected database/inited database/configured))
-    :forms-equal 1 (length (fdog-m2sh:servers :refresh t)))
+(def-test+m2/db only-have-one-server
+  :forms-equal 1 (length (fdog-m2sh:servers :refresh t)))
 
-(def-test (server-can-find-hosts :group mongrel2-database-tests
-                                 :fixtures (database/connected database/inited database/configured))
-    :true (and (mongrel2-server-hosts server)
-               (= (length (mongrel2-server-hosts server)) 1)))
+(def-test+m2/db server-can-find-hosts
+  :true (and (mongrel2-server-hosts server)
+             (= (length (mongrel2-server-hosts server)) 1)))
 
 (def-test+m2/db server-default-host-fetchable
   (:all :true
@@ -24,22 +24,22 @@
                                             +default-host+))))
   (mongrel2-server-default-host server))
 
+(def-test+m2/db server-default-host-localhost-exists
+  (:all :true
+        (:predicate (lambda (host) (string= (mongrel2-host-matching host)
+                                            +default-host+)))
+        (:predicate (lambda (host) (string= (mongrel2-host-matching host)
+                                            (mongrel2-server-default-host-name server)))))
+  (mongrel2-server-default-host server))
+
+(def-test+m2/db server-default-host-has-routes
+  (:all :true
+        (:predicate (lambda (routes) (< 0 (length routes)))))
+
+  (mongrel2-host-routes
+   (mongrel2-server-default-host server)))
+
 ;; (in-suite mongrel2/db)
-
-;; (test (server-host-localhost-exists :fixture m2/with-server
-;;                                     :depends-on server-can-find-hosts)
-;;   (let ((host (car (mongrel2-server-hosts server))))
-;;     (is (and (equal (mongrel2-host-matching host) +default-host+)
-;;              (equal (mongrel2-host-matching host) (mongrel2-server-default-host-name server)))
-;;         (format nil "The default host should be ~A and should exist" +default-host+))))
-
-;; (test (server-default-host-has-routes :fixture m2/with-server
-;;                                       :depends-on (and server-host-localhost-exists
-;;                                                        server-default-host-fetchable))
-;;   (let* ((host (mongrel2-server-default-host server))
-;;          (routes (mongrel2-host-routes host)))
-;;     (is (< 0 (length routes))
-;;         "The default host needs to have routes")))
 
 ;; (test (server-default-host-has-/static/-route :fixture m2/with-server
 ;;                                               :depends-on server-default-host-has-routes)

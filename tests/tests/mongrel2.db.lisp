@@ -39,18 +39,12 @@
   (mongrel2-host-routes
    (mongrel2-server-default-host server)))
 
-;; (in-suite mongrel2/db)
-
-;; (test (server-default-host-has-/static/-route :fixture m2/with-server
-;;                                               :depends-on server-default-host-has-routes)
-;;   (let* ((routes (mongrel2-host-routes (mongrel2-server-default-host server)))
-;;          (/static/-route (car (remove-if-not #'(lambda (r) (equal (mongrel2-route-path r) "/static/"))
-;;                                              routes))))
-;;     (is (< 0 (length routes))
-;;         "I should have routes at this point. This violates dependency!")
-
-;;     (is-false (null /static/-route)
-;;               "One of the routes should be /static/")))
+(def-test+m2/db server-default-host-has-/static/-route
+  (:all :true
+        (:predicate (lambda (s-routes) (< 0 (length s-routes)))))
+  (remove-if-not #'(lambda (route-path) (string= "/static/" route-path))
+                 (mongrel2-host-routes (mongrel2-server-default-host server))
+                 :key #'mongrel2-route-path))
 
 ;; (test (server-/static/-route-is-a-directory :fixture m2/with-server+default-host
 ;;                                             :depends-on server-default-host-has-/static/-route)

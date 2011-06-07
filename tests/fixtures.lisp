@@ -23,9 +23,16 @@
 
 
 (def-fixtures database/configured
-    (:setup (log-for (trace) "DB configured setup")
-     :cleanup (log-for (trace) "DB configured cleanup"))
-  (db-init "something-else"))
+    (:startup (progn
+              (log-for (trace) "DB configured startup")
+              (fdog-m2sh:using-configuration!
+               (fdog-m2sh:with-server (+server-name+ :bind +server-bind+ :port +server-port+ :chroot "./")
+                 (fdog-m2sh:with-host ("localhost")
+                   (fdog-m2sh:make-route "/static/" (fdog-m2sh:make-dir "./tests/")))))
+              (log-for (trace) "Servers loaded: ~A" (fdog-m2sh:servers :one t :name +server-name+)))
+     :finish (log-for (trace) "DB configured finish"))
+
+  (server (fdog-m2sh:servers :name +server-name+ :refresh t :one t)))
 
 
 (def-fixtures mongrel2/running
@@ -38,25 +45,6 @@
 
 
 ;;; Mixin macros here
-;; (defmacro +db/connected (&body body)
-;;   (let* ((base-db-path (reduce #'merge-pathnames (list *default-server-path* *default-root-path*)))
-;;          (base-db-name (namestring base-db-path)))
-;;     `(let* ((db-name (make-pathname :name "test" :type "sqlite"))
-;;             (db-path (merge-pathnames db-name ,base-db-path))
-;;             (*default-server-database-path* db-name))
-;;        (fdog-models:disconnect) ;; Let's make sure we don't trash the flow of data in a testrun
-;;        (fdog-models:connect db-path)
-
-;;        ,@body
-
-;;        (fdog-models:disconnect)
-;;        (delete-file db-path))))
-
-;; (defmacro +db/inited (&body body)
-;;   `(progn
-;;      (fdog-m2sh:init)
-;;      ,@body))
-
 ;; (defmacro +db/configured (&body body)
 ;;   `(progn
 ;;      (fdog-m2sh:using-configuration!

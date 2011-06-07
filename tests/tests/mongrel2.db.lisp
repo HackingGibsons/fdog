@@ -1,29 +1,30 @@
 (in-package :fdog-tests)
 
+(defmacro def-test+m2/db (name &body body)
+  `(def-test (,name :group mongrel2-database-tests
+                    :fixtures (database/connected database/inited database/configured))
+       ,@body))
+
 (def-test (can-find-test-server :group mongrel2-database-tests
                                 :fixtures (database/connected database/inited database/configured))
     :true server)
 
+(def-test (only-have-one-server :group mongrel2-database-tests
+                                :fixtures (database/connected database/inited database/configured))
+    :forms-equal 1 (length (fdog-m2sh:servers :refresh t)))
+
+(def-test (server-can-find-hosts :group mongrel2-database-tests
+                                 :fixtures (database/connected database/inited database/configured))
+    :true (and (mongrel2-server-hosts server)
+               (= (length (mongrel2-server-hosts server)) 1)))
+
+(def-test+m2/db server-default-host-fetchable
+  (:all :true
+        (:predicate (lambda (host) (string= (mongrel2-host-matching host)
+                                            +default-host+))))
+  (mongrel2-server-default-host server))
+
 ;; (in-suite mongrel2/db)
-
-;; (test (can-find-test-server :fixture db/configured)
-;;   (let ((server (clsql:select 'mongrel2-server :flatp t :refresh t)))
-;;     (is-false (null server))
-;;     (is (= (length server) 1) "We really only should have the one test server")))
-
-;; (test (server-can-find-hosts :fixture m2/with-server
-;;                              :depends-on can-find-test-server)
-;;   (let ((hosts (mongrel2-server-hosts server)))
-;;     (is (= (length hosts) 1)
-;;         "The server should have one host")))
-
-;; (test (server-default-host-fetchable :fixture m2/with-server
-;;                                      :depends-on server-can-find-hosts)
-;;   (let ((host (mongrel2-server-default-host server)))
-;;     (is-false (null host)
-;;               "I should be able to fetch the default host")
-;;     (is (equal (mongrel2-host-matching host) +default-host+)
-;;         "The default host should match the defined default host")))
 
 ;; (test (server-host-localhost-exists :fixture m2/with-server
 ;;                                     :depends-on server-can-find-hosts)

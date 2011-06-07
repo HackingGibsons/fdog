@@ -22,5 +22,5 @@ Artifacts should be archived from:
   bin/fdog
 
 Publish jUnit XML:
-  junit.xml
+  tests/results/*.xml
 

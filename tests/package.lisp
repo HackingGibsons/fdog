@@ -27,4 +27,5 @@
     (when *verbose*
       (log-for (trace) "Storing junit in ~A" results-dir))
     (junit-results-by-group :dir results-dir
+                            :if-file-exists :supersede
                             :if-dir-does-not-exist :create)))

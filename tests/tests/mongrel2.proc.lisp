@@ -1,10 +1,14 @@
 (in-package :fdog-tests)
-;; (in-suite mongrel2/proc)
+;; Helpers
+(defmacro def-test+m2/running (name &body body)
+  "Utility to shorten the process of writing a mongrel2 db test"
+  `(def-test (,name :group mongrel2-database-tests
+                    :fixtures (database/connected database/inited database/configured mongrel2/running))
+       ,@body))
 
-;; (test (can-have-running-server :fixture m2/with-running-server
-;;                                :depends-on test-server-correct)
-;;   (is (mongrel2-server-running-p server)
-;;       "You cannot have a running server when you ask for one. [You should be able to] :("))
+;; Tests
+(def-test+m2/running can-have-running-server
+  :true (mongrel2-server-running-p server))
 
 ;; (test (can-reach-test-static-content-over-HTTP :fixture m2/with-running-server
 ;;                                                :depends-on can-have-running-server)

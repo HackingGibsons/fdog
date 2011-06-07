@@ -34,32 +34,17 @@
 
   (server (fdog-m2sh:servers :name +server-name+ :refresh t :one t)))
 
-
 (def-fixtures mongrel2/running
-    (:setup (log-for (trace) "Mongrel2 setup")
-     :cleanup (log-for (trace) "Mongrel2 cleanup"))
-  (mongrel2 "something-else-entirely"))
+    (:setup (progn
+              (log-for (trace) "Mongrel2 setup")
+              (if (eql :timeout (progn (mongrel2-server-signal/block server :stop)
+                                       (mongrel2-server-signal/block server :start)))
+                  (error "Server spawn has timed out")
+                  (log-for (trace) "Mongrel2 started: ~A" (mongrel2-server-pid server))))
+     :cleanup (progn
+                (mongrel2-server-signal/block server :stop)
+                (log-for (trace) "Mongrel2 stopped"))))
 
-
-
-
-
-;;; Mixin macros here
-;; (defmacro +db/configured (&body body)
-;;   `(progn
-;;      (fdog-m2sh:using-configuration!
-;;       (fdog-m2sh:with-server (+server-name+ :bind +server-bind+ :port +server-port+ :chroot "./")
-;;         (fdog-m2sh:with-host ("localhost")
-;;           (fdog-m2sh:make-route "/static/" (fdog-m2sh:make-dir "./tests/")))))
-;;      ,@body))
-
-;; (defmacro +m2/with-server (&body body)
-;;   `(let ((server (car (clsql:select 'mongrel2-server :flatp t :refresh t))))
-;;      ,@body))
-
-;; (defmacro +m2/with-default-host (&body body)
-;;   `(let ((default-host (mongrel2-server-default-host server)))
-;;      ,@body))
 
 ;; (defmacro +m2/running (&body body)
 ;;   `(progn
@@ -68,29 +53,3 @@
 ;;          (skip "Server spawn has timed out")
 ;;          (progn ,@body))
 ;;      (mongrel2-server-signal/block server :stop)))
-
-;; ;;; Fixtures/Mixtures
-;; (def-mixture db/connected ()
-;;     (+db/connected)
-;;   (&body))
-
-;; (def-mixture db/inited ()
-;;     (+db/connected +db/inited)
-;;   (&body))
-
-;; (def-mixture db/configured ()
-;;     (+db/connected +db/inited +db/configured)
-;;   (&body))
-
-;; (def-mixture m2/with-server ()
-;;     (+db/connected +db/inited +db/configured +m2/with-server)
-;;   (&body))
-
-;; (def-mixture m2/with-server+default-host ()
-;;     (+db/connected +db/inited +db/configured +m2/with-server +m2/with-default-host)
-;;   (&body))
-
-
-;; (def-mixture m2/with-running-server ()
-;;     (+db/connected +db/inited +db/configured +m2/with-server +m2/running)
-;;   (&body))

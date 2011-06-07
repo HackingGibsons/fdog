@@ -2,7 +2,7 @@
 ;; Helpers
 (defmacro def-test+m2/running (name &body body)
   "Utility to shorten the process of writing a mongrel2 db test"
-  `(def-test (,name :group mongrel2-database-tests
+  `(def-test (,name :group mongrel2-process-tests
                     :fixtures (database/connected database/inited database/configured mongrel2/running))
        ,@body))
 

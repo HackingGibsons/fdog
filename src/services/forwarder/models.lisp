@@ -48,6 +48,34 @@
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
+(defmethod make-forward-to-address (&rest rest &key &allow-other-keys)
+  (declare (ignorable rest))
+  (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))
+
+(defmethod make-listen-on-address (&rest rest &key &allow-other-keys)
+  (declare (ignorable rest))
+  (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))
+
+(defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
+                         handler request raw)
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (host (cdr (assoc :host spec))))
+    (log-for (trace) "Spec: ~A" spec)
+    (log-for (trace) "Name: ~A" name)
+    (log-for (trace) "Host: ~A" host)
+    (if (find-forwarder :name name :one t)
+        (log-for (trace) "Already exists.")
+        (progn
+          (log-for (trace) "Creating")
+          (let ((new-forwarder (make-instance 'fdog-forwarder :name name :host host
+                                              :forward-to (make-forward-to-address)
+                                              :listen-on (make-listen-on-address))))
+            (clsql:update-records-from-instance new-forwarder)
+            (log-for (trace) "Created new forwarder: ~A" new-forwarder)
+            (describe new-forwarder))))))
+
+
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)
   (ppcre:register-groups-bind (forwarder) ("^/?(.*?)/?$" rest)

@@ -49,7 +49,7 @@ help:
 	@echo '   Directory relative to $$HOME of the quicklisp install'
 
 
-all: fdog
+all: fdog build
 build:
 	@echo "=> Preparing release in $(STAGEDIR)"
 	mkdir -p $(STAGEDIR)/bin

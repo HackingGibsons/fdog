@@ -62,7 +62,7 @@ build:
 	touch $(STAGEDIR)/fdog
 	@echo '#!/bin/sh' > $(STAGEDIR)/fdog
 	@echo 'BASE=`pwd -P`/`dirname $$0`' >> $(STAGEDIR)/fdog
-	@echo 'LD_LIBRARY_PATH="$$BASE/lib" bin/fdog $$@' >> $(STAGEDIR)/fdog
+	@echo 'LD_LIBRARY_PATH="$$BASE/lib" $$BASE/bin/fdog $$@' >> $(STAGEDIR)/fdog
 	chmod +x $(STAGEDIR)/fdog
 
 test: clean init

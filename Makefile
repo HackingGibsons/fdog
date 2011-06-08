@@ -89,6 +89,7 @@ $(FDOG):
 	            --asdf-tree $(ROOT)/vendor \
 		    --eval '(sb-ext:disable-debugger)' \
 	            --eval '(declaim (optimize (debug $(DEBUG))))' \
+                    --eval '(push (lambda (&rest args) (format t "Init hook runs!~%")) *init-hooks*)'
 	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \
 	            --dispatched-entry '/fdog-cli:fdog-main' \

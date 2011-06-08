@@ -54,6 +54,8 @@ test: clean init
 	$(MAKE) clean
 
 run-tests:
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP) --no-userinit \
 	        --load $(QL_ROOT_PATH)/setup.lisp \
 	        --eval '(ql:quickload :fdog)' \
@@ -79,12 +81,16 @@ externals:
 fdog: init buildapp $(FDOG)
 $(FDOG):
 	@echo "=> Assuring subsystem build"
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP) --eval '(sb-ext:disable-debugger)' \
 	        --eval '(declaim (optimize (debug $(DEBUG))))' \
 	        --load $(QL_ROOT_PATH)/setup.lisp \
 	        --eval '(ql:quickload :fdog)' \
 	        --eval '(quit)'
 	@echo "=> Building fdog"
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(BUILDAPP) --output $(FDOG) \
 	            --asdf-path $(ROOT) \
 	            --asdf-tree $(ROOT)/vendor \

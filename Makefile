@@ -4,6 +4,7 @@ LISP ?= $(shell which sbcl || echo /sbcl/does/not/exist)
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d
 BUILDAPP ?= $(ROOT)/bin/buildapp
 DESTDIR ?= /usr/local/bin
+STAGEDIR ?= $(ROOT)/build
 
 FDOG ?= $(ROOT)/$(TARGET)
 
@@ -46,7 +47,17 @@ help:
 	@echo "Some interesting options:"
 	@echo " QL_ROOT_NAME = $(QL_ROOT_NAME)"
 	@echo '   Directory relative to $$HOME of the quicklisp install'
+
+
 all: fdog
+build:
+	@echo "=> Preparing release in $(STAGEDIR)"
+	mkdir -p $(STAGEDIR)/bin
+	cp $(FDOG) $(STAGEDIR)/bin
+	mkdir -p $(STAGEDIR)/lib
+	cp vendor/libfixposix/build/lib/*.* $(STAGEDIR)/lib
+	echo `git rev-parse HEAD` > $(STAGEDIR)/REV
+	touch $(STAGEDIR)/fdog
 
 test: clean init
 	@echo "=> Running tests."
@@ -106,6 +117,8 @@ $(FDOG):
 clean-build:
 	@echo "=> Removing fdog builds"
 	rm -rf $(FDOG)
+	@echo "=> Removing the staged release"
+	rm -rf $(STAGEDIR)
 
 clean: externals-clean
 	@echo "=> Clearing common-lisp cache"

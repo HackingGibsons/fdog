@@ -64,7 +64,8 @@ run-tests:
 	        --eval '(quit)'
 
 install: all
-	sudo install -B prev -b $(FDOG) $(DESTDIR)
+	@echo "=> Install is disabled while the build is restructured."
+#	sudo install -B prev -b $(FDOG) $(DESTDIR)
 
 init: sanity-check submodules quicklisp configured-asdf
 

@@ -127,6 +127,11 @@ the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
                   (fdog-models:mongrel2-server-name server)
                   (fdog-models:mongrel2-server-running-p server)))))))
 
+(defcommand repl (argv)
+  "Start a repl and nothing else"
+  (require 'sb-aclrepl)
+  (sb-impl::toplevel-repl nil))
+
 
 (defcommand help (argv &key (exit 0))
   "Show help"

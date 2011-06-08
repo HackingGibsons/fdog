@@ -81,8 +81,8 @@ externals:
 fdog: init buildapp $(FDOG)
 $(FDOG):
 	@echo "=> Assuring subsystem build"
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
 	$(LISP) --eval '(sb-ext:disable-debugger)' \
 	        --eval '(declaim (optimize (debug $(DEBUG))))' \
 	        --load $(QL_ROOT_PATH)/setup.lisp \
@@ -96,7 +96,6 @@ $(FDOG):
 	            --asdf-tree $(ROOT)/vendor \
 		    --eval '(sb-ext:disable-debugger)' \
 	            --eval '(declaim (optimize (debug $(DEBUG))))' \
-                    --eval '(push (lambda (&rest args) (format t "Init hook runs!~%")) *init-hooks*)' \
 	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \
 	            --dispatched-entry '/fdog-cli:fdog-main' \

@@ -57,7 +57,13 @@ build:
 	mkdir -p $(STAGEDIR)/lib
 	cp vendor/libfixposix/build/lib/*.* $(STAGEDIR)/lib
 	echo `git rev-parse HEAD` > $(STAGEDIR)/REV
+
+	@echo "=> Building bootstrap script: $(STAGEDIR)/fdog"
 	touch $(STAGEDIR)/fdog
+	@echo '#!/bin/sh' > $(STAGEDIR)/fdog
+	@echo 'BASE=`pwd -P`/`dirname $$0`' >> $(STAGEDIR)/fdog
+	@echo 'LD_LIBRARY_PATH="$$BASE/lib" bin/fdog $$@' >> $(STAGEDIR)/fdog
+	chmod +x $(STAGEDIR)/fdog
 
 test: clean init
 	@echo "=> Running tests."

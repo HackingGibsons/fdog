@@ -4,14 +4,14 @@ all: nst libfixposix-build
 
 clean: nst-clean libfixposix-clean
 
-libfixposix-build: libfixposix/src/lib/.libs
+libfixposix-build: libfixposix/build/lib
 libfixposix-clean:
 	cd libfixposix && rm -rf * && git reset --hard HEAD
 
-libfixposix/src/lib/.libs: libfixposix/config.h
-	$(MAKE) -C libfixposix
+libfixposix/build/lib: libfixposix/config.h
+	$(MAKE) -C libfixposix install
 libfixposix/config.h: libfixposix/configure
-	cd libfixposix && ./configure
+	cd libfixposix && ./configure --prefix `pwd`/build
 libfixposix/configure:
 	cd libfixposix && \
 	ls && \

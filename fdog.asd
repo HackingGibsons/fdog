@@ -10,7 +10,8 @@
                #:m2cl
                #:bordeaux-threads
                #:clsql
-               #:uffi)
+               #:uffi
+               #:cffi)
   :in-order-to ((test-op (load-op fdog-tests)))
   :components ((:module "src"
                 :components ((:file "utils")

@@ -66,8 +66,9 @@ install: all
 
 init: sanity-check submodules quicklisp configured-asdf
 
-submodules: externals
+submodules:
 	git submodule update --init --recursive
+	$(MAKE) externals
 
 externals-clean:
 	$(MAKE) -C $(ROOT)/vendor clean

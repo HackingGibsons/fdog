@@ -1,8 +1,21 @@
 #These will be fetched and extracted here
 
-all: nst
+all: nst libfixposix-build
 
-clean: nst-clean
+clean: nst-clean libfixposix-clean
+
+libfixposix-build: libfixposix/src/lib/.libs
+libfixposix-clean:
+	cd libfixposix && rm -rf * && git reset --hard HEAD
+
+libfixposix/src/lib/.libs: libfixposix/config.h
+	$(MAKE) -C libfixposix
+libfixposix/config.h: libfixposix/configure
+	cd libfixposix && ./configure
+libfixposix/configure:
+	cd libfixposix && \
+	ls && \
+	autoreconf -i
 
 nst: nst-4.0.0
 nst-clean:

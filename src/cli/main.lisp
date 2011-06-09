@@ -129,7 +129,6 @@ the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
 
 (defcommand repl (argv)
   "Start a repl and nothing else"
-  (require 'sb-aclrepl)
   (sb-impl::toplevel-repl nil))
 
 

@@ -102,6 +102,7 @@ $(FDOG):
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
 	$(LISP) --eval '(sb-ext:disable-debugger)' \
+		--eval "(require 'sb-aclrepl)" \
                 --eval "(sb-ext:with-unlocked-packages (:sb-alien) \
 		           (let ((og-load #'sb-alien:load-shared-object)) \
 		             (flet ((patched-load-shared-object (path &key dont-save) \
@@ -118,6 +119,7 @@ $(FDOG):
 	$(BUILDAPP) --output $(FDOG) \
 	            --asdf-path $(ROOT) \
 	            --asdf-tree $(ROOT)/vendor \
+                    --require sb-aclrepl \
 		    --eval '(sb-ext:disable-debugger)' \
                     --eval "(sb-ext:with-unlocked-packages (:sb-alien) \
 		           (let ((og-load #'sb-alien:load-shared-object)) \

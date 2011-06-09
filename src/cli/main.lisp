@@ -7,7 +7,8 @@
 (defcommand init (argv)
   "Initialize an installation given by a path."
   (with-cli-options (argv "Usage: init [options] [path]~%~@{~A~%~}~%")
-      ((no-input "Don't prompt for input.") &free path)
+      ((safe "Skip if exists")
+       (no-input "Don't prompt for input.") &free path)
     (let ((path (path-or-cwd path)))
       (format t "Initializing in: ~A~%" path)
       (setf path (ensure-directories-exist path :verbose t))
@@ -29,8 +30,12 @@
                                            (parse-namestring path)))
                  init)
              (if (probe-file db-path)
-                 (setf init (or no-input
-                                (yes-or-no-p "Server database exists, remove?")))
+                 (if (not safe)
+                   (setf init (or no-input
+                                  (yes-or-no-p "Server database exists, remove?")))
+
+                   (format t "Server database exists, skipping~%"))
+
                  (setf init t))
              (and init
                   (probe-file db-path)

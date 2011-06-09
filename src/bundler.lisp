@@ -23,7 +23,8 @@ Should be called during build"
                        (write-sequence *data* temp-file)
                        (pathname temp-file))))
     (format t "Wrote bundle to: ~A~%" bundle-file)
-    (external-program:run "tar" `("zx" "-C" ,dir "-f" ,(namestring bundle-file)))))
+    (external-program:run "tar" `("zx" "-C" ,dir "-f" ,(namestring bundle-file)))
+    (delete-file bundle-file)))
 
 (defun bundle (argv)
   (destructuring-bind (self &rest args) argv

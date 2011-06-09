@@ -9,8 +9,10 @@
                 (when (pathname-directory path)
                   (if (probe-file path)
                       (format  *trace-output* "~&>>> 2.t) it exists, good for you.~%")
-                      (progn
+                      (let ((sub-path (make-pathname :name (pathname-name path)
+                                                     :type (pathname-type path))))
                         (format  *trace-output* "~&>>> 2.f) does not exist~%")
-                        (format  *trace-output* "~&>>> 2.f) try: ~A~%" (make-pathname :name (pathname-name path)
-                                                                                      :type (pathname-type path)))))))
+                        (format  *trace-output* "~&>>> 2.f) try: ~A~%" sub-path)
+                        (setf (sb-alien::shared-object-pathname obj) sub-path
+                              (sb-alien::shared-object-namestring obj) (namestring sub-path))))))
               (funcall function obj)))))

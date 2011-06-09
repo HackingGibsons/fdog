@@ -50,7 +50,21 @@ help:
 
 
 all: fdog $(STAGEDIR)
-$(STAGEDIR):
+
+bundle: quicklisp $(STAGEDIR) $(BUILDAPP)
+	@echo "=> Bundling up a distributable"
+	tar cz -C $(STAGEDIR) -f /tmp/fdog.bundle.tgz .
+	$(BUILDAPP) --output $(FDOG).bundle \
+		--eval '(sb-ext:disable-debugger)' \
+		--load $(QL_ROOT_PATH)/setup.lisp \
+	  	--eval "(ql:quickload :unix-options)" \
+	  	--eval "(ql:quickload :flexi-streams)" \
+                --load $(ROOT)/src/bundler.lisp \
+		--eval '(read-data-from "/tmp/fdog.bundle.tgz")' \
+	        --entry bundle
+	rm -rf /tmp/fdog.bundle.tgz
+
+$(STAGEDIR): $(FODG)
 	@echo "=> Preparing release in $(STAGEDIR)"
 	mkdir -p $(STAGEDIR)/bin
 	cp $(FDOG) $(STAGEDIR)/bin

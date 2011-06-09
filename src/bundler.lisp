@@ -12,8 +12,24 @@ Should be called during build"
                 ((eq x in))
               (write-byte x s))))))
 
+(defun unpack-to (dir)
+  (unless (ppcre:scan "/$" dir)
+    (setf dir (concatenate 'string dir "/")))
+  (ensure-directories-exist dir :verbose t)
+  (format t "Unpack to: ~A~%" (truename dir))
+  (let ((bundle-file (with-open-file (temp-file (format nil "/tmp/fdog.bundle.~A.tgz" (random 10000))
+                                                :direction :output :element-type 'flex:octet
+                                                :if-exists :supersede)
+                       (write-sequence *data* temp-file)
+                       (pathname temp-file))))
+    (format t "Wrote bundle to: ~A~%" bundle-file)
+    (external-program:run "tar" `("zx" "-C" ,dir "-f" ,(namestring bundle-file)))))
+
 (defun bundle (argv)
-  (with-cli-options (argv)
-      ()
-    (format t "Le bundle: ~A~%" argv)
-    (format t "Have data: ~A~%" (length *data*))))
+  (destructuring-bind (self &rest args) argv
+    (with-cli-options (args t)
+        (&free out)
+      (unless (= 1 (length out))
+        (format *error-output* "You must specify an output path~%")
+        (quit :unix-status 1))
+      (unpack-to (car out)))))

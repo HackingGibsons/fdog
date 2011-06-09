@@ -49,9 +49,10 @@ help:
 	@echo '   Directory relative to $$HOME of the quicklisp install'
 
 
-all: fdog $(STAGEDIR)
+all: fdog $(STAGEDIR) bundle
 
-bundle: quicklisp $(STAGEDIR) $(BUILDAPP)
+bundle: $(FDOG).bundle
+$(FDOG).bundle: quicklisp $(STAGEDIR) $(BUILDAPP)
 	@echo "=> Bundling up a distributable"
 	tar cz -C $(STAGEDIR) -f /tmp/fdog.bundle.tgz .
 	$(BUILDAPP) --output $(FDOG).bundle \
@@ -59,6 +60,8 @@ bundle: quicklisp $(STAGEDIR) $(BUILDAPP)
 		--load $(QL_ROOT_PATH)/setup.lisp \
 	  	--eval "(ql:quickload :unix-options)" \
 	  	--eval "(ql:quickload :flexi-streams)" \
+		--eval "(ql:quickload :external-program)" \
+		--eval "(ql:quickload :cl-ppcre)" \
                 --load $(ROOT)/src/bundler.lisp \
 		--eval '(read-data-from "/tmp/fdog.bundle.tgz")' \
 	        --entry bundle

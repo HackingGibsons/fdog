@@ -14,7 +14,6 @@ libfixposix/config.h: libfixposix/configure
 	cd libfixposix && ./configure --prefix `pwd`/build
 libfixposix/configure:
 	cd libfixposix && \
-	ls && \
 	autoreconf -i
 
 nst: nst-4.0.0

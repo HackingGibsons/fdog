@@ -115,6 +115,7 @@ $(FDOG):
 	            --asdf-tree $(ROOT)/vendor \
                     --require sb-aclrepl \
 		    --eval '(sb-ext:disable-debugger)' \
+                    --load $(ROOT)/src/builder.lisp \
 	            --eval '(declaim (optimize (debug $(DEBUG))))' \
 	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \

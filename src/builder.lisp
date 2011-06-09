@@ -1,0 +1,16 @@
+;; Help image reloading find the correct libraries
+(with-unlocked-packages (:sb-alien)
+  (let ((function (symbol-function 'sb-alien::try-reopen-shared-object)))
+    (setf (symbol-function 'sb-alien::try-reopen-shared-object)
+          #'(lambda (obj)
+              (declare (type sb-alien::shared-object obj))
+              (let ((path (sb-alien::shared-object-pathname obj)))
+                (format  *trace-output* "~&>>> 1) desired shared-object: ~A~%" path)
+                (when (pathname-directory path)
+                  (if (probe-file path)
+                      (format  *trace-output* "~&>>> 2.t) it exists, good for you.~%")
+                      (progn
+                        (format  *trace-output* "~&>>> 2.f) does not exist~%")
+                        (format  *trace-output* "~&>>> 2.f) try: ~A~%" (make-pathname :name (pathname-name path)
+                                                                                      :type (pathname-type path)))))))
+              (funcall function obj)))))

@@ -86,7 +86,7 @@ $(STAGEDIR): $(FODG)
 	@echo "=> Building bootstrap script: $(STAGEDIR)/fdog"
 	touch $(STAGEDIR)/fdog
 	@echo '#!/bin/sh' > $(STAGEDIR)/fdog
-	@echo 'BASE=`pwd -P`/`dirname $$0`' >> $(STAGEDIR)/fdog
+	@echo 'BASE=$$(dirname $$(readlink -f $$0))' >> $(STAGEDIR)/fdog
 	@echo 'LD_LIBRARY_PATH="$$BASE/lib" $$BASE/bin/fdog $$@' >> $(STAGEDIR)/fdog
 	chmod +x $(STAGEDIR)/fdog
 

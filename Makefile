@@ -49,14 +49,22 @@ help:
 	@echo '   Directory relative to $$HOME of the quicklisp install'
 
 
-all: fdog build
-build:
+all: fdog $(STAGEDIR)
+$(STAGEDIR):
 	@echo "=> Preparing release in $(STAGEDIR)"
 	mkdir -p $(STAGEDIR)/bin
 	cp $(FDOG) $(STAGEDIR)/bin
 	mkdir -p $(STAGEDIR)/lib
-	cp vendor/libfixposix/build/lib/*.* $(STAGEDIR)/lib
+
+	@echo "=> Archiving revision"
 	echo `git rev-parse HEAD` > $(STAGEDIR)/REV
+
+
+	@echo "=> Copying native libs"
+	cp vendor/libfixposix/build/lib/*.* $(STAGEDIR)/lib
+
+	@echo "=> Staging select FFI build libs"
+	find vendor/clsql -name '*.dylib' -or -name '*.so' | xargs -J % cp % $(STAGEDIR)/lib
 
 	@echo "=> Building bootstrap script: $(STAGEDIR)/fdog"
 	touch $(STAGEDIR)/fdog

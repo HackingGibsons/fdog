@@ -20,15 +20,12 @@
 ;;;                                                                          ;;;
 ;;; Requirements:                                                            ;;;
 ;;;   * Mongrel2 1.6                                                         ;;;
-;;;   * 0MQ 2.1.4                                                            ;;;
+;;;   * 0MQ 2.1.[47]                                                         ;;;
 ;;;   * SBCL 1.0.48                                                          ;;;
-;;;   * patched CLSQL from https://github.com/nikodemus/clsql.git            ;;;
-;;;   * M2CL (forked) from https://github.com/sshirokov/m2cl.git             ;;;
-;;;   * Quicklisp                                                            ;;;
-;;;   * Fdog path in the ASDF registry (see: user-tools/asdf-loader.lisp)    ;;;
 ;;;                                                                          ;;;
 ;;; Note:                                                                    ;;;
-;;;   * This readme is somewhat stale, see the Makefile                      ;;;
+;;;   * This readme is somewhat stale, see the Makefile:                     ;;;
+;;;     $ make                                                               ;;;
 ;;;                                                                          ;;;
 ;;; Testing:                                                                 ;;;
 ;;;   * The test suite can be run with (asdf:test-system :fdog)              ;;;

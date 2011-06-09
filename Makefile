@@ -64,7 +64,7 @@ $(STAGEDIR):
 	cp vendor/libfixposix/build/lib/*.* $(STAGEDIR)/lib
 
 	@echo "=> Staging select FFI build libs"
-	find vendor/clsql -name '*.dylib' -or -name '*.so' | xargs -J % cp % $(STAGEDIR)/lib
+	find vendor/clsql -name '*.dylib' -or -name '*.so' | xargs -I % cp % $(STAGEDIR)/lib
 
 	@echo "=> Building bootstrap script: $(STAGEDIR)/fdog"
 	touch $(STAGEDIR)/fdog

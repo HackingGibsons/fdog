@@ -119,6 +119,12 @@ $(FDOG):
 	            --asdf-path $(ROOT) \
 	            --asdf-tree $(ROOT)/vendor \
 		    --eval '(sb-ext:disable-debugger)' \
+                    --eval "(sb-ext:with-unlocked-packages (:sb-alien) \
+		           (let ((og-load #'sb-alien:load-shared-object)) \
+		             (flet ((patched-load-shared-object (path &key dont-save) \
+		                      (funcall og-load path :dont-save t))) \
+		               (setf (symbol-function 'sb-alien:load-shared-object) \
+		                     #'patched-load-shared-object))))" \
 	            --eval '(declaim (optimize (debug $(DEBUG))))' \
 	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \

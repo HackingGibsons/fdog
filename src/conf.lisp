@@ -1,5 +1,7 @@
 (in-package :fdog)
 
+(defparameter *mongrel2-bin* "/usr/local/bin/mongrel2")
+
 (defparameter get-local-address (sockets:make-address (sockets:address-to-vector "127.0.0.1")))
 (defun get-local-address (&key update (as :address))
   "Get the local IP address we should tell clients about.
@@ -20,5 +22,7 @@ If `update' is non-nil, it will be recomputed"
   "Computethe local IP address"
   (let* ((interfaces (ip-interfaces:get-ip-interfaces))
          (addresses (mapcar #'ip-interfaces:ip-interface-address interfaces))
-         (addresses (mapcar #'sockets:make-address addresses)))
-    (car (remove-if-not #'sockets:inet-address-private-p addresses))))
+         (addresses (mapcar #'sockets:make-address addresses))
+         (address (car (remove-if-not #'sockets:inet-address-private-p addresses))))
+    (and address
+         (setf get-local-address address))))

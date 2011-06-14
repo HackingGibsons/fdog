@@ -4,6 +4,7 @@
   (:export :init :start
            :get-local-address
            :make-fdog-server-db-pathname
+           :*mongrel2-bin*
            :*root-path* :*default-root-path* :*default-server-path* :*default-server-database-path*
            :*fdog-run-dirname*
            :*fdog-master-pidfile*

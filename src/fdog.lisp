@@ -12,6 +12,11 @@
   "Initialization function for fdog
 Should find and assert the correctness of the project root, server dir, and then connect to the server database"
   (setf *root-path* root)
+
+  (log-for (trace) "Computing the local address.")
+  (compute-local-address)
+  (log-for (trace) "Found local address to be: ~A" (get-local-address :as :string))
+
   (fdog-models:connect (make-fdog-server-db-pathname :root root :server server :database database)))
 
 (defmethod start ()

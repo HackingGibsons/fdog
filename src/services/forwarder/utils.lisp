@@ -17,3 +17,7 @@
 
 (defmethod make-handler-recv-ident ((forwarder fdog-forwarder))
   "")
+
+(defmethod make-local-endpoint (&key proto addr port)
+  (format nil "~A://~A:~A" (or proto "tcp") (or addr (fdog:get-local-address :as :string))
+                           (or port (next-forwarder-port))))

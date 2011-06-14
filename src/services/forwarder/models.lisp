@@ -15,12 +15,12 @@
    (path :type string
          :initarg :path
          :initform "/")
-   (listen-on :type string
+   (listen-on :type integer
               :initarg :listen-on
-              :initform "tcp://127.0.0.1:9910")
-   (forward-to :type string
+              :initform 9910)
+   (forward-to :type integer
                :initarg :forward-to
-               :initform "tcp://127.0.0.1:9999"))
+               :initform 9999))
   (:base-table fdog-forwarder
    :documentation "Database model describing a forwarder endpoint."))
 
@@ -48,14 +48,6 @@
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
-(defmethod make-forward-to-address (&rest rest &key &allow-other-keys)
-  (declare (ignorable rest))
-  (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))
-
-(defmethod make-listen-on-address (&rest rest &key &allow-other-keys)
-  (declare (ignorable rest))
-  (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))
-
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
                          handler request raw)
   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
@@ -69,8 +61,8 @@
         (progn
           (log-for (trace) "Creating")
           (let ((new-forwarder (make-instance 'fdog-forwarder :name name :host host
-                                              :forward-to (make-forward-to-address)
-                                              :listen-on (make-listen-on-address))))
+                                              :forward-to (next-forwarder-port)
+                                              :listen-on (next-forwarder-port))))
             (clsql:update-records-from-instance new-forwarder)
             (log-for (trace) "Created new forwarder: ~A" new-forwarder)
             (describe new-forwarder))))))
@@ -88,8 +80,8 @@
       (with-slots (name host path listen-on forward-to) forwarder
       (json:encode-json `((:name . ,name)
                           (:host . ,host)
-                          (:sub . ,listen-on)
-                          (:push . ,forward-to))
+                          (:sub . ,(format nil "tcp://~A:~A" (fdog:get-local-address) listen-on))
+                          (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
                         stream)))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)

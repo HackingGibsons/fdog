@@ -1,6 +1,8 @@
 ;; -*- mode: Lisp;  -*-
 (asdf:defsystem #:fdog
-  :depends-on (#:drakma
+  :depends-on (#:ip-interfaces
+               #:iolib.sockets
+               #:drakma
                #:cl-who
                #:external-program
                #:unix-options
@@ -16,7 +18,8 @@
   :components ((:module "src"
                 :components ((:file "utils")
                              (:file "package" :depends-on ("utils"))
-                             (:file "fdog" :depends-on ("models" "control" "services"))
+                             (:file "conf" :depends-on ("package"))
+                             (:file "fdog" :depends-on ("conf" "models" "control" "services"))
 
                              (:module "models" :depends-on ("package")
                               :components ((:file "package")

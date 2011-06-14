@@ -2,6 +2,7 @@
 (defpackage #:fdog
   (:use #:cl)
   (:export :init :start
+           :get-local-address
            :make-fdog-server-db-pathname
            :*root-path* :*default-root-path* :*default-server-path* :*default-server-database-path*
            :*fdog-run-dirname*

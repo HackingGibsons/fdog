@@ -52,8 +52,8 @@ If (and (eql `signal' :stop) (eql until-p 'mongrel2-server-running-p)) invert is
                       (config (mongrel2-server-config server))
                       (uuid (mongrel2-server-uuid server)))
                   (chdir root)
-                  (log-for (trace) "Running (in: ~A): ~A ~A" root "mongrel2" `(,config ,uuid))
-                  (start "mongrel2" `(,config ,uuid)))
+                  (log-for (trace) "Running (in: ~A): ~A ~A" root fdog:*mongrel2-bin* `(,config ,uuid))
+                  (start fdog:*mongrel2-bin* `(,config ,uuid)))
                 :started))
 
       (:stop (when running

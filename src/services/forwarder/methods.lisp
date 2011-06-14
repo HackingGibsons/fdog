@@ -47,11 +47,11 @@
     (with-slots (forward-to listen-on) (forwarder-upstream interface)
       ;; TODO: WONTRUN: The listen-on/forward-to below are all ports,
       ;;                they need the tcp://#{(get-local-address)}:... added
-      (log-for (trace) "Binding (forward-to) request-sock: ~A" forward-to)
+      (log-for (trace) "Binding (forward-to) request-sock: ~A:~A" (get-local-address :as :string) forward-to)
       (zmq:setsockopt request-sock zmq:linger 200)
       (zmq:bind request-sock forward-to)
 
-      (log-for (trace) "Binding (listen-on) response-sock: ~A" listen-on)
+      (log-for (trace) "Binding (listen-on) response-sock: ~A:~A" (get-local-address :as :string) listen-on)
       (zmq:setsockopt response-sock zmq:subscribe "")
       (log-for (trace) "Subscribed, binding.")
       (zmq:bind response-sock listen-on))

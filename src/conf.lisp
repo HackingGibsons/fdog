@@ -1,5 +1,7 @@
 (in-package :fdog)
 
+(defparameter *fdog-log-dir* "logs/")
+
 (defparameter *mongrel2-bin* "/usr/local/bin/mongrel2")
 
 (defparameter get-local-address (sockets:make-address (sockets:address-to-vector "127.0.0.1")))

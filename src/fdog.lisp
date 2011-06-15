@@ -1,11 +1,6 @@
 ;;;; fdog.lisp
 (in-package #:fdog)
 
-;; Logging
-(start-logging)
-
-
-
 (defun make-fdog-server-db-pathname (&key (root *default-root-path*)
                                           (server *default-server-path*)
                                           (database *default-server-database-path*))
@@ -16,6 +11,10 @@
   "Initialization function for fdog
 Should find and assert the correctness of the project root, server dir, and then connect to the server database"
   (setf *root-path* root)
+
+  ;; Logging
+  (start-logging :logfile "fdog")
+  (log-for (warn) "*** Fdog init. Logging started. Full power to main engines. ***")
 
   (log-for (trace) "Computing the local address.")
   (compute-local-address)

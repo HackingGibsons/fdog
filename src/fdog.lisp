@@ -1,6 +1,10 @@
 ;;;; fdog.lisp
-
 (in-package #:fdog)
+
+;; Logging
+(start-logging)
+
+
 
 (defun make-fdog-server-db-pathname (&key (root *default-root-path*)
                                           (server *default-server-path*)

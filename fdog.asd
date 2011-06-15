@@ -19,7 +19,8 @@
                 :components ((:file "utils")
                              (:file "package" :depends-on ("utils"))
                              (:file "conf" :depends-on ("package"))
-                             (:file "fdog" :depends-on ("conf" "models" "control" "services"))
+                             (:file "logging" :depends-on ("package" "conf" "utils"))
+                             (:file "fdog" :depends-on ("conf" "models" "control" "services" "logging"))
 
                              (:module "models" :depends-on ("package")
                               :components ((:file "package")

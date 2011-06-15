@@ -14,6 +14,7 @@
       (setf path (ensure-directories-exist path :verbose t))
 
       (let ((dirs `(("server/" . ("logs/" "run/" "tmp/"))
+                    "logs/"
                     ,*fdog-run-dirname*)))
         (labels ((create-dir (dir &key (base path))
                    (etypecase dir

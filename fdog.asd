@@ -66,7 +66,10 @@
                                                          (:file "utils" :depends-on ("package" "interface"))
 
                                                          (:file "ensure-ance" :depends-on ("interface"))
-                                                         (:file "methods" :depends-on ("utils" "models" "interface"))))))))))
+
+                                                         (:module "methods" :depends-on ("utils" "models" "interface")
+                                                          :components ((:file "support")
+                                                                       (:file "forwarding")))))))))))
 
 
 

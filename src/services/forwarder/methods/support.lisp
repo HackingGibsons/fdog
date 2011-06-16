@@ -1,5 +1,8 @@
 (in-package :fdog-forwarder)
 
+(defmethod fdog-forwarder-path ((interface fdog-forwarding-interface))
+  (fdog-forwarder-path (forwarder-upstream interface)))
+
 (defmethod interface-start :before ((self fdog-forwarding-interface))
   (log-for (trace) "Starting forwarder ~A" self)
   (init-0mq-endpoints self)

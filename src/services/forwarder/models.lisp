@@ -14,7 +14,8 @@
          :initform nil)
    (path :type string
          :initarg :path
-         :initform "/")
+         :initform "/"
+         :accessor fdog-forwarder-path)
    (listen-on :type integer
               :initarg :listen-on
               :initform 9910)

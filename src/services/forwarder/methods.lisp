@@ -45,8 +45,6 @@
 
     ;; Connect/Bind
     (with-slots (forward-to listen-on) (forwarder-upstream interface)
-      ;; TODO: WONTRUN: The listen-on/forward-to below are all ports,
-      ;;                they need the tcp://#{(get-local-address)}:... added
       (log-for (trace) "Binding (forward-to) request-sock: ~A" (make-local-endpoint :port forward-to))
       (zmq:setsockopt request-sock zmq:linger 200)
       (zmq:bind request-sock (make-local-endpoint :port forward-to))

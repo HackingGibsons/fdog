@@ -25,6 +25,10 @@
    (uuid :type string
          :initform (make-uuid4)
          :accessor mongrel2-server-uuid)
+   (use-ssl :type integer
+            :initform 0
+            :initarg :use-ssl
+            :accessor mongrel2-server-ssl)
    (access-log :type string
                :initform "/logs/{name}-access.log")
    (error-log :type string

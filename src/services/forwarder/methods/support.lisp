@@ -100,7 +100,7 @@
     (declare (ignore handler))
 
     (interface-configure-bridges (interface)
-      ("/" :mount-bridge 'mount-forwarder-application))
+      ((fdog-forwarder-path forwarder) :mount-bridge 'mount-forwarder-application))
 
     interface))
 

@@ -72,4 +72,5 @@
 
 ;; Test operation
 (defmethod perform ((o asdf:test-op) (c (eql (asdf:find-system :fdog))))
+  (funcall (intern (symbol-name :start-logging) :fdog))
   (funcall (intern (symbol-name :run) :fdog-tests)))

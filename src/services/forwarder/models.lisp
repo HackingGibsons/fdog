@@ -155,3 +155,12 @@ to use."
                                      :test #'string=
                                      :key #'fdog-hostpath-path)))))
 
+;; Queries
+(defmethod forwarder-uniqe-paths ((forwarder fdog-forwarder))
+  "Return a list of all uniqe paths for a given `forwarder'
+Used to build a set of specific handlers pre-computed to
+remove a specifc path before sending to a unified upstream"
+  (remove-duplicates
+   (mapcar #'fdog-hostpath-path
+           (fdog-forwarder-hostpaths forwarder))
+   :test #'string=))

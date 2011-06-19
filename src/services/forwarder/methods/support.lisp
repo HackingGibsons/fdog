@@ -75,11 +75,6 @@
   (log-for (dribble) "Teardown complete.")
   (describe interface))
 
-(defmethod initialize-instance :after ((self fdog-forwarding-interface) &rest initargs)
-  "Initialize the forwarder"
-  (declare (ignorable initargs))
-  :undef)
-
 (defun mount-forwarder-application (bridge interface)
   (log-for (trace) "Mounting the forwarder application on ~A" bridge)
   (log-for (trace) "Using interface: ~A" interface)

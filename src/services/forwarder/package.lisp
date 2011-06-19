@@ -52,8 +52,8 @@
 (defvar *forwarder-server-ssl-port* 13375)
 
 (defvar *watchdog-route* "/watchdog/")
-(defvar *watchdog-endpoints* '((:send . "tcp://127.0.0.1:1015")
-                               (:recv . "tcp://127.0.0.1:1012")))
+(defvar *watchdog-endpoints* '((:send . "tcp://127.0.0.1:1045")
+                               (:recv . "tcp://127.0.0.1:1042")))
 
 (defvar *forwarder-zmq-port-base* 30000)
 

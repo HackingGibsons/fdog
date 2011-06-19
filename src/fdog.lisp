@@ -7,7 +7,8 @@
   (reduce #'merge-pathnames (list database server root)))
 
 ;;; Init
-(defun init (&key (root *default-root-path*) (server *default-server-path*) (database *default-server-database-path*))
+(defun init (&key (root *default-root-path*) (server *default-server-path*) (database *default-server-database-path*)
+                  trace-sql)
   "Initialization function for fdog
 Should find and assert the correctness of the project root, server dir, and then connect to the server database"
   (setf *root-path* root)
@@ -20,7 +21,9 @@ Should find and assert the correctness of the project root, server dir, and then
   (compute-local-address)
   (log-for (trace) "Found local address to be: ~A" (get-local-address :as :string))
 
-  (fdog-models:connect (make-fdog-server-db-pathname :root root :server server :database database)))
+  (fdog-models:connect (make-fdog-server-db-pathname :root root :server server :database database))
+
+  (when trace-sql (clsql:start-sql-recording)))
 
 (defmethod start ()
   "Start the fdog daemon and run the control interface"

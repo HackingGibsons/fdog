@@ -49,6 +49,8 @@
            :mongrel2-proxy
            :mongrel2-directory
            :mongrel2-route
+             :make-host-route
+             :find-mongrel2-route
              :mongrel2-route-path
              :mongrel2-route-target
              :mongrel2-route-host

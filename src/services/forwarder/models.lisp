@@ -13,7 +13,15 @@
    (path :type string
          :initarg :path
          :initform "/"
-         :accessor fdog-forwarder-path))
+         :accessor fdog-forwarder-path)
+
+   (forwarder :db-kind :join
+              :accessor hostpath-forwarder
+              :db-info (:join-class fdog-forwarder
+                        :home-key forwarder-id
+                        :foreign-key id
+                        :set nil)))
+
   (:base-table fdog-forwarder-hostpath
    :documentation "A host and path pair for a given forwarder."))
 

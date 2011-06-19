@@ -2,7 +2,7 @@
 
 (defun ensure-forwarder-tables-exist ()
   (if (and (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder)))
-               (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-hostpath))))
+           (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-hostpath))))
       (log-for (trace) "Forwarder tables already exist.")
       (progn
         (log-for (trace) "Forwarder tables do not exist.. creating.")

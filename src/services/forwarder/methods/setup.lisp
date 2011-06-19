@@ -8,13 +8,15 @@
   "Configure `forwarder' on `server'"
   (log-for (trace) "Configuring ~A on ~A" forwarder (fdog-models:mongrel2-server-name server))
   (log-for (trace) "Making handlers for unique paths")
-  (flet ((send-ident-for (path) (format nil "forwarder-~A-~A" (fdog-forwarder-name forwarder)
-                                                              path)))
+  (flet ((send-ident-for (path)
+           (format nil "forwarder-~A-~A" (fdog-forwarder-name forwarder) path)))
+
     (dolist (path (forwarder-uniqe-paths forwarder))
       (log-for (trace) "Building forwarder handler for ~A" path)
       (make-mongrel2-handler (send-ident-for path)
                              (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
                              (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))))
+
   forwarder)
 
 

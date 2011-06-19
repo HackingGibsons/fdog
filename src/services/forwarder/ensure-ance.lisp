@@ -41,7 +41,11 @@
 (defmethod ensure-server-has-watchdog ((server mongrel2-server))
   "Ensure that `server' has a default route wired to the watchdog
 handler"
-  (let ((host (ensure-server-has-default-route-named server "localhost")))
+  (let ((host (ensure-server-has-default-route-named server "localhost"))
+        (handler (make-mongrel2-handler "forwarder-watchdog" (cdr (assoc :send *watchdog-endpoints*))
+                                                             (cdr (assoc :recv *watchdog-endpoints*)))))
     (log-for (trace) "Ensuring that S:~A H:~A has watchdog" server host)
+    (log-for (trace) "Watchdog Handler: ~A" handler)
+    (log-for (warn) "TODO: Add route")
 
     server))

@@ -23,6 +23,7 @@
                             :find-mongrel2-handler
                             :make-mongrel2-handler
                           :mongrel2-route
+                            :make-host-route
                             :mongrel2-route-path
                             :mongrel2-route-target)
   (:shadowing-import-from :fdog-m2sh

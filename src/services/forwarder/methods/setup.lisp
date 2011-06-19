@@ -2,7 +2,7 @@
 
 (defun forwarder-servers ()
   "A list of all servers that are configured for forwarding"
-  (multiple-value-list (ensure-forwarder-servers-exist)))
+  (ensure-forwarder-servers-exist))
 
 (defmethod configure-forwarder ((forwarder fdog-forwarder) (server mongrel2-server))
   "Configure `forwarder' on `server'"

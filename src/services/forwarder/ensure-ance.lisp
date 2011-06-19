@@ -38,14 +38,15 @@
     (clsql:update-records-from-instance host)
     host))
 
+(defmethod make-host-route ((host mongrel2-host) path target)
+  "Finds or creates a route on `host' and updates it to point to
+`target' using `path'"
+  :undef)
+
 (defmethod ensure-server-has-watchdog ((server mongrel2-server))
   "Ensure that `server' has a default route wired to the watchdog
 handler"
   (let ((host (ensure-server-has-default-host-named server "localhost"))
         (handler (make-mongrel2-handler "forwarder-watchdog" (cdr (assoc :send *watchdog-endpoints*))
                                                              (cdr (assoc :recv *watchdog-endpoints*)))))
-    (log-for (trace) "Ensuring that S:~A H:~A has watchdog" server host)
-    (log-for (trace) "Watchdog Handler: ~A" handler)
-    (log-for (warn) "TODO: Add route")
-
-    server))
+    (make-host-route host *watchdog-route* handler)))

@@ -10,7 +10,8 @@
 
 (defun ensure-forwarder-servers-exist ()
   (values (ensure-server-exists :port *forwarder-server-port* :ssl nil)
-          (ensure-server-exists :port *forwarder-server-ssl-port* :ssl t)))
+          (ensure-server-exists :name (concatenate 'string *forwarder-server-name* "-ssl")
+                                :port *forwarder-server-ssl-port* :ssl t)))
 
 (defun ensure-server-exists (&key (name *forwarder-server-name*) (port *forwarder-server-port*) (bind "0.0.0.0") (ssl nil))
   "Ensure that the forwarder server exists"

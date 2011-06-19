@@ -2,17 +2,17 @@
 
 (defvar next-forwarder-port nil)
 (defun next-forwarder-port (&key reset (inc t))
-  (unless next-forwarder-port
-    (next-forwarder-port :reset t :inc nil))
-
+  "Get the next avialable forwarder port starting at the base and counting up.
+If one is not found the next one up from the highest forwarder port in use is used."
   (when reset
-    (setf next-forwarder-port (or (loop for forwarder in (clsql:select 'fdog-forwarder :flatp t :update t)
+    (setf next-forwarder-port (or (loop for forwarder in (clsql:select 'fdog-forwarder :flatp t :refresh t)
                                      appending `(,(fdog-forwarder-listen-on forwarder)
                                                  ,(fdog-forwarder-forward-to forwarder))
                                        into ports
                                      return (car (sort ports #'>)))
                                   *forwarder-zmq-port-base*)))
-
+  (unless next-forwarder-port
+    (next-forwarder-port :reset t :inc nil))
   (if inc
       (incf next-forwarder-port)
       next-forwarder-port))

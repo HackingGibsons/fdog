@@ -111,7 +111,10 @@ and the key `:one' to (car *) the operation for convinience, otherwise returns l
                                              keys))))
         (name
          (clsql:select 'fdog-forwarder :flatp t :refresh t
-                       :where [= [slot-value 'fdog-forwarder 'name] name]))
+                       :where [= [slot-value 'fdog-forwarder 'name]
+                                  (if (symbolp name)
+                                      (string-downcase (symbol-name name))
+                                      name)]))
         (t
          (clsql:select 'fdog-forwarder :flatp t :refresh t)))
   #.(clsql:restore-sql-reader-syntax-state))

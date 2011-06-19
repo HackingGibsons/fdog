@@ -36,7 +36,7 @@
    (chroot :type string
            :initarg :chroot
            :accessor mongrel2-server-chroot
-           :initform "/var/www")
+           :initform "./")
    (pid-file :type string
              :accessor mongrel2-server-pidfile
              :initform "/run/mongrel2-{name}.pid")

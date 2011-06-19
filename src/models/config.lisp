@@ -225,15 +225,17 @@ by `path'"
   #.(clsql:restore-sql-reader-syntax-state))
 
 
-(defun make-mongrel2-handler (send-ident send-spec recv-spec &optional (recv-ident ""))
+(defun make-mongrel2-handler (send-ident send-spec recv-spec &key (recv-ident "") (update t))
   "Makes or updates a handler with the send-ident of `send-ident'
 setting the `send-spec' and `recv-spec'"
   (let ((handler (or (find-mongrel2-handler :send-ident send-ident)
                      (make-instance 'mongrel2-handler :send-ident send-ident))))
 
-    (setf (mongrel2-handler-recv-ident handler) recv-ident
-          (mongrel2-handler-send-spec handler) send-spec
-          (mongrel2-handler-recv-spec handler) recv-spec)
+    (when (or (not (slot-boundp handler 'fdog-models::id))
+              update)
+      (setf (mongrel2-handler-recv-ident handler) recv-ident
+            (mongrel2-handler-send-spec handler) send-spec
+            (mongrel2-handler-recv-spec handler) recv-spec))
 
     (clsql:update-records-from-instance handler)
     handler))

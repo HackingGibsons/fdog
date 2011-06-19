@@ -1,6 +1,8 @@
 (in-package :fdog-forwarder)
 
 (defun ensure-forwarder-environment ()
+  "Ensures the forwarder tables and the forwarder servers are created
+and watchdogs are installed. Returns the forwarding servers."
   (ensure-forwarder-tables-exist)
   (mapc #'ensure-server-has-watchdog (ensure-forwarder-servers-exist)))
 

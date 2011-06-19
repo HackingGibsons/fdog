@@ -83,12 +83,14 @@ it is overriden with the given path.  Nothing created if already exists."
     (clsql:update-records-from-instance hostpath)
     hostpath))
 
-(defmethod make-forwarder (name &rest host-paths)
+(defmethod make-forwarder ((name symbol) &rest host-paths)
+  "Helper to translate keywords to name slugs"
+  (call-next-method (string-downcase (symbol-name :deejay)) host-paths))
+
+(defmethod make-forwarder ((name string) &rest host-paths)
   "Make a new forwarder named `name' with hostpaths as configured
 in `host-paths' in the form ((host-string . path-string)...)"
-  (let ((forwarder (get-or-create-forwarder name)))
-    (set-forwarder-hostpaths forwarder host-paths)
-    forwarder))
+  (set-forwarder-hostpaths (get-or-create-forwarder name) host-paths))
 
 (defmethod get-or-create-forwarder (name)
   "Either find or create an fdog-forwarder object instance with
@@ -129,7 +131,12 @@ the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
   (dolist (host-path host-paths)
     (destructuring-bind (host . path) host-path
       (log-for (trace) "Installing: ~A => ~A" host path)
-      (make-forwarder-hostpath forwarder host path))))
+      (make-forwarder-hostpath forwarder host path)))
+
+  (log-for (trace) "Refreshing instance and joins")
+  (clsql:update-instance-from-records forwarder)
+  (clsql:update-objects-joins `(,forwarder))
+  forwarder)
 
 (defmethod fdog-forwarder-hostpaths :before ((forwarder fdog-forwarder))
   "Force an update of the object joins when we use the accessor"

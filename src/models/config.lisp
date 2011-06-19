@@ -104,6 +104,16 @@
    :documentation
    "Mongrel2 Host configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-270003.4.2"))
 
+(defmethod find-mongrel2-host ((server mongrel2-server) name)
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (car (clsql:select 'mongrel2-host :flatp t :refresh t
+                     :where [and [= [slot-value 'mongrel2-host 'server-id]
+                                    (model-pk server)]
+                                 [= [slot-value 'mongrel2-host 'name]
+                                    name]]))
+  #.(clsql:restore-sql-reader-syntax-state))
+
+
 (defmethod print-object ((host mongrel2-host) stream)
   (with-slots (id name matching routes) host
     (format stream "#<Host(~A:~A)::~A ~A route>" id name matching (length routes))))

@@ -34,6 +34,8 @@
              :mongrel2-server-signal
              :mongrel2-server-signal/block
            :mongrel2-host
+             :find-mongrel2-host
+             :make-mongrel2-host
              :mongrel2-host-id
              :mongrel2-host-name
              :mongrel2-host-matching

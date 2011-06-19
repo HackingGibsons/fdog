@@ -1,10 +1,21 @@
 (in-package :fdog-forwarder)
 
-(defvar next-forwarder-port 50000)
-(defun next-forwarder-port (&key reset)
+(defvar next-forwarder-port nil)
+(defun next-forwarder-port (&key reset (inc t))
+  (unless next-forwarder-port
+    (next-forwarder-port :reset t :inc nil))
+
   (when reset
-    (setf next-forwarder-port 5000))
-  (incf next-forwarder-port))
+    (setf next-forwarder-port (or (loop for forwarder in (clsql:select 'fdog-forwarder :flatp t :update t)
+                                     appending `(,(fdog-forwarder-listen-on forwarder)
+                                                 ,(fdog-forwarder-forward-to forwarder))
+                                       into ports
+                                     return (car (sort ports #'>)))
+                                  *forwarder-zmq-port-base*)))
+
+  (if inc
+      (incf next-forwarder-port)
+      next-forwarder-port))
 
 (defun make-handler-send-spec ()
   (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))

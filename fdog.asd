@@ -69,6 +69,7 @@
 
                                                          (:module "methods" :depends-on ("utils" "models" "interface")
                                                           :components ((:file "support")
+                                                                       (:file "api")
                                                                        (:file "forwarding")))))))))))
 
 

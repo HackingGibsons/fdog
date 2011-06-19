@@ -62,16 +62,13 @@
                                            (:module "forwarder"
                                             :components ((:file "package")
                                                          (:file "models" :depends-on ("package"))
-                                                         (:file "interface" :depends-on ("package" "models"))
-                                                         (:file "utils" :depends-on ("package" "interface"))
+                                                         (:file "utils" :depends-on ("package"))
 
-                                                         (:file "ensure-ance" :depends-on ("interface"))
+                                                         (:file "ensure-ance" :depends-on ("package" "models" "utils"))
 
-                                                         (:module "methods" :depends-on ("utils" "models" "interface")
-                                                          :components ((:file "support")
-                                                                       (:file "api")
-                                                                       (:file "setup")
-                                                                       (:file "forwarding")))))))))))
+                                                         (:module "methods" :depends-on ("models" "utils" "ensure-ance")
+                                                          :components ((:file "api")
+                                                                       (:file "setup")))))))))))
 
 
 

@@ -17,6 +17,7 @@
            :mongrel2-server
              ;; Data access
              :mongrel2-server-id
+             :mongrel2-server-ssl
              :mongrel2-server-name
              :mongrel2-server-uuid
              :mongrel2-server-chroot

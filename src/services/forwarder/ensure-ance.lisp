@@ -23,3 +23,25 @@
           (mongrel2-server-ssl server)  (if ssl 1 0))
     (clsql:update-records-from-instance server)
     server))
+
+(defmethod ensure-server-has-default-route-named ((server mongrel2-server) name)
+  "Ensures that the default host of `server' exists and is named `name'"
+  (clsql:update-instance-from-records server)
+  (clsql:update-objects-joins `(,server))
+  (let ((host (or (mongrel2-server-default-host server)
+                  (make-instance 'mongrel2-host :server-id (model-pk server)
+                                 :name name))))
+
+    (setf (mongrel2-host-name host) name
+          (mongrel2-host-matching host) name)
+
+    (clsql:update-records-from-instance host)
+    host))
+
+(defmethod ensure-server-has-watchdog ((server mongrel2-server))
+  "Ensure that `server' has a default route wired to the watchdog
+handler"
+  (let ((host (ensure-server-has-default-route-named server "localhost")))
+    (log-for (trace) "Ensuring that S:~A H:~A has watchdog" server host)
+
+    server))

@@ -38,11 +38,6 @@
     (clsql:update-records-from-instance host)
     host))
 
-(defmethod make-host-route ((host mongrel2-host) path target)
-  "Finds or creates a route on `host' and updates it to point to
-`target' using `path'"
-  :undef)
-
 (defmethod ensure-server-has-watchdog ((server mongrel2-server))
   "Ensure that `server' has a default route wired to the watchdog
 handler"

@@ -39,6 +39,8 @@
 (defvar *forwarder-server-name* "forwarder")
 (defvar *forwarder-server-port* 13374)
 
+(defvar *forwarder-zmq-port-base* 30000)
+
 (defvar *forwarders* ()
   "List of the loaded forwarders")
 

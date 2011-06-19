@@ -24,7 +24,7 @@
     (clsql:update-records-from-instance server)
     server))
 
-(defmethod ensure-server-has-default-route-named ((server mongrel2-server) name)
+(defmethod ensure-server-has-default-host-named ((server mongrel2-server) name)
   "Ensures that the default host of `server' exists and is named `name'"
   (clsql:update-instance-from-records server)
   (clsql:update-objects-joins `(,server))
@@ -41,7 +41,7 @@
 (defmethod ensure-server-has-watchdog ((server mongrel2-server))
   "Ensure that `server' has a default route wired to the watchdog
 handler"
-  (let ((host (ensure-server-has-default-route-named server "localhost"))
+  (let ((host (ensure-server-has-default-host-named server "localhost"))
         (handler (make-mongrel2-handler "forwarder-watchdog" (cdr (assoc :send *watchdog-endpoints*))
                                                              (cdr (assoc :recv *watchdog-endpoints*)))))
     (log-for (trace) "Ensuring that S:~A H:~A has watchdog" server host)

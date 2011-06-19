@@ -1,6 +1,11 @@
 (in-package :fdog-forwarder)
 
+(defun ensure-forwarder-environment ()
+  (ensure-forwarder-tables-exist)
+  (mapc #'ensure-server-has-watchdog (ensure-forwarder-servers-exist)))
+
 (defun ensure-forwarder-tables-exist ()
+  "Ensures the existence of the tables used for forwarder configuration storage"
   (if (and (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder)))
            (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-hostpath))))
       (log-for (trace) "Forwarder tables already exist.")
@@ -9,12 +14,15 @@
         (mapcar #'clsql:create-view-from-class '(fdog-forwarder fdog-forwarder-hostpath)))))
 
 (defun ensure-forwarder-servers-exist ()
-  (values (ensure-server-exists :port *forwarder-server-port* :ssl nil)
-          (ensure-server-exists :name (concatenate 'string *forwarder-server-name* "-ssl")
-                                :port *forwarder-server-ssl-port* :ssl t)))
+  "Ensure that the servers required for forwarder operation exist
+and are configured to the current environment configuration as dicated by
+`*forwarder-server-name*', `*forwarder-server-port*' and `*forwarder-server-ssl-port*'"
+  (list (ensure-server-exists :port *forwarder-server-port* :ssl nil)
+        (ensure-server-exists :name (concatenate 'string *forwarder-server-name* "-ssl")
+                              :port *forwarder-server-ssl-port* :ssl t)))
 
 (defun ensure-server-exists (&key (name *forwarder-server-name*) (port *forwarder-server-port*) (bind "0.0.0.0") (ssl nil))
-  "Ensure that the forwarder server exists"
+  "Ensure that the `named'-ed forwarder server exists with the options given by `port' `bind' and `ssl'"
   (let ((server (or (servers :name name :refresh t :one t)
                     (make-server name :port port :bind bind
                                  :default-host "localhost"))))
@@ -42,6 +50,7 @@
   "Ensure that `server' has a default route wired to the watchdog
 handler"
   (let ((host (ensure-server-has-default-host-named server "localhost"))
-        (handler (make-mongrel2-handler "forwarder-watchdog" (cdr (assoc :send *watchdog-endpoints*))
-                                                             (cdr (assoc :recv *watchdog-endpoints*)))))
+        (handler (make-mongrel2-handler (format nil "watchdog-~A" (mongrel2-server-name server))
+                                        (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
+                                        (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))))
     (make-host-route host *watchdog-route* handler)))

@@ -6,6 +6,9 @@
   (:shadowing-import-from :fdog-models
                           :model-pk
                           :mongrel2-server
+                            :mongrel2-server-port
+                            :mongrel2-server-addr
+                            :mongrel2-server-ssl
                             :mongrel2-server-default-host
                             :mongrel2-server-default-host-name
                           :mongrel2-host
@@ -38,6 +41,7 @@
 
 (defvar *forwarder-server-name* "forwarder")
 (defvar *forwarder-server-port* 13374)
+(defvar *forwarder-server-ssl-port* 13375)
 
 (defvar *forwarder-zmq-port-base* 30000)
 

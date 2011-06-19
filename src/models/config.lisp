@@ -192,8 +192,10 @@
 by `path'"
   #.(clsql:locally-enable-sql-reader-syntax)
   (car (clsql:select 'mongrel2-route :flatp t :refresh t
-                     :where [= [slot-value 'mongrel2-route 'path]
-                               path]))
+                     :where [and [= [slot-value 'mongrel2-route 'path]
+                                    path]
+                                 [= [slot-value 'mongrel2-route 'host-id]
+                                    (model-pk host)]]))
   #.(clsql:restore-sql-reader-syntax-state))
 
 

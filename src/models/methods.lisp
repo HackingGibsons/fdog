@@ -174,7 +174,6 @@ lisp more easily accepts as a relative path"
                    (make-instance 'mongrel2-route :host-id (model-pk host)
                                   :path path))))
     (setf (mongrel2-route-target route) target)
-
     (clsql:update-records-from-instance route)
     route))
 

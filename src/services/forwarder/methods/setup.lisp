@@ -22,8 +22,12 @@
     (dolist (hostpath (fdog-forwarder-hostpaths forwarder))
       (log-for (trace) "Routing ~A~A" (fdog-hostpath-host hostpath)
                                       (fdog-hostpath-path hostpath))
-      :TODO-get-or-create-host
-      :TODO-make-route))
+      (let* ((host (make-mongrel2-host server (fdog-hostpath-host hostpath)))
+             (target (find-mongrel2-handler :send-ident (send-ident-for (fdog-hostpath-path hostpath))))
+             (route (make-host-route host (fdog-hostpath-path hostpath) target)))
+        (log-for (trace) "Will use host: ~A" host)
+        (log-for (trace) "Will use target: ~A" target)
+        (log-for (trace) "Will use route: ~A" route))))
 
   forwarder)
 

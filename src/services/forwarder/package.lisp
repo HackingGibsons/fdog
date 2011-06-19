@@ -12,6 +12,7 @@
                             :mongrel2-server-default-host
                             :mongrel2-server-default-host-name
                           :mongrel2-host
+                            :make-mongrel2-host
                             :mongrel2-host-name
                             :mongrel2-host-matching
                             :mongrel2-host-server

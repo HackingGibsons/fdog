@@ -129,4 +129,17 @@ the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
       (log-for (trace) "Installing: ~A => ~A" host path)
       (make-forwarder-hostpath forwarder host path))))
 
+(defmethod fdog-forwarder-hostpaths :before ((forwarder fdog-forwarder))
+  "Force an update of the object joins when we use the accessor"
+  (clsql:update-objects-joins `(,forwarder)))
+
+;; Predicates
+(defmethod forwarder-valid-p ((forwarder fdog-forwarder))
+  "Returns identity of forwarder or nil if the forwarder is not valid
+to use."
+  (and (< 0 (length (fdog-forwarder-hostpaths forwarder)))
+       (= (length (fdog-forwarder-hostpaths forwarder))
+          (length (remove-duplicates (fdog-forwarder-hostpaths forwarder)
+                                     :test #'string=
+                                     :key #'fdog-hostpath-path)))))
 

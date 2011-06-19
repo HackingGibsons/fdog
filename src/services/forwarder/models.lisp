@@ -27,6 +27,12 @@
   (:base-table fdog-forwarder-hostpath
    :documentation "A host and path pair for a given forwarder."))
 
+(defmethod print-object ((hostpath fdog-forwarder-hostpath) s)
+  (format s "#<Hostpath(~A): ~A~A" (if (slot-boundp hostpath 'id)
+                                       (fdog-forwarder-name (hostpath-forwarder hostpath))
+                                       "None")
+          (fdog-hostpath-host hostpath) (fdog-hostpath-path hostpath)))
+
 (clsql:def-view-class fdog-forwarder ()
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
@@ -51,6 +57,11 @@
                         :set t)))
   (:base-table fdog-forwarder
    :documentation "Database model describing a forwarder endpoint."))
+
+(defmethod print-object ((forwarder fdog-forwarder) s)
+  (format s "#<Forwarder '~A': ~A hostpaths>"
+          (fdog-forwarder-name forwarder)
+          (length (fdog-forwarder-hostpaths forwarder))))
 
 ;; Model methods
 (defmethod make-forwarder-hostpath ((forwarder fdog-forwarder) host path)

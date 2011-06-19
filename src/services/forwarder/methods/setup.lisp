@@ -8,7 +8,8 @@
   "Configure `forwarder' on `server'"
   (log-for (trace) "Configuring ~A on ~A" forwarder (fdog-models:mongrel2-server-name server))
   (flet ((send-ident-for (path)
-           (format nil "forwarder-~A-~A" (fdog-forwarder-name forwarder) path)))
+           (format nil "forwarder-~A-~A~[~;-ssl~]"
+                   (fdog-forwarder-name forwarder) path (mongrel2-server-ssl server))))
 
     (log-for (trace) "Making handlers for unique paths")
     (dolist (path (forwarder-uniqe-paths forwarder))

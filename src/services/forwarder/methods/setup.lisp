@@ -15,7 +15,8 @@
       (log-for (trace) "Building forwarder handler for ~A" path)
       (make-mongrel2-handler (send-ident-for path)
                              (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
-                             (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))))
+                             (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
+                             :update nil)))
 
   forwarder)
 

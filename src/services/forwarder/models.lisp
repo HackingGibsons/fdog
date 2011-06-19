@@ -28,6 +28,7 @@
    :documentation "A host and path pair for a given forwarder."))
 
 (defmethod print-object ((hostpath fdog-forwarder-hostpath) s)
+  "Pretty printer for `fdog-forwarder-hostpath' class"
   (format s "#<Hostpath(~A): ~A~A" (if (slot-boundp hostpath 'id)
                                        (fdog-forwarder-name (hostpath-forwarder hostpath))
                                        "None")
@@ -59,12 +60,15 @@
    :documentation "Database model describing a forwarder endpoint."))
 
 (defmethod print-object ((forwarder fdog-forwarder) s)
+  "Pretty printer for `fdog-forwarder' class"
   (format s "#<Forwarder '~A': ~A hostpaths>"
           (fdog-forwarder-name forwarder)
           (length (fdog-forwarder-hostpaths forwarder))))
 
-;; Model methods
+;; Makers
 (defmethod make-forwarder-hostpath ((forwarder fdog-forwarder) host path)
+  "Make a hostpath for the forwarder `forwarder', if an entry exists for this host
+it is overriden with the given path.  Nothing created if already exists."
   (clsql:update-objects-joins `(,forwarder))
   (let* ((hostpaths (fdog-forwarder-hostpaths forwarder))
          (hostpath (or (find host hostpaths :key #'fdog-hostpath-host
@@ -77,6 +81,38 @@
     (clsql:update-records-from-instance hostpath)
     hostpath))
 
+(defmethod make-forwarder (name &rest host-paths)
+  "Make a new forwarder named `name' with hostpaths as configured
+in `host-paths' in the form ((host-string . path-string)...)"
+  (let ((forwarder (get-or-create-forwarder name)))
+    (set-forwarder-hostpaths forwarder host-paths)
+    forwarder))
+
+(defmethod get-or-create-forwarder (name)
+  "Either find or create an fdog-forwarder object instance with
+a database backing"
+  (or (find-forwarder :name name :one t)
+      (let ((new-forwarder (make-instance 'fdog-forwarder :name name
+                                          :forward-to (next-forwarder-port)
+                                          :listen-on (next-forwarder-port))))
+        (clsql:update-records-from-instance new-forwarder)
+        new-forwarder)))
+
+(defmethod find-forwarder (&rest keys &key name one)
+  "Search for forwarder(s) filtering using the key `:name' to filter only interesting names
+and the key `:one' to (car *) the operation for convinience, otherwise returns list."
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (cond (one
+         (car (apply #'find-forwarder (progn (setf (getf keys :one) nil)
+                                             keys))))
+        (name
+         (clsql:select 'fdog-forwarder :flatp t :refresh t
+                       :where [= [slot-value 'fdog-forwarder 'name] name]))
+        (t
+         (clsql:select 'fdog-forwarder :flatp t :refresh t)))
+  #.(clsql:restore-sql-reader-syntax-state))
+
+;; Construction and update utils
 (defmethod set-forwarder-hostpaths ((forwarder fdog-forwarder) host-paths)
   "Configure the database representation of `forwarder' to include only
 the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
@@ -92,32 +128,5 @@ the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
     (destructuring-bind (host . path) host-path
       (log-for (trace) "Installing: ~A => ~A" host path)
       (make-forwarder-hostpath forwarder host path))))
-
-(defmethod make-forwarder (name &rest host-paths)
-  "Make a new forwarder named `name' with hostpaths as configured
-in `host-paths' in the form ((host-string . path-string)...)"
-  (let ((forwarder (get-or-create-forwarder name)))
-    (set-forwarder-hostpaths forwarder host-paths)
-    forwarder))
-
-(defmethod get-or-create-forwarder (name)
-  (or (find-forwarder :name name :one t)
-      (let ((new-forwarder (make-instance 'fdog-forwarder :name name
-                                          :forward-to (next-forwarder-port)
-                                          :listen-on (next-forwarder-port))))
-        (clsql:update-records-from-instance new-forwarder)
-        new-forwarder)))
-
-(defmethod find-forwarder (&rest keys &key name one)
-  #.(clsql:locally-enable-sql-reader-syntax)
-  (cond (one
-         (car (apply #'find-forwarder (progn (setf (getf keys :one) nil)
-                                             keys))))
-        (name
-         (clsql:select 'fdog-forwarder :flatp t :refresh t
-                       :where [= [slot-value 'fdog-forwarder 'name] name]))
-        (t
-         (clsql:select 'fdog-forwarder :flatp t :refresh t)))
-  #.(clsql:restore-sql-reader-syntax-state))
 
 

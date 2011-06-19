@@ -31,10 +31,13 @@
 
   forwarder)
 
-
 (defmethod configure-forwarder ((forwarder fdog-forwarder) (server (eql :all)))
   "Configure all forwarder servers to include `forwarder'"
   (log-for (trace) "Configuring ~A on all forwarder servers" forwarder)
   (mapcar #'(lambda (s) (configure-forwarder forwarder s))
           (forwarder-servers)))
 
+(defmethod configure-forwarder ((forwarder (eql :all)) server)
+  "Helper to configure all forwarders"
+  (dolist (forwarder (find-forwarder))
+    (configure-forwarder forwarder server)))

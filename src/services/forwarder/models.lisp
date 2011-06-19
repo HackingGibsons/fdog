@@ -44,9 +44,11 @@
          :initform "forwarder"
          :accessor fdog-forwarder-name)
    (listen-on :type integer
+              :accessor fdog-forwarder-listen-on
               :initarg :listen-on
               :initform 9910)
    (forward-to :type integer
+               :accessor fdog-forwarder-forward-to
                :initarg :forward-to
                :initform 9999)
 

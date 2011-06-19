@@ -20,6 +20,7 @@
                             :mongrel2-handler-recv-ident
                             :mongrel2-handler-send-ident
                             :mongrel2-handler-recv-spec
+                            :mongrel2-handler-send-spec
                             :find-mongrel2-handler
                             :make-mongrel2-handler
                           :mongrel2-route
@@ -56,7 +57,10 @@
 (defvar *watchdog-endpoints* '((:send . "tcp://127.0.0.1:1045")
                                (:recv . "tcp://127.0.0.1:1042")))
 
-(defvar *forwarder-zmq-port-base* 30000)
+(defvar *forwarder-zmq-port-base* 30000
+  "Ports used to create forwarder external endpoints")
+(defvar *handler-zmq-port-base* 50000
+  "Ports used to create local handler endpoints for mongrel2 configuration.")
 
 (defvar *forwarders* ()
   "List of the loaded forwarders")

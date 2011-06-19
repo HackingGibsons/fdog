@@ -165,3 +165,16 @@ lisp more easily accepts as a relative path"
         (clsql:insert-records :into (clsql:view-table view-class)
                               :attributes '(extension mimetype)
                               :values (list ext type))))))
+
+;;; API
+(defmethod make-host-route ((host mongrel2-host) path target)
+  "Finds or creates a route on `host' and updates it to point to
+`target' using `path'"
+  (let ((route (or (find-mongrel2-route host path)
+                   (make-instance 'mongrel2-route :host-id (model-pk host)
+                                  :path path))))
+    (setf (mongrel2-route-target route) target)
+
+    (clsql:update-records-from-instance route)
+    route))
+

@@ -12,6 +12,8 @@
                             :mongrel2-server-default-host
                             :mongrel2-server-default-host-name
                           :mongrel2-host
+                            :mongrel2-host-name
+                            :mongrel2-host-matching
                             :mongrel2-host-server
                             :mongrel2-host-routes
                           :mongrel2-route
@@ -42,6 +44,8 @@
 (defvar *forwarder-server-name* "forwarder")
 (defvar *forwarder-server-port* 13374)
 (defvar *forwarder-server-ssl-port* 13375)
+
+(defvar *watchdog-route* "/watchdog/")
 
 (defvar *forwarder-zmq-port-base* 30000)
 

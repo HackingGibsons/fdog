@@ -203,6 +203,30 @@
    :documentation
    "Mongrel2 Handler endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-310003.4.6"))
 
+(defun find-mongrel2-handler (&key send-ident)
+  "Find either all handlers, or a handler with the given `send-ident'"
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (cond ((not send-ident)
+         (clsql:select 'mongrel2-handler :flatp t :refresh t))
+        (t
+         (car (clsql:select 'mongrel2-handler :flatp t :refresh t
+                            :where [= [slot-value 'mongrel2-handler 'send-ident]
+                                      send-ident]))))
+  #.(clsql:restore-sql-reader-syntax-state))
+
+
+(defun make-mongrel2-handler (send-ident send-spec recv-spec &optional (recv-ident ""))
+  "Makes or updates a handler with the send-ident of `send-ident'
+setting the `send-spec' and `recv-spec'"
+  (let ((handler (or (find-mongrel2-handler :send-ident send-ident)
+                     (make-instance 'mongrel2-handler :send-ident send-ident))))
+    (setf (mongrel2-handler-recv-ident handler) recv-ident
+          (mongrel2-handler-send-ident handler) send-spec
+          (mongrel2-handler-recv-spec handler) recv-spec)
+    handler))
+
+
+
 (defmethod print-object ((handler mongrel2-handler) stream)
   (with-slots (id protocol recv-ident recv-spec send-ident send-spec) handler
   (format stream "#<Handler(~A):~A::[recv(~A):~A] => [send(~A):~A]>"

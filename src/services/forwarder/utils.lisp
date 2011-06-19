@@ -17,18 +17,9 @@ If one is not found the next one up from the highest forwarder port in use is us
       (incf next-forwarder-port)
       next-forwarder-port))
 
-(defun make-handler-send-spec ()
-  (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))
-
-(defmethod make-handler-send-ident ((forwarder fdog-forwarder))
-  (format nil "forwarder-~A" (fdog-forwarder-name forwarder)))
-
-(defun make-handler-recv-spec ()
-  (format nil "tcp://127.0.0.1:~A" (next-forwarder-port)))
-
-(defmethod make-handler-recv-ident ((forwarder fdog-forwarder))
-  "")
-
 (defmethod make-local-endpoint (&key proto addr port)
+  "Constructs a zeromq endpoint using the local address. &key `port' is required,
+remainder have sane defaults"
+  (unless port (error "Port required, can't make sane default"))
   (format nil "~A://~A:~A" (or proto "tcp") (or addr (fdog:get-local-address :as :string))
                            (or port (next-forwarder-port))))

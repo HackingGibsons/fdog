@@ -16,6 +16,12 @@
                             :mongrel2-host-matching
                             :mongrel2-host-server
                             :mongrel2-host-routes
+                          :mongrel2-handler
+                            :mongrel2-handler-recv-ident
+                            :mongrel2-handler-send-ident
+                            :mongrel2-handler-recv-spec
+                            :find-mongrel2-handler
+                            :make-mongrel2-handler
                           :mongrel2-route
                             :mongrel2-route-path
                             :mongrel2-route-target)

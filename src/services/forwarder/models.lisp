@@ -43,6 +43,31 @@
    :documentation "Database model describing a forwarder endpoint."))
 
 ;; Model methods
+(defmethod set-forwarder-hostpaths ((forwarder fdog-forwarder) host-paths)
+  "Configure the database representation of `forwarder' to include only
+the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
+  (log-for (trace) "Updating forwarder ~A with host-paths ~A" forwarder host-paths)
+  (log-for (trace) "Removing existing hostpaths")
+  (dolist (host-path (fdog-forwarder-hostpaths forwarder))
+    (log-for (trace) "Removing: ~A" host-path)
+    (clsql:delete-instance-records host-path)))
+
+(defmethod make-forwarder (name &rest host-paths)
+  "Make a new forwarder named `name' with hostpaths as configured
+in `host-paths' in the form ((host-string . path-string)...)"
+  (let ((forwarder (get-or-create-forwarder name)))
+    (describe forwarder)
+    (set-forwarder-hostpaths forwarder host-paths)
+    forwarder))
+
+(defmethod get-or-create-forwarder (name)
+  (or (find-forwarder :name name :one t)
+      (let ((new-forwarder (make-instance 'fdog-forwarder :name name
+                                          :forward-to (next-forwarder-port)
+                                          :listen-on (next-forwarder-port))))
+        (clsql:update-records-from-instance new-forwarder)
+        new-forwarder)))
+
 (defmethod find-forwarder (&rest keys &key name one)
   #.(clsql:locally-enable-sql-reader-syntax)
   (cond (one

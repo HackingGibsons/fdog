@@ -113,6 +113,12 @@
                                     name]]))
   #.(clsql:restore-sql-reader-syntax-state))
 
+(defmethod make-mongrel2-host ((server mongrel2-server) name)
+  (let ((host (or (find-mongrel2-host server name)
+                  (make-instance 'mongrel2-host :server-id (model-pk server)
+                                 :name name))))
+    (clsql:update-records-from-instance host)
+    host))
 
 (defmethod print-object ((host mongrel2-host) stream)
   (with-slots (id name matching routes) host

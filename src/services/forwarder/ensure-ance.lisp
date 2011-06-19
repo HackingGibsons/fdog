@@ -1,5 +1,13 @@
 (in-package :fdog-forwarder)
 
+(defun ensure-forwarder-tables-exist ()
+  (if (and (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder)))
+               (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-hostpath))))
+      (log-for (trace) "Forwarder tables already exist.")
+      (progn
+        (log-for (trace) "Forwarder tables do not exist.. creating.")
+        (mapcar #'clsql:create-view-from-class '(fdog-forwarder fdog-forwarder-hostpath)))))
+
 (defun ensure-handler-for-forwarder (forwarder &key host server)
   (with-slots (path listen-on forward-to) forwarder
     (let* ((server (or server (ensure-server-exists forwarder *forwarder-server-name* *forwarder-server-port*)))

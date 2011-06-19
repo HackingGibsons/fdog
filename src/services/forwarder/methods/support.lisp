@@ -104,13 +104,10 @@
 
     interface))
 
-
 (defmethod init-forwarders (&key (start t))
   "Search for, init and start all known forwarders"
   (log-for (dribble) "Initializing forwarders..")
-  (when (not (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder))))
-    (log-for (trace) "Forwarder table does not exist.. creating.")
-    (clsql:create-view-from-class 'fdog-forwarder))
+  (ensure-forwarder-tables-exist)
 
   ;; Turn off any that we already have running
   (log-for (trace) "Removing current forwarders..")

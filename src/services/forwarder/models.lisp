@@ -1,5 +1,22 @@
 (in-package :fdog-forwarder)
 
+(clsql:def-view-class fdog-forwarder-hostpath ()
+  ((id :type integer
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key
+       :reader fdog-forwarder-host-id)
+   (forwarder-id :type integer
+                 :reader fdog-forwarder-host-forwarder-id)
+   (host :type string
+         :initarg :host
+         :initform nil)
+   (path :type string
+         :initarg :path
+         :initform "/"
+         :accessor fdog-forwarder-path))
+  (:base-table fdog-forwarder-hostpath
+   :documentation "A host and path pair for a given forwarder."))
+
 (clsql:def-view-class fdog-forwarder ()
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
@@ -9,40 +26,33 @@
          :initarg :name
          :initform "forwarder"
          :accessor fdog-forwarder-name)
-   (host :type string
-         :initarg :host
-         :initform nil)
-   (path :type string
-         :initarg :path
-         :initform "/"
-         :accessor fdog-forwarder-path)
    (listen-on :type integer
               :initarg :listen-on
               :initform 9910)
    (forward-to :type integer
                :initarg :forward-to
-               :initform 9999))
+               :initform 9999)
+
+   (hostpaths :db-kind :join
+              :accessor fdog-forwarder-hostpaths
+              :db-info (:join-class fdog-forwarder-hostpath
+                        :home-key id
+                        :foreign-key forwarder-id
+                        :set t)))
   (:base-table fdog-forwarder
    :documentation "Database model describing a forwarder endpoint."))
 
-(defmethod print-object ((self fdog-forwarder) stream)
-  (with-slots (id host path listen-on forward-to) self
-    (format stream "#<DBForwarder(~A): ~A~A ~A => ~A>"
-            id host path listen-on forward-to)))
-
 ;; Model methods
-(defmethod find-forwarder (&rest keys &key name host path one)
+(defmethod find-forwarder (&rest keys &key name one)
   #.(clsql:locally-enable-sql-reader-syntax)
   (cond (one
          (car (apply #'find-forwarder (progn (setf (getf keys :one) nil)
                                              keys))))
-        ((not (or name host path))
-         (clsql:select 'fdog-forwarder :flatp t :refresh t))
-        ((and name (not (or host path)))
+        (name
          (clsql:select 'fdog-forwarder :flatp t :refresh t
                        :where [= [slot-value 'fdog-forwarder 'name] name]))
         (t
-         (error "TODO: :(")))
+         (clsql:select 'fdog-forwarder :flatp t :refresh t)))
   #.(clsql:restore-sql-reader-syntax-state))
 
 

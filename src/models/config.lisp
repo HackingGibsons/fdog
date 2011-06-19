@@ -171,6 +171,16 @@
             (and (slot-boundp route 'id) id)
             (/= reversed 0) path target-type target-id)))
 
+(defmethod find-mongrel2-route ((host mongrel2-host) (path string))
+  "Find a mongrel2-route attached to the given `host' that have a path given
+by `path'"
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (car (clsql:select 'mongrel2-route :flatp t :refresh t
+                     :where [= [slot-value 'mongrel2-route 'path]
+                               path]))
+  #.(clsql:restore-sql-reader-syntax-state))
+
+
 
 ;; TODO: The closures mapping targets at the top should
 ;;       probably be methods spcialized on target :|

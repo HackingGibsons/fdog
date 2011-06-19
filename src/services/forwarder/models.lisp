@@ -51,6 +51,9 @@
    :documentation "Database model describing a forwarder endpoint."))
 
 ;; Model methods
+(defmethod make-forwarder-hostpath ((forwarder fdog-forwarder) host path)
+  :undef)
+
 (defmethod set-forwarder-hostpaths ((forwarder fdog-forwarder) host-paths)
   "Configure the database representation of `forwarder' to include only
 the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"

@@ -47,16 +47,21 @@
   "Configure the database representation of `forwarder' to include only
 the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
   (log-for (trace) "Updating forwarder ~A with host-paths ~A" forwarder host-paths)
+
   (log-for (trace) "Removing existing hostpaths")
   (dolist (host-path (fdog-forwarder-hostpaths forwarder))
     (log-for (trace) "Removing: ~A" host-path)
-    (clsql:delete-instance-records host-path)))
+    (clsql:delete-instance-records host-path))
+
+  (log-for (trace) "Adding new hostpaths")
+  (dolist (host-path host-paths)
+    (destructuring-bind (host . path) host-path
+      (log-for (trace) "Installing: ~A => ~A" host path))))
 
 (defmethod make-forwarder (name &rest host-paths)
   "Make a new forwarder named `name' with hostpaths as configured
 in `host-paths' in the form ((host-string . path-string)...)"
   (let ((forwarder (get-or-create-forwarder name)))
-    (describe forwarder)
     (set-forwarder-hostpaths forwarder host-paths)
     forwarder))
 

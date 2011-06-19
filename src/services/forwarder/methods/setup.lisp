@@ -7,10 +7,16 @@
 (defmethod configure-forwarder ((forwarder fdog-forwarder) (server mongrel2-server))
   "Configure `forwarder' on `server'"
   (log-for (trace) "Configuring ~A on ~A" forwarder (fdog-models:mongrel2-server-name server))
-  (dolist (hostpath (fdog-forwarder-hostpaths forwarder))
-    (log-for (warn) "TODO: Should configure ~A => ~A"
-             (fdog-hostpath-host hostpath)
-             (fdog-hostpath-path hostpath))))
+  (log-for (trace) "Making handlers for unique paths")
+  (flet ((send-ident-for (path) (format nil "forwarder-~A-~A" (fdog-forwarder-name forwarder)
+                                                              path)))
+    (dolist (path (forwarder-uniqe-paths forwarder))
+      (log-for (trace) "Building forwarder handler for ~A" path)
+      (make-mongrel2-handler (send-ident-for path)
+                             (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
+                             (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))))
+  forwarder)
+
 
 (defmethod configure-forwarder ((forwarder fdog-forwarder) (server (eql :all)))
   "Configure all forwarder servers to include `forwarder'"

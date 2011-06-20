@@ -109,6 +109,31 @@ Returns true of it can find a pidfile, and a process is running there."
   #.(clsql:restore-sql-reader-syntax-state))
 
 ;;; Model API Wrappers
+(defgeneric mongrel2-server-cert (server type)
+  (:documentation "Try to find a mongrel2 `server' SSL certificate of type `type'")
+  (:method (server (type (eql :both)))
+    "Return both the :crt and the :key for `server'"
+    (list
+     (mongrel2-server-cert server :crt)
+     (mongrel2-server-cert server :key)))
+
+  (:method ((server mongrel2-server) (type (eql :crt)))
+    "Return the path to the .crt file for `server'"
+    (mongrel2-server-cert server "crt"))
+
+  (:method ((server mongrel2-server) (type (eql :key)))
+    "Return the path to the .key file for `server'"
+    (mongrel2-server-cert server "key"))
+
+  (:method ((server mongrel2-server) (type string))
+    "Return the path of the certificate file of type `type' for `server'"
+    (when (= (mongrel2-server-ssl server) 1)
+      (make-pathname
+       :name (mongrel2-server-uuid server) :type type
+       :defaults (merge-pathnames
+                  (mongrel2-setting-value (find-mongrel2-setting :certdir))
+                  (mongrel2-server-root server))))))
+
 (defmethod mongrel2-server-pidfile :around ((server mongrel2-server))
   "Wrap the query for a servers pidfile field to return a string
 lisp more easily accepts as a relative path"

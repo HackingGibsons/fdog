@@ -129,9 +129,14 @@ the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
         (when servers
           (format t "Mongrel2 Servers:~%"))
         (dolist (server servers servers)
-          (format t "  Name: ~A  Status: ~:[not running~;running~]~%"
+          (format t "  Name: ~A  UUID: ~A Status: ~:[not running~;running~]~%"
                   (fdog-models:mongrel2-server-name server)
-                  (fdog-models:mongrel2-server-running-p server)))))))
+                  (fdog-models:mongrel2-server-uuid server)
+                  (fdog-models:mongrel2-server-running-p server))
+          (when (= (fdog-models:mongrel2-server-ssl server) 1)
+            (format t "    SSL: .crt: ~:[missing!~;~:*~A~]~%         .key: ~:[missing!~;~:*~A~]~%"
+                    (probe-file (fdog-models:mongrel2-server-cert server :crt))
+                    (probe-file (fdog-models:mongrel2-server-cert server :key)))))))))
 
 (defcommand repl (argv)
   "Start a repl and nothing else"

@@ -16,6 +16,7 @@
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
              ;; Data access
+             :mongrel2-server-cert
              :mongrel2-server-id
              :mongrel2-server-ssl
              :mongrel2-server-name

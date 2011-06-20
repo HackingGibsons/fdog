@@ -299,11 +299,37 @@ setting the `send-spec' and `recv-spec'"
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
        :db-kind :key)
-   (key :type string)
-   (value :type string))
+   (key :type string
+        :initarg :key
+        :accessor mongrel2-setting-key)
+   (value :type string
+          :initarg :value
+          :accessor mongrel2-setting-value))
   (:base-table setting
    :documentation
    "Mongrel2 internal settings: http://mongrel2.org/static/mongrel2-manual.html#x1-380003.10"))
+
+(defmethod print-object ((object mongrel2-setting) s)
+  (format s "#<Mongrel2-Setting[~A]: ~A => ~A>"
+          (if (slot-boundp object 'id) (model-pk object) "None")
+          (if (slot-boundp object 'key) (mongrel2-setting-key object) "[None]")
+          (if (slot-boundp object 'value) (mongrel2-setting-value object) "[None]")))
+
+(defmethod make-mongrel2-setting (key value)
+  (let ((setting (or (find-mongrel2-setting key)
+                     (make-instance 'mongrel2-setting
+                                    :key key))))
+    (setf (mongrel2-setting-value setting) value)
+    (clsql:update-records-from-instance setting)
+    setting))
+
+(defmethod find-mongrel2-setting (key)
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (car (clsql:select 'mongrel2-setting :flatp t :refresh t
+                     :where [= [slot-value 'mongrel2-setting 'key]
+                               key]))
+  #.(clsql:restore-sql-reader-syntax-state))
+
 
 (clsql:def-view-class mongrel2-log ()
   ((id :type integer

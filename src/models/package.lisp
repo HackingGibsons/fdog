@@ -59,6 +59,10 @@
              :mongrel2-route-host
            :mongrel2-target-route
            :mongrel2-setting
+             :make-mongrel2-setting
+             :find-mongrel2-setting
+             :mongrel2-setting-key
+             :mongrel2-setting-value
            :mongrel2-mimetype
              :*default-mimetypes*
            :mongrel2-log

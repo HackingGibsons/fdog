@@ -73,7 +73,10 @@ If (and (eql `signal' :stop) (eql until-p 'mongrel2-server-running-p)) invert is
       (:reload (when running
                  (handler-case (progn
                                  (kill (mongrel2-server-pid server) sighup)
-                                 ;; TODO: Need to send a request to finish the reload
+                                 (drakma:http-request (format nil "~:[http~;https~]://localhost:~A/please-reload/"
+                                                              (mongrel2-server-ssl-p server)
+                                                              (mongrel2-server-port server))
+                                                      :method :options)
                                  :reloaded)
                    (syscall-error () nil))))
 

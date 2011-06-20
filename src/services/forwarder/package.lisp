@@ -3,6 +3,12 @@
         :bordeaux-threads)
   (:shadowing-import-from :log5 :log-for)
 
+  (:shadowing-import-from :fdog-handler
+                          :request-handler-start
+                          :request-handler-stop
+                          :request-handler-running-p
+                          :request-handler-add-string-responder
+                          :configure-bridges-for)
   (:shadowing-import-from :fdog-models
                           :model-pk
                           :mongrel2-server

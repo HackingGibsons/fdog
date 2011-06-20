@@ -120,7 +120,7 @@ Paramater should describe the pathname omitting both .crt and .key extensions."
            (base-cert-path (car base-cert-path))
            (db-path (fdog:make-fdog-server-db-pathname :root dir))
            (server (cond ((probe-file db-path)
-                          (fdog:init :root dir :trace-sql t)
+                          (fdog:init :root dir)
                           (and server
                                (fdog-m2sh:servers :name server :one t :refresh t)))
                          (t
@@ -139,7 +139,22 @@ Paramater should describe the pathname omitting both .crt and .key extensions."
         (format t "ERROR: Server already has certificates.~%")
         (quit :unix-status 1))
 
-      (format t "Dir: ~A Server: ~A~%" dir server))))
+      (let ((key (probe-file (make-pathname :type "key"
+                                            :defaults (parse-namestring base-cert-path))))
+            (target-key (fdog-models:mongrel2-server-cert server :key))
+            (crt (probe-file (make-pathname :type "crt"
+                                            :defaults (parse-namestring base-cert-path))))
+            (target-crt (fdog-models:mongrel2-server-cert server :crt)))
+        (unless (and key crt)
+          (format t "ERROR: Could not find both .key and .crt from ~A~%" base-cert-path)
+          (quit :unix-status 1))
+
+        (format t "Installing certificates..~%")
+        (format t " ~A => ~A~%" key target-key)
+        (fad:copy-file key target-key)
+        (format t " ~A => ~A~%" crt target-crt)
+        (fad:copy-file crt target-crt)))))
+
 
 (defcommand status (argv)
   "Determine the status of the fdog installation at the given path."

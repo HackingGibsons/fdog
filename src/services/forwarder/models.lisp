@@ -149,11 +149,7 @@ the host->path combinations `host-paths' in the form ((''host'' . ''/path/''))"
 (defmethod forwarder-valid-p ((forwarder fdog-forwarder))
   "Returns identity of forwarder or nil if the forwarder is not valid
 to use."
-  (and (< 0 (length (fdog-forwarder-hostpaths forwarder)))
-       (= (length (fdog-forwarder-hostpaths forwarder))
-          (length (remove-duplicates (fdog-forwarder-hostpaths forwarder)
-                                     :test #'string=
-                                     :key #'fdog-hostpath-path)))))
+  (and (< 0 (length (fdog-forwarder-hostpaths forwarder)))))
 
 ;; Queries
 (defmethod forwarder-uniqe-paths ((forwarder fdog-forwarder))

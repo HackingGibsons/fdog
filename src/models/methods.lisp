@@ -134,6 +134,11 @@ Returns true of it can find a pidfile, and a process is running there."
                   (mongrel2-setting-value (find-mongrel2-setting :certdir))
                   (mongrel2-server-root server))))))
 
+(defmethod mongrel2-server-ssl-p ((server mongrel2-server))
+  (if (= (mongrel2-server-ssl server) 0)
+      nil
+      t))
+
 (defmethod mongrel2-server-pidfile :around ((server mongrel2-server))
   "Wrap the query for a servers pidfile field to return a string
 lisp more easily accepts as a relative path"

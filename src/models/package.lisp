@@ -19,6 +19,7 @@
              :mongrel2-server-cert
              :mongrel2-server-id
              :mongrel2-server-ssl
+             :mongrel2-server-ssl-p
              :mongrel2-server-name
              :mongrel2-server-uuid
              :mongrel2-server-chroot

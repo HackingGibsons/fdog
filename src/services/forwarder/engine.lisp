@@ -26,8 +26,9 @@
 
 (defmethod print-object ((multibridge multibridge) s)
   (with-slots (handler path bridges) multibridge
-    (format s "#<Multibridge: Count: ~A Path: ~A Handler-ident: ~A>"
-            (length bridges) path (mongrel2-handler-send-ident handler))))
+    (format s "#<Multibridge: ~A/~A Path: ~A Handler-ident: ~A>"
+            (length (remove-if-not #'request-handler-running-p bridges)) (length bridges)
+            path (mongrel2-handler-send-ident handler))))
 
 ;; Engine creation
 (defmethod make-multibridge ((engine forwarder-engine) (handler mongrel2-handler))

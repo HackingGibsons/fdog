@@ -56,3 +56,25 @@ handler"
                                         (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
                                         (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))))
     (make-host-route host *watchdog-route* handler)))
+
+(defmethod ensure-servers-running ((server mongrel2-server))
+  "Make sure the server `server' is running."
+  (log-for (trace) "Ensuring the running state of ~A" server)
+  (if (mongrel2-server-running-p server)
+      (progn
+        (log-for (trace) "Server is running. Asking for reload.")
+        (mongrel2-server-signal server :reload))
+      (progn
+        (log-for (trace) "Server is not running. Starting.")
+        (mongrel2-server-signal/block server :start :timeout 3)))
+
+  (unless (mongrel2-server-running-p server)
+    (error "Mongrel2 server ~A [~A] failed to start!" (model-pk server) (mongrel2-server-name server)))
+
+  server)
+
+(defmethod ensure-servers-running ((servers list))
+  "Make sure that each of the servers in `servers' is running.
+If `reload' is true, a reload signal will be sent to the server."
+  (log-for (trace) "Ensuring the running state of ~A servers" (length servers))
+  (mapcar #'ensure-servers-running servers))

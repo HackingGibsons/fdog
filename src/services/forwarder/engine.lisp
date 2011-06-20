@@ -12,6 +12,7 @@
             :accessor forwarder-engine-bridges))
   (:documentation "The engine that manages the forwarding of requests for an endpoint"))
 
+;; Multibridge, interface for running multiple bridges at the same time
 (defclass multibridge ()
   ((engine :initarg :engine
            :accessor multibridge-engine)
@@ -22,20 +23,50 @@
          :initform "/"
          :accessor multibridge-path)
    (bridges :initform ()
-            :accessor multibridge-briges)))
+            :accessor multibridge-bridges)))
 
-(defmethod print-object ((multibridge multibridge) s)
-  (with-slots (handler path bridges) multibridge
+(defmethod print-object ((object multibridge) s)
+  (with-slots (handler path bridges) object
     (format s "#<Multibridge: ~A/~A Path: ~A Handler-ident: ~A>"
-            (length (remove-if-not #'request-handler-running-p bridges)) (length bridges)
+            (length (multibridge-running-bridges object)) (length bridges)
             path (mongrel2-handler-send-ident handler))))
 
-;; Engine creation
+;; Construction and init
 (defmethod make-multibridge ((engine forwarder-engine) (handler mongrel2-handler))
   (log-for (trace) "Building multibridge for: ~A" handler)
   (make-instance 'multibridge :engine engine :handler handler
                  :path (mongrel2-route-path (mongrel2-target-route handler))))
 
+;; Operation
+(defmethod multibridge-running-bridges ((instance multibridge))
+  (remove-if-not #'request-handler-running-p (multibridge-bridges instance)))
+
+(defmethod multibridge-idle-bridges ((instance multibridge))
+  (remove-if #'request-handler-running-p (multibridge-bridges instance)))
+
+(defmethod multibridge-start ((instance multibridge))
+  (unless (multibridge-bridges instance)
+    (log-for (trace) "No bridges present, but asked to start. Adding bridge.")
+    (multibridge-add-bridge instance))
+  (mapc #'request-handler-start (multibridge-idle-bridges instance))
+  instance)
+
+(defmethod multibridge-stop ((instance multibridge))
+  (mapc #'request-handler-start (multibridge-running-bridges instance))
+  instance)
+
+
+(defmethod multibridge-add-bridge ((instance multibridge))
+  (log-for (trace) "Adding bridge to ~A" instance)
+  (log-for (warn) "Undefined: multibridge-add-bridge")
+  :undef)
+
+(defmethod multibridge-running-p ((instance multibridge))
+  (with-slots (bridges) instance
+    (and bridges
+         (remove-if-not #'request-handler-running-p bridges))))
+
+;; Engine creation
 (defmethod make-forwarder-engine ((forwarder fdog-forwarder) &key servers)
   "Construct a forwarder-engine class from an fdog-forwarder model `forwarder'"
   (log-for (trace) "Building forwarder engine from ~A" forwarder)
@@ -60,8 +91,7 @@
 (defgeneric forwarder-engine-running-p (engine)
   (:documentation "Boolean representation of engine operation")
   (:method ((engine forwarder-engine))
-    (log-for (warn) "TODO: Not implemented")
-    nil))
+    (remove-if-not #'multibridge-running-p (forwarder-engine-bridges engine))))
 
 (defgeneric forwarder-engine-start (engine)
   (:documentation "Start forwarder engine `engine' so it begins to serve requests.")
@@ -77,8 +107,8 @@
 
 (defmethod forwarder-engine-start ((engine forwarder-engine))
   (log-for (trace) "Starting engine: ~A" engine)
-  :undef)
+  (mapcar #'multibridge-start (forwarder-engine-bridges engine)))
 
 (defmethod forwarder-engine-stop ((engine forwarder-engine))
   (log-for (trace) "Shutting down engine: ~A" engine)
-  :undef)
+  (mapcar #'multibridge-stop (forwarder-engine-bridges engine)))

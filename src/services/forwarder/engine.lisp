@@ -1,5 +1,22 @@
 (in-package :fdog-forwarder)
 
+;; Forwarder endpoint, a proxy between the handlers and an outside consumer
+(defclass forwarder-engine-endpoint ()
+  ((engine :initarg :engine
+           :accessor endpoint-engine)
+
+   (processor :initarg :processor
+              :initform nil
+              :accessor endpoint-processor)
+
+   (context :accessor endpoint-context)
+   (request-proxy-sock :initarg :proxy-sock
+                       :accessor endpoint-proxy-sock)
+   (request-sock :initarg :push-sock
+                 :accessor endpoint-request-sock)
+   (response-sock :initarg :sub-sock
+                  :accessor endpoint-response-sock)))
+
 ;; Forwarder engine, that which makes the definitions dance
 (defclass forwarder-engine ()
   ((forwarder :initarg :forwarder
@@ -9,10 +26,12 @@
             :accessor forwarder-engine-servers)
    (bridges :initarg :bridges
             :initform ()
-            :accessor forwarder-engine-bridges))
+            :accessor forwarder-engine-bridges)
+   (endpoint :accessor forwarder-engine-endpoint))
   (:documentation "The engine that manages the forwarding of requests for an endpoint"))
 
 ;; Multibridge, interface for running multiple bridges at the same time
+;; TODO: Factor out engine subclass of multibridge
 (defclass multibridge ()
   ((engine :initarg :engine
            :accessor multibridge-engine)
@@ -31,13 +50,40 @@
             (length (multibridge-running-bridges object)) (length bridges)
             path (mongrel2-handler-send-ident handler))))
 
-;; Construction and init
+;; Forwarder endpoint operation
+(defmethod engine-endpoint-running-p ((endpoint forwarder-engine-endpoint))
+  (with-slots (processor) endpoint
+    (and processor
+         (threadp processor)
+         (thread-alive-p processor))))
+
+(defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
+  (log-for (trace) "Starting endpoint: ~A" endpoint)
+  (unless (engine-endpoint-running-p endpoint)
+    (setf (endpoint-processor endpoint)
+          (make-thread #'(lambda ()
+                           (loop while :forever do
+                                (log-for (warn) "This is the default endpoint processor")
+                                (sleep 30)))
+                       :name (format nil "engine-endpoint-~A"
+                                     (fdog-forwarder-name
+                                      (forwarder-engine-forwarder (endpoint-engine endpoint))))))
+    :started))
+
+(defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
+  (log-for (trace) "Stopping endpoint: ~A" endpoint)
+  (when (engine-endpoint-running-p endpoint)
+    (log-for (warn) "This is very much the wrong way to go about this one.")
+    (destroy-thread (endpoint-processor endpoint))
+    :stopped))
+
+;; Multibridge Construction and init
 (defmethod make-multibridge ((engine forwarder-engine) (handler mongrel2-handler))
   (log-for (trace) "Building multibridge for: ~A" handler)
   (make-instance 'multibridge :engine engine :handler handler
                  :path (mongrel2-route-path (mongrel2-target-route handler))))
 
-;; Operation
+;; Multibridge Operation
 (defmethod multibridge-running-bridges ((instance multibridge))
   (remove-if-not #'request-handler-running-p (multibridge-bridges instance)))
 
@@ -80,6 +126,8 @@
   "Construct a forwarder-engine class from an fdog-forwarder model `forwarder'"
   (log-for (trace) "Building forwarder engine from ~A" forwarder)
   (let ((engine (make-instance 'forwarder-engine :forwarder forwarder :servers servers)))
+    (setf (forwarder-engine-endpoint engine)
+          (make-instance 'forwarder-engine-endpoint :engine engine))
     engine))
 
 (defmethod initialize-instance :after ((engine forwarder-engine) &rest initargs)
@@ -116,8 +164,10 @@
 
 (defmethod forwarder-engine-start ((engine forwarder-engine))
   (log-for (trace) "Starting engine: ~A" engine)
+  (engine-endpoint-start (forwarder-engine-endpoint engine))
   (mapcar #'multibridge-start (forwarder-engine-bridges engine)))
 
 (defmethod forwarder-engine-stop ((engine forwarder-engine))
   (log-for (trace) "Shutting down engine: ~A" engine)
+  (engine-endpoint-stop (forwarder-engine-endpoint engine))
   (mapcar #'multibridge-stop (forwarder-engine-bridges engine)))

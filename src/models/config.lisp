@@ -69,6 +69,14 @@
    :documentation
    "Mongrel2 Server configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-260003.4.1"))
 
+(defmethod print-object ((server mongrel2-server) s)
+  "Pretty-printer of server"
+  (format s "#<Mongrel2-Server(~A) ~A/~A SSL: ~[No~;Yes~]>"
+          (if (slot-boundp server 'id) (model-pk server) "None")
+          (if (slot-boundp server 'name) (mongrel2-server-name server) "[None]")
+          (if (slot-boundp server 'uuid) (mongrel2-server-uuid server) "[None]")
+          (mongrel2-server-ssl server)))
+
 (clsql:def-view-class mongrel2-host ()
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)

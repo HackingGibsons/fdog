@@ -1,6 +1,7 @@
 ;; -*- mode: Lisp;  -*-
 (asdf:defsystem #:fdog
   :depends-on (#:ip-interfaces
+               #:cl-fad
                #:iolib.sockets
                #:drakma
                #:cl-who

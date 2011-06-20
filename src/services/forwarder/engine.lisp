@@ -12,31 +12,48 @@
             :accessor forwarder-engine-bridges))
   (:documentation "The engine that manages the forwarding of requests for an endpoint"))
 
+(defclass multibridge ()
+  ((engine :initarg :engine
+           :accessor multibridge-engine)
+   (handler :initarg :handler
+            :initform nil
+            :accessor multibridge-handler)
+   (path :initarg :path
+         :initform "/"
+         :accessor multibridge-path)
+   (bridges :initform ()
+            :accessor multibridge-briges)))
+
+(defmethod print-object ((multibridge multibridge) s)
+  (with-slots (handler path bridges) multibridge
+    (format s "#<Multibridge: Count: ~A Path: ~A Handler-ident: ~A>"
+            (length bridges) path (mongrel2-handler-send-ident handler))))
+
 ;; Engine creation
+(defmethod make-multibridge ((engine forwarder-engine) (handler mongrel2-handler))
+  (log-for (trace) "Building multibridge for: ~A" handler)
+  (make-instance 'multibridge :engine engine :handler handler
+                 :path (mongrel2-route-path (mongrel2-target-route handler))))
+
 (defmethod make-forwarder-engine ((forwarder fdog-forwarder) &key servers)
   "Construct a forwarder-engine class from an fdog-forwarder model `forwarder'"
   (log-for (trace) "Building forwarder engine from ~A" forwarder)
   (let ((engine (make-instance 'forwarder-engine :forwarder forwarder :servers servers)))
-    (init-bridges engine)
     engine))
 
-(defmethod init-bridges ((engine forwarder-engine))
+(defmethod initialize-instance :after ((engine forwarder-engine) &rest initargs)
+  (declare (ignore initargs))
   (log-for (trace) "Initializing bridges for engine: ~A" engine)
   (with-slots (forwarder servers bridges) engine
-    (let ((paths (forwarder-uniqe-paths forwarder))
-          handler route path)
+    (let ((paths (forwarder-uniqe-paths forwarder)))
       (log-for (trace) "Forwarder has paths: ~A" paths)
       (dolist (path paths bridges)
         (dolist (server servers)
-          (setf handler (find-mongrel2-handler
-                         :send-ident (send-ident-for forwarder path (mongrel2-server-ssl-p server)))
-                route (mongrel2-target-route handler)
-                path (mongrel2-route-path route))
-          (log-for (trace) "Configuring handler: ~A" handler)
-          (log-for (trace) "Route template: ~A" route)
-          (log-for (trace) "Path to strip in handler: ~A" path)
-          (push (configure-bridges-for handler) bridges)
-          (log-for (warn) "TODO: Configure a handler lambda"))))))
+          (push (make-multibridge engine
+                                  (find-mongrel2-handler
+                                   :send-ident (send-ident-for forwarder path (mongrel2-server-ssl-p server))))
+                bridges))))))
+
 
 ;; Engine state control
 (defgeneric forwarder-engine-running-p (engine)

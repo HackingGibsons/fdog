@@ -93,12 +93,14 @@
 (defgeneric forwarder-engine-start (engine)
   (:documentation "Start forwarder engine `engine' so it begins to serve requests.")
   (:method ((engine (eql :all)))
-    (mapc #'forwarder-engine-start *forwarders*)))
+    (mapc #'forwarder-engine-start
+          (remove-if #'forwarder-engine-running-p *forwarders*))))
 
 (defgeneric forwarder-engine-stop (engine)
   (:documentation "Stop forwarder engine `engine' so it ceases to serve requests.")
   (:method ((engine (eql :all)))
-    (mapc #'forwarder-engine-stop *forwarders*)))
+    (mapc #'forwarder-engine-stop
+          (remove-if-not #'forwarder-engine-running-p *forwarders*))))
 
 (defmethod forwarder-engine-start ((engine forwarder-engine))
   (log-for (trace) "Starting engine: ~A" engine)

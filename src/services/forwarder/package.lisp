@@ -6,6 +6,9 @@
   (:shadowing-import-from :fdog-models
                           :model-pk
                           :mongrel2-server
+                            :mongrel2-server-signal
+                            :mongrel2-server-signal/block
+                            :mongrel2-server-running-p
                             :mongrel2-server-name
                             :mongrel2-server-port
                             :mongrel2-server-addr

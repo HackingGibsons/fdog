@@ -60,18 +60,6 @@ Omitted, all servers are returned"
         (clsql:create-view-from-class view-class)))))
 
 
-
-;;; TODO: WIP: Construction of configuration construction
-`(defun sketch! ()
-  (server% (:name "default" :addr "localhost" :port 1337 :chroot "./")
-    (host% ("superlocalhost")
-            (route% "/dir/" (dir% "data/")))
-    (host% ("localhost")
-           (route% "/proxy/" (proxy% "localhost" 31337))
-           (route% "/handler/" (handler% :send-spec "tcp://127.0.0.1:9999"
-                                         :send-ident "54c6755b-9658-40f4-9c2a-fe81a816345e"
-                                         :recv-spec "tcp://127.0.0.1:9998")))))
-
 (defun using-configuration! (&rest servers)
   "Clear the configuration and install the configuration of each server that
 appears in the `servers' list."

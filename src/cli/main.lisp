@@ -108,6 +108,29 @@ the terminal yourself. (e.g. nohup fdog start /some/install/path & )"
                 (process-start)
                 (format t "Started process at pid: ~A~%" forked))))))))
 
+(defcommand install-cert (argv)
+  "Install a .crt+.key SSL certificate for a given server.
+Paramater should describe the pathname omitting both .crt and .key extensions."
+  (with-cli-options (argv "Usage: install-cert [options] base-cert-path ~%~@{~A~%~}~%")
+      ((dir "Fdog instance path. PWD by default")
+       &parameters
+       (server "Required: Server name to install certificate for")
+       &free base-cert-path)
+    (let* ((dir (path-or-cwd dir))
+           (db-path (fdog:make-fdog-server-db-pathname :root dir))
+           (server (cond ((probe-file db-path)
+                          (fdog:init :root dir :trace-sql t)
+                          (and server
+                               (fdog-m2sh:servers :name server :one t :refresh t)))
+                         (t
+                          (format t "ERROR: No configuration found at ~A~%" dir)
+                          (quit :unix-status 1)))))
+      (unless server
+        (format t "ERROR: Existing server name is required~%")
+        (quit :unix-status 1))
+
+      (format t "Dir: ~A Server: ~A~%" dir server))))
+
 (defcommand status (argv)
   "Determine the status of the fdog installation at the given path."
   (with-cli-options (argv "Usage: status [path]~%~@{~A~%~}~%")

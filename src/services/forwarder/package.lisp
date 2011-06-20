@@ -38,7 +38,8 @@
                           :mongrel2-route
                             :make-host-route
                             :mongrel2-route-path
-                            :mongrel2-route-target)
+                            :mongrel2-route-target
+                            :mongrel2-target-route)
   (:shadowing-import-from :fdog-m2sh
                           :servers :make-server
                           :make-handler)

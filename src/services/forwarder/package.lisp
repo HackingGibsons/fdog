@@ -19,6 +19,7 @@
                             :mongrel2-server-port
                             :mongrel2-server-addr
                             :mongrel2-server-ssl
+                            :mongrel2-server-ssl-p
                             :mongrel2-server-default-host
                             :mongrel2-server-default-host-name
                           :mongrel2-host

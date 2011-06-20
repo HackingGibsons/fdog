@@ -54,7 +54,8 @@ handler"
   (let ((host (ensure-server-has-default-host-named server "localhost"))
         (handler (make-mongrel2-handler (format nil "watchdog-~A" (mongrel2-server-name server))
                                         (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
-                                        (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))))
+                                        (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
+                                        :update nil)))
     (make-host-route host *watchdog-route* handler)))
 
 (defmethod ensure-servers-running ((server mongrel2-server))

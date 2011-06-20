@@ -55,11 +55,20 @@
   (mapc #'request-handler-stop (multibridge-running-bridges instance))
   instance)
 
+(defmethod multibridge-configure-new-bridge ((instance multibridge) (bridge fdog-handler:request-handler))
+  (log-for (trace) "Configuring bridge: ~A" bridge)
+  (request-handler-add-string-responder bridge
+                                        (lambda (request)
+                                          (log-for (trace) "Serving request for: ~A" instance)
+                                          (describe request)
+                                          (format nil (multibridge-path instance))))
+  bridge)
 
 (defmethod multibridge-add-bridge ((instance multibridge))
   (log-for (trace) "Adding bridge to ~A" instance)
-  (push (configure-bridges-for (multibridge-handler instance))
-        (multibridge-bridges instance)))
+  (let ((bridge (configure-bridges-for (multibridge-handler instance))))
+    (multibridge-configure-new-bridge instance bridge)
+    (push bridge (multibridge-bridges instance))))
 
 (defmethod multibridge-running-p ((instance multibridge))
   (with-slots (bridges) instance

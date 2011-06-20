@@ -52,14 +52,14 @@
   instance)
 
 (defmethod multibridge-stop ((instance multibridge))
-  (mapc #'request-handler-start (multibridge-running-bridges instance))
+  (mapc #'request-handler-stop (multibridge-running-bridges instance))
   instance)
 
 
 (defmethod multibridge-add-bridge ((instance multibridge))
   (log-for (trace) "Adding bridge to ~A" instance)
-  (log-for (warn) "Undefined: multibridge-add-bridge")
-  :undef)
+  (push (configure-bridges-for (multibridge-handler instance))
+        (multibridge-bridges instance)))
 
 (defmethod multibridge-running-p ((instance multibridge))
   (with-slots (bridges) instance

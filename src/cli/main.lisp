@@ -117,6 +117,7 @@ Paramater should describe the pathname omitting both .crt and .key extensions."
        (server "Required: Server name to install certificate for")
        &free base-cert-path)
     (let* ((dir (path-or-cwd dir))
+           (base-cert-path (car base-cert-path))
            (db-path (fdog:make-fdog-server-db-pathname :root dir))
            (server (cond ((probe-file db-path)
                           (fdog:init :root dir :trace-sql t)
@@ -127,6 +128,15 @@ Paramater should describe the pathname omitting both .crt and .key extensions."
                           (quit :unix-status 1)))))
       (unless server
         (format t "ERROR: Existing server name is required~%")
+        (quit :unix-status 1))
+
+      (unless (and base-cert-path (length base-cert-path))
+        (format t "ERROR: No certificate pattern specified.~%")
+        (quit :unix-status 1))
+
+      (when (remove nil (mapcar #'probe-file
+                                (fdog-models:mongrel2-server-cert server :both)))
+        (format t "ERROR: Server already has certificates.~%")
         (quit :unix-status 1))
 
       (format t "Dir: ~A Server: ~A~%" dir server))))

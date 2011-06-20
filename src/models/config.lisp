@@ -310,18 +310,27 @@ setting the `send-spec' and `recv-spec'"
    "Mongrel2 internal settings: http://mongrel2.org/static/mongrel2-manual.html#x1-380003.10"))
 
 (defmethod print-object ((object mongrel2-setting) s)
+  "Pretty printer for `mongrel2-setting'"
   (format s "#<Mongrel2-Setting[~A]: ~A => ~A>"
           (if (slot-boundp object 'id) (model-pk object) "None")
           (if (slot-boundp object 'key) (mongrel2-setting-key object) "[None]")
           (if (slot-boundp object 'value) (mongrel2-setting-value object) "[None]")))
 
+(defmethod make-mongrel2-setting ((key symbol) value)
+  "Helper to convert symbol `key's to downcased string keys"
+  (make-mongrel2-setting (string-downcase (symbol-name key)) value))
+
 (defmethod make-mongrel2-setting (key value)
+  "Get or create a setting with key `key' and set the value to `value'"
   (let ((setting (or (find-mongrel2-setting key)
                      (make-instance 'mongrel2-setting
                                     :key key))))
     (setf (mongrel2-setting-value setting) value)
     (clsql:update-records-from-instance setting)
     setting))
+
+(defmethod find-mongrel2-setting ((key symbol))
+  (find-mongrel2-setting (string-downcase (symbol-name key))))
 
 (defmethod find-mongrel2-setting (key)
   #.(clsql:locally-enable-sql-reader-syntax)

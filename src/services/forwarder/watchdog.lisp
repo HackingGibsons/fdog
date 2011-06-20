@@ -30,6 +30,9 @@
     watchdog))
 
 (defmethod initialize-instance :after ((watchdog mongrel2-watchdog) &rest initargs)
+  "Post-initialization setup.
+TODO: This was mostly a sketch-up to test SSL and the scaffolding machinery.
+      the test was successfull, so I'll get back to it."
   (log-for (trace) "After init for: ~A Bridge: ~A" watchdog (mongrel2-watchdog-bridge watchdog))
   (request-handler-add-string-responder (mongrel2-watchdog-bridge watchdog)
                                         (lambda (request)

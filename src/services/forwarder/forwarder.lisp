@@ -17,4 +17,6 @@
 
     (when start
       (log-for (trace) "Starting all forwarder engines")
-      (forwarder-engine-start :all))))
+      (forwarder-engine-start :all))
+
+    (ensure-servers-running forwarder-servers)))

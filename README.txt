@@ -41,7 +41,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;[ Development Bootstrap ];;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Knobs
-(defparameter *echo-queries* t)
+(defparameter *echo-queries* nil)
 
 ;; Load and init
 (ql:quickload :fdog)

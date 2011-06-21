@@ -87,6 +87,7 @@
 
 (defmethod maybe-linger-socket (socket)
   (and *endpoint-socket-linger*
+       (log-for (trace) "Setting a socket linger of: ~A" *endpoint-socket-linger*)
        (zmq:setsockopt socket zmq:linger *endpoint-socket-linger*))
   socket)
 
@@ -140,7 +141,9 @@
 (defmethod terminate-sockets ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Terminating sockets of endpoint: ~A" endpoint)
   (with-slots (request-proxy-sock response-process-sock request-sock response-sock) endpoint
-    (mapcar #'zmq:close (remove nil (list request-proxy-sock response-process-sock request-sock response-sock)))
+    (log-for (dribble) "Closing ~A sockets." (length (remove nil (list request-proxy-sock response-process-sock request-sock response-sock))))
+    (mapcar #'zmq:close
+            (remove nil (list request-proxy-sock response-process-sock request-sock response-sock)))
     (setf request-proxy-sock nil
           response-process-sock nil
           request-sock nil
@@ -148,18 +151,29 @@
 
 ;; Forwarder endpoint operation
 (defmethod engine-endpoint-running-p ((endpoint forwarder-engine-endpoint))
-  (terminate-context endpoint)
   (with-slots (processor) endpoint
     (and processor
          (threadp processor)
          (thread-alive-p processor))))
 
 (defmethod make-endpoint-processor ((endpoint forwarder-engine-endpoint))
-  (let (forwarder)
-    #'(lambda ()
-        (loop while :forever do
-             (log-for (warn) "This is the default endpoint processor")
-             (sleep 30)))))
+  #'(lambda ()
+      (log-for (trace) "Starting request proxy device")
+      (labels ((run-device ()
+                 (handler-case
+                     (zmq:device zmq:streamer
+                                 (endpoint-proxy-sock endpoint)
+                                 (endpoint-request-sock endpoint))
+                   (simple-error (c)
+                     (if (= (sb-alien:get-errno) sb-posix:eintr)
+                         t
+                         (prog1 nil
+                           (log-for (warn) "Device exited with condition: ~A" c)
+                           (signal c)))))))
+        (loop while (run-device) do
+             (log-for (trace) "Device restarting due to system weather.")))
+      (log-for (trace) "Device has terminated.")))
+
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
@@ -174,15 +188,16 @@
     :started))
 
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
-  (log-for (trace) "Stopping endpoint: ~A" endpoint)
+  (log-for (trace) "Stopping endpoint! => ~A" endpoint)
   (log-for (trace) "Running: ~A" (engine-endpoint-running-p endpoint))
-  (terminate-sockets endpoint)
-  (terminate-context endpoint)
   (when (engine-endpoint-running-p endpoint)
     (log-for (trace) "Preparing to terminate thread.")
     (log-for (warn) "This is very much the wrong way to go about this one.")
-    (destroy-thread (endpoint-processor endpoint))
-    :stopped))
+    (destroy-thread (endpoint-processor endpoint)))
+  (log-for (trace) "Destroying 0mq endpoint")
+  (terminate-sockets endpoint)
+  (terminate-context endpoint)
+  :stopped)
 
 ;; Multibridge Construction and init
 (defmethod make-multibridge ((engine forwarder-engine) (handler mongrel2-handler))
@@ -217,6 +232,7 @@
              (log-for (dribble) "Forwarder request processing.")
              (with-slots (context request-proxy-addr) endpoint
                (zmq:with-socket (forward context zmq:push)
+                 (maybe-linger-socket forward)
                  (log-for (dribble) "Connecting to the proxy: ~A" request-proxy-addr)
                  (log-for (dribble) "Connect result: ~A"
                           (zmq:connect forward request-proxy-addr)
@@ -273,14 +289,12 @@
 (defgeneric forwarder-engine-start (engine)
   (:documentation "Start forwarder engine `engine' so it begins to serve requests.")
   (:method ((engine (eql :all)))
-    (mapc #'forwarder-engine-start
-          (remove-if #'forwarder-engine-running-p *forwarders*))))
+    (mapc #'forwarder-engine-start *forwarders*)))
 
 (defgeneric forwarder-engine-stop (engine)
   (:documentation "Stop forwarder engine `engine' so it ceases to serve requests.")
   (:method ((engine (eql :all)))
-    (mapc #'forwarder-engine-stop
-          (remove-if-not #'forwarder-engine-running-p *forwarders*))))
+    (mapc #'forwarder-engine-stop *forwarders*)))
 
 (defmethod forwarder-engine-start ((engine forwarder-engine))
   (log-for (trace) "Starting engine: ~A" engine)
@@ -289,5 +303,6 @@
 
 (defmethod forwarder-engine-stop ((engine forwarder-engine))
   (log-for (trace) "Shutting down engine: ~A" engine)
-  (engine-endpoint-stop (forwarder-engine-endpoint engine))
-  (mapcar #'multibridge-stop (forwarder-engine-bridges engine)))
+  (mapcar #'multibridge-stop (forwarder-engine-bridges engine))
+  (engine-endpoint-stop (forwarder-engine-endpoint engine)))
+

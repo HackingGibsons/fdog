@@ -9,26 +9,25 @@
               :initform nil
               :accessor endpoint-processor)
 
-   (context :accessor endpoint-context)
+   (context-threads :initargs :threads :initform 4
+                    :accessor endpoint-context-threads)
+   (context :initarg :context
+            :initform nil
+            :accessor endpoint-context)
+
+   ;; Proxies
+   (request-proxy-sock-addr :initarg :proxy-addr
+                            :accessor endpoint-proxy-addr)
    (request-proxy-sock :initarg :proxy-sock
                        :accessor endpoint-proxy-sock)
+   (response-process-sock :initarg :response-process-sock
+                          :accessor endpoint-response-process-sock)
+
+   ;; Public facing sockets
    (request-sock :initarg :push-sock
                  :accessor endpoint-request-sock)
    (response-sock :initarg :sub-sock
                   :accessor endpoint-response-sock)))
-
-;; Forwarder engine, that which makes the definitions dance
-(defclass forwarder-engine ()
-  ((forwarder :initarg :forwarder
-              :accessor forwarder-engine-forwarder)
-   (servers :initarg :servers
-            :initform (forwarder-servers)
-            :accessor forwarder-engine-servers)
-   (bridges :initarg :bridges
-            :initform ()
-            :accessor forwarder-engine-bridges)
-   (endpoint :accessor forwarder-engine-endpoint))
-  (:documentation "The engine that manages the forwarding of requests for an endpoint"))
 
 ;; Multibridge, interface for running multiple bridges at the same time
 ;; TODO: Factor out engine subclass of multibridge
@@ -44,22 +43,63 @@
    (bridges :initform ()
             :accessor multibridge-bridges)))
 
+;; Forwarder engine, that which makes the definitions dance
+(defclass forwarder-engine ()
+  ((forwarder :initarg :forwarder
+              :accessor forwarder-engine-forwarder)
+   (servers :initarg :servers
+            :initform (forwarder-servers)
+            :accessor forwarder-engine-servers)
+   (bridges :initarg :bridges
+            :initform ()
+            :accessor forwarder-engine-bridges)
+   (endpoint :accessor forwarder-engine-endpoint))
+  (:documentation "The engine that manages the forwarding of requests for an endpoint"))
+
 (defmethod print-object ((object multibridge) s)
   (with-slots (handler path bridges) object
     (format s "#<Multibridge: ~A/~A Path: ~A Handler-ident: ~A>"
             (length (multibridge-running-bridges object)) (length bridges)
             path (mongrel2-handler-send-ident handler))))
 
+;; Forwarder endpoint creation
+(defmethod terminate-context ((endpoint forwarder-engine-endpoint))
+  (when (endpoint-context endpoint)
+    (log-for (trace) "Terminating endpoint context: ~A" endpoint)
+    (zmq:term (endpoint-context endpoint))
+    (setf (endpoint-context endpoint) nil)
+    (log-for (trace) "Terminated: ~A" endpoint)))
+
+(defmethod terminate-sockets ((endpoint forwarder-engine-endpoint))
+  (log-for (warn) "TODO: terminate-sockets is a stub.")
+  (values nil
+          :undef))
+
+(defmethod init-context ((endpoint forwarder-engine-endpoint))
+  (terminate-context endpoint)
+  (log-for (trace) "Creating ZMQ context for endpoint with ~A threads" (endpoint-context-threads endpoint))
+  (setf (endpoint-context endpoint)
+        (zmq:init (endpoint-context-threads endpoint))))
+
+(defmethod init-sockets ((endpoint forwarder-engine-endpoint))
+  (log-for (warn) "TODO: init-sockets is a stub.")
+  (values nil
+          :undef))
+
 ;; Forwarder endpoint operation
 (defmethod engine-endpoint-running-p ((endpoint forwarder-engine-endpoint))
+  (terminate-context endpoint)
   (with-slots (processor) endpoint
-    (and processor
+    (and (endpoint-context endpoint)
+         processor
          (threadp processor)
          (thread-alive-p processor))))
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
   (unless (engine-endpoint-running-p endpoint)
+    (init-context endpoint)
+    (init-sockets endpoint)
     (setf (endpoint-processor endpoint)
           (make-thread #'(lambda ()
                            (loop while :forever do
@@ -73,6 +113,8 @@
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Stopping endpoint: ~A" endpoint)
   (when (engine-endpoint-running-p endpoint)
+    (terminate-sockets endpoint)
+    (terminate-context endpoint)
     (log-for (warn) "This is very much the wrong way to go about this one.")
     (destroy-thread (endpoint-processor endpoint))
     :stopped))

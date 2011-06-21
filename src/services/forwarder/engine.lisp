@@ -179,12 +179,18 @@
       (log-for (trace) "Device has terminated.")))
 
 (defmethod make-response-device ((endpoint forwarder-engine-endpoint))
-  #'(lambda ()
-      (log-for (trace) "Starting response writing device")
-      (loop while :forever do
-           (log-for (warn) "TODO: Placeholder response writer.")
-           (sleep 10))
-      (log-for (trace) "Response device terminating")))
+  (let ((client-response (endpoint-response-sock endpoint))
+        (response-process (endpoint-response-process-sock endpoint)))
+    #'(lambda ()
+        (log-for (trace) "Starting response writing device")
+        (let ((msg (make-instance 'zmq:msg)))
+          (loop while :forever do
+               (log-for (trace) "Waiting for client response.")
+               (zmq:recv client-response msg)
+               (log-for (trace) "Sending response (~A) to processing." (zmq:msg-size msg))
+               (zmq:send response-process msg)
+               (log-for (trace) "Response sent.")))
+        (log-for (trace) "Terminating response writing device."))))
 
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))

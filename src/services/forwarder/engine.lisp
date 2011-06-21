@@ -17,10 +17,14 @@
             :accessor endpoint-context)
 
    ;; Proxies
-   (request-proxy-sock-addr :initarg :proxy-addr
-                            :accessor endpoint-proxy-addr)
+   ;; Request forwarding
+   (request-proxy-addr :initarg :proxy-addr
+                            :accessor endpoint-addr)
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
+   ;; Response processing
+   (response-process-addr :initarg :response-proc-addr
+                          :accessor endpoint-respinse-proc-addr)
    (response-process-sock :initarg :response-process-sock :initform nil
                           :accessor endpoint-response-process-sock)
 
@@ -112,15 +116,26 @@
 
 
     ;; Request proxy
-    (with-slots (request-proxy-sock-addr request-proxy-sock) endpoint
-      (setf request-proxy-sock-addr
+    (with-slots (request-proxy-addr request-proxy-sock) endpoint
+      (setf request-proxy-addr
             (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))) ;; TODO: Use a different generator than next-handler-port
-      (log-for (trace) "I have chosen the address: ~A as the request-proxy, binding" request-proxy-sock-addr)
+      (log-for (trace) "Chosen the address: ~A as the request-proxy, binding" request-proxy-addr)
       (setf request-proxy-sock
             (maybe-linger-socket (zmq:socket context zmq:pull)))
 
-      (zmq:bind request-proxy-sock request-proxy-sock-addr)
-      (log-for (trace) "Request proxy bound."))))
+      (zmq:bind request-proxy-sock request-proxy-addr)
+      (log-for (trace) "Request proxy bound."))
+
+    ;; Response process chain
+    (with-slots (response-process-sock response-process-addr) endpoint
+      (setf response-process-addr
+            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))
+      (log-for (trace) "Chosen the address: ~A as the response-process, binding" response-process-addr)
+      (setf response-process-sock
+            (maybe-linger-socket (zmq:socket context zmq:push)))
+      (log-for (trace) "Binding response process chain socket.")
+      (zmq:bind response-process-sock response-process-addr)
+      (log-for (Trace) "Response process chain socket bound."))))
 
 (defmethod terminate-sockets ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Terminating sockets of endpoint: ~A" endpoint)

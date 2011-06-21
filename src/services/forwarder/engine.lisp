@@ -112,7 +112,7 @@
                  (fdog-forwarder-name forwarder) req-addr res-addr)
         (zmq:setsockopt response-sock zmq:subscribe "")
         (zmq:bind request-sock req-addr)
-        (zmq:bind request-sock res-addr)
+        (zmq:bind response-sock res-addr)
         (log-for (trace) "Client socket binding complete.")))
 
 

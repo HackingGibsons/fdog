@@ -10,6 +10,8 @@
                    :accessor endpoint-request-device)
    (response-device :initform nil
                     :accessor endpoint-response-device)
+   (response-writers :initform nil
+                     :accessor endpoint-response-writers)
 
    (context-threads :initargs :threads :initform 4
                     :accessor endpoint-context-threads)
@@ -182,7 +184,7 @@
   (let ((client-response (endpoint-response-sock endpoint))
         (response-process (endpoint-response-process-sock endpoint)))
     #'(lambda ()
-        (log-for (trace) "Starting response writing device")
+        (log-for (trace) "Starting response proxy device")
         (let ((msg (make-instance 'zmq:msg)))
           (loop while :forever do
                (log-for (trace) "Waiting for client response.")
@@ -192,6 +194,18 @@
                (log-for (trace) "Response sent.")))
         (log-for (trace) "Terminating response writing device."))))
 
+(defmethod make-response-writer ((endpoint forwarder-engine-endpoint))
+  (let ((context (endpoint-context endpoint)))
+    #'(lambda ()
+        (log-for (trace) "Starting response writing thread.")
+        (let ((msg (make-instance 'zmq:msg)))
+          (zmq:with-socket (res-sock context zmq:pull)
+            (maybe-linger-socket res-sock)
+            (zmq:connect res-sock (endpoint-response-proc-addr endpoint))
+            (loop while :forever do
+                 (zmq:recv res-sock msg)
+                 (log-for (dribble) "Pulled response: [~A]" (zmq:msg-data-as-string msg))
+                 (log-for (warn) "Dropping reply on the ground.")))))))
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
@@ -209,6 +223,10 @@
             (endpoint-response-device endpoint)
             (make-thread (make-response-device endpoint)
                          :name (format nil "engine-endpoint-device-response-~A" name)))
+
+      (setf (endpoint-response-writers endpoint)
+            (list (make-thread (make-response-writer endpoint)
+                               :name (format nil "engine-endpoint-response-writer-~A" name))))
       :started)))
 
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
@@ -219,6 +237,15 @@
     (log-for (warn) "This is very much the wrong way to go about this one.")
     (destroy-thread (endpoint-request-device endpoint))
     (destroy-thread (endpoint-response-device endpoint)))
+
+  (log-for (trace) "Destroying ~A response writers." (length (endpoint-response-writers endpoint)))
+  (mapc #'(lambda (thr)
+            (and thr (threadp thr)
+                 (thread-alive-p thr)
+                 (destroy-thread thr)))
+        (endpoint-response-writers endpoint))
+  (setf (endpoint-response-writers endpoint) nil)
+
   (log-for (trace) "Destroying 0mq endpoint")
   (terminate-sockets endpoint)
   (terminate-context endpoint)

@@ -6,9 +6,10 @@
   ((engine :initarg :engine
            :accessor endpoint-engine)
 
-   (processor :initarg :processor
-              :initform nil
-              :accessor endpoint-processor)
+   (request-device :initform nil
+                   :accessor endpoint-request-device)
+   (response-device :initform nil
+                    :accessor endpoint-response-device)
 
    (context-threads :initargs :threads :initform 4
                     :accessor endpoint-context-threads)
@@ -151,12 +152,15 @@
 
 ;; Forwarder endpoint operation
 (defmethod engine-endpoint-running-p ((endpoint forwarder-engine-endpoint))
-  (with-slots (processor) endpoint
-    (and processor
-         (threadp processor)
-         (thread-alive-p processor))))
+  (with-slots (request-device response-device) endpoint
+    (or (and response-device
+             (threadp response-device)
+             (thread-alive-p response-device))
+        (and request-device
+             (threadp request-device)
+             (thread-alive-p request-device)))))
 
-(defmethod make-endpoint-processor ((endpoint forwarder-engine-endpoint))
+(defmethod make-request-device ((endpoint forwarder-engine-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting request proxy device")
       (labels ((run-device ()
@@ -174,18 +178,32 @@
              (log-for (trace) "Device restarting due to system weather.")))
       (log-for (trace) "Device has terminated.")))
 
+(defmethod make-response-device ((endpoint forwarder-engine-endpoint))
+  #'(lambda ()
+      (log-for (trace) "Starting response writing device")
+      (loop while :forever do
+           (log-for (warn) "TODO: Placeholder response writer.")
+           (sleep 10))
+      (log-for (trace) "Response device terminating")))
+
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
   (unless (engine-endpoint-running-p endpoint)
     (init-context endpoint)
     (init-sockets endpoint)
-    (setf (endpoint-processor endpoint)
-          (make-thread (make-endpoint-processor endpoint)
-                       :name (format nil "engine-endpoint-~A"
-                                     (fdog-forwarder-name
-                                      (forwarder-engine-forwarder (endpoint-engine endpoint))))))
-    :started))
+
+    (let ((name (fdog-forwarder-name
+                 (forwarder-engine-forwarder (endpoint-engine endpoint)))))
+
+      (setf (endpoint-request-device endpoint)
+            (make-thread (make-request-device endpoint)
+                         :name (format nil "engine-endpoint-device-request-~A" name))
+
+            (endpoint-response-device endpoint)
+            (make-thread (make-response-device endpoint)
+                         :name (format nil "engine-endpoint-device-response-~A" name)))
+      :started)))
 
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Stopping endpoint! => ~A" endpoint)
@@ -193,7 +211,8 @@
   (when (engine-endpoint-running-p endpoint)
     (log-for (trace) "Preparing to terminate thread.")
     (log-for (warn) "This is very much the wrong way to go about this one.")
-    (destroy-thread (endpoint-processor endpoint)))
+    (destroy-thread (endpoint-request-device endpoint))
+    (destroy-thread (endpoint-response-device endpoint)))
   (log-for (trace) "Destroying 0mq endpoint")
   (terminate-sockets endpoint)
   (terminate-context endpoint)

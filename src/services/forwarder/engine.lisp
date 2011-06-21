@@ -19,12 +19,12 @@
    ;; Proxies
    ;; Request forwarding
    (request-proxy-addr :initarg :proxy-addr
-                            :accessor endpoint-addr)
+                            :accessor endpoint-proxy-addr)
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
    ;; Response processing
    (response-process-addr :initarg :response-proc-addr
-                          :accessor endpoint-respinse-proc-addr)
+                          :accessor endpoint-response-proc-addr)
    (response-process-sock :initarg :response-process-sock :initform nil
                           :accessor endpoint-response-process-sock)
 
@@ -154,16 +154,20 @@
          (threadp processor)
          (thread-alive-p processor))))
 
+(defmethod make-endpoint-processor ((endpoint forwarder-engine-endpoint))
+  (let (forwarder)
+    #'(lambda ()
+        (loop while :forever do
+             (log-for (warn) "This is the default endpoint processor")
+             (sleep 30)))))
+
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
   (unless (engine-endpoint-running-p endpoint)
     (init-context endpoint)
     (init-sockets endpoint)
     (setf (endpoint-processor endpoint)
-          (make-thread #'(lambda ()
-                           (loop while :forever do
-                                (log-for (warn) "This is the default endpoint processor")
-                                (sleep 30)))
+          (make-thread (make-endpoint-processor endpoint)
                        :name (format nil "engine-endpoint-~A"
                                      (fdog-forwarder-name
                                       (forwarder-engine-forwarder (endpoint-engine endpoint))))))
@@ -206,11 +210,24 @@
 
 (defmethod multibridge-configure-new-bridge ((instance multibridge) (bridge fdog-handler:request-handler))
   (log-for (trace) "Configuring bridge: ~A" bridge)
-  (request-handler-add-string-responder bridge
-                                        (lambda (request)
-                                          (log-for (trace) "Serving request for: ~A" instance)
-                                          (describe request)
-                                          (format nil (multibridge-path instance))))
+
+  (let ((endpoint (forwarder-engine-endpoint (multibridge-engine instance))))
+    (flet ((handler-closure (handler request raw)
+             (declare (ignorable handler request))
+             (log-for (dribble) "Forwarder request processing.")
+             (with-slots (context request-proxy-addr) endpoint
+               (zmq:with-socket (forward context zmq:push)
+                 (log-for (dribble) "Connecting to the proxy: ~A" request-proxy-addr)
+                 (log-for (dribble) "Connect result: ~A"
+                          (zmq:connect forward request-proxy-addr)
+                 )
+                 (log-for (dribble) "Sending request(~A) to proxy" (length raw))
+                 (zmq:send forward (make-instance 'zmq:msg :data raw))
+                 (log-for (dribble) "Request forwarded.")))))
+
+      (setf (request-handler-processors bridge) `(,#'handler-closure))
+      (log-for (trace) "Set request-handler callchain entirely to the forwarder closure.")))
+
   bridge)
 
 (defmethod multibridge-add-bridge ((instance multibridge))

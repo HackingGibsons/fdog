@@ -277,7 +277,7 @@
 (defmethod multibridge-start ((instance multibridge))
   (unless (multibridge-bridges instance)
     (log-for (trace) "No bridges present, but asked to start. Adding bridge.")
-    (dotimes (x 4)
+    (dotimes (x 1)
       (multibridge-add-bridge instance)))
   (mapc #'request-handler-start (multibridge-idle-bridges instance))
   instance)

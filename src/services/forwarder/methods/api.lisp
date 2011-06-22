@@ -5,11 +5,28 @@
 
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
                          handler request raw)
-  (let* ((spec (json:decode-json-from-string (m2cl:request-body request))))
-    (with-chunked-stream-reply (handler request stream
-                                :headers ((header-json-type))
-                                :code 501 :status "NOT IMPLEMENTED")
-      (json:encode-json spec stream))))
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (hostpaths (cdr (assoc :hosts spec)))
+         (existing (find-forwarder :name name :one t))
+         hosts)
+    (if (and (not existing) hostpaths)
+        (with-chunked-stream-reply (handler request stream
+                                            :headers ((header-json-type)))
+          (dolist (hostpath hostpaths hosts)
+            (destructuring-bind (host . path) hostpath
+              (setf host
+                    (string-downcase
+                     (typecase host (symbol (symbol-name host)) (t host))))
+              (push (cons host path) hosts)))
+          (log-for (trace) "Making forwarder: Name: ~A Hosts: ~A" name hosts)
+          (apply #'make-forwarder `(,name ,@hosts))
+          (init-forwarders)
+          (json:encode-json spec stream))
+        (with-chunked-stream-reply (handler request stream
+                                            :headers ((header-json-type))
+                                            :code 403 :status "FORBIDDEN")
+          (json:encode-json '((:error . "Could not create"))  stream)))))
 
 
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest

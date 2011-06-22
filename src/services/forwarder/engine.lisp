@@ -216,6 +216,9 @@
               (loop while :forever do
                    (zmq:recv res-sock msg)
                    (log-for (dribble) "Pulled response: [~A]" (zmq:msg-data-as-string msg))
+                   (dolist (addr (mapcar #'mongrel2-handler-recv-spec
+                                    (forwarder-engine-handlers (endpoint-engine endpoint))))
+                     (log-for (trace) "  Sending to: ~A" addr))
                    (zmq:send m2-pub-sock msg)
                    (log-for (warn) "Dropping reply on the ground."))))))))
 

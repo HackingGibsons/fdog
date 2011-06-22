@@ -117,7 +117,8 @@
     ;; Request proxy
     (with-slots (request-proxy-addr request-proxy-sock) endpoint
       (setf request-proxy-addr
-            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))) ;; TODO: Use a different generator than next-handler-port
+;            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))) ;; TODO: Use a different generator than next-handler-port
+            (format nil "ipc:///tmp/~A.fdog.sock" (uuid:make-v4-uuid)))
       (log-for (trace) "Chosen the address: ~A as the request-proxy, binding" request-proxy-addr)
       (setf request-proxy-sock
             (maybe-linger-socket (zmq:socket context zmq:pull)))

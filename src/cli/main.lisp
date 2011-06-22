@@ -45,7 +45,9 @@
              (when init
                (fdog-m2sh:init)
                (fdog-models:reconnect)
-               (install-default-configuration)))
+               (install-default-configuration)
+               ;; TODO: Make the following more abstract
+               (fdog-forwarder::ensure-forwarder-environment)))
         (fdog-models:disconnect)))))
 
 (defcommand stop (argv)

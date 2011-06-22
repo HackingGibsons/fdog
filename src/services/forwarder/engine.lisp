@@ -30,7 +30,8 @@
    (response-process-sock :initarg :response-process-sock :initform nil
                           :accessor endpoint-response-process-sock)
    (response-processors :initform nil
-                        :accessor endpoint-response-processors)
+                        :accessor endpoint-response-processors
+                        :documentation "In the format ((:pull . zmq:socket) (:pub . zmq:socket->sink:sub) (:thread . thread))")
 
 
    ;; Public facing sockets
@@ -198,6 +199,7 @@
 
 (defmethod make-response-processor ((endpoint forwarder-engine-endpoint))
   (let ((context (endpoint-context endpoint)))
+    ;; TODO: Make, close over and return the pub and pull socket.
     #'(lambda ()
         (log-for (trace) "Starting response writing thread.")
         (let ((msg (make-instance 'zmq:msg)))
@@ -207,6 +209,7 @@
             (loop while :forever do
                  (zmq:recv res-sock msg)
                  (log-for (dribble) "Pulled response: [~A]" (zmq:msg-data-as-string msg))
+                 ;; TODO: (zmq:send local-pub-sock msg) <-- connect to every response socket, rely on recv_ident
                  (log-for (warn) "Dropping reply on the ground.")))))))
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))

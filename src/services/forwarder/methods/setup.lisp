@@ -17,6 +17,7 @@
     (make-mongrel2-handler (send-ident-for forwarder path (mongrel2-server-ssl-p server))
                            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
                            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
+                           :recv-ident (send-ident-for forwarder path (mongrel2-server-ssl-p server))
                            :update nil))
 
   (log-for (trace) "Configuring routes for each host to a handler")

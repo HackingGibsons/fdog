@@ -5,8 +5,10 @@
   (ensure-forwarder-servers-exist))
 
 (defun send-ident-for (forwarder path &optional ssl)
-  (format nil "forwarder-~A-~A~:[~;-ssl~]"
-          (fdog-forwarder-name forwarder) path ssl))
+  (ppcre:regex-replace-all "/"
+                           (format nil "forwarder-~A-~A~:[~;-ssl~]"
+                                   (fdog-forwarder-name forwarder) path ssl)
+                           "SLASH"))
 
 (defmethod configure-forwarder ((forwarder fdog-forwarder) (server mongrel2-server))
   "Configure `forwarder' on `server'"

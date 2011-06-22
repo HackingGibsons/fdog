@@ -24,6 +24,9 @@
                        :accessor endpoint-proxy-addr)
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
+   ;; Response proxy
+   (response-proxy-sock :initarg :response-proxy-sock
+                        :accessor endpoint-response-proxy-sock)
    ;; Response processing
    (response-process-addr :initarg :response-proc-addr
                           :accessor endpoint-response-proc-addr)
@@ -132,6 +135,11 @@
       (zmq:bind request-proxy-sock request-proxy-addr)
       (log-for (trace) "Request proxy bound."))
 
+    ;; Response proxy
+    (with-slots (response-proxy-sock) endpoint
+      (setf response-proxy-sock
+            (maybe-linger-socket (zmq:socket context zmq:pub))))
+
     ;; Response process chain
     (with-slots (response-process-sock response-process-addr) endpoint
       (setf response-process-addr
@@ -145,7 +153,7 @@
 
 (defmethod terminate-sockets ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Terminating sockets of endpoint: ~A" endpoint)
-  (with-slots (request-proxy-sock response-process-sock request-sock response-sock) endpoint
+  (with-slots (request-proxy-sock response-proxy-sock response-process-sock request-sock response-sock) endpoint
     (log-for (dribble) "Closing ~A sockets." (length (remove nil (list request-proxy-sock response-process-sock request-sock response-sock))))
     (mapcar #'zmq:close
             (remove nil (list request-proxy-sock response-process-sock request-sock response-sock)))

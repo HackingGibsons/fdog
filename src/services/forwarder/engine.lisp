@@ -25,16 +25,8 @@
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
    ;; Response proxy
-   (response-proxy-sock :initarg :response-proxy-sock
+   (response-proxy-sock :initarg :response-proxy-sock :initform nil
                         :accessor endpoint-response-proxy-sock)
-   ;; Response processing
-   (response-process-addr :initarg :response-proc-addr
-                          :accessor endpoint-response-proc-addr)
-   (response-process-sock :initarg :response-process-sock :initform nil
-                          :accessor endpoint-response-process-sock)
-   (response-processors :initform nil
-                        :accessor endpoint-response-processors)
-
 
    ;; Public facing sockets
    (request-sock :initarg :push-sock :initform nil
@@ -122,8 +114,6 @@
         (zmq:bind response-sock res-addr)
         (log-for (trace) "Client socket binding complete.")))
 
-
-
     ;; Request proxy
     (with-slots (request-proxy-addr request-proxy-sock) endpoint
       (setf request-proxy-addr
@@ -138,27 +128,21 @@
     ;; Response proxy
     (with-slots (response-proxy-sock) endpoint
       (setf response-proxy-sock
-            (maybe-linger-socket (zmq:socket context zmq:pub))))
-
-    ;; Response process chain
-    (with-slots (response-process-sock response-process-addr) endpoint
-      (setf response-process-addr
-            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port)))
-      (log-for (trace) "Chosen the address: ~A as the response-process, binding" response-process-addr)
-      (setf response-process-sock
-            (maybe-linger-socket (zmq:socket context zmq:push)))
-      (log-for (trace) "Binding response process chain socket.")
-      (zmq:bind response-process-sock response-process-addr)
-      (log-for (Trace) "Response process chain socket bound."))))
+            (maybe-linger-socket (zmq:socket context zmq:pub)))
+      (log-for (trace) "Connecting reply socket to relevant M2 endpoints.")
+      (dolist (addr (mapcar #'mongrel2-handler-recv-spec
+                            (forwarder-engine-handlers (endpoint-engine endpoint))))
+        (log-for (trace) "  Connecting to: ~A" addr)
+        (zmq:connect response-proxy-sock addr)))))
 
 (defmethod terminate-sockets ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Terminating sockets of endpoint: ~A" endpoint)
-  (with-slots (request-proxy-sock response-proxy-sock response-process-sock request-sock response-sock) endpoint
-    (log-for (dribble) "Closing ~A sockets." (length (remove nil (list request-proxy-sock response-process-sock request-sock response-sock))))
+  (with-slots (request-proxy-sock response-proxy-sock request-sock response-sock) endpoint
+    (log-for (dribble) "Closing ~A sockets." (length (remove nil (list request-proxy-sock response-proxy-sock request-sock response-sock))))
     (mapcar #'zmq:close
-            (remove nil (list request-proxy-sock response-process-sock request-sock response-sock)))
+            (remove nil (list request-proxy-sock response-proxy-sock request-sock response-sock)))
     (setf request-proxy-sock nil
-          response-process-sock nil
+          response-proxy-sock nil
           request-sock nil
           response-sock nil)))
 
@@ -192,16 +176,22 @@
 
 (defmethod make-response-device ((endpoint forwarder-engine-endpoint))
   (let ((client-response (endpoint-response-sock endpoint))
-        (response-process (endpoint-response-process-sock endpoint)))
+        (response-proxy (endpoint-response-proxy-sock endpoint)))
     #'(lambda ()
-        (log-for (trace) "Starting response proxy device")
-        (let ((msg (make-instance 'zmq:msg)))
-          (loop while :forever do
-               (log-for (trace) "Waiting for client response.")
-               (zmq:recv client-response msg)
-               (log-for (trace) "Sending response (~A) to processing." (zmq:msg-size msg))
-               (zmq:send response-process msg)
-               (log-for (trace) "Response sent."))))))
+        (labels ((run-device ()
+                   (handler-case
+                       (zmq:device zmq:forwarder
+                                   client-response
+                                   response-proxy)
+                     (simple-error (c)
+                       (if (= (sb-alien:get-errno) sb-posix:eintr)
+                           t
+                           (prog1 nil
+                             (log-for (warn) "Response device exited with condition: ~A" c)
+                             (signal c)))))))
+          (loop while (run-device) do
+               (log-for (trace) "Response device restarting due to system weather.")))
+        (log-for (trace) "Response device has terminated."))))
 
 (defmethod make-response-processor ((endpoint forwarder-engine-endpoint))
   (let ((context (endpoint-context endpoint)))
@@ -246,10 +236,6 @@
             (endpoint-response-device endpoint)
             (make-thread (make-response-device endpoint)
                          :name (format nil "engine-endpoint-device-response-~A" name)))
-
-      (setf (endpoint-response-processors endpoint)
-            (list (make-thread (make-response-processor endpoint)
-                               :name (format nil "engine-endpoint-response-processor-~A" name))))
       :started)))
 
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
@@ -261,13 +247,13 @@
     (destroy-thread (endpoint-request-device endpoint))
     (destroy-thread (endpoint-response-device endpoint)))
 
-  (log-for (trace) "Destroying ~A response writers." (length (endpoint-response-processors endpoint)))
-  (mapc #'(lambda (thr)
-            (and thr (threadp thr)
-                 (thread-alive-p thr)
-                 (destroy-thread thr)))
-        (endpoint-response-processors endpoint))
-  (setf (endpoint-response-processors endpoint) nil)
+  ;; (log-for (trace) "Destroying ~A response writers." (length (endpoint-response-processors endpoint)))
+  ;; (mapc #'(lambda (thr)
+  ;;           (and thr (threadp thr)
+  ;;                (thread-alive-p thr)
+  ;;                (destroy-thread thr)))
+  ;;       (endpoint-response-processors endpoint))
+  ;; (setf (endpoint-response-processors endpoint) nil)
 
   (log-for (trace) "Destroying 0mq endpoint")
   (terminate-sockets endpoint)

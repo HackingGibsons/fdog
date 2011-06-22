@@ -10,8 +10,8 @@
                    :accessor endpoint-request-device)
    (response-device :initform nil
                     :accessor endpoint-response-device)
-   (response-writers :initform nil
-                     :accessor endpoint-response-writers)
+   (response-processors :initform nil
+                     :accessor endpoint-response-processors)
 
    (context-threads :initargs :threads :initform 4
                     :accessor endpoint-context-threads)
@@ -194,7 +194,7 @@
                (log-for (trace) "Response sent.")))
         (log-for (trace) "Terminating response writing device."))))
 
-(defmethod make-response-writer ((endpoint forwarder-engine-endpoint))
+(defmethod make-response-processor ((endpoint forwarder-engine-endpoint))
   (let ((context (endpoint-context endpoint)))
     #'(lambda ()
         (log-for (trace) "Starting response writing thread.")
@@ -224,9 +224,9 @@
             (make-thread (make-response-device endpoint)
                          :name (format nil "engine-endpoint-device-response-~A" name)))
 
-      (setf (endpoint-response-writers endpoint)
-            (list (make-thread (make-response-writer endpoint)
-                               :name (format nil "engine-endpoint-response-writer-~A" name))))
+      (setf (endpoint-response-processors endpoint)
+            (list (make-thread (make-response-processor endpoint)
+                               :name (format nil "engine-endpoint-response-processor-~A" name))))
       :started)))
 
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
@@ -238,13 +238,13 @@
     (destroy-thread (endpoint-request-device endpoint))
     (destroy-thread (endpoint-response-device endpoint)))
 
-  (log-for (trace) "Destroying ~A response writers." (length (endpoint-response-writers endpoint)))
+  (log-for (trace) "Destroying ~A response writers." (length (endpoint-response-processors endpoint)))
   (mapc #'(lambda (thr)
             (and thr (threadp thr)
                  (thread-alive-p thr)
                  (destroy-thread thr)))
-        (endpoint-response-writers endpoint))
-  (setf (endpoint-response-writers endpoint) nil)
+        (endpoint-response-processors endpoint))
+  (setf (endpoint-response-processors endpoint) nil)
 
   (log-for (trace) "Destroying 0mq endpoint")
   (terminate-sockets endpoint)

@@ -21,7 +21,7 @@
    ;; Proxies
    ;; Request forwarding
    (request-proxy-addr :initarg :proxy-addr
-                            :accessor endpoint-proxy-addr)
+                       :accessor endpoint-proxy-addr)
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
    ;; Response processing

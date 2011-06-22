@@ -193,22 +193,31 @@
                (zmq:recv client-response msg)
                (log-for (trace) "Sending response (~A) to processing." (zmq:msg-size msg))
                (zmq:send response-process msg)
-               (log-for (trace) "Response sent.")))
-        (log-for (trace) "Terminating response writing device."))))
+               (log-for (trace) "Response sent."))))))
 
 (defmethod make-response-processor ((endpoint forwarder-engine-endpoint))
   (let ((context (endpoint-context endpoint)))
     #'(lambda ()
         (log-for (trace) "Starting response writing thread.")
         (let ((msg (make-instance 'zmq:msg)))
-          (zmq:with-socket (res-sock context zmq:pull)
-            (maybe-linger-socket res-sock)
-            (zmq:connect res-sock (endpoint-response-proc-addr endpoint))
-            (loop while :forever do
-                 (zmq:recv res-sock msg)
-                 (log-for (dribble) "Pulled response: [~A]" (zmq:msg-data-as-string msg))
-                 ;; TODO: (zmq:send local-pub-sock msg) <-- connect to every response socket, rely on recv_ident
-                 (log-for (warn) "Dropping reply on the ground.")))))))
+          (zmq:with-socket (m2-pub-sock context zmq:pub)
+            (zmq:with-socket (res-sock context zmq:pull)
+              (maybe-linger-socket res-sock)
+              (maybe-linger-socket m2-pub-sock)
+
+              (log-for (trace) "Connecting to response pull socket.")
+              (zmq:connect res-sock (endpoint-response-proc-addr endpoint))
+
+              (log-for (trace) "Connecting to all aplicable M2 endpoints.")
+              (dolist (addr (mapcar #'mongrel2-handler-recv-spec
+                                    (forwarder-engine-handlers (endpoint-engine endpoint))))
+                (log-for (trace) "  Connecting to: ~A" addr)
+                (zmq:connect m2-pub-sock addr))
+              (loop while :forever do
+                   (zmq:recv res-sock msg)
+                   (log-for (dribble) "Pulled response: [~A]" (zmq:msg-data-as-string msg))
+                   (zmq:send m2-pub-sock msg)
+                   (log-for (warn) "Dropping reply on the ground."))))))))
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
@@ -361,3 +370,5 @@
   (mapcar #'multibridge-stop (forwarder-engine-bridges engine))
   (engine-endpoint-stop (forwarder-engine-endpoint engine)))
 
+(defmethod forwarder-engine-handlers ((engine forwarder-engine))
+  (mapcar #'multibridge-handler (forwarder-engine-bridges engine)))

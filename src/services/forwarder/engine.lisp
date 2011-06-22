@@ -11,14 +11,7 @@
    (response-device :initform nil
                     :accessor endpoint-response-device)
 
-   ;; Response sink for distributing to mongrel2 responder devices
-   (response-sink :initform nil
-                  :accessor endpoint-response-sink)
-   ;; Devices subscribed to the sink and publishing to the mongrel2 endpoint
-   (response-dispatchers :initform nil
-                         :accessor endpoint-response-dispatchers
-                         :documentation "In the format ((:sock . zmq:socket) (:device . thread))")
-
+   ;; ZMQ Context for this endpoint
    (context-threads :initargs :threads :initform 4
                     :accessor endpoint-context-threads)
    (context :initarg :context

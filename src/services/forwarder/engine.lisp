@@ -10,8 +10,14 @@
                    :accessor endpoint-request-device)
    (response-device :initform nil
                     :accessor endpoint-response-device)
-   (response-processors :initform nil
-                     :accessor endpoint-response-processors)
+
+   ;; Response sink for distributing to mongrel2 responder devices
+   (response-sink :initform nil
+                  :accessor endpoint-response-sink)
+   ;; Devices subscribed to the sink and publishing to the mongrel2 endpoint
+   (response-dispatchers :initform nil
+                         :accessor endpoint-response-dispatchers
+                         :documentation "In the format ((:sock . zmq:socket) (:device . thread))")
 
    (context-threads :initargs :threads :initform 4
                     :accessor endpoint-context-threads)
@@ -30,6 +36,9 @@
                           :accessor endpoint-response-proc-addr)
    (response-process-sock :initarg :response-process-sock :initform nil
                           :accessor endpoint-response-process-sock)
+   (response-processors :initform nil
+                        :accessor endpoint-response-processors)
+
 
    ;; Public facing sockets
    (request-sock :initarg :push-sock :initform nil

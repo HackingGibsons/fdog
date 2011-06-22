@@ -22,7 +22,7 @@
                :initarg :procs
                :accessor request-handler-processors)
 
-   (interval :initform 0.05
+   (interval :initform 0.5
              :initarg :interval
              :accessor request-handler-interval
              :accessor request-handler-timeout)

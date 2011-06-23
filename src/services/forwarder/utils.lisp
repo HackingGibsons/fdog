@@ -7,7 +7,8 @@
                        appending (list (mongrel2-handler-recv-spec handler)
                                        (mongrel2-handler-send-spec handler))))
          (all-ports (mapcar #'(lambda (a) (car (reverse (ppcre:split ":" a)))) endpoints))
-         (all-ports (mapcar #'parse-integer (remove nil all-ports))))
+         (all-ports (remove nil (mapcar #'(lambda (h) (parse-integer h :junk-allowed t))
+                                        (remove nil all-ports)))))
 
     (labels ((unused (port)
                (not (member port all-ports)))

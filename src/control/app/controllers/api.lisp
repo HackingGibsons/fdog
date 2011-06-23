@@ -12,12 +12,15 @@
   '("Content-Type" . "application/json"))
 
 ;; Common
-(defun api/404 (handler request raw)
+(defun api/404 (handler request raw &optional condition)
   (declare (ignorable raw))
   (with-chunked-stream-reply (handler request stream
                               :code 404 :status "NOT FOUND"
                               :headers ((header-json-type)))
-    (json:encode-json `((:error . ,(format nil "Endpoint ~A not found." (api-subpath request)))) stream)))
+    (log-for (trace) "Condition: ~A" condition)
+    (if condition
+        (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
+        (json:encode-json `((:error . ,(format nil "Endpoint ~A not found." (api-subpath request)))) stream))))
 
 ;; Router
 (defgeneric api/endpoint (method sub-path handler request raw)
@@ -64,7 +67,9 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
 
       (multiple-value-bind (exact exact-sym) (applicable-exact sub-path)
         (if exact
-            (api/endpoint method exact-sym handler request raw)
+            (handler-case
+                (api/endpoint method exact-sym handler request raw)
+              (404-condition () (api/404 handler request raw)))
 
             (do* ((next-rest (multiple-value-list (next-sub-path sub-path))
                              (multiple-value-list (next-sub-path next)))

@@ -23,11 +23,8 @@
           (apply #'make-forwarder `(,name ,@hosts))
           (init-forwarders)
           (json:encode-json spec stream))
-        (with-chunked-stream-reply (handler request stream
-                                            :headers ((header-json-type))
-                                            :code 403 :status "FORBIDDEN")
-          (json:encode-json '((:error . "Could not create"))  stream)))))
-
+        (error '404-condition
+               :data (json:encode-json-to-string '((:error . "Could not create")))))))
 
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)

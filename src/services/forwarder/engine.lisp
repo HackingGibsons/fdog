@@ -278,6 +278,8 @@
                  (zmq:with-socket (forward context zmq:push)
                    (maybe-linger-socket forward)
                    (zmq:connect forward request-proxy-addr)
+                   (log-for (trace) "Original request: [~A]" (flex:octets-to-string raw))
+                   (log-for (trace) "Rewritten request: [~A]" (flex:octets-to-string (rewrite-request raw)))
                    (zmq:send forward (make-instance 'zmq:msg :data (rewrite-request raw)))))))
 
       (setf (request-handler-processors bridge) `(,#'handler-closure))

@@ -9,4 +9,5 @@
                                      :recv-spec "tcp://127.0.0.1:1332")) ;; 2 => R => Recieve, right? ..right? :(
        (make-route "/static/" (make-dir "./public/")))))
 
-  (fdog-models:make-mongrel2-setting :certdir "certs/"))
+  (fdog-models:make-mongrel2-setting :certdir "certs/")
+  (fdog-models:make-mongrel2-setting :superpoll.max_fd "65536"))

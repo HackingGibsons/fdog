@@ -262,8 +262,6 @@
   (log-for (trace) "Configuring bridge: ~A" bridge)
 
   (let ((endpoint (forwarder-engine-endpoint (multibridge-engine instance)))
-        (json:*json-identifier-name-to-lisp* 'identity)
-        (json:*lisp-identifier-name-to-json* 'identity)
         (prefix-re (format nil "^~A" (multibridge-path instance))))
 
     (labels ((rewrite-request (raw)
@@ -271,24 +269,26 @@
                    (m2cl::token-parse-n raw 3)
 
                  (flet ((perform-rewrite ()
-                          (multiple-value-bind (headers-string rest)
-                              (m2cl::netstring-parse rest)
-                            (let ((headers (json:decode-json-from-string headers-string)))
-                              (when (cdr (assoc :PATH headers))
-                                (setf (cdr (assoc :PATH headers))
-                                      (ppcre:regex-replace prefix-re (cdr (assoc :PATH headers)) "/")))
+                          (let ((json:*json-identifier-name-to-lisp* 'identity)
+                                (json:*lisp-identifier-name-to-json* 'identity))
+                            (multiple-value-bind (headers-string rest)
+                                (m2cl::netstring-parse rest)
+                              (let ((headers (json:decode-json-from-string headers-string)))
+                                (when (cdr (assoc :PATH headers))
+                                  (setf (cdr (assoc :PATH headers))
+                                        (ppcre:regex-replace prefix-re (cdr (assoc :PATH headers)) "/")))
 
-                              (when (cdr (assoc :URI headers))
-                                (setf (cdr (assoc :URI headers))
-                                      (ppcre:regex-replace prefix-re (cdr (assoc :URI headers)) "/")))
+                                (when (cdr (assoc :URI headers))
+                                  (setf (cdr (assoc :URI headers))
+                                        (ppcre:regex-replace prefix-re (cdr (assoc :URI headers)) "/")))
 
-                              (setf headers-string (json:encode-json-to-string headers))
+                                (setf headers-string (json:encode-json-to-string headers))
 
-                              (log-for (trace) "Rewriting: ~A ~A" path headers)
-                              (flex:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
-                                                             sender connection-id (ppcre:regex-replace prefix-re path "/")
-                                                             (length headers-string) headers-string
-                                                             (flex:octets-to-string rest)))))))
+                                (log-for (trace) "Rewriting: ~A ~A" path headers)
+                                (flex:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
+                                                               sender connection-id (ppcre:regex-replace prefix-re path "/")
+                                                               (length headers-string) headers-string
+                                                               (flex:octets-to-string rest))))))))
 
                    (if (ppcre:scan prefix-re path)
                        (perform-rewrite)

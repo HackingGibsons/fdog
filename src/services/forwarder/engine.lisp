@@ -268,7 +268,7 @@
     (labels ((rewrite-request (raw)
                (let ((request-string (flex:octets-to-string raw))
                      (regex (format nil "^([\\w_-]+ \\d+) ~A" path-prefix))
-                     (replacement "\1 /\\'"))
+                     (replacement "\\1 /\\'"))
                  (flex:string-to-octets
                   (ppcre:regex-replace regex request-string replacement))))
 
@@ -278,13 +278,7 @@
                  (zmq:with-socket (forward context zmq:push)
                    (maybe-linger-socket forward)
                    (zmq:connect forward request-proxy-addr)
-                   (log-for (dribble) "Connecting to the proxy: ~A" request-proxy-addr)
-                   (log-for (dribble) "Sending request(~A) to proxy" (length raw))
-                   (log-for (trace) "Data: [~A]" (flex:octets-to-string raw))
-                   (let ((new-data (rewrite-request raw)))
-                     (log-for (trace) "New data: [~A]" (flex:octets-to-string new-data))
-                     (zmq:send forward (make-instance 'zmq:msg :data new-data)))
-                   (log-for (dribble) "Request forwarded.")))))
+                   (zmq:send forward (make-instance 'zmq:msg :data (rewrite-request raw)))))))
 
       (setf (request-handler-processors bridge) `(,#'handler-closure))
       (log-for (trace) "Set request-handler callchain entirely to the forwarder closure.")))

@@ -194,33 +194,6 @@
                (log-for (trace) "Response device restarting due to system weather.")))
         (log-for (trace) "Response device has terminated."))))
 
-(defmethod make-response-processor ((endpoint forwarder-engine-endpoint))
-  (let ((context (endpoint-context endpoint)))
-    #'(lambda ()
-        (log-for (trace) "Starting response writing thread.")
-        (let ((msg (make-instance 'zmq:msg)))
-          (zmq:with-socket (m2-pub-sock context zmq:pub)
-            (zmq:with-socket (res-sock context zmq:pull)
-              (maybe-linger-socket res-sock)
-              (maybe-linger-socket m2-pub-sock)
-
-              (log-for (trace) "Connecting to response pull socket.")
-              (zmq:connect res-sock (endpoint-response-proc-addr endpoint))
-
-              (log-for (trace) "Connecting to all aplicable M2 endpoints.")
-              (dolist (addr (mapcar #'mongrel2-handler-recv-spec
-                                    (forwarder-engine-handlers (endpoint-engine endpoint))))
-                (log-for (trace) "  Connecting to: ~A" addr)
-                (zmq:connect m2-pub-sock addr))
-              (loop while :forever do
-                   (zmq:recv res-sock msg)
-                   (log-for (dribble) "Pulled response: [~A]" (zmq:msg-data-as-string msg))
-                   (dolist (addr (mapcar #'mongrel2-handler-recv-spec
-                                    (forwarder-engine-handlers (endpoint-engine endpoint))))
-                     (log-for (trace) "  Sending to: ~A" addr))
-                   (zmq:send m2-pub-sock msg)
-                   (log-for (warn) "Dropping reply on the ground."))))))))
-
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
   (unless (engine-endpoint-running-p endpoint)
@@ -289,20 +262,29 @@
 (defmethod multibridge-configure-new-bridge ((instance multibridge) (bridge fdog-handler:request-handler))
   (log-for (trace) "Configuring bridge: ~A" bridge)
 
-  (let ((endpoint (forwarder-engine-endpoint (multibridge-engine instance))))
-    (flet ((handler-closure (handler request raw)
-             (declare (ignorable handler request))
-             (log-for (dribble) "Forwarder request processing.")
-             (with-slots (context request-proxy-addr) endpoint
-               (zmq:with-socket (forward context zmq:push)
-                 (maybe-linger-socket forward)
-                 (log-for (dribble) "Connecting to the proxy: ~A" request-proxy-addr)
-                 (log-for (dribble) "Connect result: ~A"
-                          (zmq:connect forward request-proxy-addr)
-                 )
-                 (log-for (dribble) "Sending request(~A) to proxy" (length raw))
-                 (zmq:send forward (make-instance 'zmq:msg :data raw))
-                 (log-for (dribble) "Request forwarded.")))))
+  (let ((endpoint (forwarder-engine-endpoint (multibridge-engine instance)))
+        (path-prefix (multibridge-path instance)))
+
+    (labels ((rewrite-request (raw)
+               (let ((request-string (flex:octets-to-string raw))
+                     (regex (format nil "^([\\w_-]+ \\d+) ~A" path-prefix))
+                     (replacement "\1 /\\'"))
+                 (flex:string-to-octets
+                  (ppcre:regex-replace regex request-string replacement))))
+
+             (handler-closure (handler request raw)
+               (declare (ignorable handler request))
+               (with-slots (context request-proxy-addr) endpoint
+                 (zmq:with-socket (forward context zmq:push)
+                   (maybe-linger-socket forward)
+                   (zmq:connect forward request-proxy-addr)
+                   (log-for (dribble) "Connecting to the proxy: ~A" request-proxy-addr)
+                   (log-for (dribble) "Sending request(~A) to proxy" (length raw))
+                   (log-for (trace) "Data: [~A]" (flex:octets-to-string raw))
+                   (let ((new-data (rewrite-request raw)))
+                     (log-for (trace) "New data: [~A]" (flex:octets-to-string new-data))
+                     (zmq:send forward (make-instance 'zmq:msg :data new-data)))
+                   (log-for (dribble) "Request forwarded.")))))
 
       (setf (request-handler-processors bridge) `(,#'handler-closure))
       (log-for (trace) "Set request-handler callchain entirely to the forwarder closure.")))

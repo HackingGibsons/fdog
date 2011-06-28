@@ -49,7 +49,8 @@ If (and (eql `signal' :stop) (eql until-p 'mongrel2-server-running-p)) invert is
     (ecase signal
       (:start (unless running
                 (let ((root (mongrel2-server-root server))
-                      (config (mongrel2-server-config server))
+                      (config (make-pathname :directory nil
+                                             :defaults (mongrel2-server-config server)))
                       (uuid (mongrel2-server-uuid server)))
                   (chdir root)
                   (log-for (trace) "Running (in: ~A): ~A ~A" root fdog:*mongrel2-bin* `(,config ,uuid))

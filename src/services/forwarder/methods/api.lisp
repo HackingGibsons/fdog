@@ -28,7 +28,7 @@
 
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)
-  (ppcre:register-groups-bind (forwarder) ("^/?(.*?)/?$" rest)
+  (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
     (setf forwarder (find-forwarder :name forwarder :one t))
     (unless forwarder
       (error '404-condition :data (format nil "Forwarder ~A not found" rest)))

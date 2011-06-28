@@ -68,9 +68,10 @@
           (length (fdog-forwarder-hostpaths forwarder))))
 
 ;; Makers
-(defmethod make-forwarder-hostpath ((forwarder fdog-forwarder) host path)
+(defmethod make-forwarder-hostpath ((forwarder fdog-forwarder) host path &key (search :host))
   "Make a hostpath for the forwarder `forwarder', if an entry exists for this host
-it is overriden with the given path.  Nothing created if already exists."
+it is overriden with the given path.  Nothing created if already exists.
+TODO: use the `search' keyword, it does not currently alter flow."
   (clsql:update-objects-joins `(,forwarder))
   (let* ((hostpaths (fdog-forwarder-hostpaths forwarder))
          (hostpath (or (find host hostpaths :key #'fdog-hostpath-host

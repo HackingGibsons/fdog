@@ -12,6 +12,13 @@
                             (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
                           stream))))
 
+(defmethod api/forwarder/add-route (handler request forwarder args)
+  (log-for (trace) "Adding a route to a handler.")
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json `((:error . "WIP")) stream)))
+
+
 (defmethod api/forwarder/404 (handler request forwarder args)
   (error '404-condition
          :data (format nil "No routes matching ~A for a forwarder" args)))
@@ -29,6 +36,19 @@
        (funcall &route handler request forwarder rest)
 
        (:exact "/" :responder 'api/forwarder/root)
+       (:404 :responder 'api/forwarder/404))))
+
+(defmethod api/endpoint-with-args ((m (eql :post)) (p (eql :|/forwarders|)) rest
+                                   handler request raw)
+  (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
+    (setf forwarder (find-forwarder :name forwarder :one t))
+    (unless forwarder
+      (error '404-condition :data (format nil "Forwarder ~A not found" rest)))
+
+    (with-dispatch-on rest &route
+       (funcall &route handler request forwarder rest)
+
+       (:exact "/add-route/" :responder 'api/forwarder/add-route)
        (:404 :responder 'api/forwarder/404))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)

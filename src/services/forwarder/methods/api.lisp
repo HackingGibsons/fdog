@@ -3,33 +3,10 @@
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
-(defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
-                         handler request raw)
-  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
-         (name (cdr (assoc :name spec)))
-         (hostpaths (cdr (assoc :hosts spec)))
-         (existing (find-forwarder :name name :one t))
-         hosts)
-    (if (and (not existing) hostpaths)
-        (with-chunked-stream-reply (handler request stream
-                                            :headers ((header-json-type)))
-          (dolist (hostpath hostpaths hosts)
-            (destructuring-bind (host . path) hostpath
-              (setf host
-                    (string-downcase
-                     (typecase host (symbol (symbol-name host)) (t host))))
-              (push (cons host path) hosts)))
-          (log-for (trace) "Making forwarder: Name: ~A Hosts: ~A" name hosts)
-          (apply #'make-forwarder `(,name ,@hosts))
-          (init-forwarders)
-          (json:encode-json spec stream))
-        (error '404-condition
-               :data (json:encode-json-to-string '((:error . "Could not create")))))))
-
 (defmethod api/forwarder/root (handler request forwarder args)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
-      (with-slots (name host path listen-on forward-to) forwarder
+      (with-slots (name listen-on forward-to) forwarder
         (json:encode-json `((:name . ,name)
                             (:sub . ,(format nil "tcp://~A:~A" (fdog:get-local-address) listen-on))
                             (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
@@ -39,6 +16,8 @@
   (error '404-condition
          :data (format nil "No routes matching ~A for a forwarder" args)))
 
+;; API Roots
+;; These get requests dispatched to them and pass control to more specific routes
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)
   (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
@@ -65,6 +44,30 @@
       (let ((forwarder-structure (mapcar #'forwarder->structure (find-forwarder))))
         (log-for (dribble) "Constructed structure: ~A" forwarder-structure)
         (json:encode-json forwarder-structure stream)))))
+
+;; Non-dispatching roots
+(defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
+                         handler request raw)
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (hostpaths (cdr (assoc :hosts spec)))
+         (existing (find-forwarder :name name :one t))
+         hosts)
+    (if (and (not existing) hostpaths)
+        (with-chunked-stream-reply (handler request stream
+                                            :headers ((header-json-type)))
+          (dolist (hostpath hostpaths hosts)
+            (destructuring-bind (host . path) hostpath
+              (setf host
+                    (string-downcase
+                     (typecase host (symbol (symbol-name host)) (t host))))
+              (push (cons host path) hosts)))
+          (log-for (trace) "Making forwarder: Name: ~A Hosts: ~A" name hosts)
+          (apply #'make-forwarder `(,name ,@hosts))
+          (init-forwarders)
+          (json:encode-json spec stream))
+        (error '404-condition
+               :data (json:encode-json-to-string '((:error . "Could not create")))))))
 
 ;; //EOAPI Hooks
 #.(clsql:restore-sql-reader-syntax-state)

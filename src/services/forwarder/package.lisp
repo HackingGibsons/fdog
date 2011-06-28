@@ -48,6 +48,7 @@
                           :request-handler-sub
                           :request-handler-pub)
   (:shadowing-import-from :fdog-control
+                          :with-dispatch-on
                           :api/endpoint
                           :api/endpoint-with-args
                           :404-condition

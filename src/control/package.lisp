@@ -23,6 +23,8 @@
            ;;; Query and configuration
            :interface-bridge-matching
            :interface-configure-bridges
+           ;;; Routing
+           :with-dispatch-on
            ;;; API creation
            :api/endpoint
            :api/endpoint-with-args

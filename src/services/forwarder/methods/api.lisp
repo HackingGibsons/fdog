@@ -12,11 +12,25 @@
                             (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
                           stream))))
 
-(defmethod api/forwarder/add-route (handler request forwarder args)
+(defmethod api/forwarder/make-route (handler request forwarder args)
   (log-for (trace) "Adding a route to a handler.")
-  (with-chunked-stream-reply (handler request stream
-                              :headers ((header-json-type)))
-    (json:encode-json `((:error . "WIP")) stream)))
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         added)
+    (log-for (trace) "Spec: [~A]" spec)
+    (destructuring-bind (type &rest spec) (car spec)
+      (log-for (trace) "Despec: [~A]::[~A]" type spec)
+      (case type
+        (:exact
+         (log-for (trace) "Adding exact: ~A" spec)
+         (setf added
+               (make-forwarder-hostpath forwarder
+                                        (cdr (assoc :host spec))
+                                        (cdr (assoc :path spec)))))))
+    (with-chunked-stream-reply (handler request stream
+                                        :headers ((header-json-type)))
+      (json:encode-json `((:ok . ((,(fdog-hostpath-host added) .
+                                  ,(fdog-hostpath-path added)))))
+                        stream))))
 
 
 (defmethod api/forwarder/404 (handler request forwarder args)
@@ -48,7 +62,7 @@
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
 
-       (:exact "/add-route/" :responder 'api/forwarder/add-route)
+       (:exact "/make-route/" :responder 'api/forwarder/make-route)
        (:404 :responder 'api/forwarder/404))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)

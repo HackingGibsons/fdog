@@ -26,6 +26,7 @@
                (make-forwarder-hostpath forwarder
                                         (cdr (assoc :host spec))
                                         (cdr (assoc :path spec)))))))
+    (init-forwarders)
     (with-chunked-stream-reply (handler request stream
                                         :headers ((header-json-type)))
       (json:encode-json `((:ok . ((,(fdog-hostpath-host added) .

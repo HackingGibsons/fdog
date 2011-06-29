@@ -33,3 +33,12 @@
                  :accessor endpoint-request-sock)
    (response-sock :initarg :sub-sock :initform nil
                   :accessor endpoint-response-sock)))
+
+
+(defclass forwarder-queue-endpoint (forwarder-engine-endpoint)
+  ((redis-info :initform nil
+               :documentation "Redis connections will be made by applying the redis:connect function to this form")
+   (request-prefix :initform "fdog-request:")
+   (quque-prefix :initform "fdog-queue:"))
+  (:documentation "Endpoint that instead of writing requests upstream, writes
+them to redis and forwards from a different thread."))

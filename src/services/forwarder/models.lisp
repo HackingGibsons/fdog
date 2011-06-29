@@ -194,6 +194,8 @@ remove a specifc path before sending to a unified upstream"
 
 ;; Queue related
 (defmethod make-forwarder-queue-option ((forwarder fdog-forwarder))
+  "Fetch an existing, or make a new `fdog-forwarder-queue' object
+for a given `forwarder'"
   (clsql:update-objects-joins `(,forwarder))
   (let ((q-option (or (fdog-forwarder-queue-options forwarder)
                       (make-instance 'fdog-forwarder-queue
@@ -205,11 +207,14 @@ remove a specifc path before sending to a unified upstream"
     q-option))
 
 (defmethod fdog-forwarder-queue-options :around ((forwarder fdog-forwarder))
+  "Ensure the freshest copy of the `forwarder' coming out when this method is called.
+TODO: Paranoid precaution smells."
   (let ((q-opt (call-next-method)))
     (clsql:update-instance-from-records q-opt)
     q-opt))
 
 (defmethod forwarder-queuing-p ((forwarder fdog-forwarder))
+  "Is the our `forwarder' queuing?"
   (let ((q-opt (make-forwarder-queue-option forwarder)))
     (and (forwarder-queue-enabled q-opt)
          (or (not (forwarder-queue-depth q-opt))

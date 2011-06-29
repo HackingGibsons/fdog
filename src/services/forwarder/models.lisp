@@ -217,7 +217,8 @@ for a given `forwarder'"
   "Ensure the freshest copy of the `forwarder' coming out when this method is called.
 TODO: Paranoid precaution smells."
   (let ((q-opt (call-next-method)))
-    (clsql:update-instance-from-records q-opt)
+    (when q-opt
+      (clsql:update-instance-from-records q-opt))
     q-opt))
 
 (defmethod forwarder-queue-enable ((forwarder fdog-forwarder) &key depth)

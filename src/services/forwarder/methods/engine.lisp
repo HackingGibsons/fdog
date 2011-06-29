@@ -6,7 +6,12 @@
   (log-for (trace) "Building forwarder engine from ~A" forwarder)
   (let ((engine (make-instance 'forwarder-engine :forwarder forwarder :servers servers)))
     (setf (forwarder-engine-endpoint engine)
-          (make-instance 'forwarder-engine-endpoint :engine engine))
+          (if (forwarder-queuing-p forwarder)
+              (prog1 (make-instance 'forwarder-queue-endpoint :engine engine)
+                (log-for (trace) "Making queued endpoint for ~A" forwarder))
+              (prog1 (make-instance 'forwarder-engine-endpoint :engine engine)
+                (log-for (trace) "Making plain endpoint for ~A" forwarder))))
+
     engine))
 
 (defmethod initialize-instance :after ((engine forwarder-engine) &rest initargs)

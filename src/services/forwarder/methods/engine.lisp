@@ -56,3 +56,8 @@
 
 (defmethod forwarder-engine-handlers ((engine forwarder-engine))
   (mapcar #'multibridge-handler (forwarder-engine-bridges engine)))
+
+
+;; Data access helpers
+(defmethod fdog-forwarder-name ((engine forwarder-engine))
+  (fdog-forwarder-name (forwarder-engine-forwarder engine)))

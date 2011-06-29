@@ -1,5 +1,23 @@
 (in-package :fdog-forwarder)
 
+(clsql:def-view-class fdog-forwarder-queue ()
+  ((id :type integer
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key
+       :reader fdog-forwarder-queue-id)
+   (forwarder-id :type integer
+                 :initarg :forwarder-id
+                 :reader fdog-forwarder-queue-forwarder-id)
+   (enabled :type boolean
+            :initarg :enabled
+            :initform t)
+   (depth :type integer
+          :initarg :limit
+          :initform nil))
+  (:base-table fdog-forwarder-queue
+   :documentation "Any applicable queue options for a given forwarder."))
+
+
 (clsql:def-view-class fdog-forwarder-hostpath ()
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
@@ -52,6 +70,12 @@
                :initarg :forward-to
                :initform 9999)
 
+   (queue-options :db-kind :join
+                  :accessor fdog-forwarder-queue-options
+                  :db-info (:join-class fdog-forwarder-queue
+                            :home-key id
+                            :foreign-key forwarder-id
+                            :set nil))
    (hostpaths :db-kind :join
               :accessor fdog-forwarder-hostpaths
               :db-info (:join-class fdog-forwarder-hostpath
@@ -91,7 +115,10 @@ TODO: use the `search' keyword, it does not currently alter flow."
 (defmethod make-forwarder ((name string) &rest host-paths)
   "Make a new forwarder named `name' with hostpaths as configured
 in `host-paths' in the form ((host-string . path-string)...)"
-  (set-forwarder-hostpaths (get-or-create-forwarder name) host-paths))
+  (let ((forwarder (get-or-create-forwarder name)))
+    (set-forwarder-hostpaths forwarder host-paths)
+    (make-forwarder-queue-option forwarder)
+    forwarder))
 
 (defmethod get-or-create-forwarder (name)
   "Either find or create an fdog-forwarder object instance with
@@ -161,3 +188,16 @@ remove a specifc path before sending to a unified upstream"
    (mapcar #'fdog-hostpath-path
            (fdog-forwarder-hostpaths forwarder))
    :test #'string=))
+
+
+;; Queue related
+(defmethod make-forwarder-queue-option ((forwarder fdog-forwarder))
+  (clsql:update-objects-joins `(,forwarder))
+  (let ((q-option (or (fdog-forwarder-queue-options forwarder)
+                      (make-instance 'fdog-forwarder-queue
+                                     :forwarder-id (fdog-forwarder-id forwarder)
+                                     :enabled nil
+                                     :depth nil))))
+    (setf (fdog-forwarder-queue-options forwarder) q-option)
+    (clsql:update-records-from-instance q-option)
+    q-option))

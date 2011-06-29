@@ -7,13 +7,15 @@ and watchdogs are installed. Returns the forwarding servers."
   (mapc #'ensure-server-has-watchdog (ensure-forwarder-servers-exist)))
 
 (defun ensure-forwarder-tables-exist ()
-  "Ensures the existence of the tables used for forwarder configuration storage"
+  "Ensures the existence of the tables used for forwarder configuration storage
+TODO: DRY this shit up."
   (if (and (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder)))
-           (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-hostpath))))
+           (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-hostpath)))
+           (clsql:table-exists-p (clsql:view-table (find-class 'fdog-forwarder-queue))))
       (log-for (trace) "Forwarder tables already exist.")
       (progn
         (log-for (trace) "Forwarder tables do not exist.. creating.")
-        (mapcar #'clsql:create-view-from-class '(fdog-forwarder fdog-forwarder-hostpath)))))
+        (mapcar #'clsql:create-view-from-class '(fdog-forwarder fdog-forwarder-hostpath fdog-forwarder-queue)))))
 
 (defun ensure-forwarder-servers-exist ()
   "Ensure that the servers required for forwarder operation exist

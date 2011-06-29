@@ -78,7 +78,8 @@
                                                           :components ((:file "api")
                                                                        (:file "setup")
                                                                        (:file "endpoint")
-                                                                       (:file "multibridge")
+                                                                       (:file "queue.endpoint" :depends-on ("endpoint"))
+                                                                       (:file "multibridge" :depends-on ("endpoint" "queue.endpoint"))
                                                                        (:file "engine" :depends-on ("endpoint" "multibridge"))))))))))))
 
 

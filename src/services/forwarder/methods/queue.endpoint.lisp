@@ -1,10 +1,16 @@
 (in-package :fdog-forwarder)
 
+(defmethod store-request ((endpoint forwarder-queue-endpoint) msg)
+  "Store the request in redis and return a key that can be used to reffer to it."
+  (log-for (warn) "TODO: store-request WIP")
+  "TODO:undef")
+
 (defmethod queue-request ((endpoint forwarder-queue-endpoint) msg)
   "Enqueue message on the endpoint to the current connected redis instance."
-  (log-for (warn) "TODO: queue-request WIP")
-  (log-for (trace) "Into redis for ~A: [~A]" endpoint (flex:octets-to-string msg))
-  t)
+  (let ((key (store-request endpoint msg)))
+    (log-for (warn) "TODO: queue-request WIP: Key:[~A]" key)
+    (log-for (trace) "Into redis for ~A: [~A]" endpoint (flex:octets-to-string msg))
+    t))
 
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   "Make a request device that pumps requests into redis."

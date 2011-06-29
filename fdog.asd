@@ -13,6 +13,7 @@
                #:m2cl
                #:bordeaux-threads
                #:clsql
+               #:cl-redis
                #:uffi
                #:cffi)
   :in-order-to ((test-op (load-op fdog-tests)))

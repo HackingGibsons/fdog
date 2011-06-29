@@ -63,18 +63,20 @@
                                            (:module "forwarder"
                                             :components ((:file "package")
                                                          (:file "utils" :depends-on ("package"))
+                                                         (:file "forwarder" :depends-on ("models" "classes" "methods" "ensure-ance"))
 
                                                          (:file "models" :depends-on ("utils"))
-                                                         (:file "endpoint" :depends-on ("package" "models"))
-                                                         (:file "engine" :depends-on ("endpoint"))
-
                                                          (:file "ensure-ance" :depends-on ("package" "models" "utils"))
 
-                                                         (:file "forwarder" :depends-on ("models" "engine" "ensure-ance"))
+                                                         (:module "classes" :depends-on ("package" "models")
+                                                          :components ((:file "engine")
+                                                                       (:file "multibridge" :depends-on ("engine"))
+                                                                       (:file "endpoint" :depends-on ("engine" "multibridge"))))
 
-                                                         (:module "methods" :depends-on ("models" "utils" "ensure-ance")
+                                                         (:module "methods" :depends-on ("models" "utils" "ensure-ance" "classes")
                                                           :components ((:file "api")
-                                                                       (:file "setup")))))))))))
+                                                                       (:file "setup")
+                                                                       (:file "engine")))))))))))
 
 
 

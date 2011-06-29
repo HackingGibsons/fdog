@@ -3,6 +3,7 @@
 (defmethod queue-request ((endpoint forwarder-queue-endpoint) msg)
   "Enqueue message on the endpoint to the current connected redis instance."
   (log-for (warn) "TODO: queue-request WIP")
+  (log-for (trace) "Into redis for ~A: [~A]" endpoint (flex:octets-to-string msg))
   t)
 
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
@@ -14,7 +15,7 @@
                  (handler-case
                      (progn
                        (zmq:recv (endpoint-proxy-sock endpoint) msg)
-                       (queue-request endpoint (zmq:msg-data-as-array)))
+                       (queue-request endpoint (zmq:msg-data-as-array msg)))
                    (simple-error (c)
                      (if (= (sb-alien:get-errno) sb-posix:eintr)
                          t

@@ -213,6 +213,26 @@ TODO: Paranoid precaution smells."
     (clsql:update-instance-from-records q-opt)
     q-opt))
 
+(defmethod forwarder-queue-enable ((forwarder fdog-forwarder) &key depth)
+  "Enable queueing on this `forwarder', next init requests will flow into redis."
+  (log-for (trace) "Enabling request queue for ~A" forwarder)
+  (let ((q-opt (make-forwarder-queue-option forwarder)))
+    (setf (forwarder-queue-enabled q-opt) t
+          (forwarder-queue-depth q-opt) depth)
+    (clsql:update-records-from-instance q-opt))
+  forwarder)
+
+
+(defmethod forwarder-queue-disable ((forwarder fdog-forwarder))
+  "Turn off queueing on this `forwarder', next init requests will no
+longer flow to redis.
+TODO: Consider what happens to outstanding queue requests."
+  (log-for (trace) "Disabling request queueing for ~A" forwarder)
+  (let ((q-opt (make-forwarder-queue-option forwarder)))
+    (setf (forwarder-queue-enabled q-opt) nil)
+    (clsql:update-records-from-instance q-opt))
+  forwarder)
+
 (defmethod forwarder-queuing-p ((forwarder fdog-forwarder))
   "Is the our `forwarder' queuing?"
   (let ((q-opt (make-forwarder-queue-option forwarder)))

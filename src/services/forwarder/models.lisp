@@ -19,6 +19,13 @@
   (:base-table fdog-forwarder-queue
    :documentation "Any applicable queue options for a given forwarder."))
 
+(defmethod print-object ((object fdog-forwarder-queue) s)
+  (format s "#<ForwarderQueue[~A]: Forwarder[~A] ~:[Disabled~;Enabled~] Depth: ~A>"
+          (if (slot-boundp object 'id) (fdog-forwarder-queue-id object) "None")
+          (if (slot-boundp object 'forwarder-id) (fdog-forwarder-queue-forwarder-id object) "None")
+          (forwarder-queue-enabled object) (forwarder-queue-depth object)))
+
+
 
 (clsql:def-view-class fdog-forwarder-hostpath ()
   ((id :type integer

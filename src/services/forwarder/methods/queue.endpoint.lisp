@@ -10,15 +10,21 @@
   "Make a request device that pumps requests into redis."
   #'(lambda ()
       (log-for (trace) "Starting request queue device.")
-      (let ((msg (make-instance 'zmq:msg)))
-        (flet ((run-device ()
-                 (handler-case
-                     (progn
-                       (zmq:recv (endpoint-proxy-sock endpoint) msg)
-                       (queue-request endpoint (zmq:msg-data-as-array msg)))
-                   (simple-error (c)
-                     (if (= (sb-alien:get-errno) sb-posix:eintr)
-                         t
-                         (prog1 nil (log-for (warn) "Queue device exited with condition: ~A" c)
-                                (signal c)))))))
-          (loop while (run-device) do ':nothing)))))
+      (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
+                                        :port (queue-endpoint-redis-port endpoint))
+        (let ((msg (make-instance 'zmq:msg)))
+          (labels ((run-once ()
+                     (zmq:recv (endpoint-proxy-sock endpoint) msg)
+                     (queue-request endpoint (zmq:msg-data-as-array msg)))
+
+                   (handle-condition (c)
+                     (or (= (sb-alien:get-errno) sb-posix:eintr)
+                         (prog1 nil
+                           (log-for (warn) "Queue device exited with condition: ~A" c)
+                           (signal c))))
+
+                   (run-device ()
+                     (handler-case (run-once)
+                       (simple-error (c) (handle-condition c)))))
+
+            (loop while (run-device) do ':nothing))))))

@@ -35,9 +35,12 @@
                   :accessor endpoint-response-sock)))
 
 
+;; TODO: Put these redis constants elsewhere.
 (defclass forwarder-queue-endpoint (forwarder-engine-endpoint)
-  ((redis-info :initform nil
-               :documentation "Redis connections will be made by applying the redis:connect function to this form")
+  ((redis-host :initform "localhost"
+               :accessor queue-endpoint-redis-host)
+   (redis-port :initform 6379
+               :accessor queue-endpoint-redis-port)
    (request-prefix :initform "fdog-request:")
    (quque-prefix :initform "fdog-queue:")
 

@@ -9,9 +9,11 @@
                  :initarg :forwarder-id
                  :reader fdog-forwarder-queue-forwarder-id)
    (enabled :type boolean
+            :accessor forwarder-queue-enabled
             :initarg :enabled
             :initform t)
    (depth :type integer
+          :accessor forwarder-queue-depth
           :initarg :limit
           :initform nil))
   (:base-table fdog-forwarder-queue
@@ -201,3 +203,14 @@ remove a specifc path before sending to a unified upstream"
     (setf (fdog-forwarder-queue-options forwarder) q-option)
     (clsql:update-records-from-instance q-option)
     q-option))
+
+(defmethod fdog-forwarder-queue-options :around ((forwarder fdog-forwarder))
+  (let ((q-opt (call-next-method)))
+    (clsql:update-instance-from-records q-opt)
+    q-opt))
+
+(defmethod forwarder-queuing-p ((forwarder fdog-forwarder))
+  (let ((q-opt (make-forwarder-queue-option forwarder)))
+    (and (forwarder-queue-enabled q-opt)
+         (or (not (forwarder-queue-depth q-opt))
+             (> 0 (forwarder-queue-depth q-opt))))))

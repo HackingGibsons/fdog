@@ -132,9 +132,7 @@
     (init-context endpoint)
     (init-sockets endpoint)
 
-    (let ((name (fdog-forwarder-name
-                 (forwarder-engine-forwarder (endpoint-engine endpoint)))))
-
+    (let ((name (fdog-forwarder-name (forwarder-engine-forwarder (endpoint-engine endpoint)))))
       (setf (endpoint-request-device endpoint)
             (make-thread (make-request-device endpoint)
                          :name (format nil "engine-endpoint-device-request-~A" name))
@@ -152,15 +150,6 @@
     (log-for (warn) "This is very much the wrong way to go about this one.")
     (destroy-thread (endpoint-request-device endpoint))
     (destroy-thread (endpoint-response-device endpoint)))
-
-  ;; (log-for (trace) "Destroying ~A response writers." (length (endpoint-response-processors endpoint)))
-  ;; (mapc #'(lambda (thr)
-  ;;           (and thr (threadp thr)
-  ;;                (thread-alive-p thr)
-  ;;                (destroy-thread thr)))
-  ;;       (endpoint-response-processors endpoint))
-  ;; (setf (endpoint-response-processors endpoint) nil)
-
   (log-for (trace) "Destroying 0mq endpoint")
   (terminate-sockets endpoint)
   (terminate-context endpoint)

@@ -65,7 +65,8 @@
                                                          (:file "utils" :depends-on ("package"))
 
                                                          (:file "models" :depends-on ("utils"))
-                                                         (:file "engine" :depends-on ("package" "models"))
+                                                         (:file "endpoint" :depends-on ("package" "models"))
+                                                         (:file "engine" :depends-on ("endpoint"))
 
                                                          (:file "ensure-ance" :depends-on ("package" "models" "utils"))
 

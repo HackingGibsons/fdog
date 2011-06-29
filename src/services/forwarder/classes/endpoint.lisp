@@ -39,6 +39,11 @@
   ((redis-info :initform nil
                :documentation "Redis connections will be made by applying the redis:connect function to this form")
    (request-prefix :initform "fdog-request:")
-   (quque-prefix :initform "fdog-queue:"))
+   (quque-prefix :initform "fdog-queue:")
+
+   ;; Extra thread for drawing requests from the queue and writing to the client
+   (request-write-device :initform nil
+                         :accessor endpoint-request-write-device))
+
   (:documentation "Endpoint that instead of writing requests upstream, writes
 them to redis and forwards from a different thread."))

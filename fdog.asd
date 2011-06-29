@@ -76,7 +76,9 @@
                                                          (:module "methods" :depends-on ("models" "utils" "ensure-ance" "classes")
                                                           :components ((:file "api")
                                                                        (:file "setup")
-                                                                       (:file "engine")))))))))))
+                                                                       (:file "endpoint")
+                                                                       (:file "multibridge")
+                                                                       (:file "engine" :depends-on ("endpoint" "multibridge"))))))))))))
 
 
 

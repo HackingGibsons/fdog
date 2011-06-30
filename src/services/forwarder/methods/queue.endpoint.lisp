@@ -71,9 +71,15 @@
       (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
         (labels ((run-once ()
-                   (log-for (warn) "TODO: Running once to write from queue")
-                   (sleep 1)
-                   t)
+                   (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
+                          (request (redis:red-hget req-key :body)))
+                     (log-for (trace) "Got request: ~A" req-key)
+                     (log-for (trace) "Request: ~A" request)
+                     ;; TODO: Investigate better use of ZMQ to write responses
+                     ;;       so I'm less constrained to a writer single thread ;_;
+                     (= (zmq:send (endpoint-request-sock endpoint)
+                                  (make-instance 'zmq:msg :data request))
+                        0)))
 
                  (handle-condition (c)
                    (prog1 nil

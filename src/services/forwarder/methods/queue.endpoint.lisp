@@ -67,8 +67,25 @@
 ;; Methods to start the request writing "device" when the endpoint is started and stopped
 (defmethod make-request-writer-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
-      (log-for (warn) "TODO: Actually write the request queue writer device for: ~A" endpoint)
-      :undef))
+      (log-for (trace) "Starting request queue writer device.")
+      (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
+                                        :port (queue-endpoint-redis-port endpoint))
+        (labels ((run-once ()
+                   (log-for (warn) "TODO: Running once to write from queue")
+                   (sleep 1)
+                   t)
+
+                 (handle-condition (c)
+                   (prog1 nil
+                     (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                     (signal c)))
+
+                 (run-device ()
+                   (handler-case (run-once)
+                     (simple-error (c) (handle-condition c)))))
+
+          (loop while (run-device) do ':nothing)))))
+
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (with-slots (request-write-device) endpoint

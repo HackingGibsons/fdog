@@ -64,6 +64,15 @@
 
             (loop while (run-device) do ':nothing))))))
 
+;; Methods to start the request writing "device" when the endpoint is started and stopped
+(defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
+  (log-for (warn) "TODO: engine-endpoint-start :after for queue endpoint")
+  :undef)
+
+(defmethod engine-endpoint-stop :before ((endpoint forwarder-queue-endpoint))
+  (log-for (warn) "TODO: engine-endpoint-stop :before for queueu endpoint")
+  :undef)
+
 ;; Data access
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))

@@ -65,13 +65,27 @@
             (loop while (run-device) do ':nothing))))))
 
 ;; Methods to start the request writing "device" when the endpoint is started and stopped
+(defmethod make-request-writer-device ((endpoint forwarder-queue-endpoint))
+  #'(lambda ()
+      (log-for (warn) "TODO: Actually write the request queue writer device for: ~A" endpoint)
+      :undef))
+
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
-  (log-for (warn) "TODO: engine-endpoint-start :after for queue endpoint")
-  :undef)
+  (with-slots (request-write-device) endpoint
+    (setf request-write-device
+          (make-thread (make-request-writer-device endpoint)
+                       :name (format nil "engine-request-queue-request-write-device-~A"
+                                     (fdog-forwarder-name (endpoint-engine endpoint)))))))
 
 (defmethod engine-endpoint-stop :before ((endpoint forwarder-queue-endpoint))
-  (log-for (warn) "TODO: engine-endpoint-stop :before for queueu endpoint")
-  :undef)
+  (log-for (trace) "Stopping the queue request writer thread for: ~A" endpoint)
+  (with-slots (request-write-device) endpoint
+    (and request-write-device
+         (threadp request-write-device)
+         (thread-alive-p request-write-device)
+         (destroy-thread request-write-device)
+         (log-for (trace) "Killed forwarder queue writer for: ~A" endpoint))
+    (setf request-write-device nil)))
 
 ;; Data access
 ;; TODO: Add another generic for fdog-forwarder-name :(

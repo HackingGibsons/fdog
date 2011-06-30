@@ -42,7 +42,7 @@
    (redis-port :initform 6379
                :accessor queue-endpoint-redis-port)
    (request-prefix :initform "fdog-request:")
-   (quque-prefix :initform "fdog-queue:")
+   (queue-prefix :initform "fdog-queue:")
 
    ;; Extra thread for drawing requests from the queue and writing to the client
    (request-write-device :initform nil

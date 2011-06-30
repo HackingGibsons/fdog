@@ -26,9 +26,19 @@
   "Enqueue message on the endpoint to the current connected redis instance."
   (let ((request-key (store-request endpoint msg))
         (queue-key (endpoint-queue-key endpoint)))
-    (log-for (warn) "TODO: queue-request WIP: Key:[~A]" request-key)
-    (log-for (trace) "Into redis for ~A: [~A]" endpoint (flex:octets-to-string msg))
-    t))
+    ;; TODO: Fold out this contraption to a macro
+    ;; TODO: Make sure this doesn't spin wildly if the server is outright down
+    (handler-bind ((redis:redis-connection-error
+                    #'(lambda (c)
+                        (let ((reconnect (find-restart :reconnect)))
+                          (if reconnect
+                              (invoke-restart reconnect)
+                              (error c))))))
+      (redis:red-lpush queue-key request-key)
+      #|TODO: Trim|#)
+    (values queue-key
+            request-key)))
+
 
 ;; Replacement "device" to pump requests to redis
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
@@ -55,6 +65,8 @@
             (loop while (run-device) do ':nothing))))))
 
 ;; Data access
+;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
-  (log-for (warn) "TODO: endpoint-queue-key undefined.")
-  "TODO-undef-queue-key")
+  (with-slots (queue-prefix) endpoint
+    (format nil "~A:~A:request-queue" queue-prefix
+            (fdog-forwarder-name (endpoint-engine endpoint)))))

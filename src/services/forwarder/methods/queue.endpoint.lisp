@@ -47,14 +47,20 @@
             request-key)))
 
 
-;; Replacement "device" to pump requests to redis
+;; Replacement "device" to pump requests to redis and plumbing for it
 (defmethod init-sockets :after ((endpoint forwarder-queue-endpoint))
-  (log-for (warn) "TODO: Initing queue-specific sockets.")
-  :undef)
+  (log-for (trace) "Initing queue-specific sockets.")
+  (with-slots (context request-queue-sock request-queue-addr) endpoint
+    (setf request-queue-addr (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))
+          request-queue-sock (zmq:socket context zmq:pull))
+    (zmq:bind request-queue-sock request-queue-addr)))
 
 (defmethod terminate-sockets :before ((endpoint forwarder-queue-endpoint))
-  (log-for (warn) "TODO: Tearing down queue-specific sockets.")
-  :undef)
+  (log-for (trace) "Tearing down queue-specific sockets.")
+  (with-slots (context request-queue-sock request-queue-addr) endpoint
+    (setf request-queue-sock (and request-queue-sock
+                                  (zmq:close request-queue-sock) nil)
+          request-queue-addr nil)))
 
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   "Make a request device that pumps requests into redis."

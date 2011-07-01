@@ -1,6 +1,13 @@
 (in-package :fdog-forwarder)
 
 ;; Request queuing machinery
+;; TODO: Add another generic for fdog-forwarder-name :(
+(defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
+  (with-slots (queue-prefix) endpoint
+    (format nil "~A:~A:request-queue" queue-prefix
+            (fdog-forwarder-name (endpoint-engine endpoint)))))
+
+
 (defmethod endpoint-request-key ((endpoint forwarder-engine-endpoint) request)
   "Generate a key to store the given `request' under for the endpoint `endpoint'"
   (with-slots (request-prefix) endpoint
@@ -41,6 +48,14 @@
 
 
 ;; Replacement "device" to pump requests to redis
+(defmethod init-sockets :after ((endpoint forwarder-queue-endpoint))
+  (log-for (warn) "TODO: Initing queue-specific sockets.")
+  :undef)
+
+(defmethod terminate-sockets :before ((endpoint forwarder-queue-endpoint))
+  (log-for (warn) "TODO: Tearing down queue-specific sockets.")
+  :undef)
+
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   "Make a request device that pumps requests into redis."
   #'(lambda ()
@@ -82,9 +97,12 @@
                         0)))
 
                  (handle-condition (c)
-                   (prog1 nil
-                     (log-for (warn) "Queue request writer device exited with condition: ~A" c)
-                     (signal c)))
+                   (simple-error (c)
+                     (if (= (sb-alien:get-errno) sb-posix:eintr)
+                         t
+                         (prog1 nil
+                           (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                           (signal c)))))
 
                  (run-device ()
                    (handler-case (run-once)
@@ -110,9 +128,3 @@
          (log-for (trace) "Killed forwarder queue writer for: ~A" endpoint))
     (setf request-write-device nil)))
 
-;; Data access
-;; TODO: Add another generic for fdog-forwarder-name :(
-(defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
-  (with-slots (queue-prefix) endpoint
-    (format nil "~A:~A:request-queue" queue-prefix
-            (fdog-forwarder-name (endpoint-engine endpoint)))))

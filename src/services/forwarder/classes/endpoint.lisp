@@ -12,7 +12,7 @@
                     :accessor endpoint-response-device)
 
    ;; ZMQ Context for this endpoint
-   (context-threads :initargs :threads :initform 4
+   (context-threads :initargs :threads :initform 1
                     :accessor endpoint-context-threads)
    (context :initarg :context
             :initform nil
@@ -44,7 +44,16 @@
    (request-prefix :initform "fdog-request:")
    (queue-prefix :initform "fdog-queue:")
 
+   ;; New sink for requests, handlers should write here to get written to redis.
+   (request-queue-sock :initarg :queue-sock ;; pull sock, from here to redis.
+                       :initform nil
+                       :accessor endpoint-queue-sock)
+   (request-queue-addr :initarg :queue-addr
+                       :initform nil
+                       :accessor endpoint-queue-addr)
+
    ;; Extra thread for drawing requests from the queue and writing to the client
+   ;; this device writes requests from redis to the `request-queue-sock'
    (request-write-device :initform nil
                          :accessor endpoint-request-write-device))
 

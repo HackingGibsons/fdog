@@ -201,6 +201,7 @@ and forwarding the request according to where this endpoint wants it to go."
       (zmq:with-socket (forward context zmq:push)
         (maybe-linger-socket forward)
         (zmq:connect forward request-proxy-addr)
+        (log-for (trace) "Forwarding message: ~A" (flex:octets-to-string raw))
         (zmq:send forward (make-instance 'zmq:msg :data raw))))
     (list handler request raw)))
 

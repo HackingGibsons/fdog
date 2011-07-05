@@ -28,52 +28,17 @@
 (defmethod multibridge-configure-new-bridge ((instance multibridge) (bridge fdog-handler:request-handler))
   (log-for (trace) "Configuring bridge: ~A" bridge)
 
-  (let ((endpoint (forwarder-engine-endpoint (multibridge-engine instance)))
-        (prefix-re (format nil "^~A" (multibridge-path instance))))
+  (let* ((endpoint (forwarder-engine-endpoint (multibridge-engine instance)))
+         (processors (engine-endpoint-proccessors endpoint instance)))
 
-    (labels ((rewrite-request (raw)
-               (destructuring-bind (sender connection-id path rest)
-                   (m2cl::token-parse-n raw 3)
-
-                 (flet ((perform-rewrite ()
-                          (let ((json:*json-identifier-name-to-lisp* 'identity)
-                                (json:*lisp-identifier-name-to-json* 'identity))
-                            (multiple-value-bind (headers-string rest)
-                                (m2cl::netstring-parse rest)
-                              (let ((headers (json:decode-json-from-string headers-string)))
-                                (when (cdr (assoc :PATH headers))
-                                  (setf (cdr (assoc :PATH headers))
-                                        (ppcre:regex-replace prefix-re (cdr (assoc :PATH headers)) "/")))
-
-                                (when (cdr (assoc :URI headers))
-                                  (setf (cdr (assoc :URI headers))
-                                        (ppcre:regex-replace prefix-re (cdr (assoc :URI headers)) "/")))
-
-                                (setf headers-string (json:encode-json-to-string headers))
-
-                                (log-for (trace) "Rewriting: ~A ~A" path headers)
-                                (flex:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
-                                                               sender connection-id (ppcre:regex-replace prefix-re path "/")
-                                                               (length headers-string) headers-string
-                                                               (flex:octets-to-string rest))))))))
-
-                   (if (ppcre:scan prefix-re path)
-                       (perform-rewrite)
-                       raw))))
-
-             (handler-closure (handler request raw)
-               (declare (ignorable handler request))
-               (with-slots (context request-proxy-addr) endpoint
-                 (zmq:with-socket (forward context zmq:push)
-                   (maybe-linger-socket forward)
-                   (zmq:connect forward request-proxy-addr)
-                   (log-for (trace) "Original request: [~A]" (flex:octets-to-string raw))
-                   (log-for (trace) "Rewritten request: [~A]" (flex:octets-to-string (rewrite-request raw)))
-                   (zmq:send forward (make-instance 'zmq:msg :data (rewrite-request raw)))))))
+    (flet ((handler-closure (handler request raw)
+             (let ((last (list handler request raw)))
+               (dolist (proc processors last)
+                 (log-for (dribble) "Processing with: ~A" proc)
+                 (setf last (apply proc last))))))
 
       (setf (request-handler-processors bridge) `(,#'handler-closure))
       (log-for (trace) "Set request-handler callchain entirely to the forwarder closure.")))
-
   bridge)
 
 (defmethod multibridge-add-bridge ((instance multibridge))

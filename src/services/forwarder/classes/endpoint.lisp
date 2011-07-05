@@ -55,7 +55,9 @@
    ;; Extra thread for drawing requests from the queue and writing to the client
    ;; this device writes requests from redis to the `request-queue-sock'
    (request-write-device :initform nil
-                         :accessor endpoint-request-write-device))
+                         :accessor endpoint-request-write-device)
+   (request-queue-device :initform nil
+                         :accessor endpoint-request-queue-device))
 
   (:documentation "Endpoint that instead of writing requests upstream, writes
 them to redis and forwards from a different thread."))

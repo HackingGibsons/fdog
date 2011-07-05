@@ -62,7 +62,7 @@
                                   (zmq:close request-queue-sock) nil)
           request-queue-addr nil)))
 
-(defmethod make-request-device ((endpoint forwarder-queue-endpoint))
+(defmethod make-request-queuer-device ((endpoint forwarder-queue-endpoint))
   "Make a request device that pumps requests into redis."
   #'(lambda ()
       (log-for (trace) "Starting request queue device.")
@@ -70,7 +70,7 @@
                                         :port (queue-endpoint-redis-port endpoint))
         (let ((msg (make-instance 'zmq:msg)))
           (labels ((run-once ()
-                     (zmq:recv (endpoint-proxy-sock endpoint) msg)
+                     (zmq:recv (endpoint-queue-sock endpoint) msg)
                      (queue-request endpoint (zmq:msg-data-as-array msg)))
 
                    (handle-condition (c)
@@ -118,20 +118,31 @@
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (with-slots (request-write-device) endpoint
-    (setf request-write-device
+    (setf request-queue-device
+          (make-thread (make-request-queuer-device endpoint)
+                       :name (format nil "engine-request-queue-request-queue-device-~A"
+                                     (fdog-forwarder-name (endpoint-engine endpoint))))
+
+          request-write-device
           (make-thread (make-request-writer-device endpoint)
                        :name (format nil "engine-request-queue-request-write-device-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint)))))))
 
 (defmethod engine-endpoint-stop :before ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Stopping the queue request writer thread for: ~A" endpoint)
-  (with-slots (request-write-device) endpoint
+  (with-slots (request-write-device request-queue-device) endpoint
     (and request-write-device
          (threadp request-write-device)
          (thread-alive-p request-write-device)
          (destroy-thread request-write-device)
          (log-for (trace) "Killed forwarder queue writer for: ~A" endpoint))
-    (setf request-write-device nil)))
+    (and request-queue-device
+         (threadp request-queue-device)
+         (thread-alive-p request-queue-device)
+         (destroy-thread request-queue-device)
+         (log-for (trace) "Killed forwarder queuer for: ~A" endpoint))
+    (setf request-queue-device nil
+          request-write-device nil)))
 
 (defmethod request-forwarding-address ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Serving a queue address to forward requests to.")

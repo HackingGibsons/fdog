@@ -193,15 +193,19 @@ in the context of `endpoint'"
                 request
                 (rewrite-request raw))))))
 
+(defmethod request-forwarding-address ((endpoint forwarder-engine-endpoint))
+  "A method to override to cause requests to be proxied to a different address by the handlers."
+  (endpoint-proxy-addr endpoint))
+
 (defmethod make-request-forwarder-for ((endpoint forwarder-engine-endpoint) multibridge)
-  "Make a request forwarder lambda mapping (handlre request raw) as identity
+  "Make a request forwarder lambda mapping (handler request raw) as identity
 and forwarding the request according to where this endpoint wants it to go."
   (lambda (handler request raw)
     (with-slots (context request-proxy-addr) endpoint
       (zmq:with-socket (forward context zmq:push)
         (maybe-linger-socket forward)
-        (zmq:connect forward request-proxy-addr)
-        (log-for (trace) "Forwarding message: ~A" (flex:octets-to-string raw))
+        (zmq:connect forward (request-forwarding-address endpoint))
+        (log-for (trace) "Forwarding message: ~A to ~A" (flex:octets-to-string raw) (request-forwarding-address endpoint))
         (zmq:send forward (make-instance 'zmq:msg :data raw))))
     (list handler request raw)))
 

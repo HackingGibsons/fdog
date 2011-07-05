@@ -103,12 +103,11 @@
                         0)))
 
                  (handle-condition (c)
-                   (simple-error (c)
-                     (if (= (sb-alien:get-errno) sb-posix:eintr)
-                         t
-                         (prog1 nil
-                           (log-for (warn) "Queue request writer device exited with condition: ~A" c)
-                           (signal c)))))
+                   (if (= (sb-alien:get-errno) sb-posix:eintr)
+                       t
+                       (prog1 nil
+                         (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                         (signal c))))
 
                  (run-device ()
                    (handler-case (run-once)
@@ -134,3 +133,6 @@
          (log-for (trace) "Killed forwarder queue writer for: ~A" endpoint))
     (setf request-write-device nil)))
 
+(defmethod request-forwarding-address ((endpoint forwarder-queue-endpoint))
+  (log-for (trace) "Serving a queue address to forward requests to.")
+  (endpoint-queue-addr endpoint))

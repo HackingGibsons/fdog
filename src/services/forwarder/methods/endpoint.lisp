@@ -156,3 +156,57 @@
   (terminate-sockets endpoint)
   (terminate-context endpoint)
   :stopped)
+
+(defmethod make-request-rewriter-for ((endpoint forwarder-engine-endpoint) (multibridge multibridge))
+  "Make a request rewriter lambda mapping (handler request raw) => (handler' request' raw')
+in the context of `endpoint'"
+  (let ((prefix-re (format nil "^~A" (multibridge-path multibridge))))
+    (labels ((rewrite-request (raw)
+               (destructuring-bind (sender connection-id path rest) (m2cl::token-parse-n raw 3)
+                 (flet ((perform-rewrite ()
+                          (let ((json:*json-identifier-name-to-lisp* 'identity)
+                                (json:*lisp-identifier-name-to-json* 'identity))
+                            (multiple-value-bind (headers-string rest)
+                                (m2cl::netstring-parse rest)
+                              (let ((headers (json:decode-json-from-string headers-string)))
+                                (when (cdr (assoc :PATH headers))
+                                  (setf (cdr (assoc :PATH headers))
+                                        (ppcre:regex-replace prefix-re (cdr (assoc :PATH headers)) "/")))
+
+                                (when (cdr (assoc :URI headers))
+                                  (setf (cdr (assoc :URI headers))
+                                        (ppcre:regex-replace prefix-re (cdr (assoc :URI headers)) "/")))
+
+                                (setf headers-string (json:encode-json-to-string headers))
+
+                                (log-for (trace) "Rewriting: ~A ~A" path headers)
+                                (flex:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
+                                                               sender connection-id (ppcre:regex-replace prefix-re path "/")
+                                                               (length headers-string) headers-string
+                                                               (flex:octets-to-string rest))))))))
+
+                   (if (ppcre:scan prefix-re path)
+                       (perform-rewrite)
+                       raw)))))
+      #'(lambda (handler request raw)
+          (list handler
+                request
+                (rewrite-request raw))))))
+
+(defmethod make-request-forwarder-for ((endpoint forwarder-engine-endpoint) multibridge)
+  "Make a request forwarder lambda mapping (handlre request raw) as identity
+and forwarding the request according to where this endpoint wants it to go."
+  (lambda (handler request raw)
+    (with-slots (context request-proxy-addr) endpoint
+      (zmq:with-socket (forward context zmq:push)
+        (maybe-linger-socket forward)
+        (zmq:connect forward request-proxy-addr)
+        (zmq:send forward (make-instance 'zmq:msg :data raw))))
+    (list handler request raw)))
+
+(defmethod engine-endpoint-proccessors ((endpoint forwarder-engine-endpoint) (multibridge multibridge))
+  "Return a list of functions accepting (handler request raw) and returning the same.
+The result of calling the first will be the parameters to the second, and so forth."
+  (list
+   (make-request-rewriter-for endpoint multibridge)
+   (make-request-forwarder-for endpoint multibridge)))

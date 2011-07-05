@@ -91,33 +91,36 @@
       (log-for (trace) "Starting request queue writer device.")
       (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
-        (labels ((run-once ()
-                   (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
-                          (request (redis:red-hget req-key :body)))
-                     (log-for (trace) "Got request: ~A" req-key)
-                     (log-for (trace) "Request: ~A" request)
-                     ;; TODO: Investigate better use of ZMQ to write responses
-                     ;;       so I'm less constrained to a writer single thread ;_;
-                     (= (zmq:send (endpoint-request-sock endpoint)
-                                  (make-instance 'zmq:msg :data request))
-                        0)))
+        (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
+          (maybe-linger-socket forward-sock)
+          (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
+          (labels ((run-once ()
+                     (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
+                            (request (and req-key (redis:red-hget req-key :body))))
+                       (log-for (trace) "Got request: ~A" req-key)
+                       (log-for (trace) "Request: ~A" request)
+                       ;; TODO: Investigate better use of ZMQ to write responses
+                       ;;       so I'm less constrained to a writer single thread ;_;
+                       (= (zmq:send forward-sock
+                                    (make-instance 'zmq:msg :data request))
+                          0)))
 
-                 (handle-condition (c)
-                   (if (= (sb-alien:get-errno) sb-posix:eintr)
-                       t
-                       (prog1 nil
-                         (log-for (warn) "Queue request writer device exited with condition: ~A" c)
-                         (signal c))))
+                   (handle-condition (c)
+                     (if (= (sb-alien:get-errno) sb-posix:eintr)
+                         t
+                         (prog1 nil
+                           (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                           (signal c))))
 
-                 (run-device ()
-                   (handler-case (run-once)
-                     (simple-error (c) (handle-condition c)))))
+                   (run-device ()
+                     (handler-case (run-once)
+                       (simple-error (c) (handle-condition c)))))
 
-          (loop while (run-device) do ':nothing)))))
+            (loop while (run-device) do ':nothing))))))
 
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
-  (with-slots (request-write-device) endpoint
+  (with-slots (request-write-device request-queue-device) endpoint
     (setf request-queue-device
           (make-thread (make-request-queuer-device endpoint)
                        :name (format nil "engine-request-queue-request-queue-device-~A"

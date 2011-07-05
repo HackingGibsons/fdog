@@ -99,8 +99,7 @@
                             (request (and req-key (redis:red-hget req-key :body))))
                        (log-for (trace) "Got request: ~A" req-key)
                        (log-for (trace) "Request: ~A" request)
-                       ;; TODO: Investigate better use of ZMQ to write responses
-                       ;;       so I'm less constrained to a writer single thread ;_;
+
                        (= (zmq:send forward-sock
                                     (make-instance 'zmq:msg :data request))
                           0)))

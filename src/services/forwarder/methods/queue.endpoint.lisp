@@ -7,6 +7,8 @@
     (format nil "~A:~A:request-queue" queue-prefix
             (fdog-forwarder-name (endpoint-engine endpoint)))))
 
+(defmethod endpoint-queue-counter ((endpoint forwarder-queue-endpoint))
+  (format nil "~A:counter" (endpoint-queue-key endpoint)))
 
 (defmethod endpoint-request-key ((endpoint forwarder-engine-endpoint) request)
   "Generate a key to store the given `request' under for the endpoint `endpoint'"

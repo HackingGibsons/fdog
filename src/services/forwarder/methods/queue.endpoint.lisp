@@ -95,14 +95,20 @@
           (maybe-linger-socket forward-sock)
           (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
           (labels ((run-once ()
-                     (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
-                            (request (and req-key (redis:red-hget req-key :body))))
-                       (log-for (trace) "Got request: ~A" req-key)
-                       (log-for (trace) "Request: ~A" request)
+                     (handler-bind ((redis:redis-connection-error
+                                     #'(lambda (c)
+                                         (let ((reconnect (find-restart :reconnect)))
+                                           (if reconnect
+                                               (invoke-restart reconnect)
+                                               (error c))))))
+                       (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
+                              (request (and req-key (redis:red-hget req-key :body))))
+                         (log-for (trace) "Got request: ~A" req-key)
+                         (log-for (trace) "Request: ~A" request)
 
-                       (= (zmq:send forward-sock
-                                    (make-instance 'zmq:msg :data request))
-                          0)))
+                         (and
+                          (= 0 (zmq:send forward-sock (make-instance 'zmq:msg :data request)))
+                          (redis:red-incr (endpoint-queue-counter endpoint))))))
 
                    (handle-condition (c)
                      (if (= (sb-alien:get-errno) sb-posix:eintr)

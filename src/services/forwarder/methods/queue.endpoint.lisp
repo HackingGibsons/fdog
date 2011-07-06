@@ -161,27 +161,37 @@
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting queued proxy request device")
-      (let ((msg (make-instance 'zmq:msg)))
-        (labels ((run-once ()
-                   (let (recv send)
-                     (log-for (trace) "Reading queued request")
-                     (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
-                     (log-for (trace) "Read queued request: ~A" recv)
-                     (log-for (trace) "Sending queued request.")
-                     (and (= 0 recv)
-                          (setf send (zmq:send (endpoint-request-sock endpoint) msg)))
-                     (log-for (trace) "Sent queued request: ~A" send)
-                     (= 0 recv send)))
+      (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
+                                        :port (queue-endpoint-redis-port endpoint))
+        (handler-bind ((redis:redis-connection-error
+                                     #'(lambda (c)
+                                         (let ((reconnect (find-restart :reconnect)))
+                                           (if reconnect
+                                               (invoke-restart reconnect)
+                                               (error c))))))
 
-                 (handle (c)
-                   (= (sb-alien:get-errno) sb-posix:eintr))
+          (let ((msg (make-instance 'zmq:msg)))
+            (labels ((run-once ()
+                       (let (recv send)
+                         (log-for (trace) "Reading queued request")
+                         (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
+                         (log-for (trace) "Read queued request: ~A" recv)
+                         (log-for (trace) "Sending queued request.")
+                         (redis:red-decr (endpoint-queue-counter endpoint))
+                         (and (= 0 recv)
+                              (setf send (zmq:send (endpoint-request-sock endpoint) msg)))
+                         (log-for (trace) "Sent queued request: ~A" send)
+                         (= 0 recv send)))
 
-                   (run-device ()
-                     (handler-case (run-once)
-                       (simple-error (c) (handle c)))))
+                     (handle (c)
+                       (= (sb-alien:get-errno) sb-posix:eintr))
 
-          (loop while (run-device) do
-               (log-for (trace) "Request queue device restarting."))
-          (log-for (trace) "Queued request device exiting.")))))
+                     (run-device ()
+                       (handler-case (run-once)
+                         (simple-error (c) (handle c)))))
+
+              (loop while (run-device) do
+                   (log-for (trace) "Request queue device restarting."))
+              (log-for (trace) "Queued request device exiting.")))))))
 
 

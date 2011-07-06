@@ -181,9 +181,9 @@
                          (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
                          (log-for (trace) "Read queued request: ~A" recv)
                          (log-for (trace) "Sending queued request.")
-                         (request-queue-event endpoint :sent)
                          (and (= 0 recv)
                               (setf send (zmq:send (endpoint-request-sock endpoint) msg)))
+                         (request-queue-event endpoint :sent)
                          (log-for (trace) "Sent queued request: ~A" send)
                          (= 0 recv send)))
 

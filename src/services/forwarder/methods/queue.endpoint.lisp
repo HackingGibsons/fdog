@@ -10,16 +10,21 @@
 (defmethod request-queue-event ((endpoint forwarder-queue-endpoint) (event symbol))
   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
     (ecase event
+      (:reset (log-for (trace) "Resetting inflight request counter.")
+              (redis:red-multi)
+              (redis:red-del (endpoint-queue-counter endpoint))
+              (redis:red-publish (endpoint-queue-key endpoint) :reset)
+              (redis:red-exec))
       (:popped (log-for (trace) "Request popped from queue")
                (redis:red-multi)
                (redis:red-hincrby (endpoint-queue-counter endpoint) :count 1)
-               (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-universal-time))
+               (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-internal-real-time))
                (redis:red-publish (endpoint-queue-key endpoint) :popped)
                (redis:red-exec))
       (:sent (log-for (trace) "Request sent to handler.")
              (redis:red-multi)
              (redis:red-hincrby (endpoint-queue-counter endpoint) :count -1)
-             (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-universal-time))
+             (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-internal-real-time))
              (redis:red-publish (endpoint-queue-key endpoint) :sent)
              (redis:red-exec)))))
 
@@ -137,6 +142,9 @@
 
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
+  (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
+                                    :port (queue-endpoint-redis-port endpoint))
+    (request-queue-event endpoint :reset))
   (with-slots (request-write-device request-queue-device) endpoint
     (setf request-queue-device
           (make-thread (make-request-queuer-device endpoint)

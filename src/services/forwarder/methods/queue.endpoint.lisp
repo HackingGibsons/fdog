@@ -184,6 +184,7 @@
                          (= 0 recv send)))
 
                      (handle (c)
+                       (declare (ignore c))
                        (= (sb-alien:get-errno) sb-posix:eintr))
 
                      (run-device ()

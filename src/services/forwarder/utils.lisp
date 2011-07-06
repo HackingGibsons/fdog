@@ -45,3 +45,10 @@ remainder have sane defaults"
   (unless port (error "Port required, can't make sane default"))
   (format nil "~A://~A:~A" (or proto "tcp") (or addr (fdog:get-local-address :as :string))
                            port))
+
+;; Patch in a couple of more commands into redis
+;; TODO: Send a pull request: https://github.com/vseloved/cl-redis
+(in-package :redis)
+
+(def-cmd WATCH (key) :status "Watch a key.")
+(def-cmd UNWATCH () :status "Unwatch any watched keys.")

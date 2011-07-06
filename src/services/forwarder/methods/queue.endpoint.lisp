@@ -11,15 +11,17 @@
   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
     (ecase event
       (:popped (log-for (trace) "Request popped from queue")
-               (redis:with-pipelining
-                 (redis:red-hincrby (endpoint-queue-counter endpoint) :count 1)
-                 (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-universal-time)))
-               (redis:red-publish (endpoint-queue-key endpoint) :popped))
+               (redis:red-multi)
+               (redis:red-hincrby (endpoint-queue-counter endpoint) :count 1)
+               (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-universal-time))
+               (redis:red-publish (endpoint-queue-key endpoint) :popped)
+               (redis:red-exec))
       (:sent (log-for (trace) "Request sent to handler.")
-             (redis:with-pipelining
-               (redis:red-hincrby (endpoint-queue-counter endpoint) :count -1)
-               (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-universal-time)))
-             (redis:red-publish (endpoint-queue-key endpoint) :sent)))))
+             (redis:red-multi)
+             (redis:red-hincrby (endpoint-queue-counter endpoint) :count -1)
+             (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-universal-time))
+             (redis:red-publish (endpoint-queue-key endpoint) :sent)
+             (redis:red-exec)))))
 
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
@@ -52,10 +54,11 @@
         (queue-key (endpoint-queue-key endpoint)))
     ;; TODO: Make sure this doesn't spin wildly if the server is outright down
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-      (redis:with-pipelining
-        (redis:red-lpush queue-key request-key)
-        #|Trim|#)
-      (redis:red-publish (endpoint-queue-key endpoint) :pushed))
+      (redis:red-multi)
+      (redis:red-lpush queue-key request-key)
+      #|Trim|#
+      (redis:red-publish (endpoint-queue-key endpoint) :pushed)
+      (redis:red-exec))
     (values queue-key
             request-key)))
 

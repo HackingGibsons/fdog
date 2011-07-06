@@ -13,11 +13,13 @@
       (:popped (log-for (trace) "Request popped from queue")
                (redis:with-pipelining
                  (redis:red-hincrby (endpoint-queue-counter endpoint) :count 1)
-                 (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-universal-time))))
+                 (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-universal-time)))
+               (redis:red-publish (endpoint-queue-key endpoint) :popped))
       (:sent (log-for (trace) "Request sent to handler.")
              (redis:with-pipelining
                (redis:red-hincrby (endpoint-queue-counter endpoint) :count -1)
-               (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-universal-time)))))))
+               (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-universal-time)))
+             (redis:red-publish (endpoint-queue-key endpoint) :sent)))))
 
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
@@ -48,11 +50,12 @@
   "Enqueue message on the endpoint to the current connected redis instance."
   (let ((request-key (store-request endpoint msg))
         (queue-key (endpoint-queue-key endpoint)))
-    ;; TODO: Fold out this contraption to a macro
     ;; TODO: Make sure this doesn't spin wildly if the server is outright down
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-      (redis:red-lpush queue-key request-key)
-      #|TODO: Trim|#)
+      (redis:with-pipelining
+        (redis:red-lpush queue-key request-key)
+        #|Trim|#)
+      (redis:red-publish (endpoint-queue-key endpoint) :pushed))
     (values queue-key
             request-key)))
 

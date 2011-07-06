@@ -149,3 +149,31 @@
 (defmethod request-forwarding-address ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Serving a queue address to forward requests to.")
   (endpoint-queue-addr endpoint))
+
+(defmethod make-request-device ((endpoint forwarder-queue-endpoint))
+  #'(lambda ()
+      (log-for (trace) "Starting queued proxy request device")
+      (let ((msg (make-instance 'zmq:msg)))
+        (labels ((run-once ()
+                   (let (recv send)
+                     (log-for (trace) "Reading queued request")
+                     (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
+                     (log-for (trace) "Read queued request: ~A" recv)
+                     (log-for (trace) "Sending queued request.")
+                     (and (= 0 recv)
+                          (setf send (zmq:send (endpoint-request-sock endpoint) msg)))
+                     (log-for (trace) "Sent queued request: ~A" send)
+                     (= 0 recv send)))
+
+                 (handle (c)
+                   (= (sb-alien:get-errno) sb-posix:eintr))
+
+                   (run-device ()
+                     (handler-case (run-once)
+                       (simple-error (c) (handle c)))))
+
+          (loop while (run-device) do
+               (log-for (trace) "Request queue device restarting."))
+          (log-for (trace) "Queued request device exiting.")))))
+
+

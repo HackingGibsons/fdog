@@ -41,6 +41,8 @@
                :accessor queue-endpoint-redis-host)
    (redis-port :initform 6379
                :accessor queue-endpoint-redis-port)
+   (request-linger :initform 300
+                   :accessor queue-endpoint-request-linger)
    (request-prefix :initform "fdog-request:")
    (queue-prefix :initform "fdog-queue:")
 

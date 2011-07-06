@@ -141,6 +141,8 @@
                                 (request (and req-key (redis:red-hget req-key :body))))
                            (log-for (trace) "Got request: ~A" req-key)
                            (log-for (trace) "Request: ~A" request)
+                           (log-for (trace) "Expiring request in ~A seconds." (queue-endpoint-request-linger endpoint))
+                           (redis:red-expire req-key (queue-endpoint-request-linger endpoint))
 
                            (and
                             (setf prev-count cur-count)

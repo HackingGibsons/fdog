@@ -1,6 +1,20 @@
 (in-package :fdog-forwarder)
 
 ;; Request queuing machinery
+(defun reconnect-redis-handler (c)
+  (let ((reconnect (find-restart :reconnect)))
+    (if reconnect
+        (invoke-restart reconnect)
+        (error c))))
+
+(defmethod request-queue-event ((endpoint forwarder-queue-endpoint) (event symbol))
+  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (ecase event
+      (:popped (log-for (trace) "Request popped from queue")
+               (redis:red-incr (endpoint-queue-counter endpoint)))
+      (:sent (log-for (trace) "Request sent to handler.")
+             (redis:red-decr (endpoint-queue-counter endpoint))))))
+
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
   (with-slots (queue-prefix) endpoint
@@ -22,12 +36,7 @@
   "Store the request in redis and return a key that can be used to reffer to it."
   (let ((key (endpoint-request-key endpoint msg)))
     (log-for (trace) "Stored request for ~A" (fdog-forwarder-name (endpoint-engine endpoint)))
-    (handler-bind ((redis:redis-connection-error
-                    #'(lambda (c)
-                        (let ((reconnect (find-restart :reconnect)))
-                          (if reconnect
-                              (invoke-restart reconnect)
-                              (error c))))))
+    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (redis:red-hset key :body (flex:octets-to-string msg)))
     key))
 
@@ -37,12 +46,7 @@
         (queue-key (endpoint-queue-key endpoint)))
     ;; TODO: Fold out this contraption to a macro
     ;; TODO: Make sure this doesn't spin wildly if the server is outright down
-    (handler-bind ((redis:redis-connection-error
-                    #'(lambda (c)
-                        (let ((reconnect (find-restart :reconnect)))
-                          (if reconnect
-                              (invoke-restart reconnect)
-                              (error c))))))
+    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (redis:red-lpush queue-key request-key)
       #|TODO: Trim|#)
     (values queue-key
@@ -97,20 +101,16 @@
           (maybe-linger-socket forward-sock)
           (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
           (labels ((run-once ()
-                     (handler-bind ((redis:redis-connection-error
-                                     #'(lambda (c)
-                                         (let ((reconnect (find-restart :reconnect)))
-                                           (if reconnect
-                                               (invoke-restart reconnect)
-                                               (error c))))))
+                     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
                        (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
                               (request (and req-key (redis:red-hget req-key :body))))
                          (log-for (trace) "Got request: ~A" req-key)
                          (log-for (trace) "Request: ~A" request)
 
                          (and
-                          (= 0 (zmq:send forward-sock (make-instance 'zmq:msg :data request)))
-                          (redis:red-incr (endpoint-queue-counter endpoint))))))
+                          (request-queue-event endpoint :popped)
+                          (= 0 (zmq:send forward-sock (make-instance 'zmq:msg :data request)))))))
+
 
                    (handle-condition (c)
                      (if (= (sb-alien:get-errno) sb-posix:eintr)
@@ -163,13 +163,7 @@
       (log-for (trace) "Starting queued proxy request device")
       (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
-        (handler-bind ((redis:redis-connection-error
-                                     #'(lambda (c)
-                                         (let ((reconnect (find-restart :reconnect)))
-                                           (if reconnect
-                                               (invoke-restart reconnect)
-                                               (error c))))))
-
+        (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
           (let ((msg (make-instance 'zmq:msg)))
             (labels ((run-once ()
                        (let (recv send)
@@ -177,7 +171,7 @@
                          (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
                          (log-for (trace) "Read queued request: ~A" recv)
                          (log-for (trace) "Sending queued request.")
-                         (redis:red-decr (endpoint-queue-counter endpoint))
+                         (request-queue-event endpoint :sent)
                          (and (= 0 recv)
                               (setf send (zmq:send (endpoint-request-sock endpoint) msg)))
                          (log-for (trace) "Sent queued request: ~A" send)

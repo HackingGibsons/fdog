@@ -7,6 +7,12 @@
         (invoke-restart reconnect)
         (error c))))
 
+(defmethod request-event-info ((endpoint forwarder-queue-endpoint) field &key (type :int))
+  (let ((val (redis:red-hget (endpoint-queue-counter endpoint) field)))
+    (ecase type
+      (:int (parse-integer val))
+      (:raw val))))
+
 (defmethod request-queue-event ((endpoint forwarder-queue-endpoint) (event symbol))
   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
     (ecase event

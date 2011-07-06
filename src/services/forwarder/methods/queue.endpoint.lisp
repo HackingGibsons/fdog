@@ -12,7 +12,10 @@
     (ecase event
       (:reset (log-for (trace) "Resetting inflight request counter.")
               (redis:red-multi)
-              (redis:red-del (endpoint-queue-counter endpoint))
+              (redis:red-hmset (endpoint-queue-counter endpoint)
+                               :count 0
+                               :last-pop 0
+                               :last-sent 0)
               (redis:red-publish (endpoint-queue-key endpoint) :reset)
               (redis:red-exec))
       (:popped (log-for (trace) "Request popped from queue")

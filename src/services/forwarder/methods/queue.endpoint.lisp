@@ -11,9 +11,13 @@
   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
     (ecase event
       (:popped (log-for (trace) "Request popped from queue")
-               (redis:red-incr (endpoint-queue-counter endpoint)))
+               (redis:with-pipelining
+                 (redis:red-hincrby (endpoint-queue-counter endpoint) :count 1)
+                 (redis:red-hset (endpoint-queue-counter endpoint) :last-pop (get-universal-time))))
       (:sent (log-for (trace) "Request sent to handler.")
-             (redis:red-decr (endpoint-queue-counter endpoint))))))
+             (redis:with-pipelining
+               (redis:red-hincrby (endpoint-queue-counter endpoint) :count -1)
+               (redis:red-hset (endpoint-queue-counter endpoint) :last-sent (get-universal-time)))))))
 
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))

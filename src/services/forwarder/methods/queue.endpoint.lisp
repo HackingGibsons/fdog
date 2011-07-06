@@ -121,33 +121,39 @@
       (log-for (trace) "Starting request queue writer device.")
       (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
-        (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
-          (maybe-linger-socket forward-sock)
-          (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
-          (labels ((run-once ()
-                     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-                       (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
-                              (request (and req-key (redis:red-hget req-key :body))))
-                         (log-for (trace) "Got request: ~A" req-key)
-                         (log-for (trace) "Request: ~A" request)
+        (let ((prev-count (request-event-info endpoint :count))
+              cur-count)
+          (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
+            (maybe-linger-socket forward-sock)
+            (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
+            (labels ((run-once ()
+                       (setf cur-count (request-event-info endpoint :count))
+                       (when (> cur-count prev-count)
+                         (log-for (warn) "Requests are being backlogged against a blocked writer! Now: ~A" cur-count))
+                       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+                         (let* ((req-key (car (last (redis:red-brpop (endpoint-queue-key endpoint) 0))))
+                                (request (and req-key (redis:red-hget req-key :body))))
+                           (log-for (trace) "Got request: ~A" req-key)
+                           (log-for (trace) "Request: ~A" request)
 
-                         (and
-                          (request-queue-event endpoint :popped)
-                          (= 0 (zmq:send forward-sock (make-instance 'zmq:msg :data request)))))))
+                           (and
+                            (setf prev-count cur-count)
+                            (request-queue-event endpoint :popped)
+                            (= 0 (zmq:send forward-sock (make-instance 'zmq:msg :data request)))))))
 
 
-                   (handle-condition (c)
-                     (if (= (sb-alien:get-errno) sb-posix:eintr)
-                         t
-                         (prog1 nil
-                           (log-for (warn) "Queue request writer device exited with condition: ~A" c)
-                           (signal c))))
+                     (handle-condition (c)
+                       (if (= (sb-alien:get-errno) sb-posix:eintr)
+                           t
+                           (prog1 nil
+                             (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                             (signal c))))
 
-                   (run-device ()
-                     (handler-case (run-once)
-                       (simple-error (c) (handle-condition c)))))
+                     (run-device ()
+                       (handler-case (run-once)
+                         (simple-error (c) (handle-condition c)))))
 
-            (loop while (run-device) do ':nothing))))))
+              (loop while (run-device) do ':nothing)))))))
 
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))

@@ -8,6 +8,7 @@
                               :headers ((header-json-type)))
       (with-slots (name listen-on forward-to) forwarder
         (json:encode-json `((:name . ,name)
+                            (:queue . ,(forwarder-queuing-p forwarder))
                             (:sub . ,(format nil "tcp://~A:~A" (fdog:get-local-address) listen-on))
                             (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
                           stream))))

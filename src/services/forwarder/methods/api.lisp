@@ -4,11 +4,16 @@
 #.(clsql:locally-enable-sql-reader-syntax)
 
 (defmethod api/forwarder/update (handler request forwarder args)
-  (log-for (warn) "TODO: api/forwarder/update undefined.")
-  (with-chunked-stream-reply (handler request stream
-                              :headers ((header-json-type)))
-    (json:encode-json (format nil "UNDEFINED: ~A" forwarder)
-                      stream)))
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (enabled (forwarder-queuing-p forwarder)))
+    (log-for (trace) "Update spec: ~A" spec)
+    (if (cdr (assoc :queue spec))
+        (forwarder-queue-enable forwarder)
+        (forwarder-queue-disable forwarder))
+    (unless (eq enabled (forwarder-queuing-p forwarder))
+      (log-for (trace) "Queue state of forwarder changed, re-initing")
+      (init-forwarders))
+    (api/forwarder/root handler request forwarder args)))
 
 (defmethod api/forwarder/root (handler request forwarder args)
   (with-chunked-stream-reply (handler request stream
@@ -72,7 +77,7 @@
        (funcall &route handler request forwarder rest)
 
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
-       (:exact "/update/" :responder 'api/forwarder/update)
+       (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)

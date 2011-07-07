@@ -3,6 +3,13 @@
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
+(defmethod api/forwarder/update (handler request forwarder args)
+  (log-for (warn) "TODO: api/forwarder/update undefined.")
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json (format nil "UNDEFINED: ~A" forwarder)
+                      stream)))
+
 (defmethod api/forwarder/root (handler request forwarder args)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
@@ -65,6 +72,7 @@
        (funcall &route handler request forwarder rest)
 
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
+       (:exact "/update/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) handler request raw)

@@ -145,7 +145,9 @@
                                    ((string-equal (third msg) :sent))
                                  (log-for (warn) "Waiting for next send message to resume queue pickups.."))
                                (log-for (warn) "Writing to the client has resumed, resuming queue reads.")
-                               (redis:red-unsubscribe))
+                               (log-for (warn) "Unsubscribing..")
+                               (redis:red-unsubscribe)
+                               (log-for (warn) "Going for next request."))
 
                              (redis:red-unwatch))
 

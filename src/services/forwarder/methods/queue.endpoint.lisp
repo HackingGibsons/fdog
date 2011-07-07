@@ -217,9 +217,9 @@
       (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
         (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-          (let ((msg (make-instance 'zmq:msg)))
             (labels ((run-once ()
-                       (let (recv send)
+                       (let ((msg (make-instance 'zmq:msg))
+                             recv send)
                          (log-for (trace) "Reading queued request")
                          (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
                          (log-for (trace) "Read queued request: ~A" recv)
@@ -240,6 +240,6 @@
 
               (loop while (run-device) do
                    (log-for (trace) "Request queue device restarting."))
-              (log-for (trace) "Queued request device exiting.")))))))
+              (log-for (trace) "Queued request device exiting."))))))
 
 

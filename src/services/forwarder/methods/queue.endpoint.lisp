@@ -2,10 +2,15 @@
 
 ;; Request queuing machinery
 (defun reconnect-redis-handler (c)
+  (log-for (warn) "Reconnecting to Redis!!")
   (let ((reconnect (find-restart :reconnect)))
     (if reconnect
-        (invoke-restart reconnect)
-        (error c))))
+        (progn
+          (log-for (warn) "Reconnect restart found")
+          (invoke-restart reconnect))
+        (progn
+          (log-for (warn) "There is no reconnect restart")
+          (error c)))))
 
 (defmethod request-event-info ((endpoint forwarder-queue-endpoint) field &key (type :int))
   (let ((val (redis:red-hget (endpoint-queue-counter endpoint) field)))

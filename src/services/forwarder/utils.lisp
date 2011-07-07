@@ -52,3 +52,13 @@ remainder have sane defaults"
 
 (def-cmd WATCH (key) :status "Watch a key.")
 (def-cmd UNWATCH () :status "Unwatch any watched keys.")
+(def-expect-method :multi
+  (let ((n (parse-integer reply)))
+    (unless (= n -1)
+      (loop :repeat n
+         :collect (expect :anything)))))
+
+(def-cmd QSUBSCRIBE (&rest chans) :anything "Subscribe, but accept that the response won't come until after an exec.")
+(defmethod tell ((cmd (eql 'QSUBSCRIBE)) &rest args)
+  "Wrap QSUBSCRIBE to be subscribe"
+  (apply #'tell `(SUBSCRIBE ,@args)))

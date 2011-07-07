@@ -62,3 +62,18 @@ remainder have sane defaults"
 (defmethod tell ((cmd (eql 'QSUBSCRIBE)) &rest args)
   "Wrap QSUBSCRIBE to be subscribe"
   (apply #'tell `(SUBSCRIBE ,@args)))
+
+(def-cmd UNSUBSCRIBE (&rest chans) :unsubscribe
+  "Drain the channel messages then return the list of unsubscriptions.")
+(defmethod expect ((type (eql :unsubscribe)))
+  "Override the unsubscribe return to drain the pending messages
+rather than panic and fall down crying. >:["
+  (let (unsubs (discarded 0))
+    (do ((current (redis:expect :multi) (redis:expect :multi)))
+        ((and (string-equal (first current) :unsubscribe)
+              (= 0 (parse-integer (car (last current)))))
+         (progn (push current unsubs)
+                (values unsubs discarded)))
+      (if (string-equal (first current) :unsubscribe)
+        (push current unsubs)
+        (incf discarded)))))

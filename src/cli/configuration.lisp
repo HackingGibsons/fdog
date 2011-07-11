@@ -10,4 +10,11 @@
        (make-route "/static/" (make-dir "./public/")))))
 
   (fdog-models:make-mongrel2-setting :certdir "certs/")
-  (fdog-models:make-mongrel2-setting :superpoll.max_fd "65536"))
+  (fdog-models:make-mongrel2-setting :superpoll.max_fd "65536")
+  (fdog-models:make-mongrel2-setting :limits.tick_timer "1")
+  (fdog-models:make-mongrel2-setting :limits.min_ping "60")
+  (fdog-models:make-mongrel2-setting :limits.fdtask_stack "204800")
+  (fdog-models:make-mongrel2-setting :limits.handler_stack "204800")
+  (fdog-models:make-mongrel2-setting :limits.connection_stack_size "65536")
+  (fdog-models:make-mongrel2-setting :superpoll.hot_dividend "2")
+  (fdog-models:make-mongrel2-setting :limits.content_length "204800"))

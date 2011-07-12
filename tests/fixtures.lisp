@@ -44,12 +44,3 @@
      :cleanup (progn
                 (mongrel2-server-signal/block server :stop)
                 (log-for (trace) "Mongrel2 stopped"))))
-
-
-;; (defmacro +m2/running (&body body)
-;;   `(progn
-;;      (if (eql :timeout (progn (mongrel2-server-signal/block server :stop)
-;;                               (mongrel2-server-signal/block server :start)))
-;;          (skip "Server spawn has timed out")
-;;          (progn ,@body))
-;;      (mongrel2-server-signal/block server :stop)))

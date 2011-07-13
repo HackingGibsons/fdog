@@ -119,7 +119,7 @@ TODO: use the `search' keyword, it does not currently alter flow."
 
 (defmethod make-forwarder ((name symbol) &rest host-paths)
   "Helper to translate keywords to name slugs"
-  (call-next-method (string-downcase (symbol-name :deejay)) host-paths))
+  (call-next-method (string-downcase (symbol-name name)) host-paths))
 
 (defmethod make-forwarder ((name string) &rest host-paths)
   "Make a new forwarder named `name' with hostpaths as configured

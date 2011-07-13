@@ -206,9 +206,7 @@ for a given `forwarder'"
   (clsql:update-objects-joins `(,forwarder))
   (let ((q-option (or (fdog-forwarder-queue-options forwarder)
                       (make-instance 'fdog-forwarder-queue
-                                     :forwarder-id (fdog-forwarder-id forwarder)
-                                     :enabled nil
-                                     :depth nil))))
+                                     :forwarder-id (fdog-forwarder-id forwarder)))))
     (setf (fdog-forwarder-queue-options forwarder) q-option)
     (clsql:update-records-from-instance q-option)
     q-option))

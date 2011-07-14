@@ -179,7 +179,6 @@ in the context of `endpoint'"
 
                                 (setf headers-string (json:encode-json-to-string headers))
 
-                                (log-for (trace) "Rewriting: ~A ~A" path headers)
                                 (flex:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
                                                                sender connection-id (ppcre:regex-replace prefix-re path "/")
                                                                (length headers-string) headers-string
@@ -205,7 +204,6 @@ and forwarding the request according to where this endpoint wants it to go."
       (zmq:with-socket (forward context zmq:push)
         (maybe-linger-socket forward)
         (zmq:connect forward (request-forwarding-address endpoint))
-        (log-for (trace) "Forwarding message: ~A to ~A" (flex:octets-to-string raw) (request-forwarding-address endpoint))
         (zmq:send forward (make-instance 'zmq:msg :data raw))))
     (list handler request raw)))
 

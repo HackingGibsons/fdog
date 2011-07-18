@@ -21,9 +21,7 @@ TODO: DRY this shit up."
   "Ensure that the servers required for forwarder operation exist
 and are configured to the current environment configuration as dicated by
 `*forwarder-server-name*', `*forwarder-server-port*' and `*forwarder-server-ssl-port*'"
-  (list (ensure-server-exists :port *forwarder-server-port* :ssl nil)
-        (ensure-server-exists :name (concatenate 'string *forwarder-server-name* "-ssl")
-                              :port *forwarder-server-ssl-port* :ssl t)))
+  (list (ensure-server-exists :port *forwarder-server-port* :ssl nil)))
 
 (defun ensure-server-exists (&key (name *forwarder-server-name*) (port *forwarder-server-port*) (bind "0.0.0.0") (ssl nil))
   "Ensure that the `named'-ed forwarder server exists with the options given by `port' `bind' and `ssl'"

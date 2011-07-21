@@ -3,7 +3,7 @@
 (defmacro def-test+fdog (name &body body)
   "Utility to shorten the process of writing a mongrel2 db test"
   `(def-test (,name :group fdog-forwarder-api-tests
-                    :fixtures (database/connected database/inited database/configured mongrel2/running))
+                    :fixtures ())
        ,@body))
 
 

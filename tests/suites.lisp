@@ -9,7 +9,7 @@
 (def-test-group mongrel2-process-tests ()
   (:documentation "Tests including a running mongrel2."))
 
-(def-test-group fdog-forwarder-api-tests ()
+(def-test-group fdog-forwarder-api-tests (database/connected database/inited fdog/engaged)
   (:documentation "Tests the forwarder creation and endpoint fetching API."))
 
 (def-test-group main-tests ()

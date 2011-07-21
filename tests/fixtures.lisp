@@ -44,3 +44,10 @@
      :cleanup (progn
                 (mongrel2-server-signal/block server :stop)
                 (log-for (trace) "Mongrel2 stopped"))))
+
+(def-fixtures fdog/engaged
+     (:setup (progn
+               (fdog-cli::install-default-configuration)
+               (log-for (warn) "fdog/engaged setup!"))
+     :cleanup (progn
+                (log-for (warn) "fdog/engaged cleanup!"))))

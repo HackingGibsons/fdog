@@ -22,7 +22,7 @@
     (when *verbose*
       (log-for (trace) "Running tests"))
 
-    (nst-cmd :run-package :fdog-tests)
+    (nst-cmd :run-group main-tests)
 
     (when *verbose*
       (log-for (trace) "Storing junit in ~A" results-dir))

@@ -204,7 +204,7 @@ and forwarding the request according to where this endpoint wants it to go."
       (zmq:with-socket (forward context zmq:push)
         (maybe-linger-socket forward)
         (zmq:connect forward (request-forwarding-address endpoint))
-        (log-for (trace) "Forwarding request to ~A" (request-forwarding-address endpoint))
+        (log-for (trace) "Forwarding request to ~A for endpoint ~A" (request-forwarding-address endpoint) endpoint)
         (log-for (trace) "Send result: ~A"
                  (zmq:send forward (make-instance 'zmq:msg :data raw)))))
     (list handler request raw)))

@@ -105,11 +105,17 @@
                                         :port (queue-endpoint-redis-port endpoint))
         (let ((msg (make-instance 'zmq:msg)))
           (labels ((run-once ()
-                     (zmq:recv (endpoint-queue-sock endpoint) msg)
-                     (queue-request endpoint (zmq:msg-data-as-array msg)))
+                     (log-for (trace) "Waiting for message to queue for endpoint: ~A" endpoint)
+                     (log-for (trace) "Recv() result for endpoint->queue[~A]: ~A" endpoint
+                              (zmq:recv (endpoint-queue-sock endpoint) msg))
+                     (log-for (trace) "Queueing message.")
+                     (prog1 (queue-request endpoint (zmq:msg-data-as-array msg))
+                       (log-for (trace) "Request queued for endpoint: ~A")))
 
                    (handle-condition (c)
-                     (or (= (sb-alien:get-errno) sb-posix:eintr)
+                     (or (when (= (sb-alien:get-errno) sb-posix:eintr)
+                           (log-for (warn) "Queue device restarting on endpoint: ~A" endpoint)
+                           t)
                          (prog1 nil
                            (log-for (warn) "Queue device exited with condition: ~A" c)
                            (signal c))))

@@ -110,7 +110,7 @@
                               (zmq:recv (endpoint-queue-sock endpoint) msg))
                      (log-for (trace) "Queueing message.")
                      (prog1 (queue-request endpoint (zmq:msg-data-as-array msg))
-                       (log-for (trace) "Request queued for endpoint: ~A")))
+                       (log-for (trace) "Request queued for endpoint: ~A" endpoint)))
 
                    (handle-condition (c)
                      (or (when (= (sb-alien:get-errno) sb-posix:eintr)

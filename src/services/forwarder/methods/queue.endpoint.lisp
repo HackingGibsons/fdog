@@ -171,7 +171,7 @@
                            (and
                             (setf prev-count cur-count)
                             (request-queue-event endpoint :popped)
-                            (= 0 (zmq:send forward-sock (make-instance 'zmq:msg :data request)))))))
+                            (= 0 (zmq:send! forward-sock (make-instance 'zmq:msg :data request)))))))
 
 
                      (handle-condition (c)
@@ -237,7 +237,7 @@
                          (log-for (trace) "Read queued request: ~A" recv)
                          (log-for (trace) "Sending queued request.")
                          (and (= 0 recv)
-                              (setf send (zmq:send (endpoint-request-sock endpoint) msg)))
+                              (setf send (zmq:send! (endpoint-request-sock endpoint) msg)))
                          (request-queue-event endpoint :sent)
                          (log-for (trace) "Sent queued request: ~A" send)
                          (= 0 recv send)))

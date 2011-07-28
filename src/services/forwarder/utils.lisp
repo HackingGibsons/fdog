@@ -77,3 +77,20 @@ rather than panic and fall down crying. >:["
       (if (string-equal (first current) :unsubscribe)
         (push current unsubs)
         (incf discarded)))))
+
+;; Act II:
+;; ...In which I rudely invade and ammend a package
+(in-package :zmq)
+
+(export 'send!)
+(defun send! (sock msg &optional flags (count 0))
+  "Keep trying to `zmq:send' while it keeps returning -1 with an errno
+of EINTR recursively.  Second value returned is the number of times the operation was retried."
+  (let* ((res (zmq:send sock msg flags))
+         (res (cond ((and (= res -1)
+                        (= (sb-alien:get-errno) sb-posix:eintr))
+                   (send! sock msg flags (1+ count)))
+
+                  (:otherwise res))))
+    (values res count)))
+

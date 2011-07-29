@@ -107,7 +107,7 @@
           (labels ((run-once ()
                      (log-for (trace) "Waiting for message to queue for endpoint: ~A" endpoint)
                      (log-for (trace) "Recv() result for endpoint->queue[~A]: ~A" endpoint
-                              (zmq:recv (endpoint-queue-sock endpoint) msg))
+                              (zmq:recv! (endpoint-queue-sock endpoint) msg))
                      (log-for (trace) "Queueing message.")
                      (prog1 (queue-request endpoint (zmq:msg-data-as-array msg))
                        (log-for (trace) "Request queued for endpoint: ~A" endpoint)))
@@ -233,7 +233,7 @@
                        (let ((msg (make-instance 'zmq:msg))
                              recv send)
                          (log-for (trace) "Reading queued request")
-                         (setf recv (zmq:recv (endpoint-proxy-sock endpoint) msg))
+                         (setf recv (zmq:recv! (endpoint-proxy-sock endpoint) msg))
                          (log-for (trace) "Read queued request: ~A" recv)
                          (log-for (trace) "Sending queued request.")
                          (and (= 0 recv)

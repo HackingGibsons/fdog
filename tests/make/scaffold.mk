@@ -4,6 +4,8 @@ TEST_PATH = $(ROOT)/$(TEST_DIR)/
 
 build-test-fdog:
 	@echo "=> Building a test server in: $(TEST_PATH)"
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
 	$(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
 	        --eval '(ql:quickload :fdog)' \
 			--eval '(fdog-cli:fdog-main `("fdog-test" "init" "--no-input" "$(TEST_PATH)"))' \
@@ -14,6 +16,8 @@ start-test-fdog: $(TEST_DIR)
 	@echo "=> Starting instance in $(TEST_PATH)"
 	( \
 	 cd $(TEST_PATH); \
+     LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	 CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
 	 nohup $(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
 	 	   --eval '(ql:quickload :fdog)' \
 		   --eval '(fdog-cli:fdog-main `("fdog-test" "start" "$(TEST_PATH)" "--no-fork"))' \
@@ -24,6 +28,8 @@ start-test-fdog: $(TEST_DIR)
 
 stop-test-fdog:
 	@echo "=> Stopping instance in $(TEST_PATH)"
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
 	$(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
 	        --eval '(ql:quickload :fdog)' \
 			--eval '(fdog-cli:fdog-main `("fdog-test" "stop" "$(TEST_PATH)"))' \

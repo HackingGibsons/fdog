@@ -14,15 +14,12 @@ $(TEST_DIR): build-test-fdog
 
 start-test-fdog: $(TEST_DIR)
 	@echo "=> Starting instance in $(TEST_PATH)"
-	( \
-	 cd $(TEST_PATH); \
-     LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
-	 CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
-	 nohup $(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
-	 	   --eval '(ql:quickload :fdog)' \
-		   --eval '(fdog-cli:fdog-main `("fdog-test" "start" "$(TEST_PATH)" "--no-fork"))' \
-		   --eval '(quit)' & \
-	);
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
+	nohup $(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
+		  --eval '(ql:quickload :fdog)' \
+		  --eval '(fdog-cli:fdog-main `("fdog-test" "start" "$(TEST_PATH)" "--no-fork"))' \
+		  --eval '(quit)' &
 	@echo "=> Sleeping to ensure test server boot."
 	@sleep 6
 

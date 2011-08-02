@@ -21,6 +21,7 @@ QL_ROOT_PATH = $(HOME)/$(QL_ROOT_NAME)
 DEBUG ?= 1 # (declaim (debug 1)) is the SBCL default
 
 ## TODO: Clean up the mess below in these smaller messes
+.DEFAULT_GOAL=help
 include $(ROOT)/src/make/*.mk
 include $(ROOT)/tests/make/*.mk
 

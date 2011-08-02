@@ -15,5 +15,6 @@
                               :components ((:file "mongrel2.db")
                                            (:file "mongrel2.proc" :depends-on ("mongrel2.db"))
                                            (:file "forwarder.api" :depends-on ("mongrel2.proc"))
+                                           (:file "forwarder.functional")
                                            (:file "basic")))))))
 

@@ -16,13 +16,27 @@
 
 (defvar *verbose* t)
 
-(defun run ()
+(defun run-functional ()
+  (let ((results-dir (merge-pathnames (make-pathname :directory '(:relative "tests" "results"))
+                                      (asdf:system-source-directory :fdog-tests))))
+    (when *verbose*
+      (log-for (trace) "Running functional tests"))
+
+    (nst-cmd :run-group functional-tests)
+
+    (when *verbose*
+      (log-for (trace) "Storing junit in ~A" results-dir))
+    (junit-results-by-group :dir results-dir
+                            :if-file-exists :supersede
+                            :if-dir-does-not-exist :create)))
+
+(defun run-unit ()
   (let ((results-dir (merge-pathnames (make-pathname :directory '(:relative "tests" "results"))
                                       (asdf:system-source-directory :fdog-tests))))
     (when *verbose*
       (log-for (trace) "Running tests"))
 
-    (nst-cmd :run-group main-tests)
+    (nst-cmd :run-group unit-tests)
 
     (when *verbose*
       (log-for (trace) "Storing junit in ~A" results-dir))

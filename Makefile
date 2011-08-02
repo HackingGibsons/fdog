@@ -1,3 +1,4 @@
+#-*- mode:makefile-gmake; -*-
 ROOT ?= $(shell pwd)
 TARGET ?= bin/fdog
 LISP ?= $(shell which sbcl || echo /sbcl/does/not/exist)
@@ -19,6 +20,9 @@ QL_ROOT_PATH = $(HOME)/$(QL_ROOT_NAME)
 
 DEBUG ?= 1 # (declaim (debug 1)) is the SBCL default
 
+## TODO: Clean up the mess below in these smaller messes
+include $(ROOT)/src/make/*.mk
+include $(ROOT)/tests/make/*.mk
 
 # Inteded UI targets
 help:

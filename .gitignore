@@ -6,3 +6,4 @@ scratch.lisp
 *.old
 /coverage/
 build/*
+/.test/*

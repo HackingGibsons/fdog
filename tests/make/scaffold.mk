@@ -22,7 +22,7 @@ start-test-fdog: $(TEST_DIR)
 		  --eval '(quit)' &
 	date
 	@echo "=> Sleeping to ensure test server boot."
-	@sleep 6
+	sleep 15
 	date
 	@echo "=> Awake and running"
 

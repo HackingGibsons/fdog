@@ -43,3 +43,18 @@
     (junit-results-by-group :dir results-dir
                             :if-file-exists :supersede
                             :if-dir-does-not-exist :create)))
+
+(defun run-all ()
+  (let ((results-dir (merge-pathnames (make-pathname :directory '(:relative "tests" "results"))
+                                      (asdf:system-source-directory :fdog-tests))))
+    (when *verbose*
+      (log-for (trace) "Running tests"))
+
+    (nst-cmd :run-group all-tests)
+
+    (when *verbose*
+      (log-for (trace) "Storing junit in ~A" results-dir))
+    (junit-results-by-group :dir results-dir
+                            :if-file-exists :supersede
+                            :if-dir-does-not-exist :create)))
+

@@ -1,6 +1,5 @@
 (in-package :fdog-tests)
 
-;; NST
 (def-fixtures database/connected
     (:setup (progn
               (log-for (trace) "DB Connected setup")

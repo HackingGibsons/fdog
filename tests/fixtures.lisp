@@ -50,3 +50,7 @@
                (log-for (warn) "fdog/engaged setup!"))
      :cleanup (progn
                 (log-for (warn) "fdog/engaged cleanup!"))))
+
+(def-fixtures fdog/functional
+    (:setup (make "start-test-fdog")
+     :cleanup (make "stop-test-fdog")))

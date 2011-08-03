@@ -3,7 +3,7 @@
 (defmacro def-test+func (name &body body)
   "Utility to shorten the process of writing an fdog functional test"
   `(def-test (,name :group fdog-forwarder-functional-tests
-                    :fixtures ())
+                    :fixtures (fdog/functional))
        ,@body))
 
 (def-test+func can-hit-slash :eval

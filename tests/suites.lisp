@@ -26,3 +26,10 @@
 (def-test-group functional-tests ()
   (:documentation "'The' test group.")
   (:include-groups fdog-forwarder-functional-tests))
+
+;; Root suite
+(def-test-group all-tests ()
+  (:documentation "Root of test tree")
+  (:include-groups unit-tests
+                   functional-tests))
+

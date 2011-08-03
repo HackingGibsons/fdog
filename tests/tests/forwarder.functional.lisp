@@ -8,9 +8,7 @@
 
 (def-test+func can-hit-slash :eval
   (let* ((url (format nil "http://~A:~A/" "localhost" 1337))
-         (res (bt:with-timeout (3)
-                (handler-case (http->string url)
-                    (bt:timeout () nil)))))
+         (res (http->string url)))
     (assert-non-nil res)))
 
 

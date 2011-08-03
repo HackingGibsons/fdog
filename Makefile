@@ -98,7 +98,6 @@ $(STAGEDIR): $(FODG)
 test: clean init
 	@echo "=> Running tests."
 	$(MAKE) run-tests
-	$(MAKE) run-tests-functional
 	$(MAKE) clean
 
 run-tests:

@@ -20,8 +20,11 @@ start-test-fdog: $(TEST_DIR)
 		  --eval '(ql:quickload :fdog)' \
 		  --eval '(fdog-cli:fdog-main `("fdog-test" "start" "$(TEST_PATH)" "--no-fork"))' \
 		  --eval '(quit)' &
+	date
 	@echo "=> Sleeping to ensure test server boot."
 	@sleep 6
+	date
+	@echo "=> Awake and running"
 
 stop-test-fdog:
 	@echo "=> Stopping instance in $(TEST_PATH)"

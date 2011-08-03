@@ -20,3 +20,9 @@ are less usefull to string construction."
                         :reason      reason-phrase)))
 
       (bt:timeout () nil))))
+
+(defun make (target &key (dir (asdf:system-source-directory :fdog)))
+  "Wrapper for executing gnumake on a target. Defaults to running in the `:fdog' package home,
+tweakable with `:dir' keyword"
+  (external-program:run "make" `("-C" ,(namestring dir) ,target)
+                        :output t :error t))

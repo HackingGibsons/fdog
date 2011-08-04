@@ -1,6 +1,6 @@
 (in-package :fdog-tests)
 
-(defun http->string (url &key (timeout 3) (method :GET) content-type content)
+(defun http->string (url &key (timeout 10) (method :GET) content-type content)
   "A slightly repackaged veresion of drakma's client.
 Mostly exists to close the stream when required and repackage the 7-value
 return as something more edible (plist). Though discarding some values that

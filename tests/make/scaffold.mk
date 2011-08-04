@@ -38,6 +38,8 @@ stop-test-fdog:
 	for m2pid in $$(find $(TEST_PATH)/server/run/ -name '*.pid'); do \
 	 	 cat $$m2pid | xargs kill ; \
 	done
+	@echo "=> Sleeping for everything to die"
+	sleep 5
 	$(MAKE) clean-test-fdog
 
 clean-test-fdog:

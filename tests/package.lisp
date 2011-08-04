@@ -50,6 +50,10 @@
     (when *verbose*
       (log-for (trace) "Running tests"))
 
+    ;; TODO: Link this up to *verbose*
+    ;; Verbosity knob
+    ;; (nst-cmd :set :verbose :trace)
+
     (nst-cmd :run-group all-tests)
 
     (when *verbose*

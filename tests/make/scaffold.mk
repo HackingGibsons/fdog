@@ -3,6 +3,8 @@ TEST_DIR = .test
 TEST_PATH = $(ROOT)/$(TEST_DIR)/
 
 build-test-fdog:
+	@echo "=> Cautionary murder"
+	killall -9 mongrel2
 	@echo "=> Building a test server in: $(TEST_PATH)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \

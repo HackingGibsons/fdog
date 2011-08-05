@@ -93,7 +93,8 @@ Returns true of it can find a pidfile, and a process is running there."
   (let ((pidfile (merge-pathnames (mongrel2-server-pidfile server)
                                   (mongrel2-server-root server))))
     (when (probe-file pidfile)
-      (with-open-file (pid pidfile) (read pid)))))
+      (handler-case (with-open-file (pid pidfile) (read pid))
+        (end-of-file () nil)))))
 
 (defmethod mongrel2-server-config ((server mongrel2-server))
   (merge-pathnames fdog:*default-server-database-path*

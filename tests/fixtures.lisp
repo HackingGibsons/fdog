@@ -53,6 +53,7 @@
 
 (def-fixtures fdog/functional
     (:setup (make "start-test-fdog")
+
      :cleanup (let ((nohup (merge-pathnames #P"nohup.out" (asdf:system-source-directory :fdog))))
                 (make "stop-test-fdog")
                 (and (probe-file nohup)

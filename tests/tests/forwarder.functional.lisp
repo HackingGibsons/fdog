@@ -64,5 +64,5 @@
 
         (m2cl:with-handler (handler "test" push sub)
           (multiple-value-bind (req raw) (m2cl:handler-receive handler (s2us 1))
-            (log-for (trace) "Got request! (~A)" (length raw))
-            (describe req)))))))
+            (assert-null (zerop (length raw)))
+            (assert-non-nil (string-equal "/" (m2cl:request-path req)))))))))

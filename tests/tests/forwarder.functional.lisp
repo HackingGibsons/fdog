@@ -46,5 +46,7 @@
 (def-test+func (can-queue-request-then-serve-it-to-handler)
   :eval (assert-forwarder-setup)
 
-  (let (empty)
-    (assert-null empty)))
+  (log-for (trace) "Sending request destined for quedom.")
+  (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/")
+    (assert-null res))
+  (log-for (trace) "Requet sent."))

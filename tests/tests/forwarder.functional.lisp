@@ -1,17 +1,19 @@
 (in-package :fdog-tests)
-;; Helpers
+;; Wrappers
 (defmacro def-test+func ((name &key fixtures) &body body)
   "Utility to shorten the process of writing an fdog functional test"
   `(def-test (,name :group fdog-forwarder-functional-tests
                     :fixtures (fdog/functional ,@fixtures))
        ,@body))
 
-(defmacro def-test+test-forwarder ((name &key fixtures) &body body)
-  "Utility to shorten the process of writing an fdog functional test
-with a forwarder registered at /test/"
-  `(def-test (,name :group fdog-forwarder-functional-tests
-                    :fixtures  (fdog/functional ,@fixtures))
-       ,@body))
+;; Helpers
+(defmacro assert-forwarder-setup ()
+  "Utility to shorten the process of writing an fdog functional test"
+  `(let ((req '((:name . "test") (:hosts . (("localhost" . "/test/"))))))
+     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/create/" :method :POST
+                                                 :content (json:encode-json-to-string req))
+       (assert-non-nil res)
+       (assert-response-200 meta))))
 
 (defun assert-response-200 (meta)
   (assert-equal 200 (getf meta :status-code)))
@@ -41,9 +43,8 @@ with a forwarder registered at /test/"
     (assert-non-nil (assoc :push res :test #'string-equal))
     (assert-non-nil (assoc :sub res :test #'string-equal))))
 
-(def-test+func (can-queue-request-then-serve-it-to-handler) :eval
-    (let ((req '((:name . "test") (:hosts . (("localhost" . "/test/"))))))
-      (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/create/" :method :POST
-                                                  :content (json:encode-json-to-string req))
-        (assert-non-nil res)
-        (assert-response-200 meta))))
+(def-test+func (can-queue-request-then-serve-it-to-handler)
+  :eval (assert-forwarder-setup)
+
+  (let (empty)
+    (assert-null empty)))

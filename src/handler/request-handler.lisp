@@ -90,14 +90,8 @@ for the given request handler."
                                            (signal c))))
 
                   (babel-encodings:character-coding-error (c)
-                    (flet ((bad-request (req) (declare (ignorable req))
-                                        (values "Encoding error in request body."
-                                               ())))
-                      (log-for (warn) "Char encoding error in request: ~A" c)
-                      (log-for (warn) "Sending a bad request response.")
-                      (funcall (make-request-handler-string-responder req-handler #'bad-request)
-                               handler nil nil)
-                      (log-for (warn) "Sent."))))
+                    (log-for (warn) "Char encoding error in request: ~A" c)
+                    (log-for (warn) "TODO: Send 400 back.")))
 
              (release-lock (request-handler-lock req-handler))))
       (setf (request-handler-responder-handler req-handler) nil))))

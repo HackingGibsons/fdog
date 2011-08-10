@@ -64,7 +64,7 @@
   (let ((key (endpoint-request-key endpoint msg)))
     (log-for (trace) "Stored request for ~A" (fdog-forwarder-name (endpoint-engine endpoint)))
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-      (redis:red-hset key :body (flex:octets-to-string msg)))
+      (redis:red-hset key :body (babel:octets-to-string msg)))
     key))
 
 (defmethod queue-request ((endpoint forwarder-queue-endpoint) msg)

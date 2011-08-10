@@ -179,10 +179,10 @@ in the context of `endpoint'"
 
                                 (setf headers-string (json:encode-json-to-string headers))
 
-                                (flex:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
+                                (babel:string-to-octets (format nil "~A ~A ~A ~A:~A,~A"
                                                                sender connection-id (ppcre:regex-replace prefix-re path "/")
                                                                (length headers-string) headers-string
-                                                               (flex:octets-to-string rest))))))))
+                                                               (babel:octets-to-string rest))))))))
 
                    (if (ppcre:scan prefix-re path)
                        (perform-rewrite)

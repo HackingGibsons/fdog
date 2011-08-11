@@ -22,6 +22,15 @@
         (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
         (json:encode-json `((:error . ,(format nil "Endpoint ~A not found." (api-subpath request)))) stream))))
 
+(defun api/400 (handler request raw &optional (body "Malformed request"))
+  (declare (ignorable raw))
+  (with-chunked-stream-reply (handler request stream
+                              :code 400 :status "BAD REQUEST"
+                              :headers ((header-json-type)))
+    (log-for (trace) "Malformed request: ~A" request)
+    (json:encode-json `((:error . ,body)) stream)))
+
+
 ;; Router
 (defgeneric api/endpoint (method sub-path handler request raw)
   (:documentation "Generic api endpoint. Things wishing to provide an API specialize on this method."))
@@ -69,6 +78,7 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
         (if exact
             (handler-case
                 (api/endpoint method exact-sym handler request raw)
+              (end-of-file () (api/400 handler request raw))
               (404-condition () (api/404 handler request raw)))
 
             (do* ((next-rest (multiple-value-list (next-sub-path sub-path))
@@ -84,6 +94,7 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                       (handler-case
                           (api/endpoint-with-args method (intern next :keyword) rest
                                                   handler request raw)
+                        (end-of-file () (api/400 handler request raw))
                         (404-condition () (api/404 handler request raw)))
 
                       (api/404 handler request raw)))))))))

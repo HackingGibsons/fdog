@@ -81,17 +81,23 @@ for the given request handler."
       (setf (request-handler-responder-handler req-handler) handler)
       (loop while (acquire-lock (request-handler-lock req-handler) nil) do
            (unwind-protect
-                (handler-case (request-handler-wait->get->process req-handler)
+                (handler-case
+                    (handler-bind ((babel-encodings:character-coding-error #'(lambda (c)
+                                                                               (let ((r (find-restart :send-400 c)))
+                                                                                 (log-for (warn) "Char encoding error in request: ~A" c)
+                                                                                 (log-for (warn) "Found: ~A" r)
+                                                                                 (log-for (warn) "Restarts: ~A" (compute-restarts c))
+                                                                                 (log-for (warn) "TODO: Send 400 back.")))))
+
+                                   (request-handler-wait->get->process req-handler))
+
                   (simple-error (c) (cond ((= (sb-alien:get-errno) sb-posix:eintr)
                                            (log-for (trace) "Syscall interrupted in poll loop. Ignoring"))
                                           (t
                                            ;; TODO: Add a handler case to m2cl to allow defaulting unassigned query args
                                            (log-for (trace) "Condition from poller: ~A" c)
-                                           (signal c))))
+                                           (signal c)))))
 
-                  (babel-encodings:character-coding-error (c)
-                    (log-for (warn) "Char encoding error in request: ~A" c)
-                    (log-for (warn) "TODO: Send 400 back.")))
 
              (release-lock (request-handler-lock req-handler))))
       (setf (request-handler-responder-handler req-handler) nil))))

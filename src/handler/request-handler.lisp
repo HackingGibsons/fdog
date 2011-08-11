@@ -66,7 +66,7 @@ data available at `raw'"
     (let ((m2-handler (request-handler-responder-handler req-handler))
           (timeout (request-handler-timeout req-handler))
           (processors (request-handler-processors req-handler)))
-      (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler (s2us timeout))
+      (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler :timeout (s2us timeout))
         (when (and req (not (m2cl:request-disconnect-p req)))
           (request-handler-respond-with-chain req-handler req raw processors))))))
 

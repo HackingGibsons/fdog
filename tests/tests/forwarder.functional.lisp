@@ -63,6 +63,6 @@
       (flet ((s2us (s) (round (* s 1000000))))
 
         (m2cl:with-handler (handler "test" push sub)
-          (multiple-value-bind (req raw) (m2cl:handler-receive handler (s2us 1))
+          (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
             (assert-null (zerop (length raw)))
             (assert-non-nil (string-equal "/" (m2cl:request-path req)))))))))

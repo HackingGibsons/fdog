@@ -80,7 +80,7 @@ for the given request handler."
                                 (request-handler-sub req-handler)
                                 (request-handler-pub req-handler))
       (flet ((try-reply-400 (condition)
-               (let ((r (find-restart :send-400 condition)))
+               (let ((r (find-restart :reply-http-400 condition)))
                  (log-for (warn) "Char encoding error in request: ~A" condition)
                  (if r
                      (prog1 (invoke-restart r handler)

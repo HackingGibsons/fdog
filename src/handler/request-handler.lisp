@@ -67,9 +67,10 @@ data available at `raw'"
           (timeout (request-handler-timeout req-handler))
           (processors (request-handler-processors req-handler)))
       (multiple-value-bind (req raw) (m2cl:handler-receive m2-handler :timeout (s2us timeout))
-        (when (and req (not (m2cl:request-disconnect-p req)))
-          (request-handler-respond-with-chain req-handler req raw processors))))))
-
+        (if (and req (not (m2cl:request-disconnect-p req)))
+            (request-handler-respond-with-chain req-handler req raw processors)
+            (when req
+              (log-for (warn) "Not processing request: disconnect message")))))))
 
 (defmethod make-request-handler-poller ((req-handler request-handler))
   "Generate a closure to be used to create the polling thread

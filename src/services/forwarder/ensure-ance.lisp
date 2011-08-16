@@ -15,7 +15,7 @@ and watchdogs are installed. Returns the forwarding servers."
 
 (defun ensure-forwarder-tables-exist ()
   (mapcar #'ensure-forwarder-table-exists
-          '(fdog-forwarder fdog-forwarder-hostpath fdog-forwarder-queue)))
+          '(fdog-forwarder fdog-forwarder-hostpath fdog-forwarder-queue fdog-forwarder-alias)))
 
 (defun ensure-forwarder-servers-exist ()
   "Ensure that the servers required for forwarder operation exist

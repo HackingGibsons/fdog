@@ -61,6 +61,34 @@
                                        "None")
           (fdog-hostpath-host hostpath) (fdog-hostpath-path hostpath)))
 
+(clsql:def-view-class fdog-forwarder-alias ()
+  ((id :type integer
+       :db-constraints (:primary-key :auto-increment)
+       :db-kind :key
+       :reader fdog-forwarder-alias-id)
+   (forwarder-id :type integer
+                 :initarg :forwarder-id
+                 :reader fdog-forwarder-host-forwarder-id)
+   (name :type string
+         :initarg :name)
+   (match :type string
+            :initarg :match
+            :initform "^$")
+   (listen-on :type integer
+              :accessor fdog-forwarder-alias-listen-on)
+   (forward-to :type integer
+               :accessor fdog-forwarder-alias-forward-to)
+
+   (forwarder :db-kind :join
+              :accessor hostpath-forwarder
+              :db-info (:join-class fdog-forwarder
+                        :home-key forwarder-id
+                        :foreign-key id
+                        :set nil)))
+
+  (:base-table fdog-forwarder-alias
+   :documentation "Database model for handling regex-segregated clusters of an app."))
+
 (clsql:def-view-class fdog-forwarder ()
   ((id :type integer
        :db-constraints (:primary-key :auto-increment)
@@ -85,6 +113,14 @@
                             :home-key id
                             :foreign-key forwarder-id
                             :set nil))
+
+   (aliases   :db-kind :join
+              :accessor fdog-forwarder-aliases
+              :db-info (:join-class fdog-forwarder-alias
+                        :home-key id
+                        :foreign-key forwarder-id
+                        :set t))
+
    (hostpaths :db-kind :join
               :accessor fdog-forwarder-hostpaths
               :db-info (:join-class fdog-forwarder-hostpath
@@ -105,6 +141,7 @@
   "Make a hostpath for the forwarder `forwarder', if an entry exists for this host
 it is overriden with the given path.  Nothing created if already exists.
 TODO: use the `search' keyword, it does not currently alter flow."
+  (declare (ignorable search))
   (clsql:update-objects-joins `(,forwarder))
   (let* ((hostpaths (fdog-forwarder-hostpaths forwarder))
          (hostpath (or (find host hostpaths :key #'fdog-hostpath-host

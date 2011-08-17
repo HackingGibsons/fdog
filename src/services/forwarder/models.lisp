@@ -71,9 +71,16 @@
                  :reader fdog-forwarder-host-forwarder-id)
    (name :type string
          :initarg :name)
+
    (match :type string
-            :initarg :match
-            :initform "^$")
+          :initarg :match
+          :accessor fdog-forwarder-alias-match
+          :initform "^$")
+   (method :type string
+           :initarg :method
+           :accessor fdog-forwarder-alias-method
+           :initform nil)
+
    (listen-on :type integer
               :accessor fdog-forwarder-alias-listen-on)
    (forward-to :type integer
@@ -137,6 +144,36 @@
           (length (fdog-forwarder-hostpaths forwarder))))
 
 ;; Makers
+(defmethod find-forwarder-alias ((forwarder fdog-forwarder) name)
+  #.(clsql:locally-enable-sql-reader-syntax)
+  (car (clsql:select 'fdog-forwarder-alias :flatp t :refresh t
+                     :where [and [= [slot-value 'fdog-forwarder-alias 'forwarder-id]
+                                    (fdog-forwarder-id forwarder)]
+                                 [= [slot-value 'fdog-forwarder-alias 'name]
+                                    name]]))
+  #.(clsql:restore-sql-reader-syntax-state))
+
+(defmethod get-or-create-forwarder-alias ((forwarder fdog-forwarder) (name string))
+  "Get an instance of or create and persist a forwarder alias for forwarder `forwarder'
+named `namee'"
+  (or (find-forwarder-alias forwarder name)
+      (let ((instance (make-instance 'fdog-forwarder-alias
+                                     :forwarder-id (fdog-forwarder-id forwarder)
+                                     :name name)))
+        (clsql:update-records-from-instance instance)
+        instance)))
+
+(defmethod make-forwarder-alias ((forwarder fdog-forwarder) (name string) &key match method)
+  "Make an alias for the forwarder `forwarder' named `name' If `match' and/or `method' are
+added, they will be set, otherwise the alias will match the empty string (^$)"
+  (let ((alias (get-or-create-forwarder-alias forwarder name)))
+    (when match
+      (setf (fdog-forwarder-alias-match alias) match))
+    (when method
+      (setf (fdog-forwarder-alias-method alias) method))
+    alias))
+
+
 (defmethod make-forwarder-hostpath ((forwarder fdog-forwarder) host path &key (search :host))
   "Make a hostpath for the forwarder `forwarder', if an entry exists for this host
 it is overriden with the given path.  Nothing created if already exists.

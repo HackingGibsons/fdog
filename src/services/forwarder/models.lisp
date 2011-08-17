@@ -101,7 +101,7 @@
   (format s "#<ForwarderAlias[~A]: ~A => ~A::~A>"
           (if (slot-boundp object 'forwarder-id) (fdog-forwarder-alias-forwarder-id object) "None")
           (if (slot-boundp object 'name) (fdog-forwarder-alias-name object) "None")
-          (if (slot-boundp object 'method) (fdog-forwarder-alias-method object) "AnyMethod")
+          (or (fdog-forwarder-alias-method object) "AnyMethod")
           (if (slot-boundp object 'match) (fdog-forwarder-alias-match object) "None")))
 
 (clsql:def-view-class fdog-forwarder ()

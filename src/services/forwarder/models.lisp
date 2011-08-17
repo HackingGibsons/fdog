@@ -87,7 +87,7 @@
                :accessor fdog-forwarder-alias-forward-to)
 
    (forwarder :db-kind :join
-              :accessor hostpath-forwarder
+              :accessor fdog-forwarder-alias-forwarder
               :db-info (:join-class fdog-forwarder
                         :home-key forwarder-id
                         :foreign-key id

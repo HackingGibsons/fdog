@@ -25,6 +25,11 @@
                             (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
                           stream))))
 
+(defmethod api/forwarder/aliases/route (handler request forwarder args)
+  (log-for (trace) "Called with: ~A/~A" forwarder args)
+  (with-chunked-stream-reply (handler request stream)
+    (json:encode-json '((:TODO . :undone)) stream)))
+
 (defmethod api/forwarder/make-route (handler request forwarder args)
   (log-for (trace) "Adding a route to a handler.")
   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
@@ -76,6 +81,7 @@
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
 
+       (:regex "/aliases/.+/$"  :responder 'api/forwarder/aliases/route)
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
        (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))

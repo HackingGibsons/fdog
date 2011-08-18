@@ -83,8 +83,10 @@
            :initform nil)
 
    (listen-on :type integer
+              :initarg :listen-on
               :accessor fdog-forwarder-alias-listen-on)
    (forward-to :type integer
+               :initarg :forward-to
                :accessor fdog-forwarder-alias-forward-to)
 
    (forwarder :db-kind :join
@@ -167,7 +169,9 @@ named `namee'"
   (or (find-forwarder-alias forwarder name)
       (let ((instance (make-instance 'fdog-forwarder-alias
                                      :forwarder-id (fdog-forwarder-id forwarder)
-                                     :name name)))
+                                     :name name
+                                     :listen-on (next-forwarder-port)
+                                     :forward-to (next-forwarder-port))))
         (clsql:update-records-from-instance instance)
         instance)))
 

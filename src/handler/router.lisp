@@ -1,6 +1,6 @@
 (in-package :fdog-handler)
 
-(defmacro with-dispatch-on (route binding matched-form &rest rules)
+(defmacro with-dispatch-on (route binding matched-form &body rules)
   (log-for (trace) "Dispatching on ~A" route)
   (let (exact regex errors)
     (dolist (rule rules)

@@ -34,10 +34,15 @@
                       stream)))
 
 (defmethod api/forwarder/alias (handler request forwarder args)
-  (log-for (trace) "Specific forwarder alias: ~A => ~A" forwarder args)
-  (with-chunked-stream-reply (handler request stream
-                              :headers ((header-json-type)))
-    (json:encode-json args stream)))
+  (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/" args "\\1"))
+         (alias (find-forwarder-alias forwarder alias-name)))
+    (log-for (trace) "Requesting forwarder alias: ~A => ~A => ~A" forwarder alias-name alias)
+    (unless alias
+      (error '404-condition :data (format nil "No aliases named [~A] for forwarder [~A]"
+                                          (fdog-forwarder-name forwarder) alias-name)))
+    (with-chunked-stream-reply (handler request stream
+                                :headers ((header-json-type)))
+      (json:encode-json args stream))))
 
 (defmethod api/forwarder/make-route (handler request forwarder args)
   (log-for (trace) "Adding a route to a handler.")

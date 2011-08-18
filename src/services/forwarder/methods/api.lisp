@@ -26,9 +26,12 @@
                           stream))))
 
 (defmethod api/forwarder/aliases/route (handler request forwarder args)
-  (log-for (trace) "Called with: ~A/~A" forwarder args)
-  (with-chunked-stream-reply (handler request stream)
-    (json:encode-json '((:TODO . :undone)) stream)))
+  (log-for (trace) "Routing an alias route for ~A => ~A" forwarder args)
+  (with-dispatch-on args &route
+      (funcall &route handler request forwarder args)
+
+    (:404 :responder 'api/forwarder/404)))
+
 
 (defmethod api/forwarder/make-route (handler request forwarder args)
   (log-for (trace) "Adding a route to a handler.")

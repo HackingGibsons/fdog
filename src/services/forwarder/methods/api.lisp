@@ -25,13 +25,19 @@
                             (:push . ,(format nil "tcp://~A:~A" (fdog:get-local-address) forward-to)))
                           stream))))
 
-(defmethod api/forwarder/aliases/route (handler request forwarder args)
-  (log-for (trace) "Routing an alias route for ~A => ~A" forwarder args)
-  (with-dispatch-on args &route
-      (funcall &route handler request forwarder args)
+(defmethod api/forwarder/aliases/index (handler request forwarder args)
+  (log-for (trace) "Forwarder alias index for: ~A" forwarder)
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json (mapcar #'fdog-forwarder-alias-name
+                              (fdog-forwarder-aliases forwarder))
+                      stream)))
 
-    (:404 :responder 'api/forwarder/404)))
-
+(defmethod api/forwarder/alias (handler request forwarder args)
+  (log-for (trace) "Specific forwarder alias: ~A => ~A" forwarder args)
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json args stream)))
 
 (defmethod api/forwarder/make-route (handler request forwarder args)
   (log-for (trace) "Adding a route to a handler.")
@@ -61,6 +67,17 @@
 
 ;; API Roots
 ;; These get requests dispatched to them and pass control to more specific routes
+(defmethod api/forwarder/aliases/route (handler request forwarder args)
+  (log-for (trace) "Routing an alias route for ~A => ~A" forwarder args)
+  (with-dispatch-on args &route
+      (funcall &route handler request forwarder args)
+
+    (:exact "/aliases/" :responder 'api/forwarder/aliases/index)
+    (:regex "/aliases/[\\w_-]+/" :responder 'api/forwarder/alias)
+
+    (:404 :responder 'api/forwarder/404)))
+
+
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest
                                    handler request raw)
   (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)

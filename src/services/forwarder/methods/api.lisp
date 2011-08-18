@@ -68,6 +68,7 @@
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
 
+       (:regex "/aliases/.*"  :responder 'api/forwarder/aliases/route)
        (:exact "/" :responder 'api/forwarder/root)
        (:404 :responder 'api/forwarder/404))))
 
@@ -81,7 +82,6 @@
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
 
-       (:regex "/aliases/.+/$"  :responder 'api/forwarder/aliases/route)
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
        (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))

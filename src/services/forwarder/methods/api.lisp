@@ -33,6 +33,13 @@
                               (fdog-forwarder-aliases forwarder))
                       stream)))
 
+(defmethod api/forwarder/alias/create (handler request forwarder args)
+  (log-for (trace) "Forwarder alias creation for: ~A" forwarder)
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json '((:TODO . :Undone))
+                      stream)))
+
 (defmethod api/forwarder/alias (handler request forwarder args)
   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/" args "\\1"))
          (alias (find-forwarder-alias forwarder alias-name)))
@@ -78,6 +85,7 @@
       (funcall &route handler request forwarder args)
 
     (:exact "/aliases/" :responder 'api/forwarder/aliases/index)
+    (:exact "/aliases/create/" :responder 'api/forwarder/alias/create)
     (:regex "/aliases/[\\w_-]+/" :responder 'api/forwarder/alias)
 
     (:404 :responder 'api/forwarder/404)))

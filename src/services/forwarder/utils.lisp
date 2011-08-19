@@ -21,20 +21,30 @@
                 (lowest-free-handler-port (or next-handler-port base)))
         (incf next-handler-port)))))
 
+(defmacro used-ports-for-model (model)
+  "Collect all of the forward and listen ports of a `fdog-forwarder'-ish model"
+  `(reduce #'(lambda (acc next)
+               (append acc
+                       (list (forwarder-listen-on next) (forwarder-forward-to next))))
+           (clsql:select ,model :flatp t :refresh t) :initial-value nil))
+
+(defun all-used-forwarder-ports (&key (order #'>))
+  "A full collection of used ports by forwarders and their aliases."
+  (sort (append (used-ports-for-model 'fdog-forwarder)
+                (used-ports-for-model 'fdog-forwarder-alias))
+        order))
+
 
 (defvar next-forwarder-port nil)
 (defun next-forwarder-port (&key reset (inc t))
   "Get the next avialable forwarder port starting at the base and counting up.
 If one is not found the next one up from the highest forwarder port in use is used."
   (when reset
-    (setf next-forwarder-port (or (loop for forwarder in (clsql:select 'fdog-forwarder :flatp t :refresh t)
-                                     appending `(,(fdog-forwarder-listen-on forwarder)
-                                                 ,(fdog-forwarder-forward-to forwarder))
-                                       into ports
-                                     return (car (sort ports #'>)))
+    (setf next-forwarder-port (or (car (all-used-forwarder-ports))
                                   *forwarder-zmq-port-base*)))
   (unless next-forwarder-port
     (next-forwarder-port :reset t :inc nil))
+
   (if inc
       (incf next-forwarder-port)
       next-forwarder-port))

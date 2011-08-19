@@ -35,9 +35,24 @@
 
 (defmethod api/forwarder/alias/create (handler request forwarder args)
   (log-for (trace) "Forwarder alias creation for: ~A" forwarder)
-  (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
-    (json:encode-json '((:TODO . :Undone))
-                      stream)))
+  (log-for (trace) "Body: ~A" (m2cl:request-body request))
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (method (cdr (assoc :method spec)))
+         (match (cdr (assoc :match spec))))
+
+    (unless (and spec name (or method match))
+      (log-for (trace) "Invalid spec: ~A" spec)
+      (error '404-condition :data (format nil "The must contain: (and name (or method match)) to be valid.")))
+
+    (when (find-forwarder-alias forwarder name)
+      (log-for (trace) "Trying to build forwarder with known name: ~A" name)
+      (error '404-condition :data (format nil "An alias by that name already exists.")))
+
+    (let ((alias (make-forwarder-alias forwarder name :method method :match match)))
+      (log-for (trace) "Built alias: ~A" alias)
+      (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+        (json:encode-json spec stream)))))
 
 (defmethod api/forwarder/alias (handler request forwarder args)
   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/" args "\\1"))

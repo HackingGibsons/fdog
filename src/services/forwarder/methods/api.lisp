@@ -69,6 +69,7 @@
       (with-slots (name listen-on forward-to) alias
         (json:encode-json `((:name . ,name)
                             (:parent . ,(fdog-forwarder-name forwarder))
+                            (:queue . ,(forwarder-queuing-p forwarder))
                             (:sub . ,(make-local-endpoint :port listen-on))
                             (:push . ,(make-local-endpoint :port forward-to)))
                           stream)))))

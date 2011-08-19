@@ -35,8 +35,7 @@
 
 (defmethod api/forwarder/alias/create (handler request forwarder args)
   (log-for (trace) "Forwarder alias creation for: ~A" forwarder)
-  (with-chunked-stream-reply (handler request stream
-                              :headers ((header-json-type)))
+  (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
     (json:encode-json '((:TODO . :Undone))
                       stream)))
 
@@ -85,7 +84,6 @@
       (funcall &route handler request forwarder args)
 
     (:exact "/aliases/" :responder 'api/forwarder/aliases/index)
-    (:exact "/aliases/create/" :responder 'api/forwarder/alias/create)
     (:regex "/aliases/[\\w_-]+/" :responder 'api/forwarder/alias)
 
     (:404 :responder 'api/forwarder/404)))
@@ -116,6 +114,7 @@
        (funcall &route handler request forwarder rest)
 
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
+       (:exact "/aliases/create/" :responder 'api/forwarder/alias/create)
        (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))
 

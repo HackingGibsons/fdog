@@ -1,9 +1,15 @@
 (in-package :fdog-forwarder)
 
 ;; Engine creation
-(defmethod make-alias-endpoint ((alias fdog-forwarder-alias))
-  (log-for (warn) "TODO: Build an alias for: ~A" alias)
-  nil)
+(defmethod make-alias-endpoint ((engine forwarder-engine) (alias fdog-forwarder-alias))
+  (let* ((forwarder (fdog-forwarder-alias-forwarder alias))
+         (queue-p (forwarder-queuing-p forwarder)))
+    (if queue-p
+        (prog1 (make-instance 'forwarder-queue-endpoint :engine engine :alias alias)
+          (log-for (trace) "Making queued alias endpoint for ~A of ~A" alias forwarder))
+        (prog1 (make-instance 'forwarder-engine-endpoint :engine engine :alias alias)
+          (log-for (trace) "Making plain endpoint for ~A of ~A" alias forwarder)))))
+
 
 (defmethod make-forwarder-engine ((forwarder fdog-forwarder) &key servers)
   "Construct a forwarder-engine class from an fdog-forwarder model `forwarder'"
@@ -18,9 +24,8 @@
                 (log-for (trace) "Making plain endpoint for ~A" forwarder)))
 
           (forwarder-engine-alias-endpoints engine)
-          (mapcar #'make-alias-endpoint (fdog-forwarder-aliases forwarder)))
-
-
+          (mapcar #'(lambda (alias) (make-alias-endpoint engine alias))
+                  (fdog-forwarder-aliases forwarder)))
     engine))
 
 (defmethod initialize-instance :after ((engine forwarder-engine) &rest initargs)
@@ -57,6 +62,9 @@
 (defmethod forwarder-engine-start ((engine forwarder-engine))
   (log-for (trace) "Starting engine: ~A" engine)
   (engine-endpoint-start (forwarder-engine-endpoint engine))
+  (log-for (trace) "Starting alias endpoints.")
+  (mapcar #'engine-endpoint-start (forwarder-engine-alias-endpoints engine))
+  (log-for (trace) "Starting main endpoint.")
   (mapcar #'multibridge-start (forwarder-engine-bridges engine)))
 
 (defmethod forwarder-engine-stop ((engine forwarder-engine))

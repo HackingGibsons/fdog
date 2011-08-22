@@ -23,6 +23,14 @@
        (zmq:setsockopt socket zmq:linger *endpoint-socket-linger*))
   socket)
 
+(defmethod forwarder-forward-to ((endpoint forwarder-engine-endpoint))
+  (forwarder-forward-to (or (endpoint-alias endpoint)
+                            (forwarder-engine-forwarder endpoint))))
+
+(defmethod forwarder-listen-on ((endpoint forwarder-engine-endpoint))
+  (forwarder-listen-on (or (endpoint-alias endpoint)
+                            (forwarder-engine-forwarder endpoint))))
+
 (defmethod init-sockets ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Initializing sockets of endpoing ~A" endpoint)
   (terminate-sockets endpoint)
@@ -32,8 +40,8 @@
     ;; Client socks
     (with-slots (request-sock response-sock) endpoint
       (let* ((forwarder (forwarder-engine-forwarder endpoint))
-             (req-addr (make-local-endpoint :port (forwarder-forward-to forwarder)))
-             (res-addr (make-local-endpoint :port (forwarder-listen-on forwarder))))
+             (req-addr (make-local-endpoint :port (forwarder-forward-to endpoint)))
+             (res-addr (make-local-endpoint :port (forwarder-listen-on endpoint))))
         (setf request-sock
               (maybe-linger-socket (zmq:socket context zmq:push))
               response-sock
@@ -132,7 +140,11 @@
     (init-context endpoint)
     (init-sockets endpoint)
 
-    (let* ((name (fdog-forwarder-name (forwarder-engine-forwarder (endpoint-engine endpoint)))))
+    (let* ((name (fdog-forwarder-name (forwarder-engine-forwarder (endpoint-engine endpoint))))
+           (name (if (endpoint-alias endpoint)
+                     (format nil "~A-alias-~A" name (fdog-forwarder-alias-name (endpoint-alias endpoint)))
+                     name)))
+      (log-for (trace) "Starting engine endpoint with name: ~A" name)
       (setf (endpoint-request-device endpoint)
             (make-thread (make-request-device endpoint)
                          :name (format nil "engine-endpoint-device-request-~A" name))

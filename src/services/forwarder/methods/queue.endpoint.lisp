@@ -45,8 +45,12 @@
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
   (with-slots (queue-prefix) endpoint
-    (format nil "~A:~A:request-queue" queue-prefix
-            (fdog-forwarder-name (endpoint-engine endpoint)))))
+    (let* ((name (fdog-forwarder-name (endpoint-engine endpoint)))
+           (name (if (endpoint-alias endpoint)
+                     (format nil "~A-alias-~A" name (fdog-forwarder-alias-name (endpoint-alias endpoint)))
+                     name)))
+      (format nil "~A:~A:request-queue" queue-prefix
+              name))))
 
 (defmethod endpoint-queue-counter ((endpoint forwarder-queue-endpoint))
   (format nil "~A:counter" (endpoint-queue-key endpoint)))

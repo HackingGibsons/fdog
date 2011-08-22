@@ -1,6 +1,10 @@
 (in-package :fdog-forwarder)
 
 ;; Engine creation
+(defmethod make-alias-endpoint ((alias fdog-forwarder-alias))
+  (log-for (warn) "TODO: Build an alias for: ~A" alias)
+  nil)
+
 (defmethod make-forwarder-engine ((forwarder fdog-forwarder) &key servers)
   "Construct a forwarder-engine class from an fdog-forwarder model `forwarder'"
   (log-for (trace) "Building forwarder engine from ~A" forwarder)
@@ -11,15 +15,18 @@
               (prog1 (make-instance 'forwarder-queue-endpoint :engine engine)
                 (log-for (trace) "Making queued endpoint for ~A" forwarder))
               (prog1 (make-instance 'forwarder-engine-endpoint :engine engine)
-                (log-for (trace) "Making plain endpoint for ~A" forwarder))))
+                (log-for (trace) "Making plain endpoint for ~A" forwarder)))
+
+          (forwarder-engine-alias-endpoints engine)
+          (mapcar #'make-alias-endpoint (fdog-forwarder-aliases forwarder)))
+
 
     engine))
 
-(defmethod initialize-instance :after ((engine forwarder-engine) &rest initargs &key &allow-other-keys)
+(defmethod initialize-instance :after ((engine forwarder-engine) &rest initargs)
+  (declare (ignorable initargs))
   (log-for (trace) "Initializing bridges for engine: ~A" engine)
   (with-slots (forwarder aliases servers bridges) engine
-    ;; Cache the aliases for lookip
-    (setf aliases (fdog-forwarder-aliases forwarder))
     ;; Build multibridges for all unique paths
     (let ((paths (forwarder-uniqe-paths forwarder)))
       (log-for (trace) "Forwarder has paths: ~A" paths)

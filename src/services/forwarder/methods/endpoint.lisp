@@ -32,8 +32,8 @@
     ;; Client socks
     (with-slots (request-sock response-sock) endpoint
       (let* ((forwarder (forwarder-engine-forwarder endpoint))
-             (req-addr (make-local-endpoint :port (fdog-forwarder-forward-to forwarder)))
-             (res-addr (make-local-endpoint :port (fdog-forwarder-listen-on forwarder))))
+             (req-addr (make-local-endpoint :port (forwarder-forward-to forwarder)))
+             (res-addr (make-local-endpoint :port (forwarder-listen-on forwarder))))
         (setf request-sock
               (maybe-linger-socket (zmq:socket context zmq:push))
               response-sock
@@ -132,7 +132,7 @@
     (init-context endpoint)
     (init-sockets endpoint)
 
-    (let ((name (fdog-forwarder-name (forwarder-engine-forwarder (endpoint-engine endpoint)))))
+    (let* ((name (fdog-forwarder-name (forwarder-engine-forwarder (endpoint-engine endpoint)))))
       (setf (endpoint-request-device endpoint)
             (make-thread (make-request-device endpoint)
                          :name (format nil "engine-endpoint-device-request-~A" name))

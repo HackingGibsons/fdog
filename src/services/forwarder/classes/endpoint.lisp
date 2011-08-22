@@ -5,6 +5,9 @@
 (defclass forwarder-engine-endpoint ()
   ((engine :initarg :engine
            :accessor endpoint-engine)
+   (alias :initarg :alias
+          :accessor endpoint-alias
+          :initform nil)
 
    (request-device :initform nil
                    :accessor endpoint-request-device)

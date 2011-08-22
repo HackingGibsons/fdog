@@ -221,9 +221,10 @@ and forwarding the request according to where this endpoint wants it to go."
                  (zmq:send! forward (make-instance 'zmq:msg :data raw)))))
     (list handler request raw)))
 
-(defmethod engine-endpoint-proccessors ((endpoint forwarder-engine-endpoint) (multibridge multibridge))
+(defmethod multibridge-request-proccessors ((multibridge multibridge))
   "Return a list of functions accepting (handler request raw) and returning the same.
 The result of calling the first will be the parameters to the second, and so forth."
-  (list
-   (make-request-rewriter-for endpoint multibridge)
-   (make-request-forwarder-for endpoint multibridge)))
+  (let ((endpoint (forwarder-engine-endpoint (multibridge-engine multibridge))))
+    (list
+     (make-request-rewriter-for endpoint multibridge)
+     (make-request-forwarder-for endpoint multibridge))))

@@ -29,7 +29,7 @@
   (log-for (trace) "Configuring bridge: ~A" bridge)
 
   (let* ((endpoint (forwarder-engine-endpoint (multibridge-engine instance)))
-         (processors (engine-endpoint-proccessors endpoint instance)))
+         (processors (multibridge-request-proccessors instance)))
 
     (flet ((handler-closure (handler request raw)
              (let ((last (list handler request raw)))

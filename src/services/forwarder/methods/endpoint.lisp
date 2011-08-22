@@ -169,9 +169,8 @@
   (terminate-context endpoint)
   :stopped)
 
-(defmethod make-request-rewriter-for ((endpoint forwarder-engine-endpoint) (multibridge multibridge))
-  "Make a request rewriter lambda mapping (handler request raw) => (handler' request' raw')
-in the context of `endpoint'"
+(defmethod make-request-rewriter-for ((multibridge multibridge))
+  "Make a request rewriter lambda mapping (handler request raw) => (handler' request' raw')"
   (let ((prefix-re (format nil "^~A" (multibridge-path multibridge))))
     (labels ((rewrite-request (raw)
                (destructuring-bind (sender connection-id path rest) (m2cl::token-parse-n raw 3)
@@ -208,23 +207,24 @@ in the context of `endpoint'"
   "A method to override to cause requests to be proxied to a different address by the handlers."
   (endpoint-proxy-addr endpoint))
 
-(defmethod make-request-forwarder-for ((endpoint forwarder-engine-endpoint) multibridge)
+(defmethod make-request-forwarder-for (multibridge)
   "Make a request forwarder lambda mapping (handler request raw) as identity
 and forwarding the request according to where this endpoint wants it to go."
-  (lambda (handler request raw)
-    (with-slots (context request-proxy-addr) endpoint
-      (zmq:with-socket (forward context zmq:push)
-        (maybe-linger-socket forward)
-        (zmq:connect forward (request-forwarding-address endpoint))
-        (log-for (trace) "Forwarding request to ~A for endpoint ~A" (request-forwarding-address endpoint) endpoint)
-        (log-for (trace) "Send result: ~A"
-                 (zmq:send! forward (make-instance 'zmq:msg :data raw)))))
-    (list handler request raw)))
+  (let ((endpoint (forwarder-engine-endpoint (multibridge-engine multibridge))))
+    (lambda (handler request raw)
+      (with-slots (context request-proxy-addr) endpoint
+        (zmq:with-socket (forward context zmq:push)
+          (maybe-linger-socket forward)
+          (zmq:connect forward (request-forwarding-address endpoint))
+          (log-for (trace) "Forwarding request to ~A for endpoint ~A" (request-forwarding-address endpoint) endpoint)
+          (log-for (trace) "Send result: ~A"
+                   (zmq:send! forward (make-instance 'zmq:msg :data raw)))))
+      (list handler request raw))))
 
 (defmethod multibridge-request-proccessors ((multibridge multibridge))
   "Return a list of functions accepting (handler request raw) and returning the same.
 The result of calling the first will be the parameters to the second, and so forth."
   (let ((endpoint (forwarder-engine-endpoint (multibridge-engine multibridge))))
     (list
-     (make-request-rewriter-for endpoint multibridge)
-     (make-request-forwarder-for endpoint multibridge))))
+     (make-request-rewriter-for multibridge)
+     (make-request-forwarder-for multibridge))))

@@ -92,12 +92,14 @@
    (forwarder :db-kind :join
               :accessor fdog-forwarder-alias-forwarder
               :db-info (:join-class fdog-forwarder
+                        :retrieval :immediate
                         :home-key forwarder-id
                         :foreign-key id
                         :set nil)))
 
   (:base-table fdog-forwarder-alias
    :documentation "Database model for handling regex-segregated clusters of an app."))
+
 
 (defmethod print-object ((object fdog-forwarder-alias) s)
   (format s "#<ForwarderAlias[~A]: ~A => ~A::~A>"

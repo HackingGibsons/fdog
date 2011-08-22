@@ -3,12 +3,14 @@
 ;; Engine creation
 (defmethod make-alias-endpoint ((engine forwarder-engine) (alias fdog-forwarder-alias))
   (let* ((forwarder (fdog-forwarder-alias-forwarder alias))
-         (queue-p (forwarder-queuing-p forwarder)))
-    (if queue-p
-        (prog1 (make-instance 'forwarder-queue-endpoint :engine engine :alias alias)
-          (log-for (trace) "Making queued alias endpoint for ~A of ~A" alias forwarder))
-        (prog1 (make-instance 'forwarder-engine-endpoint :engine engine :alias alias)
-          (log-for (trace) "Making plain endpoint for ~A of ~A" alias forwarder)))))
+         (queue-p (forwarder-queuing-p forwarder))
+         (endpoint (if queue-p
+                       (prog1 (make-instance 'forwarder-queue-endpoint :engine engine :alias alias)
+                         (log-for (trace) "Making queued alias endpoint for ~A of ~A" alias forwarder))
+                       (prog1 (make-instance 'forwarder-engine-endpoint :engine engine :alias alias)
+                         (log-for (trace) "Making plain endpoint for ~A of ~A" alias forwarder)))))
+  ;; Result returned as cons pair so that the list can be searched for matches
+  (cons alias endpoint)))
 
 
 (defmethod make-forwarder-engine ((forwarder fdog-forwarder) &key servers)
@@ -63,7 +65,10 @@
   (log-for (trace) "Starting engine: ~A" engine)
   (engine-endpoint-start (forwarder-engine-endpoint engine))
   (log-for (trace) "Starting alias endpoints.")
-  (mapcar #'engine-endpoint-start (forwarder-engine-alias-endpoints engine))
+  (mapcar #'engine-endpoint-start
+          ;; The aliases are stored as (alias . endpoint)
+          ;; for searching
+          (mapcar #'cdr (forwarder-engine-alias-endpoints engine)))
   (log-for (trace) "Starting main endpoint.")
   (mapcar #'multibridge-start (forwarder-engine-bridges engine)))
 

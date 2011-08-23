@@ -210,16 +210,29 @@
 (defmethod make-request-forwarder-for (multibridge)
   "Make a request forwarder lambda mapping (handler request raw) as identity
 and forwarding the request according to where this endpoint wants it to go."
-  (flet ((select-endpoint (req raw)
-           (let ((engine (multibridge-engine multibridge))
-                 (new-req (m2cl::request-parse raw)))
+  (labels ((matching-endpoint-p (alias request)
+             (let* ((method (cdr (assoc :method (m2cl:request-headers request))))
+                    (method (and method (intern method :keyword))))
+               (log-for (trace) "Considering: ~A against ~A" alias request)
+               (log-for (trace) "Method: (~A)~A" (type-of method) method)
+               (log-for (trace) "Path: ~A" (m2cl:request-path request))
+               (describe alias)
+               (when (and (or (null (fdog-forwarder-alias-method alias))
+                              (string-equal (fdog-forwarder-alias-method alias) method))
+                          (ppcre:scan (or (fdog-forwarder-alias-match alias) "")
+                                      (m2cl:request-path request)))
+                 (log-for (trace) "==> Match")
+                 t)))
 
-             (log-for (warn) "TODO: Select an endpoint for request:")
-             (describe new-req)
-             (or (loop for alias in (forwarder-engine-alias-endpoints engine)
-                      do (log-for (trace) "Considering: ~A" alias))
+           (select-endpoint (req raw)
+             (declare (ignorable req))0
 
-                 (forwarder-engine-endpoint (multibridge-engine multibridge))))))
+             (let ((engine (multibridge-engine multibridge))
+                   (new-req (m2cl::request-parse raw)))
+               (or (loop for alias in (forwarder-engine-alias-endpoints engine)
+                      if (matching-endpoint-p (car alias) new-req)
+                        return (cdr alias))
+                   (forwarder-engine-endpoint (multibridge-engine multibridge))))))
 
     (lambda (handler request raw)
       (let ((endpoint (select-endpoint request raw)))

@@ -216,7 +216,6 @@ and forwarding the request according to where this endpoint wants it to go."
                (log-for (trace) "Considering: ~A against ~A" alias request)
                (log-for (trace) "Method: (~A)~A" (type-of method) method)
                (log-for (trace) "Path: ~A" (m2cl:request-path request))
-               (describe alias)
                (when (and (or (null (fdog-forwarder-alias-method alias))
                               (string-equal (fdog-forwarder-alias-method alias) method))
                           (ppcre:scan (or (fdog-forwarder-alias-match alias) "")

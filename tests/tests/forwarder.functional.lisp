@@ -66,3 +66,27 @@
           (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
             (assert-null (zerop (length raw)))
             (assert-non-nil (string-equal "/" (m2cl:request-path req)))))))))
+
+(def-test+func (test-alias-function-and-routing)
+    :eval (assert-forwarder-setup)
+
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/")
+      (assert-null res)
+      (assert-response-200 meta))
+
+    (let ((req '((:name . "post-only") (method . "POST") (match . ".*"))))
+      (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
+                                                  :content (json:encode-json-to-string req))
+        (log-for (trace) "Alias create: ~A" res)
+        (log-for (trace) "Alias meta: ~A" meta))))
+
+
+    ;;                                               :content (json:encode-json-to-string req))
+
+    ;; (let ((req (json:encode-json-to-string '((:name . "post-only") (method . "POST") (match . "")))))
+    ;;   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
+    ;;                                               :content (json:encode-json-to-string req))
+    ;;     (log-for (trace) "Result: ~A" res)
+    ;;     (log-for (trace) "Meta: ~A" meta)
+    ;;     (assert-non-nil res)
+    ;;     (assert-response-200 meta))))

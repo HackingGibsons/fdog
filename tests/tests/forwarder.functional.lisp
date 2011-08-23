@@ -77,16 +77,17 @@
     (let ((req '((:name . "post-only") (method . "POST") (match . ".*"))))
       (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
                                                   :content (json:encode-json-to-string req))
-        (log-for (trace) "Alias create: ~A" res)
-        (log-for (trace) "Alias meta: ~A" meta))))
+        (assert-non-nil res)
+        (assert-response-200 meta)))
 
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/")
+      (assert-non-nil res)
+      (assert-response-200 meta)
+      (assert-non-nil (find "post-only" res :test #'string=)))
 
-    ;;                                               :content (json:encode-json-to-string req))
+    ;; Binding just to invoke a compiler warning.
+    (let (undone-testing)
+      (log-for (warn) "TODO: Test routing GET requests to default endpoint.")
+      (log-for (warn) "TODO: Test routing POST requests to alias endpoint.")
+      (log-for (warn) "TODO: Test that backlogging one doesn't backlog the other.")))
 
-    ;; (let ((req (json:encode-json-to-string '((:name . "post-only") (method . "POST") (match . "")))))
-    ;;   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
-    ;;                                               :content (json:encode-json-to-string req))
-    ;;     (log-for (trace) "Result: ~A" res)
-    ;;     (log-for (trace) "Meta: ~A" meta)
-    ;;     (assert-non-nil res)
-    ;;     (assert-response-200 meta))))

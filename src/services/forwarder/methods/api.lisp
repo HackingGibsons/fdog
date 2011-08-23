@@ -51,6 +51,8 @@
 
     (let ((alias (make-forwarder-alias forwarder name :method method :match match)))
       (log-for (trace) "Built alias: ~A" alias)
+      (init-forwarders)
+      (log-for (trace) "Re-inited.")
       (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
         (json:encode-json spec stream)))))
 

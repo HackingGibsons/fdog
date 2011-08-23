@@ -65,7 +65,6 @@
 
     (with-chunked-stream-reply (handler request stream
                                 :headers ((header-json-type)))
-      (describe alias)
       (with-slots (name listen-on forward-to) alias
         (json:encode-json `((:name . ,name)
                             (:parent . ,(fdog-forwarder-name forwarder))

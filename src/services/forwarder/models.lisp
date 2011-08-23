@@ -185,6 +185,7 @@ added, they will be set, otherwise the alias will match the empty string (^$)"
       (setf (fdog-forwarder-alias-match alias) match))
     (when method
       (setf (fdog-forwarder-alias-method alias) method))
+    (clsql:update-records-from-instance alias)
     alias))
 
 

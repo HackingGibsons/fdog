@@ -86,6 +86,17 @@
       (assert-non-nil (find "post-only" res :test #'string=)))
 
     ;; Ensure that nothing that used to work broke.
+    (log-for (trace) "Sending request destined for quedom to pick up.")
+    (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/")
+      (assert-null res))
+    (log-for (trace) "Requet sent.")
+
+    (log-for (trace) "Sending POST request destined for quedom to pick up.")
+    (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/" :method :POST
+                                                 :content "Hello world")
+      (assert-null res))
+    (log-for (trace) "POST Requet sent.")
+
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/")
       (assert-response-200 meta)
       (assert-non-nil res)
@@ -102,8 +113,18 @@
               (assert-null (zerop (length raw)))
               (assert-non-nil (string-equal "/" (m2cl:request-path req))))))))
 
-    ;; Binding just to invoke a compiler warning.
-    (let (undone-testing)
-      (log-for (warn) "TODO: Test routing GET requests to default endpoint.")
-      (log-for (warn) "TODO: Test routing POST requests to alias endpoint.")
-      (log-for (warn) "TODO: Test that backlogging one doesn't backlog the other.")))
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/post-only/")
+      (assert-response-200 meta)
+      (assert-non-nil res)
+
+      (assert-non-nil (assoc :push res :test #'string-equal))
+      (assert-non-nil (assoc :sub res :test #'string-equal))
+
+      (let ((push (cdr (assoc :push res :test #'string-equal)))
+            (sub (cdr (assoc :sub res :test #'string-equal))))
+        (flet ((s2us (s) (round (* s 1000000))))
+
+          (m2cl:with-handler (handler "test" push sub)
+            (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
+              (assert-null (zerop (length raw)))
+              (assert-non-nil (string-equal "/" (m2cl:request-path req)))))))))

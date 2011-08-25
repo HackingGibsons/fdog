@@ -8,6 +8,8 @@
 ;; Globals
 (defparameter *context-threads* 1
   "Number of threads an agent context uses.")
+(defparameter *event-starvation-timeout* 3
+  "Number of seconds that an agent can live without events.")
 
 ;; Classes
 (defclass standard-agent ()
@@ -39,6 +41,24 @@
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
+;; Heart
+;; TODO: Move
+(defclass agent-heart ()
+  ((agent :initarg :agent
+          :accessor organ-agent)
+   (beat-every :initarg :beat-every
+               :initform 0.3)))
+
+(defmethod make-heart-for ((agent standard-agent))
+  (let ((heart (make-instance 'agent-heart :agent agent)))
+    (agent-connect agent heart)
+    heart))
+
+;; Agent methods
+(defmethod agent-connect ((agent standard-agent) organ &rest options)
+  (log-for (trace) "Connecting organ: ~A to agent: ~A With: ~A" organ agent options))
+
+
 (defmethod initialize-instance :after ((agent standard-agent) &rest initargs)
   "Set up the interal bus address."
   (declare (ignorable initargs))
@@ -53,6 +73,10 @@
   "Agent maker wrapper"
   (make-instance 'standard-agent))
 
+(defmethod agent-poll-timeout ((agent standard-agent))
+  "Determine how long the poll timeout should be."
+  *event-starvation-timeout*)
+
 (defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
 or `:timeout' if no event is found after a pause."
@@ -64,7 +88,7 @@ or `:timeout' if no event is found after a pause."
              (zmq:recv! (agent-event-sock agent) msg)
              (zmq:msg-data-as-string msg))))
     (zmq:with-polls ((readers . (((agent-event-sock agent) . zmq:pollin))))
-      (if (zmq:poll readers :timeout (s2us 1) :retry t)
+      (if (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)
           (read-message)
           :timeout))))
 
@@ -72,12 +96,11 @@ or `:timeout' if no event is found after a pause."
 (defmethod event-fatal-p ((agent standard-agent) event)
   "Predicate to determine if this event should end the agent."
   (log-for (trace) "Testing event fatalaty of ~A for ~A" event agent)
-  (let ((timeout 3))
-    (if (and (event-timeout-p event)
-             (> (- (get-internal-real-time) (agent-last-event agent))
-                (* timeout internal-time-units-per-second)))
-        (prog1 t (log-for (warn) "Event timeout ~As reached." timeout))
-        (not event))))
+  (if (and (event-timeout-p event)
+           (> (- (get-internal-real-time) (agent-last-event agent))
+              (* *event-starvation-timeout* internal-time-units-per-second)))
+      (prog1 t (log-for (warn) "Event timeout ~As reached." *event-starvation-timeout*))
+      (not event)))
 
 (defmethod run-agent ((agent standard-agent))
   "Enter the agent event loop, return only when agent is dead."

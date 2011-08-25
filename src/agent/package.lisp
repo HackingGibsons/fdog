@@ -144,9 +144,11 @@ or `:timeout' if no event is found after a pause."
              (zmq:recv! (agent-event-sock agent) msg)
              (zmq:msg-data-as-string msg))))
     (zmq:with-polls ((readers . (((agent-event-sock agent) . zmq:pollin))))
-      (if (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)
-          (read-message)
-          :timeout))))
+      (let ((poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
+        (mapcar #'describe readers)
+        (if poll-result
+            (read-message)
+            :timeout)))))
 
 
 (defmethod event-fatal-p ((agent standard-agent) event)

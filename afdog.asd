@@ -13,5 +13,10 @@
                          (:module "agent"
                                   :depends-on ("logging")
                                   :components
-                                  ((:file "package")))))))
+                                  ((:file "package")
+                                   (:file "agent" :depends-on ("classes"))
+                                   (:module "classes" :depends-on ("package")
+                                            :components
+                                            ((:file "standard-agent")
+                                             (:file "standard-organ")))))))))
 

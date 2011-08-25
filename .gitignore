@@ -7,3 +7,5 @@ scratch.lisp
 /coverage/
 build/*
 /.test/*
+\#*
+.\#*

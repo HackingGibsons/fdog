@@ -13,47 +13,55 @@
   ((context :initarg :context
             :reader agent-context
             :initform nil)
+   (event-count :initform 0
+                :accessor agent-event-count)
+   (last-tick :initform 0
+              :accessor agent-last-tick)
+   (tick-delta :initform 0
+               :accessor agent-tick-delta)
    (uuid :initarg :uuid
          :reader agent-uuid
          :initform (print-object (uuid:make-v4-uuid) nil)))
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
-(defclass vertebrate-agent (standard-agent)
-  ((spine :initform (make-hash-table :test #'equal)
-          :reader agent-spine
-          :documentation "A hash table of nerve junctions")))
+(defun make-agent ()
+  (make-instance 'standard-agent))
 
-;; Pretty-printers
-(defmethod print-object ((agent standard-agent) s)
-  (format s "#<Agent[~A] Running: ~A" (agent-uuid agent) (agent-running-p agent)))
+(defmethod next-event ((agent standard-agent))
+  (log-for (trace) "Fetching event for: ~A" agent)
+  (let ((e (random 100)))
+    (if (= e 0) nil e)))
 
-(defmethod print-object ((agent vertebrate-agent) s)
-  (format s "#<VertebrateAgent[~A][~A] Running: ~A" (agent-uuid agent)
-          (hash-table-count (agent-spine agent))
-          (agent-running-p agent)))
+(defmethod event-fatal-p ((agent standard-agent) event)
+  (log-for (trace) "Testing event fatalaty of ~A for ~A" event agent)
+  (not event))
 
-;; Generics/Base methods
-(defgeneric agent-running-p (agent)
-  (:documentation "Generic predicate for agent running test. Tests for context existance.")
-  (:method ((agent standard-agent))
-    (not (not (agent-context agent)))))
+(defmethod run-agent ((agent standard-agent))
+  (zmq:with-context (ctx *context-threads*)
+    (log-for (trace) "Setting agent context: ~A" agent)
+    (setf (slot-value agent 'context) ctx)
 
-(defgeneric start-agent (agent &rest options &key &allow-other-keys)
-  (:documentation "Start the agent `agent'.")
-  (:method ((agent standard-agent) &rest options)
-    (declare (ignorable options))
-    (when (agent-running-p agent) (return-from start-agent nil))
-    (log-for (trace) "Creating agent context(~A) for ~A" *context-threads* agent)
-    (setf (slot-value agent 'context) (zmq:init *context-threads*))
-    agent))
+    ;; Agent event loop
+    (do ((event (next-event agent) (next-event agent)))
+        ((or (not event)
+             (event-fatal-p agent event))
+         event)
+      (log-for (trace) "Agent[~A] Event: ~A" agent event)
+      ;; Tick, Process, Increment counter
+      (agent-tick agent)
+      (act-on-event agent event)
+      (incf (agent-event-count agent)))
 
-(defgeneric stop-agent (agent)
-  (:documentation "Stop the agent `agent'")
-  (:method ((agent standard-agent))
-    (unless (agent-running-p agent) (return-from stop-agent nil))
-    (log-for (trace) "Terminating context of: ~A" agent)
-    (zmq:term (agent-context agent))
-    (log-for (trace) "Terminated context of: ~A" agent)
-    (setf (slot-value agent 'context) nil)
-    agent))
+    (log-for (trace) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))
+
+(defmethod act-on-event ((agent standard-agent) event)
+  (log-for (trace) "Agent: ~A processing event: ~A" agent event))
+
+(defmethod agent-tick ((agent standard-agent))
+  "Internal tick, measure time queue timed events."
+  (let ((last (agent-last-tick agent))
+        (now (get-internal-real-time)))
+    (setf (agent-tick-delta agent) (- now last)
+          (agent-last-tick agent) now)
+    (log-for (trace) "Agent ~A tick. Tick Delta: ~A" agent (agent-tick-delta agent))))

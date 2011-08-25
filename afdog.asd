@@ -13,21 +13,24 @@
                                   ((:file "zmq")))
 
                          ;; Agent components and standard library
-                         (:module "agent" :depends-on ("logging")
-                                  :components
+                         (:module "agent" :depends-on ("logging") :components
                                   ((:file "package")
                                    (:file "agent" :depends-on ("classes" "organs"))
 
                                    ;; Agent classes and bases
-                                   (:module "classes" :depends-on ("package")
-                                            :components
+                                   (:module "classes" :depends-on ("package") :components
                                             ((:file "standard-agent")
+                                             (:file "standard-organ")))
+                                   (:module "methods" :depends-on ("classes") :components
+                                            ((:module "standard-agent" :components
+                                                      ((:file "standard-agent")))
                                              (:file "standard-organ")))
 
                                    ;; Standard organ definitions
-                                   (:module "organs" :depends-on ("classes")
-                                            :components
+                                   (:module "organs" :depends-on ("classes") :components
                                             ((:module "classes" :components
+                                                      ((:file "heart")))
+                                             (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")))))))))))
 
 

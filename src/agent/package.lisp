@@ -73,7 +73,6 @@
 
 (defmethod agent-tick ((heart agent-heart) e)
   (declare (ignorable e))
-  (log-for (trace) "Heart tick.")
   (let ((now (get-internal-real-time)))
     (when (>= now (heart-next-beat heart))
       (zmq:with-socket (esock (agent-context (organ-agent heart)) zmq:pub)

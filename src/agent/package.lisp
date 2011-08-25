@@ -29,7 +29,16 @@
                  :reader agent-message-addr)
    (message-sock :reader agent-message-sock)
 
+   ;; Squigly spooges
+   (organs :initform nil
+           :accessor agent-organs)
 
+   ;; Cron
+   (cron :initform nil
+         :accessor agent-cron
+         :documentation "A list of integers in the form of `(get-internal-real-time)' at which ticks should fire.")
+
+   ;; Event, tick and timeout bookeeping
    (event-count :initform 0
                 :accessor agent-event-count)
    (last-event :initform (get-internal-real-time)
@@ -41,22 +50,59 @@
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
+;; Organs
+(defclass standard-organ ()
+  ((agent :initarg :agent
+          :accessor organ-agent)))
+
+(defmethod agent-tick ((organ standard-organ) event)
+  "By default, an organ tick is a no-op"
+  nil)
+
 ;; Heart
 ;; TODO: Move
-(defclass agent-heart ()
-  ((agent :initarg :agent
-          :accessor organ-agent)
-   (beat-every :initarg :beat-every
-               :initform 0.3)))
+(defclass agent-heart (standard-organ)
+  ((beat-every :initarg :beat-every
+               :accessor heart-beat-every
+               :initform 0.3)
 
+   (last-beat :initform 0
+              :accessor heart-last-beat)
+   (next-beat :initform (get-internal-real-time)
+              :accessor heart-next-beat)))
+
+(defmethod agent-tick ((heart agent-heart) e)
+  (declare (ignorable e))
+  (log-for (trace) "Heart tick.")
+  (let ((now (get-internal-real-time)))
+    (when (>= now (heart-next-beat heart))
+      (zmq:with-socket (esock (agent-context (organ-agent heart)) zmq:pub)
+        (zmq:connect esock (agent-event-addr (organ-agent heart)))
+        (zmq:send! esock (prepare-message '(:heart :beat))))
+
+      (setf (heart-last-beat heart) now
+            (heart-next-beat heart) (round (+ now (* (heart-beat-every heart)
+                                                     internal-time-units-per-second)))))
+    (heart-next-beat heart)))
+
+
+;; Makers
 (defmethod make-heart-for ((agent standard-agent))
   (let ((heart (make-instance 'agent-heart :agent agent)))
-    (agent-connect agent heart)
     heart))
+
+(defun make-agent ()
+  "Agent maker wrapper"
+  (let* ((agent (make-instance 'standard-agent))
+         (heart (make-heart-for agent)))
+    (agent-connect agent heart)
+    agent))
 
 ;; Agent methods
 (defmethod agent-connect ((agent standard-agent) organ &rest options)
-  (log-for (trace) "Connecting organ: ~A to agent: ~A With: ~A" organ agent options))
+  (log-for (trace) "Connecting organ: ~A to agent: ~A With: ~A" organ agent options)
+  (push organ (agent-organs agent))
+  (values agent organ))
 
 
 (defmethod initialize-instance :after ((agent standard-agent) &rest initargs)
@@ -69,13 +115,11 @@
   (setf (slot-value agent 'message-addr)
         (format nil "inproc://msg-~A" (agent-uuid agent))))
 
-(defun make-agent ()
-  "Agent maker wrapper"
-  (make-instance 'standard-agent))
-
 (defmethod agent-poll-timeout ((agent standard-agent))
-  "Determine how long the poll timeout should be."
-  *event-starvation-timeout*)
+  "Determine how long the poll timeout should be for the current poll
+for `agent'"
+  (log-for (trace) "Calculating timeout. Cron: ~A" (agent-cron agent))
+  (/ *event-starvation-timeout* 3))
 
 (defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
@@ -84,6 +128,7 @@ or `:timeout' if no event is found after a pause."
   (flet ((s2us (s) (round (* s 1000000)))
 
          (read-message ()
+           (log-for (trace) "Reading message.")
            (let ((msg (make-instance 'zmq:msg)))
              (zmq:recv! (agent-event-sock agent) msg)
              (zmq:msg-data-as-string msg))))
@@ -165,6 +210,17 @@ or `:timeout' if no event is found after a pause."
   "Internal tick, measure time, queue timed events, update timeout clock."
   (let ((last (agent-last-tick agent))
         (now (get-internal-real-time)))
+
+    (flet ((organ-tick (o) (agent-tick o event)))
+      ;; Compile a list of maximum times any organs want the next local tick to happen
+      ;; to compute the correct poll timeout
+      (let* ((maybe-crons (remove nil (mapcar #'organ-tick (agent-organs agent))))
+             (maybe-crons (append maybe-crons (agent-cron agent)))
+             (maybe-crons (remove-duplicates maybe-crons :test #'=))
+             (maybe-crons (sort maybe-crons #'<))
+             (maybe-crons (remove-if #'(lambda (c) (< c now)) maybe-crons)))
+        (setf (agent-cron agent) maybe-crons)))
+
 
     (unless (event-timeout-p event)
       (log-for (trace) "Not a timeout event.")

@@ -18,7 +18,6 @@
             :reader agent-context
             :initform nil)
    (event-addr :initarg :event-addr
-               :initform (format nil "tcp://127.0.0.1:30308")
                :reader agent-event-addr)
    (event-sock :reader agent-event-sock)
 
@@ -32,6 +31,12 @@
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
+(defmethod initialize-instance :after ((agent standard-agent) &rest initargs)
+  (declare (ignorable initargs))
+  (log-for (trace) "Setting the event-addr to inproc://uuid")
+  (setf (slot-value agent 'event-addr)
+        (format nil "inproc://~A" (agent-uuid agent))))
+
 (defun make-agent ()
   (make-instance 'standard-agent))
 
@@ -44,7 +49,7 @@
              (zmq:recv! (agent-event-sock agent) msg)
              (zmq:msg-data-as-string msg))))
     (zmq:with-polls ((readers . (((agent-event-sock agent) . zmq:pollin))))
-      (if (zmq:poll readers :timeout (s2us 1))
+      (if (zmq:poll readers :timeout (s2us 1) :retry t)
           (read-message)
           :timeout))))
 

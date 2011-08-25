@@ -4,8 +4,11 @@
                #:bordeaux-threads
                #:zeromq)
   :components ((:module "src" :components
-                        ((:file "package")
+                        ((:file "package" :depends-on ("patches"))
                          (:file "logging" :depends-on ("package"))
+
+                         (:module "patches" :components
+                                  ((:file "zmq")))
 
                          (:module "agent"
                                   :depends-on ("logging")

@@ -119,7 +119,19 @@
   "Determine how long the poll timeout should be for the current poll
 for `agent'"
   (log-for (trace) "Calculating timeout. Cron: ~A" (agent-cron agent))
-  (/ *event-starvation-timeout* 3))
+  (let* ((now (get-internal-real-time))
+         (soon (pop (agent-cron agent)))
+         (soon (and soon
+                    (/ (- soon now) internal-time-units-per-second)))
+         (soon (and soon (if (>= soon 0) soon 0)))
+         (timeout (if soon soon
+                      (/ *event-starvation-timeout* 3))))
+
+    (setf (agent-cron agent)
+          (remove-if #'(lambda (c) (< c now)) (agent-cron agent)))
+
+    (log-for (trace) "Using poll timeout of: ~Fs" timeout)
+    timeout))
 
 (defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
@@ -217,8 +229,7 @@ or `:timeout' if no event is found after a pause."
       (let* ((maybe-crons (remove nil (mapcar #'organ-tick (agent-organs agent))))
              (maybe-crons (append maybe-crons (agent-cron agent)))
              (maybe-crons (remove-duplicates maybe-crons :test #'=))
-             (maybe-crons (sort maybe-crons #'<))
-             (maybe-crons (remove-if #'(lambda (c) (< c now)) maybe-crons)))
+             (maybe-crons (sort maybe-crons #'<)))
         (setf (agent-cron agent) maybe-crons)))
 
 

@@ -85,7 +85,6 @@ or `:timeout' if no event is found after a pause."
         ;; Send boot
         (agent-publish-event agent `(:boot ,(get-internal-real-time) :uuid ,(agent-uuid agent)))
 
-
         ;; Agent event loop
         (setf (agent-last-event agent) (get-internal-real-time))
         (setf (agent-event-count agent) 0)
@@ -105,7 +104,7 @@ or `:timeout' if no event is found after a pause."
 
 (defgeneric prepare-message (message)
   (:method (message)
-    (make-instance 'zmq:msg :data (with-output-to-string (s) (prin1 message s))))
+    (prepare-message (with-output-to-string (s) (prin1 message s))))
   (:method ((message string))
     (make-instance 'zmq:msg :data message)))
 
@@ -121,13 +120,32 @@ or `:timeout' if no event is found after a pause."
     (log-for (trace) "Sending message: [~A]" (with-output-to-string (s) (prin1 event s)))
     (zmq:send! (agent-message-sock agent) (prepare-message event))))
 
+(defmethod agent-event-special-p ((agent standard-agent) event)
+  (and (consp event)
+       (or (eql (car event) :boot))))
+
+(defgeneric agent-special-event (agent head event)
+  (:documentation "Method responsible for handling internal special events like boot")
+  (:method ((agent standard-agent) (head (eql :boot)) event)
+    (log-for (warn) "TODO: Handle the boot event!")))
+
 (defmethod act-on-event ((agent standard-agent) event)
   "Perform any action an `agent' would need to take to act on `event'"
-  (log-for (trace) "Agent: ~A processing event: ~A" agent event)
+  (log-for (trace) "Agent: ~A processing event(~A): ~A" agent (type-of event) event)
 
-  ;; Rebroadcast useful events
-  (unless (or (not event) (event-timeout-p event))
-    (agent-send-message agent event)))
+  (let ((event (typecase event
+                 (string (handler-case (read-from-string event) (end-of-file () nil)))
+                 (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
+                 (otherwise event))))
+    (unless event
+      (log-for (warn) "Not an event to act on!")
+      (return-from act-on-event))
+
+    (cond ((agent-event-special-p agent event)
+           (agent-special-event agent (car event) event))
+
+          ((not (event-timeout-p event))
+           (agent-send-message agent event)))))
 
 (defun event-timeout-p (event)
   "Predicate testing if the `event' represents a timeout event"

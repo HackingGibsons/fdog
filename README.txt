@@ -1,1 +1,1 @@
-A quick scaffold to manage a lisp system under development
+This is the Dark Work.

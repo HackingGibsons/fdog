@@ -118,6 +118,7 @@ or `:timeout' if no event is found after a pause."
                (agent-tick agent event)
                (incf (agent-event-count agent)))
 
+          ;; Event loop unwind
           (flet ((organ-disconnect (o) (agent-disconnect agent o)))
             (log-for (trace) "Disconnecting organs.")
             (mapcar #'organ-disconnect (agent-organs agent))))

@@ -111,6 +111,9 @@ or `:timeout' if no event is found after a pause."
                (log-for (trace) "Agent[~A] Event: ~A" agent event)
 
                ;; Process, Tick, Increment counter
+               ;; Event has to be acted on before the tick fires
+               ;; Because actions can alter the reactor before the tick
+               ;; Operates
                (act-on-event agent event)
                (agent-tick agent event)
                (incf (agent-event-count agent)))

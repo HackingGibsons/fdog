@@ -59,14 +59,24 @@ or `:timeout' if no event is found after a pause."
            (log-for (trace) "Reading message.")
            (let ((msg (make-instance 'zmq:msg)))
              (zmq:recv! (agent-event-sock agent) msg)
-             (zmq:msg-data-as-string msg))))
+             (zmq:msg-data-as-string msg)))
 
+         (make-reader (sock)
+           (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
 
-    (zmq:with-polls ((readers . (((agent-event-sock agent) . zmq:pollin))))
-      (let ((poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
-        (if poll-result
-            (read-message)
-            :timeout)))))
+         (organ-socks ()
+           (remove nil (mapcar #'organ-incoming-sock (agent-organs agent)))))
+
+    (let* ((readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
+           (poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
+
+      (log-for (trace) "Readers:")
+      (mapcar #'describe readers)
+      (log-for (trace) "Poll result: ~A" poll-result)
+
+      (if (= (first poll-result) 1)
+          (read-message)
+          :timeout))))
 
 
 (defmethod event-fatal-p ((agent standard-agent) event)

@@ -29,7 +29,8 @@
                                    ;; Standard organ definitions
                                    (:module "organs" :depends-on ("classes") :components
                                             ((:module "classes" :components
-                                                      ((:file "heart")))
+                                                      ((:file "heart")
+                                                       (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")))))))))))
 

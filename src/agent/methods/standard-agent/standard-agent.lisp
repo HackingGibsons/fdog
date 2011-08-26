@@ -51,7 +51,8 @@ for `agent'"
 
 (defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
-or `:timeout' if no event is found after a pause."
+or `:timeout' if no event is found after a pause. Will also poll all organs
+and deliver any events that appear to them before returning the agent event."
   (log-for (trace) "Fetching event for: ~A" agent)
   (labels ((s2us (s) (round (* s 1000000)))
 

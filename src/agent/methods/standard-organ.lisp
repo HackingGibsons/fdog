@@ -45,3 +45,17 @@
 (defmethod send-message ((organ standard-organ) message)
   (log-for (trace) "Organ sending message: [~A]" message)
   (zmq:send! (organ-outgoing-sock organ) (prepare-message message)))
+
+(defmethod act-on-event ((organ standard-organ) event)
+  (log-for (trace) "Organ: ~A processing event(~A): ~A" organ (type-of event) event)
+
+  (let ((event (typecase event
+                 (string (handler-case (read-from-string event) (end-of-file () nil)))
+                 (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
+                 (otherwise event))))
+
+    (unless event
+      (log-for (warn) "Not an event to act on!")
+      (return-from act-on-event))
+
+    (log-for (warn) "TODO: Act on event: ~A" event)))

@@ -53,23 +53,24 @@ for `agent'"
   "Returns the next event pending for `agent' on the internal bus
 or `:timeout' if no event is found after a pause."
   (log-for (trace) "Fetching event for: ~A" agent)
-  (flet ((s2us (s) (round (* s 1000000)))
+  (labels ((s2us (s) (round (* s 1000000)))
 
-         (read-message ()
-           (log-for (trace) "Reading message.")
-           (let ((msg (make-instance 'zmq:msg)))
-             (zmq:recv! (agent-event-sock agent) msg)
-             (zmq:msg-data-as-string msg)))
+           (read-message (&optional (sock (agent-event-sock agent)))
+             (log-for (trace) "Reading message.")
+             (let ((msg (make-instance 'zmq:msg)))
+               (zmq:recv! sock msg)
+               (zmq:msg-data-as-string msg)))
 
-         (make-reader (sock)
-           (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
+           (make-reader (sock)
+             (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
 
-         (organ-socks ()
-           (remove nil (mapcar #'organ-incoming-sock (agent-organs agent))))
+           (organ-socks ()
+             (remove nil (mapcar #'organ-incoming-sock (agent-organs agent))))
 
-         (deliver-organ-event (organ poller result)
-           (when (and organ (/= result 0))
-             (log-for (trace) "Deliver to ~A => ~A" organ poller))))
+           (deliver-organ-event (organ poller result)
+             (when (and organ (/= result 0))
+               (log-for (trace) "Deliver to ~A => ~A" organ poller)
+               (act-on-event organ (read-message (zmq:pollitem-socket poller))))))
 
     (let* ((organs `(nil ,@(agent-organs agent)))
            (readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
@@ -78,7 +79,7 @@ or `:timeout' if no event is found after a pause."
       (log-for (trace) "Dispatching organ events.")
       (mapcar #'deliver-organ-event organs readers poll-result)
 
-      (if (= (first poll-result) 1)
+      (if (and poll-result (= (first poll-result) 1))
           (read-message)
           :timeout))))
 

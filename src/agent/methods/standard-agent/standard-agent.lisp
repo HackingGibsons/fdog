@@ -65,14 +65,18 @@ or `:timeout' if no event is found after a pause."
            (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
 
          (organ-socks ()
-           (remove nil (mapcar #'organ-incoming-sock (agent-organs agent)))))
+           (remove nil (mapcar #'organ-incoming-sock (agent-organs agent))))
 
-    (let* ((readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
+         (deliver-organ-event (organ poller result)
+           (when (and organ (/= result 0))
+             (log-for (trace) "Deliver to ~A => ~A" organ poller))))
+
+    (let* ((organs `(nil ,@(agent-organs agent)))
+           (readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
            (poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
 
-      (log-for (trace) "Readers:")
-      (mapcar #'describe readers)
-      (log-for (trace) "Poll result: ~A" poll-result)
+      (log-for (trace) "Dispatching organ events.")
+      (mapcar #'deliver-organ-event organs readers poll-result)
 
       (if (= (first poll-result) 1)
           (read-message)

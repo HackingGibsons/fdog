@@ -7,6 +7,11 @@
   (push organ (agent-organs agent))
   (values agent organ))
 
+(defmethod agent-boot ((agent standard-agent) organ &rest options)
+  (declare (ignorable options))
+  (log-for (trace) "Agent boot/NOP of: ~A for ~A" organ agent)
+  nil)
+
 (defmethod agent-disconnect ((agent standard-agent) organ &rest options)
   (declare (ignorable options))
   (log-for (trace) "Disconnecting/NOP for organ: ~A from ~A" organ agent)
@@ -141,7 +146,9 @@ or `:timeout' if no event is found after a pause."
 (defgeneric agent-special-event (agent head event)
   (:documentation "Method responsible for handling internal special events like boot")
   (:method ((agent standard-agent) (head (eql :boot)) event)
-    (log-for (warn) "TODO: Handle the boot event!")))
+    (log-for (trace) "Handling the boot event!")
+    (flet ((organ-boot (o) (agent-boot agent o)))
+      (mapcar #'organ-boot (agent-organs agent)))))
 
 (defmethod act-on-event ((agent standard-agent) event)
   "Perform any action an `agent' would need to take to act on `event'"

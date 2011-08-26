@@ -110,9 +110,9 @@ or `:timeout' if no event is found after a pause."
                   event)
                (log-for (trace) "Agent[~A] Event: ~A" agent event)
 
-               ;; Tick, Process, Increment counter
-               (agent-tick agent event)
+               ;; Process, Tick, Increment counter
                (act-on-event agent event)
+               (agent-tick agent event)
                (incf (agent-event-count agent)))
 
           (flet ((organ-disconnect (o) (agent-disconnect agent o)))

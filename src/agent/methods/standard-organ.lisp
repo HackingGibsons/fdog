@@ -1,5 +1,6 @@
 (in-package :agent)
 
+;; Agent linkage methods
 (defmethod agent-tick ((organ standard-organ) event)
   "By default, an organ tick is a no-op"
   nil)
@@ -39,3 +40,8 @@
   (when (organ-incoming-sock organ)
     (zmq:close (organ-incoming-sock organ))
     (setf (organ-incoming-sock organ) nil)))
+
+;; Messaging
+(defmethod send-message ((organ standard-organ) message)
+  (log-for (trace) "Organ sending message: [~A]" message)
+  (zmq:send! (organ-outgoing-sock organ) (prepare-message message)))

@@ -2,8 +2,17 @@
 
 ;; Agent methods
 (defmethod agent-connect ((agent standard-agent) organ &rest options)
+  (declare (ignorable options))
   (log-for (trace) "Connecting organ: ~A to agent: ~A With: ~A" organ agent options)
   (push organ (agent-organs agent))
+  (values agent organ))
+
+(defmethod agent-disconnect ((agent standard-agent) organ &rest options)
+  (declare (ignorable options))
+  (log-for (trace) "Disconnecting/NOP for organ: ~A from ~A" organ agent)
+  (log-for (trace) "Organs before: ~A" (agent-organs agent))
+  (setf (agent-organs agent) (delete organ (agent-organs agent)))
+  (log-for (trace) "Organs after: ~A" (agent-organs agent))
   (values agent organ))
 
 
@@ -89,16 +98,21 @@ or `:timeout' if no event is found after a pause."
         (setf (agent-last-event agent) (get-internal-real-time))
         (setf (agent-event-count agent) 0)
         (log-for (trace) "Entering agent event loop.")
-        (do ((event (next-event agent) (next-event agent)))
-            ((or (not event)
-                 (event-fatal-p agent event))
-             event)
-          (log-for (trace) "Agent[~A] Event: ~A" agent event)
+        (unwind-protect
+             (do ((event (next-event agent) (next-event agent)))
+                 ((or (not event)
+                      (event-fatal-p agent event))
+                  event)
+               (log-for (trace) "Agent[~A] Event: ~A" agent event)
 
-          ;; Tick, Process, Increment counter
-          (agent-tick agent event)
-          (act-on-event agent event)
-          (incf (agent-event-count agent)))
+               ;; Tick, Process, Increment counter
+               (agent-tick agent event)
+               (act-on-event agent event)
+               (incf (agent-event-count agent)))
+
+          (flet ((organ-disconnect (o) (agent-disconnect agent o)))
+            (log-for (trace) "Disconnecting organs.")
+            (mapcar #'organ-disconnect (agent-organs agent))))
 
         (log-for (trace) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))))
 

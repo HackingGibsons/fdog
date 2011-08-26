@@ -55,7 +55,7 @@ or `:timeout' if no event is found after a pause."
   (log-for (trace) "Fetching event for: ~A" agent)
   (labels ((s2us (s) (round (* s 1000000)))
 
-           (read-message (&optional (sock (agent-event-sock agent)))
+           (read-message (&key (sock (agent-event-sock agent)))
              (log-for (trace) "Reading message.")
              (let ((msg (make-instance 'zmq:msg)))
                (zmq:recv! sock msg)
@@ -70,9 +70,9 @@ or `:timeout' if no event is found after a pause."
            (deliver-organ-event (organ poller result)
              (when (and organ (/= result 0))
                (log-for (trace) "Deliver to ~A => ~A" organ poller)
-               (act-on-event organ (read-message (zmq:pollitem-socket poller))))))
+               (act-on-event organ (read-message :sock (zmq:pollitem-socket poller))))))
 
-    (let* ((organs `(nil ,@(agent-organs agent)))
+    (let* ((organs `(nil ,@(remove-if-not #'organ-incoming-sock (agent-organs agent))))
            (readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
            (poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
 

@@ -1,6 +1,7 @@
 (defpackage #:afdog
   (:use #:cl)
   (:use #:log5)
-  (:export :start-logging))
+  (:export :start-logging
+           :stop-logging))
 
 (in-package :afdog)

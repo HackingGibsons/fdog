@@ -11,3 +11,6 @@
                        (log5:stream-sender :location *error-output*)
                        :category-spec '(log5:dribble+)
                        :output-spec '(human-time log5:category log5:message))))
+
+(defun stop-logging ()
+  (log5:stop-all-senders))

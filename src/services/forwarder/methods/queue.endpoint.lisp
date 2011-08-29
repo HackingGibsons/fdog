@@ -105,7 +105,7 @@
   "Make a request device that pumps requests into redis."
   #'(lambda ()
       (log-for (trace) "Starting request queue device.")
-      (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
+      (redis:with-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
         (let ((msg (make-instance 'zmq:msg)))
           (labels ((run-once ()
@@ -193,8 +193,8 @@
 
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
-  (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
-                                    :port (queue-endpoint-redis-port endpoint))
+  (redis:with-connection (:host (queue-endpoint-redis-host endpoint)
+                                :port (queue-endpoint-redis-port endpoint))
     (request-queue-event endpoint :reset))
   (with-slots (request-write-device request-queue-device) endpoint
     (setf request-queue-device
@@ -230,7 +230,7 @@
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting queued proxy request device")
-      (redis:with-recursive-connection (:host (queue-endpoint-redis-host endpoint)
+      (redis:with-connection (:host (queue-endpoint-redis-host endpoint)
                                         :port (queue-endpoint-redis-port endpoint))
         (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
             (labels ((run-once ()

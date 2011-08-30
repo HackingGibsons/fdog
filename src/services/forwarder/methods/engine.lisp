@@ -75,6 +75,7 @@
 (defmethod forwarder-engine-stop ((engine forwarder-engine))
   (log-for (trace) "Shutting down engine: ~A" engine)
   (mapcar #'multibridge-stop (forwarder-engine-bridges engine))
+  (mapcar #'engine-endpoint-stop (forwarder-engine-alias-endpoints engine))
   (engine-endpoint-stop (forwarder-engine-endpoint engine)))
 
 (defmethod forwarder-engine-handlers ((engine forwarder-engine))

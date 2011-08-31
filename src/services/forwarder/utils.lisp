@@ -66,20 +66,21 @@ remainder have sane defaults"
   (let ((n (parse-integer reply)))
     (unless (= n -1)
       (loop :repeat n
-         :collect (expect :anything)))))
+         :collect (expect connection :anything)))))
 
 (def-cmd QSUBSCRIBE (&rest chans) :anything "Subscribe, but accept that the response won't come until after an exec.")
-(defmethod tell ((cmd (eql 'QSUBSCRIBE)) &rest args)
+(defmethod tell (connection (cmd (eql 'QSUBSCRIBE)) &rest args)
   "Wrap QSUBSCRIBE to be subscribe"
-  (apply #'tell `(SUBSCRIBE ,@args)))
+  (apply #'tell connection `(SUBSCRIBE ,@args)))
 
 (def-cmd UNSUBSCRIBE (&rest chans) :unsubscribe
   "Drain the channel messages then return the list of unsubscriptions.")
-(defmethod expect ((type (eql :unsubscribe)))
+
+(defmethod expect (connection (type (eql :unsubscribe)))
   "Override the unsubscribe return to drain the pending messages
 rather than panic and fall down crying. >:["
   (let (unsubs (discarded 0))
-    (do ((current (redis:expect :multi) (redis:expect :multi)))
+    (do ((current (redis:expect connection :multi) (redis:expect connection :multi)))
         ((and (string-equal (first current) :unsubscribe)
               (= 0 (parse-integer (car (last current)))))
          (progn (push current unsubs)

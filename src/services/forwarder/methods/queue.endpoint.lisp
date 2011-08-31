@@ -156,7 +156,7 @@
                                  (log-for (warn) "Inflight count changed since we last checked, going again")
                                  (return-from run-once :again))
 
-                               (do ((msg (redis:expect :multi) (redis:expect :multi)))
+                               (do ((msg (redis:expect redis:*connection* :multi) (redis:expect redis:*connection* :multi)))
                                    ((string-equal (third msg) :sent))
                                  (log-for (warn) "Waiting for next send message to resume queue pickups.."))
                                (log-for (warn) "Writing to the client has resumed, resuming queue reads.")

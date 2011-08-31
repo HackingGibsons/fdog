@@ -13,3 +13,6 @@
 [submodule "vendor/iolib"]
 	path = vendor/iolib
 	url = git://gitorious.org/iolib/iolib.git
+[submodule "vendor/cl-redis"]
+	path = vendor/cl-redis
+	url = https://github.com/sshirokov/cl-redis.git

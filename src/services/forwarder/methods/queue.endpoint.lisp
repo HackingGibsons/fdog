@@ -12,35 +12,49 @@
           (log-for (warn) "There is no reconnect restart")
           (error c)))))
 
+(defvar *request-event-lock* (bt:make-lock "request-event-lock"))
+
 (defmethod request-event-info ((endpoint forwarder-queue-endpoint) redis field &key (type :int))
-  (let ((val (redis:lred-hget redis (endpoint-queue-counter endpoint) field)))
-    (ecase type
-      (:int (parse-integer val))
-      (:raw val))))
+  (log-for (warn) "Thread: ~A waiting on request-event-info lock" (bt:current-thread))
+  (bt:with-lock-held (*request-event-lock*)
+    (log-for (warn) "Thread: ~A holds the request-event-info lock" (bt:current-thread))
+    (let ((val (redis:lred-hget redis (endpoint-queue-counter endpoint) field)))
+      (ecase type
+        (:int (parse-integer val))
+        (:raw val)))))
 
 (defmethod request-queue-event ((endpoint forwarder-queue-endpoint) redis (event symbol))
-  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-    (ecase event
-      (:reset (log-for (trace) "Resetting inflight request counter.")
-              (redis:lred-multi redis)
-              (redis:lred-hmset redis (endpoint-queue-counter endpoint)
-                                :count 0
-                                :last-pop 0
-                                :last-sent 0)
-              (redis:lred-publish redis (endpoint-queue-key endpoint) :reset)
-              (redis:lred-exec redis))
-      (:popped (log-for (trace) "Request popped from queue")
+  (log-for (warn) "Thread: ~A waiting on request-queue-event lock" (bt:current-thread))
+  (bt:with-lock-held (*request-event-lock*)
+    (log-for (warn) "Thread: ~A holds the request-queue-event-lock" (bt:current-thread))
+    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+      (ecase event
+        (:reset (log-for (trace) "Resetting inflight request counter.")
+                (redis:lred-hmset redis (endpoint-queue-counter endpoint)
+                                  :count 0
+                                  :last-pop 0
+                                  :last-sent 0))
+        (:popped (log-for (trace) "Request popped from queue")
+                 (redis:lred-multi redis)
+                 (redis:lred-hincrby redis (endpoint-queue-counter endpoint) :count 1)
+                 (redis:lred-hset redis (endpoint-queue-counter endpoint) :last-pop (get-internal-real-time))
+                 (redis:lred-publish redis (endpoint-queue-key endpoint) :popped)
+                 (redis:lred-exec redis))
+        (:sent (log-for (trace) "Request sent to handler.")
                (redis:lred-multi redis)
-               (redis:lred-hincrby redis (endpoint-queue-counter endpoint) :count 1)
-               (redis:lred-hset redis (endpoint-queue-counter endpoint) :last-pop (get-internal-real-time))
-               (redis:lred-publish redis (endpoint-queue-key endpoint) :popped)
-               (redis:lred-exec redis))
-      (:sent (log-for (trace) "Request sent to handler.")
-             (redis:lred-multi redis)
-             (redis:lred-hincrby redis (endpoint-queue-counter endpoint) :count -1)
-             (redis:lred-hset redis (endpoint-queue-counter endpoint) :last-sent (get-internal-real-time))
-             (redis:lred-publish redis (endpoint-queue-key endpoint) :sent)
-             (redis:lred-exec redis)))))
+               (redis:lred-hincrby redis (endpoint-queue-counter endpoint) :count -1)
+               (redis:lred-hset redis (endpoint-queue-counter endpoint) :last-sent (get-internal-real-time))
+               (redis:lred-publish redis (endpoint-queue-key endpoint) :sent)
+               (redis:lred-exec redis))))))
+
+;; LOCKS
+;; This meth, for one reason or another fails intermitently even with a lexically bound redis passed in :(
+;; (unless (get 'request-queue-event 'lock)
+;;   (setf (get 'request-queue-event 'lock) (bt:make-lock "request-queue-event")))
+
+;; (unless (get 'request-event-info 'lock)
+;;   (setf (get 'request-event-info 'lock) (bt:make-lock "request-event-info")))
+
 
 ;; TODO: Add another generic for fdog-forwarder-name :(
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
@@ -105,16 +119,16 @@
   "Make a request device that pumps requests into redis."
   #'(lambda ()
       (log-for (trace) "Starting request queue device.")
-      (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                          :port (queue-endpoint-redis-port endpoint))
         (let ((msg (make-instance 'zmq:msg)))
           (labels ((run-once ()
-                     (log-for (trace) "Waiting for message to queue for endpoint: ~A" endpoint)
-                     (log-for (trace) "Recv() result for endpoint->queue[~A]: ~A" endpoint
-                              (zmq:recv! (endpoint-queue-sock endpoint) msg))
-                     (log-for (trace) "Queueing message.")
-                     (prog1 (queue-request endpoint redis (zmq:msg-data-as-array msg))
-                       (log-for (trace) "Request queued for endpoint: ~A" endpoint)))
+                     (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
+                                                         :port (queue-endpoint-redis-port endpoint))
+                       (log-for (trace) "Waiting for message to queue for endpoint: ~A" endpoint)
+                       (log-for (trace) "Recv() result for endpoint->queue[~A]: ~A" endpoint
+                                (zmq:recv! (endpoint-queue-sock endpoint) msg))
+                       (log-for (trace) "Queueing message.")
+                       (prog1 (queue-request endpoint redis (zmq:msg-data-as-array msg))
+                         (log-for (trace) "Request queued for endpoint: ~A" endpoint))))
 
                    (handle-condition (c)
                      (or (when (= (sb-alien:get-errno) sb-posix:eintr)
@@ -128,20 +142,22 @@
                      (handler-case (run-once)
                        (simple-error (c) (handle-condition c)))))
 
-            (loop while (run-device) do ':nothing))))))
+            (loop while (run-device) do ':nothing)))))
 
 ;; Methods to start the request writing "device" when the endpoint is started and stopped
 (defmethod make-request-writer-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting request queue writer device.")
-      (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                          :port (queue-endpoint-redis-port endpoint))
-        (let ((prev-count (request-event-info endpoint redis :count))
-              cur-count)
-          (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
-            (maybe-linger-socket forward-sock)
-            (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
-            (labels ((run-once ()
+      (let ((prev-count (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
+                                                            :port (queue-endpoint-redis-port endpoint))
+                          (request-event-info endpoint redis :count)))
+            cur-count)
+        (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
+          (maybe-linger-socket forward-sock)
+          (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
+          (labels ((run-once ()
+                     (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
+                                                         :port (queue-endpoint-redis-port endpoint))
                        (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
                          (redis:lred-watch redis (endpoint-queue-counter endpoint))
                          (setf cur-count (request-event-info endpoint redis :count))
@@ -175,21 +191,21 @@
                            (and
                             (setf prev-count cur-count)
                             (request-queue-event endpoint redis :popped)
-                            (= 0 (zmq:send! forward-sock (make-instance 'zmq:msg :data request)))))))
+                            (= 0 (zmq:send! forward-sock (make-instance 'zmq:msg :data request))))))))
 
 
-                     (handle-condition (c)
-                       (if (= (sb-alien:get-errno) sb-posix:eintr)
-                           t
-                           (prog1 nil
-                             (log-for (warn) "Queue request writer device exited with condition: ~A" c)
-                             (error c))))
+                   (handle-condition (c)
+                     (if (= (sb-alien:get-errno) sb-posix:eintr)
+                         t
+                         (prog1 nil
+                           (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                           (error c))))
 
-                     (run-device ()
-                       (handler-case (run-once)
-                         (simple-error (c) (handle-condition c)))))
+                   (run-device ()
+                     (handler-case (run-once)
+                       (simple-error (c) (handle-condition c)))))
 
-              (loop while (run-device) do ':nothing)))))))
+            (loop while (run-device) do ':nothing))))))
 
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
@@ -230,21 +246,22 @@
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting queued proxy request device")
-      (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                          :port (queue-endpoint-redis-port endpoint))
+
         (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
             (labels ((run-once ()
-                       (let ((msg (make-instance 'zmq:msg))
-                             recv send)
-                         (log-for (trace) "Reading queued request")
-                         (setf recv (zmq:recv! (endpoint-proxy-sock endpoint) msg))
-                         (log-for (trace) "Read queued request: ~A" recv)
-                         (log-for (trace) "Sending queued request.")
-                         (and (= 0 recv)
-                              (setf send (zmq:send! (endpoint-request-sock endpoint) msg)))
-                         (request-queue-event endpoint redis :sent)
-                         (log-for (trace) "Sent queued request: ~A" send)
-                         (= 0 recv send)))
+                       (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
+                                                           :port (queue-endpoint-redis-port endpoint))
+                         (let ((msg (make-instance 'zmq:msg))
+                               recv send)
+                           (log-for (trace) "Reading queued request")
+                           (setf recv (zmq:recv! (endpoint-proxy-sock endpoint) msg))
+                           (log-for (trace) "Read queued request: ~A" recv)
+                           (log-for (trace) "Sending queued request.")
+                           (and (= 0 recv)
+                                (setf send (zmq:send! (endpoint-request-sock endpoint) msg)))
+                           (request-queue-event endpoint redis :sent)
+                           (log-for (trace) "Sent queued request: ~A" send)
+                           (= 0 recv send))))
 
                      (handle (c)
                        (declare (ignore c))
@@ -256,6 +273,6 @@
 
               (loop while (run-device) do
                    (log-for (trace) "Request queue device restarting."))
-              (log-for (trace) "Queued request device exiting."))))))
+              (log-for (trace) "Queued request device exiting.")))))
 
 

@@ -1,10 +1,6 @@
 (in-package :agent)
 
 ;; Agent linkage methods
-(defmethod agent-tick ((organ standard-organ) event)
-  "By default, an organ tick is a no-op"
-  nil)
-
 (defmethod agent-boot ((agent standard-agent) (organ standard-organ) &rest options)
   (declare (ignorable options))
   (call-next-method)
@@ -27,7 +23,7 @@
 
   organ)
 
-(defmethod agent-disconnect :before ((agent standard-agent) (organ standard-organ) &rest options)
+(defmethod agent-disconnect :after ((agent standard-agent) (organ standard-organ) &rest options)
   (declare (ignorable options))
   (log-for (trace) "Organ specific :before disconnect of ~A from ~A" organ agent)
 
@@ -46,10 +42,36 @@
   (log-for (trace) "Organ sending message: [~A]" message)
   (zmq:send! (organ-outgoing-sock organ) (prepare-message message)))
 
+
+;; Event handling
 (defmethod act-on-event ((organ standard-organ) event)
+  "Default primary method for `standard-organ' so that the remainig machinery can function."
+  (log-for (warn) "Organ: ~A doesn't handle events as: ~A" organ event))
+
+(defmethod act-on-event :around ((organ standard-organ) event)
+  "Process the event for consumption by the primary method chain by trying to read it into a cons."
+
   (log-for (trace) "Organ: ~A processing event(~A): ~A" organ (type-of event) event)
 
-  (typecase event
-    (string (handler-case (read-from-string event) (end-of-file () nil)))
-    (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
-    (otherwise event)))
+  (let ((parsed (typecase event
+                  (string (handler-case (read-from-string event) (end-of-file () nil)))
+                  (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
+                  (otherwise event))))
+    (call-next-method organ parsed)))
+
+(defmethod act-on-event :before ((organ standard-beating-organ) event)
+  "Process any heart-beat events of a `standard-beating-organ' with magic."
+
+  (log-for (trace) "Maybe replying to heartbeat for ~A" organ)
+
+  (prog1 event
+    (when (and (listp event) (eql (getf event :heart) :beat))
+      (log-for (trace) "~A replying to heartbeat." organ)
+      (send-message organ `(,(organ-tag organ) :beat
+                             :uuid ,(organ-uuid organ)
+                             :time ,(get-internal-real-time))))))
+;; Hard ticks
+(defmethod agent-tick ((organ standard-organ) event)
+  "By default, an organ tick is a no-op"
+  nil)
+

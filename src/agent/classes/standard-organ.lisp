@@ -11,3 +11,9 @@
                   :accessor organ-incoming-sock)
    (outgoing-sock :initform nil
                   :accessor organ-outgoing-sock)))
+
+(defclass standard-beating-organ (standard-organ)
+  ((tag :initform :anonymous-organ
+        :initarg :tag
+        :accessor organ-tag
+        :documentation "A beating organ heads it's heartbeat reply with a keyword from this slot.")))

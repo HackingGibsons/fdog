@@ -7,6 +7,11 @@ VENDOR_ASDF_CONF_NAME = $(REGISTRYD)/"$(TARGET)-01.conf"
 asdf: | $(REGISTRYD) $(ASDF_CONF_NAME) $(VENDOR_ASDF_CONF_NAME)
 	@echo "Added $(TARGET) in $(ROOT) to ASDF registry"
 
+asdf-clean:
+	@echo "=> Cleaning up after ASDF"
+	rm -f $(ASDF_CONF_NAME)
+	rm -f $(VENDOR_ASDF_CONF_NAME)
+
 $(REGISTRYD):
 	@echo "=> Creating ASDF registry configuration directory"
 	mkdir -p $(REGISTRYD)

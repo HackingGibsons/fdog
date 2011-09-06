@@ -30,6 +30,7 @@
                                    (:module "organs" :depends-on ("classes") :components
                                             ((:module "classes" :components
                                                       ((:file "heart")
+                                                       (:file "head")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")))))))))))

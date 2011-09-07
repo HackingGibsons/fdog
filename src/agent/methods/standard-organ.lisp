@@ -66,6 +66,7 @@
 
   (prog1 event
     (when (and (listp event) (eql (getf event :heart) :beat))
+      (setf (last-beat organ) (getf event :time))
       (log-for (trace) "~A replying to heartbeat." organ)
       (send-message organ `(,(organ-tag organ) :beat
                              :uuid ,(organ-uuid organ)

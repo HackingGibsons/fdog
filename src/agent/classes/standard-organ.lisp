@@ -13,7 +13,9 @@
                   :accessor organ-outgoing-sock)))
 
 (defclass standard-beating-organ (standard-organ)
-  ((tag :initform :anonymous-organ
+  ((last-beat :initform nil
+              :accessor last-beat)
+   (tag :initform :anonymous-organ
         :initarg :tag
         :accessor organ-tag
         :documentation "A beating organ heads it's heartbeat reply with a keyword from this slot.")))

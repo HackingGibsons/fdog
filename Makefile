@@ -101,7 +101,7 @@ test: clean init
 	$(MAKE) clean
 
 run-tests:
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP) --no-userinit \
 	        --load $(QL_ROOT_PATH)/setup.lisp \

@@ -6,10 +6,12 @@
 of EINTR recursively.  Second value returned is the number of times the operation was retried."
   (let* ((res (zmq:send sock msg flags))
          (res (cond ((and (= res -1)
-                          (= (sb-alien:get-errno) sb-posix:eintr))
+                          (or (= (sb-alien:get-errno) sb-posix:eintr)
+                              (= (sb-alien:get-errno) sb-posix:eagain)))
                      (send! sock msg flags (1+ count)))
 
-                    (:otherwise res))))
+                    (:otherwise
+                     res))))
     (values res count)))
 
 (export 'recv!)

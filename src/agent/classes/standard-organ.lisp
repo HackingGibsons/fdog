@@ -13,7 +13,7 @@
                   :accessor organ-outgoing-sock)))
 
 (defclass standard-beating-organ (standard-organ)
-  ((last-beat :initform nil
+  ((last-beat :initform '(nil nil)
               :accessor last-beat)
    (tag :initform :anonymous-organ
         :initarg :tag

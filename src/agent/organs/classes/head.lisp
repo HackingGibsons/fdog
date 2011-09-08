@@ -16,12 +16,16 @@
 
 (defmethod organ-beat-event ((head agent-head) (event list))
   "Handle the updating of an organ's state."
-  (let ((tag (car event))
-        (uuid (getf event :uuid))
-        (time (getf event :time)))
+  (let* ((tag (car event))
+         (uuid (getf event :uuid))
+         (time (getf event :time))
+         (status `(:tag ,tag :time ,time)))
 
     (unless (and tag uuid time)
       (log-for (warn) "~A: organ-beat-event did nat have all of: tag, :uuid or :time" head)
       (error "organ-beat-event did nat have all of: tag, :uuid or :time"))
 
-    (log-for (trace) "Updating organ: ~A/~A @ ~A" tag uuid time)))
+    (log-for (trace) "Updating organ: ~A/~A @ ~A" tag uuid time)
+    (setf (gethash uuid (agent-organs head)) status)))
+
+

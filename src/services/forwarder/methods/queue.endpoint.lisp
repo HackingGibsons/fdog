@@ -246,7 +246,7 @@
 (defmethod make-request-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting queued proxy request device")
-
+      (let (last-message)
         (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
             (labels ((run-once ()
                        (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
@@ -254,14 +254,19 @@
                          (let ((msg (make-instance 'zmq:msg))
                                recv send)
                            (log-for (trace) "Reading queued request")
-                           (setf recv (zmq:recv! (endpoint-proxy-sock endpoint) msg))
+                           (unless last-message
+                             (setf recv (zmq:recv! (endpoint-proxy-sock endpoint) msg))
+                             (and (= recv 0)
+                                  (setf last-message msg)))
                            (log-for (trace) "Read queued request: ~A" recv)
                            (log-for (trace) "Sending queued request.")
-                           (and (= 0 recv)
-                                (setf send (zmq:send! (endpoint-request-sock endpoint) msg)))
-                           (request-queue-event endpoint redis :sent)
-                           (log-for (trace) "Sent queued request: ~A" send)
-                           (= 0 recv send))))
+                           (and last-message
+                                (setf send (zmq:send! (endpoint-request-sock endpoint) last-message)))
+                           (when (= send 0)
+                             (setf last-message nil)
+                             (request-queue-event endpoint redis :sent)
+                             (log-for (trace) "Sent queued request: ~A" send))
+                           (not last-message))))
 
                      (handle (c)
                        (declare (ignore c))
@@ -273,6 +278,6 @@
 
               (loop while (run-device) do
                    (log-for (trace) "Request queue device restarting."))
-              (log-for (trace) "Queued request device exiting.")))))
+              (log-for (trace) "Queued request device exiting."))))))
 
 

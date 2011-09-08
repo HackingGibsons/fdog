@@ -5,7 +5,7 @@
                :accessor heart-beat-every
                :initform 1)
 
-   (last-beat :initform 0
+   (last-sent-beat :initform 0
               :accessor heart-last-beat)
    (next-beat :initform (get-internal-real-time)
               :accessor heart-next-beat)))

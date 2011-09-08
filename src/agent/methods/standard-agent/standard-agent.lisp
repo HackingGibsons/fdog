@@ -87,12 +87,20 @@ and deliver any events that appear to them before returning the agent event."
 
 (defmethod event-fatal-p ((agent standard-agent) event)
   "Predicate to determine if this event should end the agent."
-  (log-for (trace) "Testing event fatalaty of ~A for ~A" event agent)
-  (if (and (event-timeout-p event)
-           (> (- (get-internal-real-time) (agent-last-event agent))
-              (* *event-starvation-timeout* internal-time-units-per-second)))
-      (prog1 t (log-for (warn) "Event timeout ~As reached." *event-starvation-timeout*))
-      (not event)))
+  (log-for (trace) "Testing event fatalaty of ~A[~A] for ~A" event (type-of event) agent)
+  (let ((parsed (and (typep event 'string) (handler-case (read-from-string event) (end-of-file () nil)))))
+    (cond ((not event)
+           t)
+
+          ((and (event-timeout-p event)
+                (> (- (get-internal-real-time) (agent-last-event agent))
+                   (* *event-starvation-timeout* internal-time-units-per-second)))
+           (prog1 t
+             (log-for (warn) "Event timeout ~As reached." *event-starvation-timeout*)))
+
+          ((eql (getf parsed :command) :die)
+           (prog1 t
+             (log-for (warn) "Suicide event: ~A" event))))))
 
 (defmethod run-agent ((agent standard-agent))
   "Enter the agent event loop, return only when agent is dead."

@@ -47,7 +47,7 @@
   :eval (assert-forwarder-setup)
 
   (log-for (trace) "Sending request destined for quedom.")
-  (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/")
+  (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/awesome/")
     (assert-null res))
   (log-for (trace) "Requet sent.")
 
@@ -60,12 +60,14 @@
 
     (let ((push (cdr (assoc :push res :test #'string-equal)))
           (sub (cdr (assoc :sub res :test #'string-equal))))
-      (flet ((s2us (s) (round (* s 1000000))))
 
+      (log-for (trace) "Endpoints: Push: ~A Sub: ~A" push sub)
+
+      (flet ((s2us (s) (round (* s 1000000))))
         (m2cl:with-handler (handler "test" push sub)
-          (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
+          (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 5))
             (assert-null (zerop (length raw)))
-            (assert-non-nil (string-equal "/" (m2cl:request-path req)))))))))
+            (assert-non-nil (string-equal "/awesome/" (m2cl:request-path req)))))))))
 
 (def-test+func (test-alias-function-and-routing)
     :eval (assert-forwarder-setup)

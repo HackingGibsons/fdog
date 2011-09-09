@@ -33,7 +33,8 @@
                                                        (:file "head")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
-                                                      ((:file "heart")))))))))))
+                                                      ((:file "heart")
+                                                       (:file "head")))))))))))
 
 
 

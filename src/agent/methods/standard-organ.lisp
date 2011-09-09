@@ -1,5 +1,10 @@
 (in-package :agent)
 
+;; Helpers
+(defmethod agent-context ((organ standard-organ))
+  "Wraps context access for organs"
+  (agent-context (organ-agent organ)))
+
 ;; Agent linkage methods
 (defmethod agent-boot ((agent standard-agent) (organ standard-organ) &rest options)
   (declare (ignorable options))

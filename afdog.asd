@@ -1,5 +1,7 @@
 (asdf:defsystem #:afdog
-  :depends-on (#:uuid
+  :depends-on (#:ip-interfaces
+               #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
+               #:uuid
                #:log5
                #:bordeaux-threads
                #:zeromq)
@@ -7,13 +9,14 @@
                         ;; Base project scaffold
                         ((:file "package" :depends-on ("patches"))
                          (:file "logging" :depends-on ("package"))
+                         (:file "utils" :depends-on ("package"))
 
                          ;; Code loaded into dependencies
                          (:module "patches" :components
                                   ((:file "zmq")))
 
                          ;; Agent components and standard library
-                         (:module "agent" :depends-on ("logging") :components
+                         (:module "agent" :depends-on ("logging" "utils") :components
                                   ((:file "package")
                                    (:file "agent" :depends-on ("classes" "organs"))
 

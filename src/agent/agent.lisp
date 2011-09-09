@@ -13,14 +13,19 @@
   (let ((head (make-instance 'agent-head :agent agent)))
     head))
 
+(defmethod make-mouth-for ((agent standard-agent))
+  (let ((mouth (make-instance 'agent-mouth :agent agent)))
+    mouth))
+
 (defun make-agent ()
   "Agent maker wrapper"
   (let* ((agent (make-instance 'standard-agent))
          (head (make-head-for agent))
          (heart (make-heart-for agent))
+         (mouth (make-mouth-for agent))
          (appendix (make-appendix-for agent)))
+    (agent-connect agent mouth)
     (agent-connect agent head)
     (agent-connect agent heart)
     (agent-connect agent appendix)
     agent))
-

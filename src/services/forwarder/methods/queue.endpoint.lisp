@@ -128,10 +128,12 @@
                                 (zmq:recv! (endpoint-queue-sock endpoint) msg))
                        (log-for (trace) "Queueing message.")
                        (prog1 (queue-request endpoint redis (zmq:msg-data-as-array msg))
-                         (log-for (trace) "Request queued for endpoint: ~A" endpoint))))
+                         (log-for (trace) "Request queued for endpoint: ~A" endpoint)))
+                     :always-run)
 
                    (handle-condition (c)
-                     (or (when (= (sb-alien:get-errno) sb-posix:eintr)
+                     (or (when (or :always-run ;; Again, spin good, silent failure bad.
+                                   (= (sb-alien:get-errno) sb-posix:eintr))
                            (log-for (warn) "Queue device restarting on endpoint: ~A" endpoint)
                            t)
                          (prog1 nil
@@ -197,7 +199,7 @@
                    (handle-condition (c)
                      (if (= (sb-alien:get-errno) sb-posix:eintr)
                          t
-                         (prog1 nil
+                         (prog1 :always-run ;; Search for ":always-run" for the explanation
                            (log-for (warn) "Queue request writer device exited with condition: ~A" c)
                            (error c))))
 

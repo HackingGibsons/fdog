@@ -266,11 +266,13 @@
                              (setf last-message nil)
                              (request-queue-event endpoint redis :sent)
                              (log-for (trace) "Sent queued request: ~A" send))
-                           (not last-message))))
+                           (not last-message)
+                           :always-run)))
 
                      (handle (c)
-                       (declare (ignore c))
-                       (= (sb-alien:get-errno) sb-posix:eintr))
+                       (log-for (warn) "Queued request device condition: ~A" c)
+                       :always-run)
+;                       (= (sb-alien:get-errno) sb-posix:eintr))
 
                      (run-device ()
                        (handler-case (run-once)

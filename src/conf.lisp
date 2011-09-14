@@ -4,6 +4,8 @@
 
 (defparameter *mongrel2-bin* "/usr/local/bin/mongrel2")
 
+(defparameter *swank-port* 4005)
+
 (defparameter get-local-address (sockets:make-address (sockets:address-to-vector "127.0.0.1")))
 (defun get-local-address (&key update (as :address))
   "Get the local IP address we should tell clients about.

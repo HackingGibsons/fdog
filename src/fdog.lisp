@@ -45,6 +45,10 @@ Should find and assert the correctness of the project root, server dir, and then
                (delete-file (fdog-pidfile-path))))
         sb-ext:*exit-hooks*)
 
+  ;; Start swank
+  (swank:create-server :port *swank-port* :dont-close t)
+  (setf swank:*use-dedicated-output-stream* nil)
+
   (fdog-services:init-services))
 
 (defun fdog-pidfile-path (&optional path)

@@ -1,5 +1,6 @@
 (asdf:defsystem #:afdog
-  :depends-on (#:ip-interfaces
+  :depends-on (#:closer-mop
+               #:ip-interfaces
                #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
                #:uuid
                #:log5

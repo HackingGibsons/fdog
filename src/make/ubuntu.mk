@@ -48,9 +48,19 @@ ubuntu-sbcl: ubuntu-basics
 	@echo "=> Cleaning up"
 	rm -rf /tmp/sbcl-build
 
+LIBTOOL_URL_SRC ?= "http://ftp.gnu.org/gnu/libtool/libtool-2.4.tar.gz"
 ubuntu-basics:
 	sudo apt-get update
 	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
 	@echo "=> Round one of dependancies"
 	yes Y | sudo aptitude install curl build-essential autoconf
+	# libtool - out of date on 11.04
+	@echo "=> Installing Ubuntu libtool 2.4"
+	rm -rf /tmp/libtool-build && \
+		mkdir -p /tmp/libtool-build && \
+		cd /tmp/libtool-build && \
+		curl -L $(LIBTOOL_URL_SRC) | tar xzf - && \
+		cd libtool* && \
+		./configure --prefix=/usr && \ # libtool and autoconf have to be in the same prefix
+		make && sudo make install

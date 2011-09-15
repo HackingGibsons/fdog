@@ -55,7 +55,7 @@ $(FDOG):
 	        --eval '(ql:quickload :fdog)' \
 	        --eval '(quit)'
 	@echo "=> Building fdog"
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(BUILDAPP) --output $(FDOG) \
 	            --asdf-path $(ROOT) \

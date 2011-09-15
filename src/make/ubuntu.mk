@@ -53,4 +53,4 @@ ubuntu-basics:
 	@echo "=> Making sure we have aptitude"
 	yes Y | sudo apt-get install aptitude
 	@echo "=> Round one of dependancies"
-	yes Y | sudo aptitude install curl build-essential
+	yes Y | sudo aptitude install curl build-essential autoconf

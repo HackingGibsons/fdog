@@ -11,7 +11,7 @@ mongrel2: 0mq
 	  cd mongrel2* && \
 	  make && sudo make install
 
-0MQ_URL_SRC ?= "http://download.zeromq.org/zeromq-2.1.7.tar.gz"
+0MQ_URL_SRC ?= "http://download.zeromq.org/zeromq-2.1.9.tar.gz"
 0mq:
 	@echo "=> Installing 0mq"
 	rm -rf /tmp/0mq-build && \

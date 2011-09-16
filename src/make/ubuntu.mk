@@ -34,7 +34,7 @@ ubuntu-0mq: ubuntu-basics
 	$(MAKE) 0mq
 
 
-SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.48-x86-64-linux-binary.tar.bz2"
+SBCL_URL_BIN ?= "http://prdownloads.sourceforge.net/sbcl/sbcl-1.0.51-x86-64-linux-binary.tar.bz2"
 ubuntu-sbcl: ubuntu-basics
 	@echo "=> Fetching/extracting/installing SBCL binary"
 	[ -e "$(LISP)" ] && echo "SBCL Already installed." || { \

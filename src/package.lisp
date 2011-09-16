@@ -1,6 +1,7 @@
 ;;;; package.lisp
 (defpackage #:fdog
   (:use #:cl)
+  (:use #:swank-io-package)
   (:export :init :start
            :get-local-address
            :make-fdog-server-db-pathname

@@ -66,6 +66,7 @@ $(FDOG):
 	            --eval '(declaim (optimize (debug $(DEBUG))))' \
 	            --load $(QL_ROOT_PATH)/setup.lisp \
 	            --eval '(ql:quickload :fdog)' \
+				--eval '(swank-loader:init :load-contribs t)' \
 	            --dispatched-entry '/fdog-cli:fdog-main' \
 	|| { echo '[ERROR] Build failed!'; \
 	     rm -f $(FDOG); exit 1; }

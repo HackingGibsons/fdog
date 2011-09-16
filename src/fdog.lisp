@@ -46,7 +46,6 @@ Should find and assert the correctness of the project root, server dir, and then
         sb-ext:*exit-hooks*)
 
   ;; Start swank
-  (swank-loader:init :load-contribs t)
   (swank:create-server :port *swank-port* :dont-close t)
   (setf swank:*use-dedicated-output-stream* nil)
 

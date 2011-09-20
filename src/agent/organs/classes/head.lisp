@@ -12,7 +12,9 @@
   (:metaclass c2mop:funcallable-standard-class))
 
 (defmacro defbehavior (name behavior invoke-lambda &body body)
-  "Generates a behavior function with a description of how it should be invoked."
+  "Generates a behavior class and and makes it funcallable with `invoke-lambda' as the lambda
+list, evaluating `body' on invokation as governed by the `behavior' list. The scope will
+contain `behavior' bound to the current instance of the behavior class `name'"
   `(progn
      (defclass ,name (standard-behavior)
        ()

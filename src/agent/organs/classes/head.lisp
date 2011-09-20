@@ -19,7 +19,7 @@
            (macrolet ((:interval (definition verb noun)
                         `(progn
                            (lambda (event)
-                             (log-for (warn) "TODO: The compiler does nothing: ~A => ~A" event behavior)
+                             (log-for (warn) "TODO: The compiler does nothing: [~A ~A ~A] ~A => ~A" ',definition ,verb ,noun event behavior)
                              nil))))
              ,description))))
 

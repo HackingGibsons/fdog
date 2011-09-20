@@ -8,11 +8,19 @@
   (:default-initargs . (:tag :head)))
 
 (defclass standard-behavior (c2mop:funcallable-standard-object)
-  ((organ :initarg :organ
+  ((organ :initarg :organ :initform nil
           :accessor behavior-organ)
    (invoke-when :initarg :invoke-when
                 :accessor invoke-when)
    (invoke-p :accessor invoke-p)))
+
+(defclass interval-behavior ()
+  ((recent-events :initform nil
+                  :initarg :recent-events :accessor recent-events)
+   (last-invoked :initform nil
+                 :initarg :last-invoked :accessor last-invoked))
+
+  (:documentation "Mixin class for events that head their behavior with :interval"))
 
 (defmethod behavior-compile-invoke-p (behavior description)
   (eval
@@ -32,7 +40,8 @@
 list, evaluating `body' on invokation as governed by the `behavior' list. The scope will
 contain `behavior' bound to the current instance of the behavior class `name'"
   `(progn
-     (defclass ,name (standard-behavior)
+     (defclass ,name (standard-behavior ,(cond ((eql (car behavior) :interval) 'interval-behavior)
+                                               (t (values))))
        ()
        (:metaclass c2mop:funcallable-standard-class))
 

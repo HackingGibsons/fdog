@@ -8,8 +8,7 @@
   (:default-initargs . (:tag :head)))
 
 (defclass standard-behavior (c2mop:funcallable-standard-object)
-  ()
-  (:metaclass c2mop:funcallable-standard-class))
+  ())
 
 (defmacro defbehavior (name behavior invoke-lambda &body body)
   "Generates a behavior class and and makes it funcallable with `invoke-lambda' as the lambda

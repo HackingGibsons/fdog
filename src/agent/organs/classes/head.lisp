@@ -15,13 +15,13 @@
    (invoke-p :accessor invoke-p)))
 
 (defmethod behavior-compile-invoke-p (behavior description)
-  (eval `(let ((behavior ,behavior))
-           (macrolet ((:interval (definition verb noun)
-                        `(progn
-                           (lambda (event)
-                             (log-for (warn) "TODO: The compiler does nothing: [~A ~A ~A] ~A => ~A" ',definition ,verb ,noun event behavior)
-                             nil))))
-             ,description))))
+  (eval
+   `(let ((behavior ,behavior))
+      (macrolet ((:interval (definition verb noun)
+                   `(lambda (event)
+                      (log-for (warn) "TODO: The compiler does nothing: [~A ~A ~A] ~A => ~A" ',definition ,verb ,noun event behavior)
+                      nil)))
+        ,description))))
 
 (defmethod initialize-instance :after ((behavior standard-behavior) &key)
   (log-for (trace) "Computing `invoke-p' from `invoke-when' for ~A" behavior)

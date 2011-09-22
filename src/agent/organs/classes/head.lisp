@@ -26,9 +26,16 @@
   (eval
    `(let ((behavior ,behavior))
       (macrolet ((:interval (definition verb noun)
-                   `(lambda (event)
-                      (log-for (warn) "TODO: The compiler does nothing: [~A ~A ~A] ~A => ~A" ',definition ,verb ,noun event behavior)
-                      nil)))
+                   `(let ((from (getf ',definition :from))
+                          (nth (getf ',definition :nth)))
+                      (lambda (event)
+                        (log-for (warn) "TODO: Compiling ~A checker for every ~Ath beat from ~A" behavior nth from)
+                        (when (eql (and (consp event) (car event) from))
+                          (let ((time (getf event :time)))
+                            (and time
+                                 (setf (recent-events behavior) (subseq (push time (recent-events behavior))) 0 nth))
+                            (log-for (warn) "TODO: Events in ~A to date: ~A" behavior (recent-events behavior))))
+                        nil))))
         ,description))))
 
 (defmethod initialize-instance :after ((behavior standard-behavior) &key)
@@ -58,4 +65,5 @@ contain `behavior' bound to the current instance of the behavior class `name'"
                                         ,@body))))))
 
 (defbehavior announce-self (:interval (:from :heart :nth 3) :do :invoke) (organ)
+  (log-for (warn) "TODO: Running behavior lambda for ~A" organ)
   :oh-hello)

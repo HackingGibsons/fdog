@@ -147,10 +147,9 @@
       (zmq:setsockopt socket zmq:subscribe "")
       (loop
         (let ((response (make-instance 'zmq:msg)))
-          (zmq:recv socket response)
+          (zmq:recv! socket response)
           ;; put it into redis
-          ))))
-  )
+          )))))
 
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)

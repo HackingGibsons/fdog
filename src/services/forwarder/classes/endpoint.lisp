@@ -18,6 +18,8 @@
                    :accessor endpoint-request-device)
    (response-device :initform nil
                     :accessor endpoint-response-device)
+   (response-logging-device :initform nil
+                            :accessor endpoint-response-logging-device)
 
    ;; ZMQ Context for this endpoint
    (context-threads :initargs :threads :initform 1

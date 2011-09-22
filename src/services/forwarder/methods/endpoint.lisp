@@ -134,6 +134,18 @@
                (log-for (trace) "Response device restarting due to system weather.")))
         (log-for (trace) "Response device has terminated."))))
 
+(defmethod make-response-logging-device ((endpoint forwarder-engine-endpoint))
+  (with-slots (context response-proxy-addr) endpoint
+    (zmq:with-socket (socket context zmq:sub)
+      (zmq:connect socket response-proxy-addr)
+      (zmq:setsockopt socket zmq:subscribe "")
+      (loop
+        (let ((response (make-instance 'zmq:msg)))
+          (zmq:recv socket response)
+          ;; put it into redis
+          ))))
+  )
+
 (defmethod engine-endpoint-start ((endpoint forwarder-engine-endpoint))
   (log-for (trace) "Starting endpoint: ~A" endpoint)
   (unless (engine-endpoint-running-p endpoint)
@@ -151,7 +163,10 @@
 
             (endpoint-response-device endpoint)
             (make-thread (make-response-device endpoint)
-                         :name (format nil "engine-endpoint-device-response-~A" name)))
+                         :name (format nil "engine-endpoint-device-response-~A" name))
+            (endpoint-response-logging-device endpoint)
+            (make-thread (make-response-logging-device endpoint)
+                         :name (format nil "engine-endpoint-device-response-logging-~A" name)))
       :started)))
 
 (defmethod engine-endpoint-stop ((endpoint forwarder-engine-endpoint))
@@ -163,7 +178,9 @@
     (when (thread-alive-p (endpoint-request-device endpoint))
       (destroy-thread (endpoint-request-device endpoint)))
     (when (thread-alive-p (endpoint-request-device endpoint))
-      (destroy-thread (endpoint-response-device endpoint))))
+      (destroy-thread (endpoint-response-device endpoint)))
+    (when (thread-alive-p (endpoint-response-logging-device endpoint))
+      (destroy-thread (endpoint-response-logging-device endpoint))))
   (log-for (trace) "Destroying 0mq endpoint")
   (terminate-sockets endpoint)
   (terminate-context endpoint)

@@ -209,12 +209,22 @@
 
             (loop while (run-device) do ':nothing))))))
 
+(defmethod make-response-logging-device ((endpoint forwarder-queue-endpoint))
+  (with-slots (context response-proxy-addr) endpoint
+    (zmq:with-socket (socket context zmq:sub)
+      (zmq:connect socket response-proxy-addr)
+      (zmq:setsockopt socket zmq:subscribe "")
+      (loop
+        (let ((response (make-instance 'zmq:msg)))
+          (zmq:recv! socket response)
+          ;; put it into redis
+          )))))
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
                                       :port (queue-endpoint-redis-port endpoint))
     (request-queue-event endpoint redis :reset))
-  (with-slots (request-write-device request-queue-device) endpoint
+  (with-slots (request-write-device request-queue-device endpoint-response-logging-device) endpoint
     (setf request-queue-device
           (make-thread (make-request-queuer-device endpoint)
                        :name (format nil "engine-request-queue-request-queue-device-~A"
@@ -223,11 +233,15 @@
           request-write-device
           (make-thread (make-request-writer-device endpoint)
                        :name (format nil "engine-request-queue-request-write-device-~A"
+                                     (fdog-forwarder-name (endpoint-engine endpoint))))
+          endpoint-response-logging-device
+          (make-thread (make-response-logging-device endpoint)
+                       :name (format nil "engine-endpoint-device-response-logging-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint)))))))
 
 (defmethod engine-endpoint-stop :before ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Stopping the queue request writer thread for: ~A" endpoint)
-  (with-slots (request-write-device request-queue-device) endpoint
+  (with-slots (request-write-device request-queue-device endpoint-response-logging-device) endpoint
     (and request-write-device
          (threadp request-write-device)
          (thread-alive-p request-write-device)
@@ -238,8 +252,14 @@
          (thread-alive-p request-queue-device)
          (destroy-thread request-queue-device)
          (log-for (trace) "Killed forwarder queuer for: ~A" endpoint))
+    (and endpoint-response-logging-device
+         (threadp endpoint-response-logging-device)
+         (thread-alive-p endpoint-response-logging-device)
+         (destroy-thread endpoint-response-logging-device)
+         (log-for (trace) "Killed response logger for: ~A" endpoint))
     (setf request-queue-device nil
-          request-write-device nil)))
+          request-write-device nil
+          endpoint-response-logging-device nil)))
 
 (defmethod request-forwarding-address ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Serving a queue address to forward requests to.")

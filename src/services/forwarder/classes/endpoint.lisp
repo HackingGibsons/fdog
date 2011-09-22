@@ -3,12 +3,7 @@
 ;; Forwarder endpoint, a proxy between the handlers and an outside consumer
 (defvar *endpoint-socket-linger* 1000)
 (defclass forwarder-engine-endpoint ()
-  ((redis-host :initform "localhost"
-               :accessor queue-endpoint-redis-host)
-   (redis-port :initform 6379
-               :accessor queue-endpoint-redis-port)
-
-   (engine :initarg :engine
+  ((engine :initarg :engine
            :accessor endpoint-engine)
    (alias :initarg :alias
           :accessor endpoint-alias
@@ -18,8 +13,6 @@
                    :accessor endpoint-request-device)
    (response-device :initform nil
                     :accessor endpoint-response-device)
-   (response-logging-device :initform nil
-                            :accessor endpoint-response-logging-device)
 
    ;; ZMQ Context for this endpoint
    (context-threads :initargs :threads :initform 1
@@ -47,7 +40,11 @@
 
 ;; TODO: Put these redis constants elsewhere.
 (defclass forwarder-queue-endpoint (forwarder-engine-endpoint)
-  ((request-linger :initform 300
+  ((redis-host :initform "localhost"
+               :accessor queue-endpoint-redis-host)
+   (redis-port :initform 6379
+               :accessor queue-endpoint-redis-port)
+   (request-linger :initform 300
                    :accessor queue-endpoint-request-linger)
    (request-prefix :initform "fdog-request:")
    (queue-prefix :initform "fdog-queue:")
@@ -65,7 +62,10 @@
    (request-write-device :initform nil
                          :accessor endpoint-request-write-device)
    (request-queue-device :initform nil
-                         :accessor endpoint-request-queue-device))
+                         :accessor endpoint-request-queue-device)
+
+   (response-logging-device :initform nil
+                            :accessor endpoint-response-logging-device))
 
   (:documentation "Endpoint that instead of writing requests upstream, writes
 them to redis and forwards from a different thread."))

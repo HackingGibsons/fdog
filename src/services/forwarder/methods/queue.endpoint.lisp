@@ -214,11 +214,19 @@
     (zmq:with-socket (socket context zmq:sub)
       (zmq:connect socket response-proxy-addr)
       (zmq:setsockopt socket zmq:subscribe "")
-      (loop
-        (let ((response (make-instance 'zmq:msg)))
-          (zmq:recv! socket response)
-          ;; put it into redis
-          )))))
+      (labels
+        ((run-once ()
+                   (let ((response (make-instance 'zmq:msg)))
+                     (zmq:recv! socket response)
+                     (log-for (trace) "Writing to redis: ~A" (zmq:msg-data-as-string response))
+                     ;; put it into redis
+                     t))
+
+         (run-device ()
+                     (handler-case (run-once)
+                       (simple-error (c) t))))
+
+        (loop while (run-device) do (run-device))))))
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)

@@ -3,7 +3,12 @@
 ;; Forwarder endpoint, a proxy between the handlers and an outside consumer
 (defvar *endpoint-socket-linger* 1000)
 (defclass forwarder-engine-endpoint ()
-  ((engine :initarg :engine
+  ((redis-host :initform "localhost"
+               :accessor queue-endpoint-redis-host)
+   (redis-port :initform 6379
+               :accessor queue-endpoint-redis-port)
+
+   (engine :initarg :engine
            :accessor endpoint-engine)
    (alias :initarg :alias
           :accessor endpoint-alias
@@ -40,11 +45,7 @@
 
 ;; TODO: Put these redis constants elsewhere.
 (defclass forwarder-queue-endpoint (forwarder-engine-endpoint)
-  ((redis-host :initform "localhost"
-               :accessor queue-endpoint-redis-host)
-   (redis-port :initform 6379
-               :accessor queue-endpoint-redis-port)
-   (request-linger :initform 300
+  ((request-linger :initform 300
                    :accessor queue-endpoint-request-linger)
    (request-prefix :initform "fdog-request:")
    (queue-prefix :initform "fdog-queue:")

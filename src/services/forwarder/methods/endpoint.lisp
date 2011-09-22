@@ -69,7 +69,7 @@
     ;; Response proxy
     (with-slots (response-proxy-addr response-proxy-sock) endpoint
       (setf response-proxy-addr
-            (make-local-endpoint :addr "127.0.0.1" :port (next-handlerport))) ;; TODO: see above
+            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))) ;; TODO: see above
       (log-for (trace) "Chosen the address: ~A as the response-proxy, binding" response-proxy-addr)
       (setf response-proxy-sock
             (maybe-linger-socket (zmq:socket context zmq:pub)))

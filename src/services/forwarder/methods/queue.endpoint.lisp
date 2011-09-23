@@ -233,7 +233,7 @@
   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
                                       :port (queue-endpoint-redis-port endpoint))
     (request-queue-event endpoint redis :reset))
-  (with-slots (request-write-device request-queue-device endpoint-response-logging-device) endpoint
+  (with-slots (request-write-device request-queue-device response-logging-device) endpoint
     (setf request-queue-device
           (make-thread (make-request-queuer-device endpoint)
                        :name (format nil "engine-request-queue-request-queue-device-~A"
@@ -243,7 +243,7 @@
           (make-thread (make-request-writer-device endpoint)
                        :name (format nil "engine-request-queue-request-write-device-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint))))
-          endpoint-response-logging-device
+          response-logging-device
           (make-thread (make-response-logging-device endpoint)
                        :name (format nil "engine-endpoint-device-response-logging-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint)))))))

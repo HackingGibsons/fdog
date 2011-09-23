@@ -67,7 +67,8 @@
         (m2cl:with-handler (handler "test" push sub)
           (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 5))
             (assert-null (zerop (length raw)))
-            (assert-non-nil (string-equal "/awesome/" (m2cl:request-path req)))))))))
+            (assert-non-nil (string-equal "/awesome/" (m2cl:request-path req)))
+            (m2cl:handler-send-http handler "awesome!" :request req)))))))
 
 (def-test+func (test-alias-function-and-routing)
     :eval (assert-forwarder-setup)

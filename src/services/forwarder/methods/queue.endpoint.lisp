@@ -250,7 +250,7 @@
 
 (defmethod engine-endpoint-stop :before ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Stopping the queue request writer thread for: ~A" endpoint)
-  (with-slots (request-write-device request-queue-device endpoint-response-logging-device) endpoint
+  (with-slots (request-write-device request-queue-device response-logging-device) endpoint
     (and request-write-device
          (threadp request-write-device)
          (thread-alive-p request-write-device)
@@ -261,14 +261,14 @@
          (thread-alive-p request-queue-device)
          (destroy-thread request-queue-device)
          (log-for (trace) "Killed forwarder queuer for: ~A" endpoint))
-    (and endpoint-response-logging-device
-         (threadp endpoint-response-logging-device)
-         (thread-alive-p endpoint-response-logging-device)
-         (destroy-thread endpoint-response-logging-device)
+    (and response-logging-device
+         (threadp response-logging-device)
+         (thread-alive-p response-logging-device)
+         (destroy-thread response-logging-device)
          (log-for (trace) "Killed response logger for: ~A" endpoint))
     (setf request-queue-device nil
           request-write-device nil
-          endpoint-response-logging-device nil)))
+          response-logging-device nil)))
 
 (defmethod request-forwarding-address ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Serving a queue address to forward requests to.")

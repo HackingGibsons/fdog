@@ -210,29 +210,30 @@
             (loop while (run-device) do ':nothing))))))
 
 (defmethod make-response-logging-device ((endpoint forwarder-queue-endpoint))
-  (with-slots (context response-proxy-addr) endpoint
-    (zmq:with-socket (socket context zmq:sub)
-      (zmq:connect socket response-proxy-addr)
-      (zmq:setsockopt socket zmq:subscribe "")
-      (labels
-        ((run-once ()
-                   (let ((response (make-instance 'zmq:msg)))
-                     (zmq:recv! socket response)
-                     (log-for (trace) "Writing to redis: ~A" (zmq:msg-data-as-string response))
-                     ;; put it into redis
-                     t))
+  #'(lambda ()
+      (with-slots (context response-proxy-addr) endpoint
+        (zmq:with-socket (socket context zmq:sub)
+          (zmq:connect socket response-proxy-addr)
+          (zmq:setsockopt socket zmq:subscribe "")
+          (labels
+              ((run-once ()
+                 (let ((response (make-instance 'zmq:msg)))
+                   (zmq:recv! socket response)
+                   (log-for (trace) "Writing to redis: ~A" (zmq:msg-data-as-string response))
+                   ;; put it into redis
+                   t))
 
-         (run-device ()
-                     (handler-case (run-once)
-                       (simple-error (c) t))))
+               (run-device ()
+                 (handler-case (run-once)
+                   (simple-error (c) t))))
 
-        (loop while (run-device) do (run-device))))))
+            (loop while (run-device) do (run-device)))))))
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
                                       :port (queue-endpoint-redis-port endpoint))
     (request-queue-event endpoint redis :reset))
-  (with-slots (request-write-device request-queue-device endpoint-response-logging-device) endpoint
+  (with-slots (request-write-device request-queue-device response-logging-device) endpoint
     (setf request-queue-device
           (make-thread (make-request-queuer-device endpoint)
                        :name (format nil "engine-request-queue-request-queue-device-~A"
@@ -242,7 +243,7 @@
           (make-thread (make-request-writer-device endpoint)
                        :name (format nil "engine-request-queue-request-write-device-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint))))
-          endpoint-response-logging-device
+          response-logging-device
           (make-thread (make-response-logging-device endpoint)
                        :name (format nil "engine-endpoint-device-response-logging-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint)))))))

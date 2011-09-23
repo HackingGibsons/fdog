@@ -28,8 +28,8 @@
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
    ;; Response proxy
-   (response-proxy-addr :initarg :proxy-addr
-                       :accessor endpoint-proxy-addr)
+   (response-proxy-addr :initarg :response-proxy-addr :initform nil
+                        :accessor endpoint-response-proxy-addr)
    (response-proxy-sock :initarg :response-proxy-sock :initform nil
                         :accessor endpoint-response-proxy-sock)
 

@@ -46,8 +46,11 @@ Should find and assert the correctness of the project root, server dir, and then
         sb-ext:*exit-hooks*)
 
   ;; Start swank
-  (swank:create-server :port *swank-port* :dont-close t)
-  (setf swank:*use-dedicated-output-stream* nil)
+  (handler-case
+    (progn
+      (swank:create-server :port *swank-port* :dont-close t) 
+      (setf swank:*use-dedicated-output-stream* nil))
+    (sb-bsd-sockets:address-in-use-error () (log-for (warn) "Could not start swank server!"))) 
 
   (fdog-services:init-services))
 

@@ -48,6 +48,8 @@
                :accessor queue-endpoint-redis-port)
    (request-linger :initform 300
                    :accessor queue-endpoint-request-linger)
+   (response-linger :initform 300
+                   :accessor queue-endpoint-response-linger)
    (request-prefix :initform "fdog-request:")
    (repsonse-prefix :initform "fdog-repsonse:")
    (queue-prefix :initform "fdog-queue:")

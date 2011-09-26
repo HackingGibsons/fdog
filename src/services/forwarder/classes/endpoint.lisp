@@ -49,6 +49,7 @@
    (request-linger :initform 300
                    :accessor queue-endpoint-request-linger)
    (request-prefix :initform "fdog-request:")
+   (repsonse-prefix :initform "fdog-repsonse:")
    (queue-prefix :initform "fdog-queue:")
 
    ;; New sink for requests, handlers should write here to get written to redis.

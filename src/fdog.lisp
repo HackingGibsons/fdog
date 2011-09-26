@@ -50,7 +50,7 @@ Should find and assert the correctness of the project root, server dir, and then
     (progn
       (swank:create-server :port *swank-port* :dont-close t) 
       (setf swank:*use-dedicated-output-stream* nil))
-    (sb-bsd-sockets:address-in-use-error () (log-for (warn) "Could not start swank server!"))) 
+    (t (c) (log-for (warn) "Could not start swank: ~A" c))) 
 
   (fdog-services:init-services))
 

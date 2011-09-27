@@ -60,7 +60,11 @@
                           :interface-bridge-matching
                           :fdog-interface-bridges)
 
-  (:export :init-forwarders))
+  (:export :init-forwarders
+           :*redis-host*
+           :*redis-port*
+           :*request-prefix*
+           :*response-prefix*))
 (in-package :fdog-forwarder)
 
 (defvar *forwarder-server-name* "forwarder")
@@ -79,4 +83,7 @@
 (defvar *forwarders* ()
   "List of the loaded forwarders")
 
-
+(defvar *redis-host* "localhost")
+(defvar *redis-port* 6379)
+(defvar *request-prefix* "fdog-request:")
+(defvar *response-prefix* "fdog-response:")

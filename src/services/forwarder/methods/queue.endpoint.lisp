@@ -243,9 +243,11 @@
                    (log-for (trace) "Writing to redis: ~A" (zmq:msg-data-as-string response))
                    (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
                                                        :port (queue-endpoint-redis-port endpoint))
+                   (log-for (trace) "Actually writing to redis: ~A" (zmq:msg-data-as-string response))
                       ;; Store in redis without queueing it,
                       ;; and expire it after the response linger time
                       (let ((key (store-response endpoint redis (zmq:msg-data-as-array response))))
+                        (log-for (trace) "Wrote key to redis: ~A" key)
                         (log-for (trace) "Expiring response in ~A seconds." (queue-endpoint-response-linger endpoint))
                         (redis:lred-expire redis key (queue-endpoint-response-linger endpoint))))
                    ;; put it into redis

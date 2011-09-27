@@ -98,9 +98,11 @@
   (format nil "~A:~A" *counter-prefix* prefix))
 
 (defun request-count (forwarder-name)
+  "Retrieves the number of requests served for a given forwarder."
   (msg-count (endpoint-request-counter-key) forwarder-name))
 
 (defun response-count (forwarder-name)
+  "Retrieves the number of responses served for a given forwarder."
   (msg-count (endpoint-response-counter-key) forwarder-name))
 
 (defun msg-count (key forwarder-name)

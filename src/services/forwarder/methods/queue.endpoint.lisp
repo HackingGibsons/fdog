@@ -97,7 +97,7 @@
     key))
 
 (defmethod store-response ((endpoint forwarder-queue-endpoint) redis msg)
-  "Store the repsonse in redis and return a key that can be used to reffer to it."
+  "Store the response in redis and return a key that can be used to reffer to it."
   (let ((key (endpoint-response-key endpoint msg)))
     (store-msg endpoint redis key msg)
     key))

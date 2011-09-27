@@ -51,7 +51,7 @@
    (response-linger :initform 300
                    :accessor queue-endpoint-response-linger)
    (request-prefix :initform "fdog-request:")
-   (response-prefix :initform "fdog-repsonse:")
+   (response-prefix :initform "fdog-response:")
    (queue-prefix :initform "fdog-queue:")
 
    ;; New sink for requests, handlers should write here to get written to redis.

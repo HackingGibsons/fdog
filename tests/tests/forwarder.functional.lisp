@@ -47,8 +47,10 @@
   :eval (assert-forwarder-setup)
 
   (log-for (trace) "Sending request destined for quedom.")
-  (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/awesome/")
-    (assert-null res))
+  (let ((old-request-count (fdog-forwarder:request-count "test")))
+    (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/awesome/")
+      (assert-null res)
+      (assert-equal (1+ old-request-count) (fdog-forwarder:request-count "test"))))
   (log-for (trace) "Requet sent.")
 
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/")
@@ -66,14 +68,15 @@
       (flet ((s2us (s) (round (* s 1000000))))
         (m2cl:with-handler (handler "test" push sub)
           (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 5))
-            (assert-null (zerop (length raw)))
-            (assert-non-nil (string-equal "/awesome/" (m2cl:request-path req)))
-            (m2cl:handler-send-http handler "awesome!" :request req)
-            ;; TODO actually move the redis constants, this is ugly
-            ;; Also the response prefix?
             (redis:with-named-connection (redis :host fdog-forwarder:*redis-host*
                                                 :port fdog-forwarder:*redis-port*)
-              (assert-non-nil (redis:lred-keys redis (format nil "~A*" fdog-forwarder:*response-prefix*))))))))))
+            (assert-null (zerop (length raw)))
+            (assert-non-nil (string-equal "/awesome/" (m2cl:request-path req)))
+            (let ((old-response-count (fdog-forwarder:response-count "test")))
+              (m2cl:handler-send-http handler "awesome!" :request req)
+              (assert-non-nil (redis:lred-keys redis (format nil "~A*" fdog-forwarder:*response-prefix*)))
+              (sleep 3) ;; TODO: the laziest test (race condition from response and actually hitting redis w/counter)
+              (assert-equal (1+ old-response-count) (fdog-forwarder:response-count "test"))))))))))
 
 (def-test+func (test-alias-function-and-routing)
     :eval (assert-forwarder-setup)

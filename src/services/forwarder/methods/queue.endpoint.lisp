@@ -88,22 +88,45 @@
           (format-decoded-time)
           (get-internal-real-time)))
 
+(defun endpoint-request-counter-key ()
+  (endpoint-counter-key *request-prefix*))
+
+(defun endpoint-response-counter-key ()
+  (endpoint-counter-key *response-prefix*))
+
+(defun endpoint-counter-key (prefix)
+  (format nil "~A:~A" *counter-prefix* prefix))
+
+(defun request-count (forwarder-name)
+  (msg-count (endpoint-request-counter-key) forwarder-name))
+
+(defun response-count (forwarder-name)
+  (msg-count (endpoint-response-counter-key) forwarder-name))
+
+(defun msg-count (key forwarder-name)
+  (redis:with-named-connection (redis :host *redis-host*
+                                      :port *redis-port*)
+    (parse-integer (redis:lred-hget redis key forwarder-name))))
+
 (defmethod store-request ((endpoint forwarder-queue-endpoint) redis msg)
   "Store the request in redis and return a key that can be used to reffer to it."
-  (let ((key (endpoint-request-key endpoint msg)))
-    (store-msg endpoint redis key msg)
+  (let ((key (endpoint-request-key endpoint msg))
+        (counter-key (endpoint-request-counter-key)))
+    (store-msg endpoint redis key counter-key msg)
     key))
 
 (defmethod store-response ((endpoint forwarder-queue-endpoint) redis msg)
   "Store the response in redis and return a key that can be used to reffer to it."
-  (let ((key (endpoint-response-key endpoint msg)))
-    (store-msg endpoint redis key msg)
+  (let ((key (endpoint-response-key endpoint msg))
+        (counter-key (endpoint-response-counter-key)))
+    (store-msg endpoint redis key counter-key msg)
     key))
 
-(defmethod store-msg ((endpoint forwarder-queue-endpoint) redis key msg)
+(defmethod store-msg ((endpoint forwarder-queue-endpoint) redis key counter-key msg)
   (log-for (trace) "Stored request for ~A" (fdog-forwarder-name (endpoint-engine endpoint)))
   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-    (redis:lred-hset redis key :body (babel:octets-to-string msg))))
+    (redis:lred-hset redis key :body (babel:octets-to-string msg))
+    (redis:lred-hincrby redis counter-key (fdog-forwarder-name (endpoint-engine endpoint)) 1)))
 
 (defmethod queue-request ((endpoint forwarder-queue-endpoint) redis msg)
   "Enqueue message on the endpoint to the current connected redis instance."

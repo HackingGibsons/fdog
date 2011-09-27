@@ -61,6 +61,8 @@
                           :fdog-interface-bridges)
 
   (:export :init-forwarders
+           :request-count
+           :response-count
            :*redis-host*
            :*redis-port*
            :*request-prefix*
@@ -87,3 +89,4 @@
 (defvar *redis-port* 6379)
 (defvar *request-prefix* "fdog-request:")
 (defvar *response-prefix* "fdog-response:")
+(defvar *counter-prefix* "fdog-counter:")

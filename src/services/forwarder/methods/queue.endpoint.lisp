@@ -250,7 +250,6 @@
                      (log-for (trace) "Wrote key to redis: ~A" key)
                      (log-for (trace) "Expiring response in ~A seconds." (queue-endpoint-response-linger endpoint))
                      (redis:lred-expire redis key (queue-endpoint-response-linger endpoint))))
-                   ;; put it into redis
                    t))
 
                (run-device ()

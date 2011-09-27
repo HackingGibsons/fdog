@@ -28,6 +28,8 @@
    (request-proxy-sock :initarg :proxy-sock :initform nil
                        :accessor endpoint-proxy-sock)
    ;; Response proxy
+   (response-proxy-addr :initarg :response-proxy-addr :initform nil
+                        :accessor endpoint-response-proxy-addr)
    (response-proxy-sock :initarg :response-proxy-sock :initform nil
                         :accessor endpoint-response-proxy-sock)
 
@@ -46,7 +48,10 @@
                :accessor queue-endpoint-redis-port)
    (request-linger :initform 300
                    :accessor queue-endpoint-request-linger)
+   (response-linger :initform 300
+                   :accessor queue-endpoint-response-linger)
    (request-prefix :initform "fdog-request:")
+   (response-prefix :initform "fdog-response:")
    (queue-prefix :initform "fdog-queue:")
 
    ;; New sink for requests, handlers should write here to get written to redis.
@@ -62,7 +67,10 @@
    (request-write-device :initform nil
                          :accessor endpoint-request-write-device)
    (request-queue-device :initform nil
-                         :accessor endpoint-request-queue-device))
+                         :accessor endpoint-request-queue-device)
+
+   (response-logging-device :initform nil
+                            :accessor endpoint-response-logging-device))
 
   (:documentation "Endpoint that instead of writing requests upstream, writes
 them to redis and forwards from a different thread."))

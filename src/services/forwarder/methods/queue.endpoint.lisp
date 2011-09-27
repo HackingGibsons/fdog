@@ -69,21 +69,43 @@
 (defmethod endpoint-queue-counter ((endpoint forwarder-queue-endpoint))
   (format nil "~A:counter" (endpoint-queue-key endpoint)))
 
+(defun format-decoded-time ()
+  "Returns the universal time formatted in YYYYMMDDHHmmss"
+  (multiple-value-bind (seconds minutes hours date month year) (get-decoded-time)
+    (format nil "~4,'0D~2,'0D~2,'0D~2,'0D~2,'0D~2,'0D" year month date hours minutes seconds)))
+
 (defmethod endpoint-request-key ((endpoint forwarder-engine-endpoint) request)
   "Generate a key to store the given `request' under for the endpoint `endpoint'"
   (with-slots (request-prefix) endpoint
-    (format nil "~A:~A:~A:~A" request-prefix
-            (fdog-forwarder-name (endpoint-engine endpoint))
-            (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 request))
-            (uuid:make-v4-uuid))))
+    (endpoint-key endpoint request-prefix request)))
+
+(defmethod endpoint-response-key ((endpoint forwarder-engine-endpoint) response)
+  (with-slots (response-prefix) endpoint
+    (endpoint-key endpoint response-prefix response)))
+
+(defmethod endpoint-key ((endpoint forwarder-engine-endpoint) prefix msg)
+  (format nil "~A:~A:~A:~A:~A" prefix
+          (fdog-forwarder-name (endpoint-engine endpoint))
+          (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 msg))
+          (format-decoded-time)
+          (get-internal-real-time)))
 
 (defmethod store-request ((endpoint forwarder-queue-endpoint) redis msg)
   "Store the request in redis and return a key that can be used to reffer to it."
   (let ((key (endpoint-request-key endpoint msg)))
-    (log-for (trace) "Stored request for ~A" (fdog-forwarder-name (endpoint-engine endpoint)))
-    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-      (redis:lred-hset redis key :body (babel:octets-to-string msg)))
+    (store-msg endpoint redis key msg)
     key))
+
+(defmethod store-response ((endpoint forwarder-queue-endpoint) redis msg)
+  "Store the response in redis and return a key that can be used to reffer to it."
+  (let ((key (endpoint-response-key endpoint msg)))
+    (store-msg endpoint redis key msg)
+    key))
+
+(defmethod store-msg ((endpoint forwarder-queue-endpoint) redis key msg)
+  (log-for (trace) "Stored request for ~A" (fdog-forwarder-name (endpoint-engine endpoint)))
+  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (redis:lred-hset redis key :body (babel:octets-to-string msg))))
 
 (defmethod queue-request ((endpoint forwarder-queue-endpoint) redis msg)
   "Enqueue message on the endpoint to the current connected redis instance."
@@ -98,7 +120,6 @@
       (redis:lred-exec redis))
     (values queue-key
             request-key)))
-
 
 ;; Replacement "device" to pump requests to redis and plumbing for it
 (defmethod init-sockets :after ((endpoint forwarder-queue-endpoint))
@@ -209,12 +230,39 @@
 
             (loop while (run-device) do ':nothing))))))
 
+(defmethod make-response-logging-device ((endpoint forwarder-queue-endpoint))
+  #'(lambda ()
+      (with-slots (context response-proxy-addr) endpoint
+        (zmq:with-socket (socket context zmq:sub)
+          (zmq:connect socket response-proxy-addr)
+          (zmq:setsockopt socket zmq:subscribe "")
+          (labels
+              ((run-once ()
+                 (let ((response (make-instance 'zmq:msg)))
+                   (zmq:recv! socket response)
+                   (log-for (trace) "Writing to redis: ~A" (zmq:msg-data-as-string response))
+                   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
+                                                       :port (queue-endpoint-redis-port endpoint))
+                   (log-for (trace) "Actually writing to redis: ~A" (zmq:msg-data-as-string response))
+                   ;; Store in redis without queueing it,
+                   ;; and expire it after the response linger time
+                   (let ((key (store-response endpoint redis (zmq:msg-data-as-array response))))
+                     (log-for (trace) "Wrote key to redis: ~A" key)
+                     (log-for (trace) "Expiring response in ~A seconds." (queue-endpoint-response-linger endpoint))
+                     (redis:lred-expire redis key (queue-endpoint-response-linger endpoint))))
+                   t))
+
+               (run-device ()
+                 (handler-case (run-once)
+                   (simple-error (c) t))))
+
+            (loop while (run-device) do (run-device)))))))
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
                                       :port (queue-endpoint-redis-port endpoint))
     (request-queue-event endpoint redis :reset))
-  (with-slots (request-write-device request-queue-device) endpoint
+  (with-slots (request-write-device request-queue-device response-logging-device) endpoint
     (setf request-queue-device
           (make-thread (make-request-queuer-device endpoint)
                        :name (format nil "engine-request-queue-request-queue-device-~A"
@@ -223,11 +271,15 @@
           request-write-device
           (make-thread (make-request-writer-device endpoint)
                        :name (format nil "engine-request-queue-request-write-device-~A"
+                                     (fdog-forwarder-name (endpoint-engine endpoint))))
+          response-logging-device
+          (make-thread (make-response-logging-device endpoint)
+                       :name (format nil "engine-endpoint-device-response-logging-~A"
                                      (fdog-forwarder-name (endpoint-engine endpoint)))))))
 
 (defmethod engine-endpoint-stop :before ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Stopping the queue request writer thread for: ~A" endpoint)
-  (with-slots (request-write-device request-queue-device) endpoint
+  (with-slots (request-write-device request-queue-device response-logging-device) endpoint
     (and request-write-device
          (threadp request-write-device)
          (thread-alive-p request-write-device)
@@ -238,8 +290,14 @@
          (thread-alive-p request-queue-device)
          (destroy-thread request-queue-device)
          (log-for (trace) "Killed forwarder queuer for: ~A" endpoint))
+    (and response-logging-device
+         (threadp response-logging-device)
+         (thread-alive-p response-logging-device)
+         (destroy-thread response-logging-device)
+         (log-for (trace) "Killed response logger for: ~A" endpoint))
     (setf request-queue-device nil
-          request-write-device nil)))
+          request-write-device nil
+          response-logging-device nil)))
 
 (defmethod request-forwarding-address ((endpoint forwarder-queue-endpoint))
   (log-for (trace) "Serving a queue address to forward requests to.")

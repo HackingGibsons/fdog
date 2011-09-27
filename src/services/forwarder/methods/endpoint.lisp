@@ -67,9 +67,15 @@
       (log-for (trace) "Request proxy bound."))
 
     ;; Response proxy
-    (with-slots (response-proxy-sock) endpoint
+    (with-slots (response-proxy-addr response-proxy-sock) endpoint
+      (setf response-proxy-addr
+            (make-local-endpoint :addr "127.0.0.1" :port (next-handler-port))) ;; TODO: see above
+      (log-for (trace) "Chosen the address: ~A as the response-proxy, binding" response-proxy-addr)
       (setf response-proxy-sock
             (maybe-linger-socket (zmq:socket context zmq:pub)))
+
+      (log-for (trace) "Response proxy bound: ~A" (zmq:bind response-proxy-sock response-proxy-addr))
+
       (log-for (trace) "Connecting reply socket to relevant M2 endpoints.")
       (dolist (addr (mapcar #'mongrel2-handler-recv-spec
                             (forwarder-engine-handlers (endpoint-engine endpoint))))

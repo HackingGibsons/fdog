@@ -76,12 +76,10 @@
 
 (defmethod endpoint-request-key ((endpoint forwarder-engine-endpoint) request)
   "Generate a key to store the given `request' under for the endpoint `endpoint'"
-  (with-slots (request-prefix) endpoint
-    (endpoint-key endpoint request-prefix request)))
+  (endpoint-key endpoint *request-prefix* request))
 
 (defmethod endpoint-response-key ((endpoint forwarder-engine-endpoint) response)
-  (with-slots (response-prefix) endpoint
-    (endpoint-key endpoint response-prefix response)))
+  (endpoint-key endpoint *response-prefix* response))
 
 (defmethod endpoint-key ((endpoint forwarder-engine-endpoint) prefix msg)
   (format nil "~A:~A:~A:~A:~A" prefix
@@ -142,8 +140,8 @@
       (log-for (trace) "Starting request queue device.")
         (let ((msg (make-instance 'zmq:msg)))
           (labels ((run-once ()
-                     (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                                         :port (queue-endpoint-redis-port endpoint))
+                     (redis:with-named-connection (redis :host *redis-host*
+                                                         :port *redis-port*)
                        (log-for (trace) "Waiting for message to queue for endpoint: ~A" endpoint)
                        (log-for (trace) "Recv() result for endpoint->queue[~A]: ~A" endpoint
                                 (zmq:recv! (endpoint-queue-sock endpoint) msg))
@@ -171,16 +169,16 @@
 (defmethod make-request-writer-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()
       (log-for (trace) "Starting request queue writer device.")
-      (let ((prev-count (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                                            :port (queue-endpoint-redis-port endpoint))
+      (let ((prev-count (redis:with-named-connection (redis :host *redis-host*
+                                                            :port *redis-port*)
                           (request-event-info endpoint redis :count)))
             cur-count)
         (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
           (maybe-linger-socket forward-sock)
           (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
           (labels ((run-once ()
-                     (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                                         :port (queue-endpoint-redis-port endpoint))
+                     (redis:with-named-connection (redis :host *redis-host*
+                                                         :port *redis-port*)
                        (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
                          (redis:lred-watch redis (endpoint-queue-counter endpoint))
                          (setf cur-count (request-event-info endpoint redis :count))
@@ -241,8 +239,8 @@
                  (let ((response (make-instance 'zmq:msg)))
                    (zmq:recv! socket response)
                    (log-for (trace) "Writing to redis: ~A" (zmq:msg-data-as-string response))
-                   (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                                       :port (queue-endpoint-redis-port endpoint))
+                   (redis:with-named-connection (redis :host *redis-host*
+                                                       :port *redis-port*)
                    (log-for (trace) "Actually writing to redis: ~A" (zmq:msg-data-as-string response))
                    ;; Store in redis without queueing it,
                    ;; and expire it after the response linger time
@@ -259,8 +257,8 @@
             (loop while (run-device) do (run-device)))))))
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
-  (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                      :port (queue-endpoint-redis-port endpoint))
+  (redis:with-named-connection (redis :host *redis-host*
+                                      :port *redis-port*)
     (request-queue-event endpoint redis :reset))
   (with-slots (request-write-device request-queue-device response-logging-device) endpoint
     (setf request-queue-device
@@ -309,8 +307,8 @@
       (let (last-message)
         (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
             (labels ((run-once ()
-                       (redis:with-named-connection (redis :host (queue-endpoint-redis-host endpoint)
-                                                           :port (queue-endpoint-redis-port endpoint))
+                       (redis:with-named-connection (redis :host *redis-host*
+                                                           :port *redis-port*)
                          (let ((msg (make-instance 'zmq:msg))
                                recv send)
                            (log-for (trace) "Reading queued request")

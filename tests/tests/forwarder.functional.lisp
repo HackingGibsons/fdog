@@ -71,9 +71,9 @@
             (m2cl:handler-send-http handler "awesome!" :request req)
             ;; TODO actually move the redis constants, this is ugly
             ;; Also the response prefix?
-            (redis:with-named-connection (redis :host "localhost"
-                                                :port 6379)
-              (assert-non-nil (redis:lred-keys redis "fdog-response:*")))))))))
+            (redis:with-named-connection (redis :host fdog-forwarder:*redis-host*
+                                                :port fdog-forwarder:*redis-port*)
+              (assert-non-nil (redis:lred-keys redis (format nil "~A*" fdog-forwarder:*response-prefix*))))))))))
 
 (def-test+func (test-alias-function-and-routing)
     :eval (assert-forwarder-setup)

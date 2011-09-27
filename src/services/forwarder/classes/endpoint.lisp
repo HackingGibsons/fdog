@@ -42,16 +42,10 @@
 
 ;; TODO: Put these redis constants elsewhere.
 (defclass forwarder-queue-endpoint (forwarder-engine-endpoint)
-  ((redis-host :initform "localhost"
-               :accessor queue-endpoint-redis-host)
-   (redis-port :initform 6379
-               :accessor queue-endpoint-redis-port)
-   (request-linger :initform 300
+  ((request-linger :initform 300
                    :accessor queue-endpoint-request-linger)
    (response-linger :initform 300
                    :accessor queue-endpoint-response-linger)
-   (request-prefix :initform "fdog-request:")
-   (response-prefix :initform "fdog-response:")
    (queue-prefix :initform "fdog-queue:")
 
    ;; New sink for requests, handlers should write here to get written to redis.

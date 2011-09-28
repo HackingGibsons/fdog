@@ -40,8 +40,8 @@
     (assert-response-200 meta)
     (assert-non-nil res)
 
-    (assert-non-nil (assoc :push res :test #'string-equal))
-    (assert-non-nil (assoc :sub res :test #'string-equal))))
+    (assert-non-nil (assoc :push res :test #'equal))
+    (assert-non-nil (assoc :sub res :test #'equal))))
 
 (def-test+func (can-queue-request-then-serve-it-to-handler)
   :eval (assert-forwarder-setup)
@@ -57,11 +57,11 @@
     (assert-response-200 meta)
     (assert-non-nil res :format "Response is nil")
 
-    (assert-non-nil (assoc :push res :test #'string-equal) :format "Response did not contain push")
-    (assert-non-nil (assoc :sub res :test #'string-equal) :format "Response did not contain sub")
+    (assert-non-nil (assoc :push res :test #'equal) :format "Response did not contain push")
+    (assert-non-nil (assoc :sub res :test #'equal) :format "Response did not contain sub")
 
-    (let ((push (cdr (assoc :push res :test #'string-equal)))
-          (sub (cdr (assoc :sub res :test #'string-equal))))
+    (let ((push (cdr (assoc :push res :test #'equal)))
+          (sub (cdr (assoc :sub res :test #'equal))))
 
       (log-for (trace) "Endpoints: Push: ~A Sub: ~A" push sub)
 
@@ -71,7 +71,7 @@
             (redis:with-named-connection (redis :host fdog-forwarder:*redis-host*
                                                 :port fdog-forwarder:*redis-port*)
               (assert-null (zerop (length raw)) :format "Mongrel response not empty")
-              (assert-non-nil (string-equal "/awesome/" (m2cl:request-path req)) :format "Path did not contain /awesome/")
+              (assert-non-nil (equal "/awesome/" (m2cl:request-path req)) :format "Path did not contain /awesome/")
               (let ((old-response-count (fdog-forwarder:response-count "test")))
                 (m2cl:handler-send-http handler "awesome!" :request req)
                 (sleep 3) ;; TODO: the laziest test (race condition from response and actually hitting redis)
@@ -112,30 +112,30 @@
       (assert-response-200 meta)
       (assert-non-nil res)
 
-      (assert-non-nil (assoc :push res :test #'string-equal))
-      (assert-non-nil (assoc :sub res :test #'string-equal))
+      (assert-non-nil (assoc :push res :test #'equal))
+      (assert-non-nil (assoc :sub res :test #'equal))
 
-      (let ((push (cdr (assoc :push res :test #'string-equal)))
-            (sub (cdr (assoc :sub res :test #'string-equal))))
+      (let ((push (cdr (assoc :push res :test #'equal)))
+            (sub (cdr (assoc :sub res :test #'equal))))
         (flet ((s2us (s) (round (* s 1000000))))
 
           (m2cl:with-handler (handler "test" push sub)
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
               (assert-null (zerop (length raw)))
-              (assert-non-nil (string-equal "/" (m2cl:request-path req))))))))
+              (assert-non-nil (equal "/" (m2cl:request-path req))))))))
 
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/post-only/")
       (assert-response-200 meta)
       (assert-non-nil res)
 
-      (assert-non-nil (assoc :push res :test #'string-equal))
-      (assert-non-nil (assoc :sub res :test #'string-equal))
+      (assert-non-nil (assoc :push res :test #'equal))
+      (assert-non-nil (assoc :sub res :test #'equal))
 
-      (let ((push (cdr (assoc :push res :test #'string-equal)))
-            (sub (cdr (assoc :sub res :test #'string-equal))))
+      (let ((push (cdr (assoc :push res :test #'equal)))
+            (sub (cdr (assoc :sub res :test #'equal))))
         (flet ((s2us (s) (round (* s 1000000))))
 
           (m2cl:with-handler (handler "test" push sub)
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
               (assert-null (zerop (length raw)))
-              (assert-non-nil (string-equal "/" (m2cl:request-path req)))))))))
+              (assert-non-nil (equal "/" (m2cl:request-path req)))))))))

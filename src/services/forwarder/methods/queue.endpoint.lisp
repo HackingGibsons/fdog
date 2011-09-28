@@ -108,7 +108,7 @@
 (defun msg-count (key forwarder-name)
   (redis:with-named-connection (redis :host *redis-host*
                                       :port *redis-port*)
-    (parse-integer (redis:lred-hget redis key forwarder-name))))
+    (parse-integer (or (redis:lred-hget redis key forwarder-name) "0"))))
 
 (defmethod store-request ((endpoint forwarder-queue-endpoint) redis msg)
   "Store the request in redis and return a key that can be used to reffer to it."

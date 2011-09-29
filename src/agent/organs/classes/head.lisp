@@ -33,13 +33,24 @@
                    `(let ((from (getf ',definition :from))
                           (nth (getf ',definition :nth)))
                       (lambda (event)
-                        (log-for (warn) "TODO: Compiling ~A checker for every ~Ath beat from ~A" behavior nth from)
+                        (log-for (warn) "TODO: Compiled ~A checker for every ~Ath beat from ~A" behavior nth from)
+                        (log-for (warn) "Current event: ~A" event)
+                        (log-for (warn) "Typed: ~A" (type-of event))
                         (when (eql (and (consp event) (car event)) from)
                           (let ((time (getf event :time)))
                             (and time
-                                 (setf (recent-events behavior) (subseq (push time (recent-events behavior)) 0 nth)))
-                            (log-for (warn) "TODO: Events in ~A to date: ~A" behavior (recent-events behavior))))
-                        nil))))
+                                 (setf (recent-events behavior)
+                                       (subseq (push time (recent-events behavior))
+                                               0 (min nth (length (recent-events behavior))))))
+
+                            (log-for (warn) "TODO: Events in ~A to date: ~A" behavior (recent-events behavior))
+                            (log-for (warn) "Seeking: ~A" (last-invoked behavior))
+
+                            (if (not (find (last-invoked behavior) (recent-events behavior)))
+                                (prog1 t
+                                  (log-for (trace) "Seems we haven't been invoked in a while. Let's")
+                                  (setf (last-invoked behavior) time))
+                                nil)))))))
         ,description))))
 
 (defmethod initialize-instance :after ((behavior standard-behavior) &key)
@@ -79,6 +90,16 @@ contain `behavior' bound to the current instance of the behavior class `name'"
         behavior
         #'(lambda ,invoke-lambda (progn (log-for (trace) "Behavior ~A running" (symbol-name ',name))
                                         ,@body))))))
+
+(defmethod act-on-event :after ((organ behaving-organ-mixin) event)
+  (log-for (warn) "TODO: Call invoke-p for each behavior and invoke it if need be.")
+  (let (fired)
+    (dolist (behavior (behaviors organ) fired)
+      (log-for (trace) "Testing ~A of ~A" behavior organ)
+      (when (funcall (invoke-p behavior) event)
+        (log-for (trace) " Passed, invoking")
+        (funcall behavior organ)
+        (push behavior fired )))))
 
 (defbehavior announce-self (:interval (:from :heart :nth 3) :do :invoke) (organ)
   (log-for (warn) "TODO: Running behavior lambda for ~A" organ)

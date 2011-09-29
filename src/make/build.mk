@@ -84,4 +84,4 @@ clean: externals-clean
 	rm -rf $(BUILDAPP)
 	$(MAKE) clean-build
 
-
+clean-all: clean core-clean

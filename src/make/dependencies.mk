@@ -1,4 +1,16 @@
 # Dependency targets
+
+CORE = "fdog.core"
+
+core:
+	if [ ! -e  $(CORE) ]; then \
+	$(LISP) --eval '(ql:quickload :fdog)' \
+		    --eval '(save-lisp-and-die #p"fdog.core")'; \
+	fi
+
+core-clean:
+	rm -f $(CORE)
+
 buildapp: quicklisp $(BUILDAPP)
 $(BUILDAPP):
 	$(LISP) --eval '(sb-ext:disable-debugger)' \

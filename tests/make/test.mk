@@ -1,14 +1,14 @@
-test: clean init
+test: clean-all init
 	@echo "=> Running tests."
 	$(MAKE) run-tests
 	$(MAKE) clean
 
-run-tests:
+run-tests: core
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(LISP) --no-userinit \
+	$(LISP) --core $(CORE) \
 	        --load $(QL_ROOT_PATH)/setup.lisp \
-	        --eval '(ql:quickload :fdog)' \
+			--no-userinit \
 	        --eval '(ql:quickload :fdog-tests)' \
 	        --eval '(asdf:test-system :fdog)' \
 	        --eval '(quit)'

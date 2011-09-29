@@ -30,10 +30,10 @@
                           (nth (getf ',definition :nth)))
                       (lambda (event)
                         (log-for (warn) "TODO: Compiling ~A checker for every ~Ath beat from ~A" behavior nth from)
-                        (when (eql (and (consp event) (car event) from))
+                        (when (eql (and (consp event) (car event)) from)
                           (let ((time (getf event :time)))
                             (and time
-                                 (setf (recent-events behavior) (subseq (push time (recent-events behavior))) 0 nth))
+                                 (setf (recent-events behavior) (subseq (push time (recent-events behavior)) 0 nth)))
                             (log-for (warn) "TODO: Events in ~A to date: ~A" behavior (recent-events behavior))))
                         nil))))
         ,description))))

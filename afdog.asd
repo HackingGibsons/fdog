@@ -19,7 +19,7 @@
                          ;; Agent components and standard library
                          (:module "agent" :depends-on ("logging" "utils") :components
                                   ((:file "package")
-                                   (:file "agent" :depends-on ("classes" "organs"))
+                                   (:file "agent" :depends-on ("classes" "organs" "behavior"))
 
                                    ;; Agent classes and bases
                                    (:module "classes" :depends-on ("package") :components
@@ -29,6 +29,13 @@
                                             ((:module "standard-agent" :components
                                                       ((:file "standard-agent")))
                                              (:file "standard-organ")))
+
+                                   ;; Behavior definiton
+                                   (:module "behavior" :depends-on ("package") :components
+                                            ((:file "classes")
+                                             (:file "defbehavior" :depends-on ("classes"))
+                                             (:module "behaviors" :depends-on ("defbehavior") :components
+                                                      ((:file "peers")))))
 
                                    ;; Standard organ definitions
                                    (:module "organs" :depends-on ("classes") :components

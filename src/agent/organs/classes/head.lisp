@@ -7,6 +7,10 @@
   (:documentation "This organ is responsible for decision making and task scheduling, but none of the work.")
   (:default-initargs . (:tag :head)))
 
+(defclass behaving-organ-mixin ()
+  ((behaviors :initarg :behaviors :initform nil
+              :accessor behaviors)))
+
 (defclass standard-behavior (c2mop:funcallable-standard-object)
   ((organ :initarg :organ :initform nil
           :accessor behavior-organ)

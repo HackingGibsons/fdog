@@ -59,7 +59,19 @@ contain `behavior' bound to the current instance of the behavior class `name'"
      (defmethod ,(intern (string-upcase (concatenate 'string "make-" (symbol-name name)))) (organ &key)
        "Make an instance of a behavior class"
        (log-for (trace) "Making ~A" (symbol-name ',name))
-       (make-instance ',name :organ organ :invoke-when ',behavior))
+
+       (let* ((new-organ-class (make-instance 'standard-class :name (type-of organ)
+                                              :direct-superclasses `(,(class-of organ) ,(find-class 'behaving-organ-mixin))))
+              (instance (make-instance ',name :organ organ :invoke-when ',behavior)))
+
+         (log-for (trace) "Updating class of ~A" organ)
+         (change-class organ new-organ-class)
+
+         (log-for (trace) "Storing self as a behavior")
+         (pushnew instance (behaviors organ) :test #'eql :key #'type-of)
+
+         (values instance organ)))
+
 
      (defmethod initialize-instance :before ((behavior ,name) &key)
        (log-for (trace) "Binding funcallable lambda to ~A" behavior)

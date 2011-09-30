@@ -16,6 +16,7 @@
 
 (defmethod make-mouth-for ((agent standard-agent))
   (let ((mouth (make-instance 'agent-mouth :agent agent)))
+    (make-speak-when-told mouth)
     mouth))
 
 (defun make-agent ()

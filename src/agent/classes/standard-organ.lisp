@@ -20,6 +20,6 @@
         :accessor organ-tag
         :documentation "A beating organ heads it's heartbeat reply with a keyword from this slot.")))
 
-(defmethod organ-tag ((pass t))
-  "An untagged organ should just look nil. Makes mapping across them easier."
-  nil)
+(defmethod organ-tag ((organ t))
+  "An untagged `organ' should look like it's type. Makes mapping across them easier."
+  (intern (symbol-name (type-of organ)) :keyword))

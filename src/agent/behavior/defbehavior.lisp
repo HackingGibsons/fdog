@@ -1,6 +1,6 @@
 (in-package :agent)
 
-(eval-when (:compile-toplevel)
+(eval-when (:compile-toplevel :load-toplevel)
   (defmacro defbehavior (name behavior invoke-lambda &body body)
     "Generates a behavior class and and makes it funcallable with `invoke-lambda' as the lambda
 list, evaluating `body' on invokation as governed by the `behavior' list. The scope will

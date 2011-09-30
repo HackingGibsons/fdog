@@ -224,5 +224,13 @@ and deliver any events that appear to them before returning the agent event."
 
     (log-for (trace) "Agent ~A tick. Tick Delta: ~A" agent (agent-tick-delta agent))))
 
+(defmethod agent-info ((organ standard-organ))
+  "An organ specific information snippet. Collected by
+`agent-info' on `standard-agent'. nil by default."
+  (log-for (trace) "~A did not define additional info." organ)
+  nil)
+
 (defmethod agent-info ((agent standard-agent))
-  `(:uuid ,(agent-uuid agent)))
+  (append `(:uuid ,(agent-uuid agent))
+          (loop for organ in (agent-organs agent)
+               appending (agent-info organ))))

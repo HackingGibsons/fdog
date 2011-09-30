@@ -6,8 +6,7 @@
 list, evaluating `body' on invokation as governed by the `behavior' list. The scope will
 contain `behavior' bound to the current instance of the behavior class `name'"
     `(progn
-       (defclass ,name (standard-behavior ,(cond ((eql (car behavior) :interval) 'interval-behavior)
-                                                 (t (values))))
+       (defclass ,name (standard-behavior ,@(cond ((eql (car behavior) :interval) '(interval-behavior))))
          ()
          (:metaclass c2mop:funcallable-standard-class))
 

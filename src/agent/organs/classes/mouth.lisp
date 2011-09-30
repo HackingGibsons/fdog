@@ -19,10 +19,16 @@ type. Returns two values: the socket created and the address that was bound to i
 
     (values sock addr)))
 
-
 (defmethod agent-boot :after ((agent standard-agent) (mouth agent-mouth) &rest options)
   "Mouth specific socket inits."
   (declare (ignorable options))
+
+  (log-for (warn) "Binding info specializer.")
+  (defmethod agent-info :around ((agent (eql agent)))
+    (let ((info (call-next-method)))
+      (log-for (trace) "Got info for ~A: ~A" agent info)
+      info))
+
   (log-for (warn) "TOOD: Booting mouth: ~A from ~A" mouth agent)
   (with-slots (speak-addr speak-sock) mouth
     (multiple-value-bind (sock addr) (make-local-sock (agent-context agent) zmq:pub)
@@ -34,6 +40,14 @@ type. Returns two values: the socket created and the address that was bound to i
 (defmethod agent-disconnect :after ((agent standard-agent) (mouth agent-mouth) &rest options)
   "Mouth specific disconnect."
   (declare (ignorable options))
+
+  (log-for (warn) "Attempting to remove info specializer.")
+  (let ((method (find-method #'agent-info '(:around) `(,(c2mop:intern-eql-specializer agent)) nil)))
+    (if method
+        (prog1 (remove-method #'agent-info method)
+          (log-for (trace) "Removed agent-specific method specialization."))
+        (log-for (warn) "Could not find specialization to remove!")))
+
   (log-for (warn) "Disconnecting mouth: ~A from ~A" mouth agent)
   (with-slots (speak-addr speak-sock) mouth
     (zmq:close speak-sock)

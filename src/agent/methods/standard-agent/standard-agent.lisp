@@ -223,3 +223,6 @@ and deliver any events that appear to them before returning the agent event."
           (agent-last-tick agent) now)
 
     (log-for (trace) "Agent ~A tick. Tick Delta: ~A" agent (agent-tick-delta agent))))
+
+(defmethod agent-info ((agent standard-agent))
+  `(:uuid ,(agent-uuid agent)))

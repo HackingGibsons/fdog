@@ -2,7 +2,7 @@
 
 all: libfixposix-build
 
-clean: libfixposix-clean
+clean: nst-clean libfixposix-clean
 
 libfixposix-build: libfixposix/build/lib
 libfixposix-clean:
@@ -16,3 +16,5 @@ libfixposix/configure:
 	cd libfixposix && \
 	autoreconf -i
 
+nst-clean:
+	rm -rf nst-4.0.0

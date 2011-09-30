@@ -1,8 +1,12 @@
 (in-package :agent)
 
 (defbehavior announce-self (:interval (:from :heart :nth 3) :do :invoke) (organ)
-  (log-for (warn) "TODO: Running ~A behavior lambda for ~A" behavior organ)
+  (log-for (trace) "Running ~A behavior lambda for ~A" behavior organ)
   (send-message organ `(,(organ-tag organ) :command
                          :command :speak
                          :say (:agent :info :info ,(agent-info (organ-agent organ)))))
-  (log-for (warn) "Message sent."))
+  (log-for (trace) "Message sent."))
+
+(defbehavior speak-when-told (:on (:command :speak :from :head) :do :invoke-with-event) (organ event)
+  (log-for (trace) "TODO: Should speak: ~A because ~A came in" organ event)
+  :TODO)

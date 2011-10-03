@@ -3,7 +3,7 @@ test: clean-all init
 	$(MAKE) run-tests
 	$(MAKE) clean
 
-run-tests: core
+run-tests: $(CORE)
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP) --core $(CORE) \

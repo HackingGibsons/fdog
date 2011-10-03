@@ -1,12 +1,10 @@
 # Dependency targets
 
-CORE = "fdog.core"
+CORE = $(ROOT)/fdog.core
 
-core:
-	if [ ! -e  $(CORE) ]; then \
+$(CORE):
 	$(LISP) --eval '(ql:quickload :fdog)' \
-		    --eval '(save-lisp-and-die #p"fdog.core")'; \
-	fi
+		    --eval '(save-lisp-and-die #p"fdog.core")';
 
 core-clean:
 	rm -f $(CORE)

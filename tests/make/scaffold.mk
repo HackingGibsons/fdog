@@ -2,7 +2,7 @@
 TEST_DIR = .test
 TEST_PATH = $(ROOT)/$(TEST_DIR)/
 
-build-test-fdog: core
+build-test-fdog: $(CORE)
 	@echo "=> Cautionary murder"
 	killall -9 mongrel2 || echo "!!=> No mongrels to kill"
 	@echo "=> Building a test server in: $(TEST_PATH)"
@@ -14,7 +14,7 @@ build-test-fdog: core
 			--eval '(quit)'
 $(TEST_DIR): build-test-fdog
 
-start-test-fdog: core $(TEST_DIR)
+start-test-fdog: $(CORE) $(TEST_DIR)
 	@echo "=> Starting instance in $(TEST_PATH)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
@@ -28,7 +28,7 @@ start-test-fdog: core $(TEST_DIR)
 	date
 	@echo "=> Awake and running"
 
-stop-test-fdog: core
+stop-test-fdog: $(CORE)
 	@echo "=> Stopping instance in $(TEST_PATH)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \

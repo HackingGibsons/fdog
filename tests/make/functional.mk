@@ -1,4 +1,4 @@
-run-tests-functional: core
+run-tests-functional: $(CORE)
 	@echo "Running functional test suite."
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \

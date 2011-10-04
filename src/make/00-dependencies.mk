@@ -2,7 +2,7 @@
 
 CORE = $(ROOT)/fdog.core
 
-$(CORE):
+$(CORE): init
 	$(LISP) --eval '(ql:quickload :fdog)' \
 		    --eval '(save-lisp-and-die #p"fdog.core")';
 

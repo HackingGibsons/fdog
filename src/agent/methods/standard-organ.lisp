@@ -43,9 +43,9 @@
     (setf (organ-incoming-sock organ) nil)))
 
 ;; Messaging
-(defmethod send-message ((organ standard-organ) message)
+(defmethod send-message ((organ standard-organ) message &key sock)
   (log-for (trace) "Organ sending message: [~A]" message)
-  (zmq:send! (organ-outgoing-sock organ) (prepare-message message)))
+  (zmq:send! (or sock (organ-outgoing-sock organ)) (prepare-message message)))
 
 
 ;; Event handling

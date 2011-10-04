@@ -1,10 +1,13 @@
 # Dependency targets
-buildapp: quicklisp $(BUILDAPP)
-$(BUILDAPP):
-	$(LISP) --eval '(sb-ext:disable-debugger)' \
-	        --eval '(ql:quickload :buildapp)' \
-	        --eval '(buildapp:build-buildapp "$(BUILDAPP)")' \
-	        --eval '(quit)'
+
+CORE = $(ROOT)/fdog.core
+
+$(CORE): init
+	$(LISP) --eval '(ql:quickload :fdog)' \
+		    --eval '(save-lisp-and-die #p"fdog.core")';
+
+core-clean:
+	rm -f $(CORE)
 
 QL_TEST ?= $(LISP) --eval '(quit :unix-status (if (find-package :ql) 0 1))'
 QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"

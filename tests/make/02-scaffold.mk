@@ -2,24 +2,24 @@
 TEST_DIR = .test
 TEST_PATH = $(ROOT)/$(TEST_DIR)/
 
-build-test-fdog:
+build-test-fdog: $(CORE)
 	@echo "=> Cautionary murder"
 	killall -9 mongrel2 || echo "!!=> No mongrels to kill"
 	@echo "=> Building a test server in: $(TEST_PATH)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
-	$(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
-	        --eval '(ql:quickload :fdog)' \
+	$(LISP) --core $(CORE) \
+            --load $(QL_ROOT_PATH)/setup.lisp \
 			--eval '(fdog-cli:fdog-main `("fdog-test" "init" "--no-input" "$(TEST_PATH)"))' \
 			--eval '(quit)'
 $(TEST_DIR): build-test-fdog
 
-start-test-fdog: $(TEST_DIR)
+start-test-fdog: $(CORE) $(TEST_DIR)
 	@echo "=> Starting instance in $(TEST_PATH)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
-	nohup $(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
-		  --eval '(ql:quickload :fdog)' \
+	nohup $(LISP) --core $(CORE) \
+          --load $(QL_ROOT_PATH)/setup.lisp \
 		  --eval '(fdog-cli:fdog-main `("fdog-test" "start" "$(TEST_PATH)" "--no-fork"))' \
 		  --eval '(quit)' &
 	date
@@ -28,17 +28,17 @@ start-test-fdog: $(TEST_DIR)
 	date
 	@echo "=> Awake and running"
 
-stop-test-fdog:
+stop-test-fdog: $(CORE)
 	@echo "=> Stopping instance in $(TEST_PATH)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
-	$(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
-	        --eval '(ql:quickload :fdog)' \
+	$(LISP) --core $(CORE) \
+		    --load $(QL_ROOT_PATH)/setup.lisp \
 			--eval '(fdog-cli:fdog-main `("fdog-test" "stop" "$(TEST_PATH)"))' \
 			--eval '(quit)'
 	@echo "-> Killing stray mongrels"
 	for m2pid in $$(find $(TEST_PATH)/server/run/ -name '*.pid'); do \
-	 	 cat $$m2pid | xargs kill ; \
+		cat $$m2pid | xargs kill ; \
 	done
 	@echo "=> Sleeping for everything to die"
 	sleep 5

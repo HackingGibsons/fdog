@@ -7,3 +7,4 @@ scratch.lisp
 /coverage/
 build/*
 /.test/*
+*.core

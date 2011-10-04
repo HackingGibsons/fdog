@@ -19,15 +19,21 @@
     (make-speak-when-told mouth)
     mouth))
 
+(defmethod make-ear-for ((agent standard-agent))
+  (let ((ear (make-instance 'agent-ear :agent agent)))
+    ear))
+
 (defun make-agent ()
   "Agent maker wrapper"
   (let* ((agent (make-instance 'standard-agent))
          (head (make-head-for agent))
          (heart (make-heart-for agent))
          (mouth (make-mouth-for agent))
+         (ear (make-ear-for agent))
          (appendix (make-appendix-for agent)))
 
     (agent-connect agent mouth)
+    (agent-connect agent ear)
     (agent-connect agent head)
     (agent-connect agent heart)
     (agent-connect agent appendix)

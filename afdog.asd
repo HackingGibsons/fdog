@@ -43,6 +43,7 @@
                                                       ((:file "heart")
                                                        (:file "head")
                                                        (:file "mouth")
+                                                       (:file "ear")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")

@@ -8,5 +8,6 @@
   (log-for (trace) "Message sent."))
 
 (defbehavior speak-when-told (:on (:command :speak :from :head) :do :invoke-with-event) (organ event)
-  (log-for (trace) "TODO: Should speak: ~A because ~A came in" organ event)
-  :TODO)
+  (let ((message (getf event :say)))
+    (send-message organ message :sock (speak-sock organ))
+    (log-for (trace) "~A has spoken:" message)))

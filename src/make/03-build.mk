@@ -1,19 +1,22 @@
 all: fdog $(STAGEDIR) bundle
 
 bundle: $(FDOG).bundle
-$(FDOG).bundle: quicklisp $(STAGEDIR) $(BUILDAPP)
+$(FDOG).bundle: quicklisp $(STAGEDIR)
 	@echo "=> Bundling up a distributable"
 	tar cz -C $(STAGEDIR) -f /tmp/fdog.bundle.tgz .
-	$(BUILDAPP) --output $(FDOG).bundle \
-		--eval '(sb-ext:disable-debugger)' \
-		--load $(QL_ROOT_PATH)/setup.lisp \
-	  	--eval "(ql:quickload :unix-options)" \
-	  	--eval "(ql:quickload :flexi-streams)" \
-		--eval "(ql:quickload :external-program)" \
-		--eval "(ql:quickload :cl-ppcre)" \
-                --load $(ROOT)/src/bundler.lisp \
-		--eval '(read-data-from "/tmp/fdog.bundle.tgz")' \
-	        --entry bundle
+	$(LISP) --core $(CORE) \
+			--noinform \
+			--no-userinit \
+			--no-sysinit \
+			--eval "(sb-ext:disable-debugger)" \
+			--load $(QL_ROOT_PATH)/setup.lisp \
+			--eval "(ql:quickload :unix-options)" \
+			--eval "(ql:quickload :flexi-streams)" \
+			--eval "(ql:quickload :external-program)" \
+			--eval "(ql:quickload :cl-ppcre)" \
+			--load $(ROOT)/src/bundler.lisp \
+			--eval '(read-data-from "/tmp/fdog.bundle.tgz")' \
+			--eval "(sb-ext:save-lisp-and-die #p\"$(FDOG).bundle\" :executable t :save-runtime-options t :toplevel #'(lambda () (bundle sb-ext:*posix-argv*)))"
 	rm -rf /tmp/fdog.bundle.tgz
 
 $(STAGEDIR): $(FODG)
@@ -36,40 +39,40 @@ $(STAGEDIR): $(FODG)
 	touch $(STAGEDIR)/fdog
 	@echo '#!/bin/sh' > $(STAGEDIR)/fdog
 	@echo 'BASE=$$(dirname $$(readlink -f $$0))' >> $(STAGEDIR)/fdog
-	@echo 'LD_LIBRARY_PATH="$$BASE/lib" $$BASE/bin/fdog $$@' >> $(STAGEDIR)/fdog
+	@echo 'LD_LIBRARY_PATH="$$BASE/lib":$$LD_LIBRARY_PATH $$BASE/bin/fdog $$@' >> $(STAGEDIR)/fdog
 	chmod +x $(STAGEDIR)/fdog
 
 install: all
 	@echo "=> Install is disabled while the build is restructured."
 #	sudo install -B prev -b $(FDOG) $(DESTDIR)
 
-fdog: init buildapp $(FDOG)
-$(FDOG):
+fdog: init $(FDOG)
+$(FDOG): $(CORE)
 	@echo "=> Assuring subsystem build"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include:$(CPATH) \
-	$(LISP) --eval '(sb-ext:disable-debugger)' \
-		--eval "(require 'sb-aclrepl)" \
+	$(LISP) --core $(CORE) \
+		    --eval '(sb-ext:disable-debugger)' \
+			--eval "(require 'sb-aclrepl)" \
 	        --eval '(declaim (optimize (debug $(DEBUG))))' \
 	        --load $(QL_ROOT_PATH)/setup.lisp \
-	        --eval '(ql:quickload :fdog)' \
 	        --eval '(quit)'
 	@echo "=> Building fdog"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/src/lib/.libs \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(BUILDAPP) --output $(FDOG) \
-	            --asdf-path $(ROOT) \
-	            --asdf-tree $(ROOT)/vendor \
-                    --require sb-aclrepl \
-		    --eval '(sb-ext:disable-debugger)' \
-                    --load $(ROOT)/src/builder.lisp \
-	            --eval '(declaim (optimize (debug $(DEBUG))))' \
-	            --load $(QL_ROOT_PATH)/setup.lisp \
-	            --eval '(ql:quickload :fdog)' \
-				--eval '(swank-loader:init :load-contribs t)' \
-	            --dispatched-entry '/fdog-cli:fdog-main' \
+	$(LISP) --core $(CORE) \
+			--noinform \
+			--no-userinit \
+			--no-sysinit \
+			--eval "(require 'sb-aclrepl)" \
+			--eval "(sb-ext:disable-debugger)" \
+			--load $(ROOT)/src/builder.lisp \
+			--eval "(declaim (optimize (debug $(DEBUG))))" \
+			--load $(QL_ROOT_PATH)/setup.lisp \
+			--eval "(swank-loader:init :load-contribs t)" \
+			--eval "(sb-ext:save-lisp-and-die #p\"$(FDOG)\" :executable t :save-runtime-options t :toplevel #'(lambda () (fdog-cli:fdog-main sb-ext:*posix-argv*)))" \
 	|| { echo '[ERROR] Build failed!'; \
-	     rm -f $(FDOG); exit 1; }
+		rm -f $(FDOG); exit 1; }
 
 clean-build:
 	@echo "=> Removing fdog builds"
@@ -80,8 +83,6 @@ clean-build:
 clean: externals-clean
 	@echo "=> Clearing common-lisp cache"
 	rm -rf ~/.cache/common-lisp/
-	@echo "=> Cleaning up buildapp"
-	rm -rf $(BUILDAPP)
 	$(MAKE) clean-build
 
 clean-all: clean core-clean

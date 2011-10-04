@@ -38,7 +38,7 @@ stop-test-fdog: $(CORE)
 			--eval '(quit)'
 	@echo "-> Killing stray mongrels"
 	for m2pid in $$(find $(TEST_PATH)/server/run/ -name '*.pid'); do \
-	 	 cat $$m2pid | xargs kill ; \
+		cat $$m2pid | xargs kill ; \
 	done
 	@echo "=> Sleeping for everything to die"
 	sleep 5

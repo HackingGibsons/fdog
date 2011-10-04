@@ -9,13 +9,6 @@ $(CORE):
 core-clean:
 	rm -f $(CORE)
 
-buildapp: quicklisp $(BUILDAPP)
-$(BUILDAPP):
-	$(LISP) --eval '(sb-ext:disable-debugger)' \
-	        --eval '(ql:quickload :buildapp)' \
-	        --eval '(buildapp:build-buildapp "$(BUILDAPP)")' \
-	        --eval '(quit)'
-
 QL_TEST ?= $(LISP) --eval '(quit :unix-status (if (find-package :ql) 0 1))'
 QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"
 quicklisp: sanity-check

@@ -2,8 +2,10 @@
 
 (defclass agent-mouth (standard-beating-organ)
   ((speak-addr :initform nil
+               :accessor speak-addr
                :accessor mouth-addr)
    (speak-sock :initform nil
+               :accessor speak-sock
                :accessor mouth-sock))
 
   (:documentation "Responsible for outgoing cross-agent communication.")

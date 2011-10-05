@@ -3,6 +3,8 @@
 CORE = $(ROOT)/fdog.core
 
 $(CORE):
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP) --eval '(ql:quickload :fdog)' \
 		    --eval '(save-lisp-and-die #p"fdog.core")';
 

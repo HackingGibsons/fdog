@@ -4,10 +4,7 @@ bundle: $(FDOG).bundle
 $(FDOG).bundle: quicklisp $(STAGEDIR)
 	@echo "=> Bundling up a distributable"
 	tar cz -C $(STAGEDIR) -f /tmp/fdog.bundle.tgz .
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(LISP) --core $(CORE) \
-			--noinform \
+	$(LISP) --noinform \
 			--no-userinit \
 			--no-sysinit \
 			--eval "(sb-ext:disable-debugger)" \

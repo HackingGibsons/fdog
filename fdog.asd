@@ -67,7 +67,12 @@
                                                          (:file "utils" :depends-on ("package"))
                                                          (:file "forwarder" :depends-on ("models" "classes" "methods" "ensure-ance"))
 
-                                                         (:file "models" :depends-on ("utils"))
+                                                         (:module "models" :depends-on ("utils")
+                                                          :components ((:file "forwarder")
+                                                                       (:file "alias" :depends-on ("forwarder"))
+                                                                       (:file "hostpath" :depends-on ("forwarder"))
+                                                                       (:file "queue" :depends-on ("forwarder"))))
+
                                                          (:file "ensure-ance" :depends-on ("package" "models" "utils"))
 
                                                          (:module "classes" :depends-on ("package" "models")

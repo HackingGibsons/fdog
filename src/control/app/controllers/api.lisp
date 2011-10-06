@@ -22,18 +22,37 @@
         (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
         (json:encode-json `((:error . ,(format nil "Endpoint ~A not found." (api-subpath request)))) stream))))
 
-(defun api/400 (handler request raw &optional (body "Malformed request"))
+(defun api/400 (handler request raw &optional (body "Malformed request") condition)
   (declare (ignorable raw))
   (with-chunked-stream-reply (handler request stream
                               :code 400 :status "BAD REQUEST"
                               :headers ((header-json-type)))
     (log-for (trace) "Malformed request: ~A" request)
-    (json:encode-json `((:error . ,body)) stream)))
+    (json:encode-json `((:error . ,body)) stream)
+    (if condition
+      (json:encode-json `((:error . ,(format nil "~A" condition))) stream))))
+
+(defun api/500 (handler request raw &optional condition)
+  (declare (ignorable raw))
+  (with-chunked-stream-reply (handler request stream
+                              :code 500 :status "Internal Server Error"
+                              :headers ((header-json-type)))
+    (log-for (trace) "Condition: ~A" condition)
+    (if condition
+        (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
+        )))
 
 
 ;; Router
 (defgeneric api/endpoint (method sub-path handler request raw)
   (:documentation "Generic api endpoint. Things wishing to provide an API specialize on this method."))
+
+(define-condition 400-condition ()
+  ((data :initform "Bad request"
+         :initarg :data
+         :reader 400-data))
+  (:report (lambda (c s)
+             (format s "400 Raised: ~A" (400-data c)))))
 
 (define-condition 404-condition ()
   ((data :initform "Not found"
@@ -41,6 +60,13 @@
          :reader 404-data))
   (:report (lambda (c s)
              (format s "404 Raised: ~A" (404-data c)))))
+
+(define-condition 500-condition ()
+  ((data :initform "Internal server error"
+         :initarg :data
+         :reader 500-data))
+  (:report (lambda (c s)
+             (format s "500 Raised: ~A" (500-data c)))))
 
 (defgeneric api/endpoint-with-args (method sub-path rest handler request raw)
   (:documentation "Generic api endpoint with subpath for args. Things wishing to provide an API with a
@@ -79,7 +105,9 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
             (handler-case
                 (api/endpoint method exact-sym handler request raw)
               (end-of-file () (api/400 handler request raw))
-              (404-condition () (api/404 handler request raw)))
+              (400-condition () (api/400 handler request raw))
+              (404-condition () (api/404 handler request raw))
+              (500-condition () (api/500 handler request raw))) 
 
             (do* ((next-rest (multiple-value-list (next-sub-path sub-path))
                              (multiple-value-list (next-sub-path next)))
@@ -95,7 +123,9 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                           (api/endpoint-with-args method (intern next :keyword) rest
                                                   handler request raw)
                         (end-of-file () (api/400 handler request raw))
-                        (404-condition () (api/404 handler request raw)))
+                        (400-condition () (api/400 handler request raw))
+                        (404-condition () (api/404 handler request raw))
+                        (500-condition () (api/500 handler request raw))) 
 
                       (api/404 handler request raw)))))))))
 ;; Endpoints

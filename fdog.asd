@@ -70,6 +70,7 @@
                                                          (:module "models" :depends-on ("utils")
                                                           :components ((:file "forwarder")
                                                                        (:file "alias" :depends-on ("forwarder"))
+                                                                       (:file "generics" :depends-on ("forwarder" "alias"))
                                                                        (:file "hostpath" :depends-on ("forwarder"))
                                                                        (:file "queue" :depends-on ("forwarder"))))
 

@@ -3,7 +3,7 @@
 (defparameter *api-version* 1)
 
 ;;; TODO: make these (intern (string-upcase ... function calls
-(defmacro def-http-code (&key code desc echo default)
+(defmacro def-http-code (code desc &key echo default)
   "Macro for functionality related to HTTP status codes. Currently creates a condition and API handler.
   code - the numerical status code (404, 500...)
   desc - the description of the status code (\"Not found\", \"Internal server error\")
@@ -32,9 +32,9 @@
                   (format s ,(string-upcase (concatenate 'string (write-to-string code) " Raised: ~A")) (,(intern (string-upcase (concatenate 'string (write-to-string code) "-data"))) c)))))
      (export (find-symbol ,(string-upcase (concatenate 'string (write-to-string code) "-condition")) ':fdog-control) ':fdog-control)))
 
-(def-http-code :code 400 :desc "Bad request" :echo t)
-(def-http-code :code 404 :desc "Not found" :default ("Endpoint ~A not found." (api-subpath request)))
-(def-http-code :code 500 :desc "Internal server error")
+(def-http-code 400 "Bad request" :echo t)
+(def-http-code 404 "Not found" :default ("Endpoint ~A not found." (api-subpath request)))
+(def-http-code 500 "Internal server error")
 
 ;; Utils
 (defun api-subpath (request)

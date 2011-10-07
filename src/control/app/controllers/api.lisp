@@ -10,29 +10,27 @@
   echo - boolean whether to echo the status description in the JSON
   default - A format string for a default error message to be encoded in the JSON"
 
-  `(progn (defun ,(intern (string-upcase (concatenate 'string "api/" (write-to-string code)))) (handler request raw &optional condition)
-     (declare (ignorable raw))
-     (with-chunked-stream-reply (handler request stream
-                                :code ,code :status ,desc
-                                :headers ((header-json-type)))
-       (log-for (trace) "~A ~A Condition: ~A" ,code ,desc condition)
-       ,(if echo
-          `(json:encode-json `((:error . ,,desc)) stream)
-          )
-       (if condition
-         (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
-         ,(if default
-            `(json:encode-json `((:error . ,(format nil ,@default))) stream)
-           )
-         )))
+  `(progn
+     (defun ,(intern (string-upcase (concatenate 'string "api/" (write-to-string code)))) (handler request raw &optional condition)
+       (declare (ignorable raw))
+       (with-chunked-stream-reply (handler request stream
+                                     :code ,code :status ,desc
+                                     :headers ((header-json-type)))
+         (log-for (trace) "~A ~A Condition: ~A" ,code ,desc condition)
+         ,(when echo
+            `(json:encode-json `((:error . ,,desc)) stream))
+         (when condition
+           (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
+           ,(when default
+              `(json:encode-json `((:error . ,(format nil ,@default))) stream)))))
 
-  (define-condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition"))) ()
-     ((data :initform ,desc
-            :initarg :data
-            :reader ,(intern (string-upcase (concatenate 'string (write-to-string code) "-data")))))
-     (:report (lambda (c s)
-                (format s ,(string-upcase (concatenate 'string (write-to-string code) " Raised: ~A")) (,(intern (string-upcase (concatenate 'string (write-to-string code) "-data"))) c)))))
-  (export (find-symbol ,(string-upcase (concatenate 'string (write-to-string code) "-condition")) ':fdog-control) ':fdog-control)))
+     (define-condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition"))) ()
+       ((data :initform ,desc
+              :initarg :data
+              :reader ,(intern (string-upcase (concatenate 'string (write-to-string code) "-data")))))
+       (:report (lambda (c s)
+                  (format s ,(string-upcase (concatenate 'string (write-to-string code) " Raised: ~A")) (,(intern (string-upcase (concatenate 'string (write-to-string code) "-data"))) c)))))
+     (export (find-symbol ,(string-upcase (concatenate 'string (write-to-string code) "-condition")) ':fdog-control) ':fdog-control)))
 
 (def-http-code :code 400 :desc "Bad request" :echo t)
 (def-http-code :code 404 :desc "Not found" :default ("Endpoint ~A not found." (api-subpath request)))

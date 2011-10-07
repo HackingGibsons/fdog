@@ -31,7 +31,8 @@
             :initarg :data
             :reader ,(intern (string-upcase (concatenate 'string (write-to-string code) "-data")))))
      (:report (lambda (c s)
-                (format s ,(string-upcase (concatenate 'string (write-to-string code) " Raised: ~A")) (,(intern (string-upcase (concatenate 'string (write-to-string code) "-data"))) c)))))))
+                (format s ,(string-upcase (concatenate 'string (write-to-string code) " Raised: ~A")) (,(intern (string-upcase (concatenate 'string (write-to-string code) "-data"))) c)))))
+  (export (find-symbol ,(string-upcase (concatenate 'string (write-to-string code) "-condition")) ':fdog-control) ':fdog-control)))
 
 (def-http-code :code 400 :desc "Bad request" :echo t)
 (def-http-code :code 404 :desc "Not found" :default ("Endpoint ~A not found." (api-subpath request)))

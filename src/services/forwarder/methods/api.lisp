@@ -43,11 +43,11 @@
 
     (unless (and spec name (or method match))
       (log-for (trace) "Invalid spec: ~A" spec)
-      (error '400-condition :data (format nil "The must contain: (and name (or method match)) to be valid.")))
+      (error 'fdog-control:400-condition :data (format nil "The must contain: (and name (or method match)) to be valid.")))
 
     (when (find-forwarder-alias forwarder name)
       (log-for (trace) "Trying to build forwarder with known name: ~A" name)
-      (error '400-condition :data (format nil "An alias by that name already exists.")))
+      (error 'fdog-control:400-condition :data (format nil "An alias by that name already exists.")))
 
     (let ((alias (make-forwarder-alias forwarder name :method method :match match)))
       (log-for (trace) "Built alias: ~A" alias)
@@ -62,7 +62,7 @@
     (log-for (trace) "Requesting forwarder alias: ~A => ~A => ~A" forwarder alias-name alias)
 
     (unless alias
-      (error '400-condition :data (format nil "No aliases named [~A] for forwarder [~A]"
+      (error 'fdog-control:400-condition :data (format nil "No aliases named [~A] for forwarder [~A]"
                                           (fdog-forwarder-name forwarder) alias-name)))
 
     (with-chunked-stream-reply (handler request stream
@@ -98,7 +98,7 @@
 
 
 (defmethod api/forwarder/404 (handler request forwarder args)
-  (error '404-condition
+  (error 'fdog-control:404-condition
          :data (format nil "No routes matching ~A for a forwarder" args)))
 
 ;; API Roots
@@ -119,7 +119,7 @@
   (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
     (setf forwarder (find-forwarder :name forwarder :one t))
     (unless forwarder
-      (error '404-condition :data (format nil "Forwarder ~A not found" rest)))
+      (error 'fdog-control:404-condition :data (format nil "Forwarder ~A not found" rest)))
 
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
@@ -133,7 +133,7 @@
   (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
     (setf forwarder (find-forwarder :name forwarder :one t))
     (unless forwarder
-      (error '404-condition :data (format nil "Forwarder ~A not found" rest)))
+      (error 'fdog-control:404-condition :data (format nil "Forwarder ~A not found" rest)))
 
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
@@ -178,7 +178,7 @@
           (apply #'make-forwarder `(,name ,@hosts))
           (init-forwarders)
           (json:encode-json spec stream))
-        (error '500-condition
+        (error 'fdog-control:500-condition
                :data (json:encode-json-to-string '((:error . "Could not create")))))))
 
 ;; //EOAPI Hooks

@@ -8,6 +8,7 @@
 ;;; echo - boolean whether to echo the status description in the JSON
 ;;; default - A format string for a default error message to be encoded in the JSON
 ;;; TODO: export symbol from fdog-control, shadow it in fdog-forwarder
+;;; TODO: make these (intern (string-upcase ... function calls
 (defmacro def-http-code (&key code desc echo default)
   `(progn (defun ,(intern (string-upcase (concatenate 'string "api/" (write-to-string code)))) (handler request raw &optional condition)
      (declare (ignorable raw))

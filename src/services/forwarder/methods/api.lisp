@@ -62,7 +62,7 @@
     (log-for (trace) "Requesting forwarder alias: ~A => ~A => ~A" forwarder alias-name alias)
 
     (unless alias
-      (error 'fdog-control:400-condition :data (format nil "No aliases named [~A] for forwarder [~A]"
+      (error 'fdog-control:404-condition :data (format nil "No aliases named [~A] for forwarder [~A]"
                                           (fdog-forwarder-name forwarder) alias-name)))
 
     (with-chunked-stream-reply (handler request stream

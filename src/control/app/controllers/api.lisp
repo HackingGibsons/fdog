@@ -2,14 +2,14 @@
 
 (defparameter *api-version* 1)
 
-;;; Macro for functionality related to HTTP status codes
-;;; code - the numerical status code (404, 500...)
-;;; desc - the description of the status code ("Not found", "Internal server error")
-;;; echo - boolean whether to echo the status description in the JSON
-;;; default - A format string for a default error message to be encoded in the JSON
-;;; TODO: export symbol from fdog-control, shadow it in fdog-forwarder
 ;;; TODO: make these (intern (string-upcase ... function calls
 (defmacro def-http-code (&key code desc echo default)
+  "Macro for functionality related to HTTP status codes. Currently creates a condition and API handler.
+  code - the numerical status code (404, 500...)
+  desc - the description of the status code (\"Not found\", \"Internal server error\")
+  echo - boolean whether to echo the status description in the JSON
+  default - A format string for a default error message to be encoded in the JSON"
+
   `(progn (defun ,(intern (string-upcase (concatenate 'string "api/" (write-to-string code)))) (handler request raw &optional condition)
      (declare (ignorable raw))
      (with-chunked-stream-reply (handler request stream

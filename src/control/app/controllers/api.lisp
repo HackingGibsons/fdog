@@ -2,6 +2,11 @@
 
 (defparameter *api-version* 1)
 
+(defgeneric handle-http-condition (condition handler request raw)
+  (:documentation "Generic for handling HTTP conditions. Specific implementations are defined in the def-http-code macro."))
+
+(define-condition http-error-condition () ())
+
 ;;; TODO: make these (intern (string-upcase ... function calls
 (defmacro def-http-code (code desc &key echo default)
   "Macro for functionality related to HTTP status codes. Currently creates a condition and API handler.
@@ -11,7 +16,7 @@
   default - A format string for a default error message to be encoded in the JSON"
 
   `(progn
-     (defun ,(intern (string-upcase (concatenate 'string "api/" (write-to-string code)))) (handler request raw &optional condition)
+     (defmethod handle-http-condition ((condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition")))) handler request raw) 
        (declare (ignorable raw))
        (with-chunked-stream-reply (handler request stream
                                      :code ,code :status ,desc
@@ -24,7 +29,7 @@
            ,(when default
               `(json:encode-json `((:error . ,(format nil ,@default))) stream)))))
 
-     (define-condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition"))) ()
+     (define-condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition"))) (http-error-condition)
        ((data :initform ,desc
               :initarg :data
               :reader ,(intern (string-upcase (concatenate 'string (write-to-string code) "-data")))))
@@ -85,10 +90,8 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
         (if exact
             (handler-case
                 (api/endpoint method exact-sym handler request raw)
-              (end-of-file () (api/400 handler request raw))
-              (400-condition () (api/400 handler request raw))
-              (404-condition () (api/404 handler request raw))
-              (500-condition () (api/500 handler request raw)))
+              (end-of-file () (handle-http-condition (make-instance '400-condition) handler request raw))
+              (http-error-condition (condition) (handle-http-condition condition handler request raw)))
 
             (do* ((next-rest (multiple-value-list (next-sub-path sub-path))
                              (multiple-value-list (next-sub-path next)))
@@ -103,10 +106,8 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                       (handler-case
                           (api/endpoint-with-args method (intern next :keyword) rest
                                                   handler request raw)
-                        (end-of-file () (api/400 handler request raw))
-                        (400-condition () (api/400 handler request raw))
-                        (404-condition () (api/404 handler request raw))
-                        (500-condition () (api/500 handler request raw)))
+                          (end-of-file () (handle-http-condition (make-instance '400-condition) handler request raw))
+                          (http-error-condition (condition) (handle-http-condition condition handler request raw)))
 
                       (api/404 handler request raw)))))))))
 ;; Endpoints

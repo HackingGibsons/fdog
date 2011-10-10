@@ -10,9 +10,9 @@
 ;;; TODO: make these (intern (string-upcase ... function calls
 (defmacro def-http-code (code desc &key default)
   "Macro for functionality related to HTTP status codes. Currently creates a condition and API handler.
-  code - the numerical status code (404, 500...)
-  desc - the description of the status code (\"Not found\", \"Internal server error\")
-  default - A format string for a default error message to be encoded in the JSON"
+'code' - the numerical status code (404, 500...)
+'desc' - the description of the status code (\"Not found\", \"Internal server error\")
+'default' - A format string for a default error message to be encoded in the JSON"
 
   `(progn
      (defmethod handle-http-condition ((condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition")))) handler request raw)

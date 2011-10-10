@@ -117,8 +117,8 @@ as fire any callbacks that may be pending IO when it is ready."
              (poll (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
 
         ;; TODO: The lambda should fire events on result for each subscriber
-        (mapcar #'(lambda (result poller callback) nil)
-                (rest poll) (rest readers) callbacks)
+        (mapc #'(lambda (result poller callback) nil)
+              (rest poll) (rest readers) callbacks)
 
         (if (equal (first poll) 1)
             (read-message)

@@ -107,7 +107,7 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                           (end-of-file () (handle-http-condition (make-instance '400-condition) handler request raw))
                           (http-error-condition (condition) (handle-http-condition condition handler request raw)))
 
-                      (api/404 handler request raw)))))))))
+                      (handle-http-condition (make-instance '404-condition) handler request raw)))))))))
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) handler request raw)
   (with-chunked-stream-reply (handler request stream

@@ -77,12 +77,48 @@ and deliver any events that appear to them before returning the agent event."
            (readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
            (poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
 
+      (log-for (warn) "Readers: ~A" readers)
+      (log-for (warn) "Poll result: ~A" poll-result)
+
       (log-for (trace) "Dispatching organ events.")
       (mapcar #'deliver-organ-event organs readers poll-result)
 
       (if (and poll-result (= (first poll-result) 1))
           (read-message)
           :timeout))))
+
+(defmethod next-event% ((agent standard-agent))
+  "Returns the next event pending for `agent' on the internal bus
+or `:timeout' otherwise after a scheduled pause. Will also poll
+all of the organs and deliver any internal messages from the bus as well
+as fire any callbacks that may be pending IO when it is ready."
+  (labels ((s2us (s)
+             "Seconds to uSeconds"
+             (round (* s 1000000)))
+
+           (make-reader (sock)
+             "Wrap `sock' in a `zmq:pollitem' instance for `zmq:pollin' event"
+             (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
+
+           (read-message (&key (sock (agent-event-sock agent)) (transform #'zmq:msg-data-as-string))
+             "Read a message from `sock' and transform it with `transform', default as `zmq:msg-data-as-string'"
+             (let ((msg (make-instance 'zmq:msg)))
+               (zmq:recv! sock msg)
+               (funcall transform msg)))
+
+           (organ-readers-and-callbacks ()
+             "Returns two lists. A list of pollitems for read events and the callbacks for each."
+             (values nil
+                     nil)))
+
+    (multiple-value-bind (callback-readers callbacks) (organ-readers-and-callbacks)
+      (let* ((readers `(,(make-reader (agent-event-sock agent)) ;; Agent event socket
+                         ,@callback-readers))
+             (poll (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
+
+        (if (equal (first poll) 1)
+            (read-message)
+            :timeout)))))
 
 
 (defmethod event-fatal-p ((agent standard-agent) event)

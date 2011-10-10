@@ -178,8 +178,10 @@
           (apply #'make-forwarder `(,name ,@hosts))
           (init-forwarders)
           (json:encode-json spec stream))
-        (error 'fdog-control:500-condition
-               :data (json:encode-json-to-string '((:error . "Could not create")))))))
+        (error 'fdog-control:400-condition
+               :data (cond
+                          (existing "Forwarder already exists")
+                          ((not hostpaths) "Forwarder requires hostpaths"))))))
 
 ;; //EOAPI Hooks
 #.(clsql:restore-sql-reader-syntax-state)

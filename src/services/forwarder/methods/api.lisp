@@ -119,7 +119,7 @@
   (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
     (setf forwarder (find-forwarder :name forwarder :one t))
     (unless forwarder
-      (error 'fdog-control:404-condition :data (format nil "Forwarder ~A not found" rest)))
+      (error 'fdog-control:404-condition))
 
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)
@@ -133,7 +133,7 @@
   (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
     (setf forwarder (find-forwarder :name forwarder :one t))
     (unless forwarder
-      (error 'fdog-control:404-condition :data (format nil "Forwarder ~A not found" rest)))
+      (error 'fdog-control:404-condition))
 
     (with-dispatch-on rest &route
        (funcall &route handler request forwarder rest)

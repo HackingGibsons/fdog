@@ -24,10 +24,8 @@
          (log-for (trace) "~A ~A Condition: ~A" ,code ,desc condition)
          ,(when echo
             `(json:encode-json `((:error . ,,desc)) stream))
-         (when condition
-           (json:encode-json `((:error . ,(format nil "~A" condition))) stream)
-           ,(when default
-              `(json:encode-json `((:error . ,(format nil ,@default))) stream)))))
+         ,(when default
+            `(json:encode-json `((:error . ,(format nil ,@default))) stream))))
 
      (define-condition ,(intern (string-upcase (concatenate 'string (write-to-string code) "-condition"))) (http-error-condition)
        ((data :initform ,desc

@@ -15,15 +15,35 @@
        (assert-non-nil res)
        (assert-response-200 meta))))
 
-(defun assert-response-200 (meta)
-  (assert-equal 200 (getf meta :status-code)))
+(defmacro def-assert-response (code)
+  `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta)
+     (assert-equal ,code (getf meta :status-code))))
 
+(def-assert-response 200)
+(def-assert-response 400)
+(def-assert-response 404)
 
 ;; Tests
 (def-test+func (can-hit-slash) :eval
   (multiple-value-bind (res meta)  (http->string "http://localhost:1337/")
     (assert-non-nil res)
     (assert-response-200 meta)))
+
+(def-test+func (can-get-404) :eval
+  (multiple-value-bind (res meta) (http->string "http://localhost:1337/forwarders/test/")
+    (assert-non-nil res)
+    (assert-response-404 meta)))
+
+(def-test+func (can-get-400) :eval
+  (multiple-value-bind (res meta)  (http->json "http://localhost:1337/api/forwarders/")
+    (assert-null res)
+    (assert-response-200 meta))
+
+  (let ((req '((:name . "test"))))
+    (multiple-value-bind (res meta) (http->string "http://localhost:1337/api/forwarders/create/" :method :POST
+                                                  :content (json:encode-json-to-string req))
+      (assert-non-nil res)
+      (assert-response-400 meta))))
 
 (def-test+func (can-create-forwarder-and-query-for-it) :eval
   (multiple-value-bind (res meta)  (http->json "http://localhost:1337/api/forwarders/")

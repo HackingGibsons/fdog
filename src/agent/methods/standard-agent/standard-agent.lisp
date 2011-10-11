@@ -87,7 +87,7 @@ and deliver any events that appear to them before returning the agent event."
           (read-message)
           :timeout))))
 
-(defmethod next-event% ((agent standard-agent))
+(defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
 or `:timeout' otherwise after a scheduled pause. Will also poll
 all of the organs and deliver any internal messages from the bus as well
@@ -113,15 +113,26 @@ as fire any callbacks that may be pending IO when it is ready."
                    readers callbacks)
                   ((not organ) (values (mapcar #'make-reader readers)
                                        callbacks))
-               (log-for (warn) "TODO: Accumilate readers and callbacks for: ~A" organ))))
+               (multiple-value-bind (socks funs) (reader-callbacks organ)
+                 (setf readers `(,@readers ,@socks)
+                       callbacks `(,@callbacks ,@funs))
+                 (log-for (trace) "Processing: ~A" organ)
+                 (log-for (trace) "Got socks: ~A" socks)
+                 (log-for (trace) "Got funs: ~A" funs)
+                 (log-for (trace) "Readers: ~A" readers)
+                 (log-for (trace) "Callbacks: ~A" callbacks))))
+
+           (maybe-fire-callback (result poller callback)
+             (when (equal result 1)
+               (funcall callback (zmq:pollitem-socket poller)))))
 
     (multiple-value-bind (callback-readers callbacks) (organ-readers-and-callbacks)
       (let* ((readers `(,(make-reader (agent-event-sock agent)) ;; Agent event socket
                          ,@callback-readers))
              (poll (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
 
-        ;; TODO: The lambda should fire events on result for each subscriber
-        (mapc #'(lambda (result poller callback) nil)
+
+        (mapc #'maybe-fire-callback
               (rest poll) (rest readers) callbacks)
 
         (if (equal (first poll) 1)

@@ -45,8 +45,9 @@
                              (:module "control" :depends-on ("m2sh" "handler")
                               :components  ((:file "package")
                                             (:file "interface" :depends-on ("package"))
+                                            (:file "utils" :depends-on ("package"))
 
-                                            (:module "app" :depends-on ("interface")
+                                            (:module "app" :depends-on ("interface" "utils")
                                              :components ((:file "bootstrap")
                                                           (:file "routes" :depends-on ("bootstrap"))
                                                           (:module "controllers" :depends-on ("bootstrap")

@@ -47,6 +47,24 @@
   (log-for (trace) "Organ sending message: [~A]" message)
   (zmq:send! (or sock (organ-outgoing-sock organ)) (prepare-message message)))
 
+(defgeneric reader-callbacks (organ)
+  (:documentation "Returns two values both lists: any sockets to add to the poller
+and callbacks for each socket mentioned.")
+  (:method ((organ standard-organ))
+    (values nil nil))
+  (:method :around ((organ standard-organ))
+           (flet ((incoming-callback (sock)
+                    (let ((msg (make-instance 'zmq:msg)))
+                      (zmq:recv! sock msg)
+                      (act-on-event organ (zmq:msg-data-as-string msg)))))
+
+           (multiple-value-bind (socks callbacks) (call-next-method)
+             (let ((socks `(,(organ-incoming-sock organ) ,@socks))
+                   (calls `(,#'incoming-callback ,@callbacks)))
+               (values (remove nil socks)
+                       (remove nil (mapcar #'(lambda (sock callback) (when sock callback)) socks calls))))))))
+
+
 
 ;; Event handling
 (defmethod act-on-event ((organ standard-organ) event)

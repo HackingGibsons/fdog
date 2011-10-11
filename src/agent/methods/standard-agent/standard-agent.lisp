@@ -108,8 +108,12 @@ as fire any callbacks that may be pending IO when it is ready."
 
            (organ-readers-and-callbacks ()
              "Returns two lists. A list of pollitems for read events and the callbacks for each."
-             (values nil
-                     nil)))
+             (do* ((organs (agent-organs agent) (rest organs))
+                   (organ (car organs) (car organs))
+                   readers callbacks)
+                  ((not organ) (values (mapcar #'make-reader readers)
+                                       callbacks))
+               (log-for (warn) "TODO: Accumilate readers and callbacks for: ~A" organ))))
 
     (multiple-value-bind (callback-readers callbacks) (organ-readers-and-callbacks)
       (let* ((readers `(,(make-reader (agent-event-sock agent)) ;; Agent event socket

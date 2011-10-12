@@ -1,7 +1,9 @@
 (in-package :agent)
 
 (defclass agent-ear (standard-beating-organ)
-  ((listen-addr :initform nil
+  ((listening-to :initform (make-hash-table :test 'equal)
+                 :accessor listening-to)
+   (listen-addr :initform nil
                 :accessor listen-addr
                 :accessor ear-addr)
    (listen-sock :initform nil

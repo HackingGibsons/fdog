@@ -24,5 +24,8 @@
 
 (defbehavior listen-where-told (:on (:command :listen :from :head) :do :invoke-with-event) (organ event)
   (let ((addr (getf event :listen)))
-    (when (and addr (listen-sock organ))
-      (zmq:connect (listen-sock organ) addr))))
+    (when (and addr (listen-sock organ)
+               (not (gethash addr (listening-to organ))))
+      (setf (gethash addr (listening-to organ))
+            (zmq:connect (listen-sock organ) addr)))))
+

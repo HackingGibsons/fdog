@@ -62,12 +62,6 @@ as fire any callbacks that may be pending IO when it is ready."
              "Wrap `sock' in a `zmq:pollitem' instance for `zmq:pollin' event"
              (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
 
-           (read-message (&key (sock (agent-event-sock agent)) (transform #'zmq:msg-data-as-string))
-             "Read a message from `sock' and transform it with `transform', default as `zmq:msg-data-as-string'"
-             (let ((msg (make-instance 'zmq:msg)))
-               (zmq:recv! sock msg)
-               (funcall transform msg)))
-
            (organ-readers-and-callbacks ()
              "Returns two lists. A list of pollitems for read events and the callbacks for each."
              (do* ((organs (agent-organs agent) (rest organs))
@@ -94,7 +88,7 @@ as fire any callbacks that may be pending IO when it is ready."
               (rest poll) (rest readers) callbacks)
 
         (if (equal (first poll) 1)
-            (read-message)
+            (afdog:read-message (agent-event-sock agent))
             :timeout)))))
 
 

@@ -51,44 +51,6 @@ for `agent'"
 
 (defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
-or `:timeout' if no event is found after a pause. Will also poll all organs
-and deliver any events that appear to them before returning the agent event."
-  (log-for (trace) "Fetching event for: ~A" agent)
-  (labels ((s2us (s) (round (* s 1000000)))
-
-           (read-message (&key (sock (agent-event-sock agent)))
-             (log-for (trace) "Reading message.")
-             (let ((msg (make-instance 'zmq:msg)))
-               (zmq:recv! sock msg)
-               (zmq:msg-data-as-string msg)))
-
-           (make-reader (sock)
-             (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
-
-           (organ-socks ()
-             (remove nil (mapcar #'organ-incoming-sock (agent-organs agent))))
-
-           (deliver-organ-event (organ poller result)
-             (when (and organ (/= result 0))
-               (log-for (trace) "Deliver to ~A => ~A" organ poller)
-               (act-on-event organ (read-message :sock (zmq:pollitem-socket poller))))))
-
-    (let* ((organs `(nil ,@(remove-if-not #'organ-incoming-sock (agent-organs agent))))
-           (readers (mapcar #'make-reader `(,(agent-event-sock agent) ,@(organ-socks))))
-           (poll-result (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
-
-      (log-for (warn) "Readers: ~A" readers)
-      (log-for (warn) "Poll result: ~A" poll-result)
-
-      (log-for (trace) "Dispatching organ events.")
-      (mapcar #'deliver-organ-event organs readers poll-result)
-
-      (if (and poll-result (= (first poll-result) 1))
-          (read-message)
-          :timeout))))
-
-(defmethod next-event ((agent standard-agent))
-  "Returns the next event pending for `agent' on the internal bus
 or `:timeout' otherwise after a scheduled pause. Will also poll
 all of the organs and deliver any internal messages from the bus as well
 as fire any callbacks that may be pending IO when it is ready."
@@ -115,14 +77,10 @@ as fire any callbacks that may be pending IO when it is ready."
                                        callbacks))
                (multiple-value-bind (socks funs) (reader-callbacks organ)
                  (setf readers `(,@readers ,@socks)
-                       callbacks `(,@callbacks ,@funs))
-                 (log-for (trace) "Processing: ~A" organ)
-                 (log-for (trace) "Got socks: ~A" socks)
-                 (log-for (trace) "Got funs: ~A" funs)
-                 (log-for (trace) "Readers: ~A" readers)
-                 (log-for (trace) "Callbacks: ~A" callbacks))))
+                       callbacks `(,@callbacks ,@funs)))))
 
            (maybe-fire-callback (result poller callback)
+             "Fires the given `callback' with the socket from the `poller' if `result' is 1"
              (when (equal result 1)
                (funcall callback (zmq:pollitem-socket poller)))))
 

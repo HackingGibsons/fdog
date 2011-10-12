@@ -37,12 +37,18 @@
 (defmethod agent-info ((ear agent-ear))
   `(:ear (:uuid ,(organ-uuid ear) :addr ,(ear-addr ear))))
 
-(defmethod reader-callbacks ((ear agent-ear))
-  (flet ((hear-something (sock)
-           (let ((msg (make-instance 'zmq:msg)))
-             (zmq:recv! sock msg)
-             (log-for (trace) "~A Heard: [~A]" ear (zmq:msg-data-as-string msg)))))
+(defmethod ear-hear ((ear agent-ear) sock)
+  "This method is called when `ear' should read a message from `sock' and act
+on it as something 'heard'"
+  (let ((msg (make-instance 'zmq:msg)))
+    (zmq:recv! sock msg)
+    (log-for (trace) "~A Heard: [~A]" ear (zmq:msg-data-as-string msg))))
 
+(defmethod make-hearer ((ear agent-ear))
+  "Return a callback to submit to the poll loop for `ear'"
+  #'(lambda (sock) (ear-hear ear sock)))
+
+(defmethod reader-callbacks ((ear agent-ear))
     (values (list (listen-sock ear))
-            (list #'hear-something))))
+            (list (make-hearer ear))))
 

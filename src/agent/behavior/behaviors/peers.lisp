@@ -10,4 +10,4 @@
 (defbehavior speak-when-told (:on (:command :speak :from :head) :do :invoke-with-event) (organ event)
   (let ((message (getf event :say)))
     (send-message organ message :sock (speak-sock organ))
-    (log-for (trace) "~A has spoken:" message)))
+    (log-for (trace) "~A => ~A has spoken: ~A" organ (speak-addr organ) message)))

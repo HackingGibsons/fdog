@@ -36,3 +36,13 @@
 
 (defmethod agent-info ((ear agent-ear))
   `(:ear (:uuid ,(organ-uuid ear) :addr ,(ear-addr ear))))
+
+(defmethod reader-callbacks ((ear agent-ear))
+  (flet ((hear-something (sock)
+           (let ((msg (make-instance 'zmq:msg)))
+             (zmq:recv! sock msg)
+             (log-for (trace) "~A Heard: [~A]" ear (zmq:msg-data-as-string msg)))))
+
+    (values (list (listen-sock ear))
+            (list #'hear-something))))
+

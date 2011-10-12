@@ -96,6 +96,8 @@
                                   ,(fdog-hostpath-path added)))))
                         stream))))
 
+(defmethod api/forwarder/delete (handler request forwarder args)
+  (log-for (trace) "Deleting forwarder"))
 
 (defmethod api/forwarder/404 (handler request forwarder args)
   (error 'fdog-control:404-condition
@@ -140,6 +142,7 @@
 
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
        (:exact "/aliases/create/" :responder 'api/forwarder/alias/create)
+       (:exact "/delete/" :responder 'api/forwarder/delete)
        (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))
 

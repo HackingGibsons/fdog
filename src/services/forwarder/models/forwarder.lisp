@@ -69,6 +69,11 @@ a database backing"
         (clsql:update-records-from-instance new-forwarder)
         new-forwarder)))
 
+(defmethod delete-forwarder ((forwarder fdog-forwarder))
+  (with-slots (name) forwarder
+    (and (find-forwarder :name name)
+         (clsql:delete-instance-records forwarder))))
+
 (defmethod find-forwarder (&rest keys &key name one)
   "Search for forwarder(s) filtering using the key `:name' to filter only interesting names
 and the key `:one' to (car *) the operation for convinience, otherwise returns list."

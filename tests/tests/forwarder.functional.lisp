@@ -159,3 +159,31 @@
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
               (assert-null (zerop (length raw)))
               (assert-non-nil (equal "/" (m2cl:request-path req)))))))))
+
+(def-test+func (cannot-delete-nonexistent-forwarder) :eval
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/")
+    (assert-response-404 meta)
+    (assert-non-nil res))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/delete" :method :POST)
+    (assert-response-404 meta)
+    (assert-non-nil res)))
+
+(def-test+func (can-delete-forwarder) :eval
+  (let ((req '((:name . "deleteme") (:hosts . (("localhost" . "/deleteme/"))))))
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/create/" :method :POST
+                                                :content (json:encode-json-to-string req))
+      (assert-non-nil res)
+      (assert-response-200 meta)))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/")
+    (assert-response-200 meta)
+    (assert-non-nil res))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/" :method :DELETE)
+    (assert-response-200 meta)
+    (assert-non-nil res))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/")
+    (assert-response-404 meta)
+    (assert-non-nil res)))

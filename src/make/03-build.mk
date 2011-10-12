@@ -69,6 +69,7 @@ $(FDOG): $(CORE)
 			--eval "(declaim (optimize (debug $(DEBUG))))" \
 			--load $(QL_ROOT_PATH)/setup.lisp \
 			--eval "(swank-loader:init :load-contribs t)" \
+			--eval '(sb-ext:gc :full t)' \
 			--eval "(sb-ext:save-lisp-and-die #p\"$(FDOG)\" :executable t :save-runtime-options t :toplevel #'(lambda () (fdog-cli:fdog-main sb-ext:*posix-argv*)))" \
 	|| { echo '[ERROR] Build failed!'; \
 		rm -f $(FDOG); exit 1; }

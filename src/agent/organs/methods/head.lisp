@@ -45,3 +45,9 @@
                         :command :die
                         :uuid ,(organ-uuid head)
                         :time ,(get-internal-real-time))))
+
+(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
+  "Agent info hearing and storing."
+  (let ((info (getf info :info)))
+    (format t "Agent info: ~A~%" info)))
+

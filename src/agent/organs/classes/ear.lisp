@@ -49,6 +49,7 @@ on it as something 'heard'"
   #'(lambda (sock) (ear-hear ear sock)))
 
 (defmethod reader-callbacks ((ear agent-ear))
+  "The `ear' needs to submit it's earhole at `listen-sock' to the poll loop."
     (values (list (listen-sock ear))
             (list (make-hearer ear))))
 

@@ -40,9 +40,10 @@
 (defmethod ear-hear ((ear agent-ear) sock)
   "This method is called when `ear' should read a message from `sock' and act
 on it as something 'heard'"
-  (let ((msg (make-instance 'zmq:msg)))
-    (zmq:recv! sock msg)
-    (log-for (trace) "~A Heard: [~A]" ear (zmq:msg-data-as-string msg))))
+  (let ((message (afdog:parse-message (afdog:read-message sock))))
+    (log-for (trace) "~A Heard: [~A]" ear message)
+    (send-message ear `(,(organ-tag ear) :heard
+                         :message ,message))))
 
 (defmethod make-hearer ((ear agent-ear))
   "Return a callback to submit to the poll loop for `ear'"

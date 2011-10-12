@@ -32,7 +32,7 @@
 (defmethod organ-healthy-p ((head agent-head) uuid (status list))
   "Check the status of the organ as a predicate"
   (log-for (trace) "~A checking health of ~A using ~A" head uuid status)
-  (let ((cutoff (or (second (last-beat head)) 0)))
+  (let ((cutoff (or (car (last (last-beat head))) 0)))
     (log-for (trace) "Setting death cutoff to be <~A" cutoff)
     (if (< (or (getf status :time) 0) cutoff)
         (prog1 nil (log-for (warn) "~A/~A appears dead." uuid status))

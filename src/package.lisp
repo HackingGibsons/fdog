@@ -4,6 +4,8 @@
   (:export :start-logging
            :stop-logging
            :make-local-sock
-           :get-local-address))
+           :get-local-address
+           :read-message
+           :parse-message))
 
 (in-package :afdog)

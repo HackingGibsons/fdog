@@ -97,7 +97,11 @@
                         stream))))
 
 (defmethod api/forwarder/delete (handler request forwarder args)
-  (log-for (trace) "Deleting forwarder"))
+  (log-for (trace) "Deleting forwarder: ~A" (fdog-forwarder-name forwarder))
+  (delete-forwarder forwarder)
+  (with-chunked-stream-reply (handler request stream
+                                      :headers ((header-json-type)))
+    (json:encode-json `((:ok . ,(fdog-forwarder-name forwarder))) stream)))
 
 (defmethod api/forwarder/404 (handler request forwarder args)
   (error 'fdog-control:404-condition

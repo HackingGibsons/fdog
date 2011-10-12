@@ -165,7 +165,7 @@
     (assert-response-404 meta)
     (assert-non-nil res))
 
-  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/delete" :method :POST)
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/delete/" :method :POST)
     (assert-response-404 meta)
     (assert-non-nil res)))
 
@@ -180,7 +180,7 @@
     (assert-response-200 meta)
     (assert-non-nil res))
 
-  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/" :method :DELETE)
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/delete/" :method :POST)
     (assert-response-200 meta)
     (assert-non-nil res))
 

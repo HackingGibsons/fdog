@@ -70,9 +70,7 @@ a database backing"
         new-forwarder)))
 
 (defmethod delete-forwarder ((forwarder fdog-forwarder))
-  (with-slots (name) forwarder
-    (and (find-forwarder :name name)
-         (clsql:delete-instance-records forwarder))))
+  (clsql:delete-instance-records forwarder))
 
 (defmethod find-forwarder (&rest keys &key name one)
   "Search for forwarder(s) filtering using the key `:name' to filter only interesting names

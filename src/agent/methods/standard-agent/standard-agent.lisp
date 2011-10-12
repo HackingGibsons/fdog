@@ -241,3 +241,8 @@ as fire any callbacks that may be pending IO when it is ready."
   (append `(:uuid ,(agent-uuid agent))
           (loop for organ in (agent-organs agent)
                appending (agent-info organ))))
+
+;; Utils
+;; TODO: Extract these to a file
+(defmethod find-organ (agent tag)
+  (find tag (agent-organs agent) :key #'organ-tag))

@@ -22,6 +22,7 @@
 
 (defmethod make-ear-for ((agent standard-agent))
   (let ((ear (make-instance 'agent-ear :agent agent)))
+    (make-listen-where-told ear)
     ear))
 
 (defun make-agent ()

@@ -21,3 +21,8 @@
 (defbehavior have-hearing (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (apply #'heard-message `(,organ ,@message))))
+
+(defbehavior listen-where-told (:on (:command :listen :from :head) :do :invoke-with-event) (organ event)
+  (let ((addr (getf event :listen)))
+    (when (and addr (listen-sock organ))
+      (zmq:connect (listen-sock organ) addr))))

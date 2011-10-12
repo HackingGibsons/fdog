@@ -42,8 +42,9 @@
 on it as something 'heard'"
   (let ((message (afdog:parse-message (afdog:read-message sock))))
     (log-for (trace) "~A Heard: [~A]" ear message)
-    (send-message ear `(,(organ-tag ear) :heard
-                         :message ,message))))
+    (when message
+      (send-message ear `(,(organ-tag ear) :heard
+                           :message ,message)))))
 
 (defmethod make-hearer ((ear agent-ear))
   "Return a callback to submit to the poll loop for `ear'"

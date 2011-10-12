@@ -44,6 +44,7 @@ on it as something 'heard'"
     (log-for (trace) "~A Heard: [~A]" ear message)
     (when message
       (send-message ear `(,(organ-tag ear) :heard
+                           :heard :message
                            :message ,message)))))
 
 (defmethod make-hearer ((ear agent-ear))

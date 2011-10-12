@@ -11,3 +11,7 @@
   (let ((message (getf event :say)))
     (send-message organ message :sock (speak-sock organ))
     (log-for (trace) "~A => ~A has spoken: ~A" organ (speak-addr organ) message)))
+
+(defbehavior have-hearing (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (format t "Heard message: ~A~%" message)))

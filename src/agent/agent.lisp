@@ -12,6 +12,7 @@
 (defmethod make-head-for ((agent standard-agent))
   (let ((head (make-instance 'agent-head :agent agent)))
     (make-announce-self head)
+    (make-have-hearing head)
     head))
 
 (defmethod make-mouth-for ((agent standard-agent))

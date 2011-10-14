@@ -17,7 +17,7 @@
 
 (defmacro def-assert-response (code)
   `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta &key format)
-     (assert-equal ,code (getf meta :status-code))))
+     (assert-equal ,code (getf meta :status-code) :format format)))
 
 (def-assert-response 200)
 (def-assert-response 400)
@@ -194,27 +194,27 @@
   (let ((req '((:name . "updateme") (method . "POST") (match . "test"))))
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
                                                 :content (json:encode-json-to-string req))
-      (assert-non-nil res)
-      (assert-response-200 meta)))
+      (assert-non-nil res :format "Create alias 'updateme' response nil")
+      (assert-response-200 meta :format "Create alias 'updateme' response not 200")))
 
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updateme/")
-    (assert-non-nil res)
-    (assert-response-200 meta))
+    (assert-non-nil res :format "GET updateme response nil")
+    (assert-response-200 meta :format "GET updateme does not exist when it should"))
 
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updated/")
-    (assert-non-nil res)
-    (assert-response-404 meta))
+    (assert-non-nil res :format "GET updated response nil")
+    (assert-response-404 meta :format "GET updated exists when it shouldn't"))
 
   (let ((req '((:name . "updated") (method . "POST") (match . "what"))))
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updateme/update/" :method :POST
                                                 :content (json:encode-json-to-string req))
-      (assert-non-nil res)
-      (assert-response-200 meta)))
+      (assert-non-nil res :format "Update forwarder response nil")
+      (assert-response-200 meta :format "Update forwarder response not 200")))
 
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updateme/")
-    (assert-non-nil res)
-    (assert-response-404 meta))
+    (assert-non-nil res :format "(after update) GET updateme response nil")
+    (assert-response-404 meta :format "GET updateme exists when it shouldn't"))
 
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updated/")
-    (assert-non-nil res)
-    (assert-response-200 meta)))
+    (assert-non-nil res :format "(after update) GET updated response nil")
+    (assert-response-200 meta :format "GET updated does not exist when it should")))

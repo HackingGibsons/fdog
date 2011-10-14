@@ -119,13 +119,13 @@
    ;; Ensure that nothing that used to work broke.
     (log-for (trace) "Sending request destined for quedom to pick up.")
     (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/")
-      (assert-null res))
+      (assert-null res :format "Got response from queue-request, expected nil"))
     (log-for (trace) "Requet sent.")
 
     (log-for (trace) "Sending POST request destined for quedom to pick up.")
     (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/" :method :POST
                                                  :content "Hello world")
-      (assert-null res))
+      (assert-null res :format "Got response from queue-post, expected nil"))
     (log-for (trace) "POST Requet sent.")
 
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/")
@@ -157,7 +157,7 @@
 
           (m2cl:with-handler (handler "test" push sub)
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
-              (assert-null (zerop (length raw)))
+              (assert-null (zerop (length raw)) :format "mongrel response expected nonzero length, got zero")
               (assert-non-nil (equal "/" (m2cl:request-path req)))))))))
 
 (def-test+func (cannot-delete-nonexistent-forwarder) :eval

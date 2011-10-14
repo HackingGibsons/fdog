@@ -49,12 +49,13 @@
        (log-for (trace) "Invalid spec: ~A" spec)
        (error 'fdog-control:400-condition :data (format nil "The request must contain (or name method match) to be valid.")))
 
-     (let ((alias2 (update-forwarder-alias alias :name name :method method :match match)))
-       (log-for (trace) "Updated alias: ~A" alias2)
-       (init-forwarders)
-       (log-for (trace) "Re-inited.")
-       (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
-         (json:encode-json spec stream)))))
+     (let ((new-alias (update-forwarder-alias alias :name name :method method :match match)))
+       (log-for (trace) "Updated alias: ~A" new-alias)) 
+
+     (init-forwarders) 
+     (log-for (trace) "Re-inited.") 
+     (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+       (json:encode-json spec stream))))
 
 (defmethod api/forwarder/alias/create (handler request forwarder args)
   (log-for (trace) "Forwarder alias creation for: ~A" forwarder)
@@ -122,6 +123,7 @@
 (defmethod api/forwarder/delete (handler request forwarder args)
   (log-for (trace) "Deleting forwarder: ~A" (fdog-forwarder-name forwarder))
   (delete-forwarder forwarder)
+  (init-forwarders)
   (with-chunked-stream-reply (handler request stream
                                       :headers ((header-json-type)))
     (json:encode-json `((:ok . ,(fdog-forwarder-name forwarder))) stream)))

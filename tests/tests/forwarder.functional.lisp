@@ -16,7 +16,7 @@
        (assert-response-200 meta))))
 
 (defmacro def-assert-response (code)
-  `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta)
+  `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta &key format)
      (assert-equal ,code (getf meta :status-code))))
 
 (def-assert-response 200)
@@ -116,7 +116,7 @@
       (assert-response-200 meta)
       (assert-non-nil (find "post-only" res :test #'string=)))
 
-    ;; Ensure that nothing that used to work broke.
+   ;; Ensure that nothing that used to work broke.
     (log-for (trace) "Sending request destined for quedom to pick up.")
     (multiple-value-bind (res meta)  (http->json "http://localhost:13374/test/")
       (assert-null res))
@@ -187,3 +187,34 @@
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/")
     (assert-response-404 meta)
     (assert-non-nil res)))
+
+(def-test+func (can-update-forwarder) :eval
+  (assert-forwarder-setup)
+
+  (let ((req '((:name . "updateme") (method . "POST") (match . "test"))))
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
+                                                :content (json:encode-json-to-string req))
+      (assert-non-nil res)
+      (assert-response-200 meta)))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updateme/")
+    (assert-non-nil res)
+    (assert-response-200 meta))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updated/")
+    (assert-non-nil res)
+    (assert-response-404 meta))
+
+  (let ((req '((:name . "updated") (method . "POST") (match . "what"))))
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updateme/update/" :method :POST
+                                                :content (json:encode-json-to-string req))
+      (assert-non-nil res)
+      (assert-response-200 meta)))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updateme/")
+    (assert-non-nil res)
+    (assert-response-404 meta))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updated/")
+    (assert-non-nil res)
+    (assert-response-200 meta)))

@@ -33,6 +33,29 @@
                               (fdog-forwarder-aliases forwarder))
                       stream)))
 
+(defmethod api/forwarder/alias/update (handler request forwarder args)
+   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
+         (alias (find-forwarder-alias forwarder alias-name))
+         (spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (match (cdr (assoc :match spec)))
+         (method (cdr (assoc :method spec))))
+
+     (log-for (trace) "Updating forwarder alias: ~A => ~A => ~A" forwarder alias-name alias)
+     (unless alias
+       (error 'fdog-control:404-condition :data (format nil "No alias named [~A] for forwarder [~A]" (fdog-forwarder-name forwarder) alias-name)))
+
+     (unless (and spec (or name method match))
+       (log-for (trace) "Invalid spec: ~A" spec)
+       (error 'fdog-control:400-condition :data (format nil "The request must contain (or name method match) to be valid.")))
+
+     (let ((alias2 (update-forwarder-alias alias :name name :method method :match match)))
+       (log-for (trace) "Updated alias: ~A" alias2)
+       (init-forwarders)
+       (log-for (trace) "Re-inited.")
+       (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+         (json:encode-json spec stream)))))
+
 (defmethod api/forwarder/alias/create (handler request forwarder args)
   (log-for (trace) "Forwarder alias creation for: ~A" forwarder)
   (log-for (trace) "Body: ~A" (m2cl:request-body request))
@@ -146,6 +169,7 @@
 
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
        (:exact "/aliases/create/" :responder 'api/forwarder/alias/create)
+       (:regex "/aliases/.*/update" :responder 'api/forwarder/alias/update)
        (:exact "/delete/" :responder 'api/forwarder/delete)
        (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))

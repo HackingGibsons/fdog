@@ -17,7 +17,10 @@
 
 (defmacro def-assert-response (code)
   `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta &key format)
-     (assert-equal ,code (getf meta :status-code) :format format)))
+     (let ((params `(,,code ,(getf meta :status-code))))
+       (when format
+         (nconc params `(:format ,format)))
+       (apply #'assert-equal params))))
 
 (def-assert-response 200)
 (def-assert-response 400)

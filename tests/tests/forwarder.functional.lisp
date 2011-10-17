@@ -223,3 +223,35 @@
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/updated/")
     (assert-non-nil res :format "(after update) GET updated response nil")
     (assert-response-200 meta :format "GET updated does not exist when it should")))
+
+(def-test+func (cannot-delete-nonexistent-alias) :eval
+  (assert-forwarder-setup)
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/deleteme/")
+    (assert-response-404 meta)
+    (assert-non-nil res))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/deleteme/delete/" :method :POST)
+    (assert-response-404 meta)
+    (assert-non-nil res)))
+
+(def-test+func (can-delete-alias) :eval
+  (assert-forwarder-setup)
+  (let ((req '((:name . "deleteme") (method . "POST") (match . "what"))))
+    (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
+                                                :content (json:encode-json-to-string req))
+      (assert-non-nil res)
+      (assert-response-200 meta)))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/deleteme/")
+    (assert-response-200 meta)
+    (assert-non-nil res))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/deleteme/delete/" :method :POST)
+    (assert-response-200 meta)
+    (assert-non-nil res))
+
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/alises/deleteme/")
+    (assert-response-404 meta)
+    (assert-non-nil res)))
+

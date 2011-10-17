@@ -89,3 +89,6 @@ added, they will be set, otherwise the alias will match the empty string (^$)"
     (setf (fdog-forwarder-alias-match alias) match))
   (clsql:update-records-from-instance alias)
   alias)
+
+(defmethod delete-forwarder-alias ((alias fdog-forwarder-alias))
+  (clsql:delete-instance-records alias))

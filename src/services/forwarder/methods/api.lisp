@@ -33,6 +33,22 @@
                               (fdog-forwarder-aliases forwarder))
                       stream)))
 
+(defmethod api/forwarder/alias/delete (handler request forwarder args)
+  (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
+         (alias (find-forwarder-alias forwarder alias-name)))
+
+    (log-for (trace) "Deleting forwarder alias: ~A => ~A => ~A")
+    (unless alias
+      (error 'fdog-control:404-condition :data (format nil "No alias named [~A] for forwarder [~A]" ( fdog-forwarder-name forwarder) alias-name)))
+
+    (delete-forwarder-alias alias)
+    (log-for (trace) "Deleted alias: ~A" alias-name)
+    (init-forwarders)
+    (log-for (trace) "Re-inited.")
+    (with-chunked-stream-reply (handler request stream
+                                        :headers ((header-json-type)))
+      (json:encode-json `((:ok . ,alias-name)) stream))))
+
 (defmethod api/forwarder/alias/update (handler request forwarder args)
    (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
          (alias (find-forwarder-alias forwarder alias-name))
@@ -50,10 +66,10 @@
        (error 'fdog-control:400-condition :data (format nil "The request must contain (or name method match) to be valid.")))
 
      (let ((new-alias (update-forwarder-alias alias :name name :method method :match match)))
-       (log-for (trace) "Updated alias: ~A" new-alias)) 
+       (log-for (trace) "Updated alias: ~A" new-alias))
 
-     (init-forwarders) 
-     (log-for (trace) "Re-inited.") 
+     (init-forwarders)
+     (log-for (trace) "Re-inited.")
      (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
        (json:encode-json spec stream))))
 
@@ -172,6 +188,7 @@
        (:exact "/make-route/" :responder 'api/forwarder/make-route)
        (:exact "/aliases/create/" :responder 'api/forwarder/alias/create)
        (:regex "/aliases/.*/update" :responder 'api/forwarder/alias/update)
+       (:regex "/aliases/.*/delete" :responder 'api/forwarder/alias/delete)
        (:exact "/delete/" :responder 'api/forwarder/delete)
        (:exact "/" :responder 'api/forwarder/update)
        (:404 :responder 'api/forwarder/404))))

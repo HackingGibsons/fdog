@@ -46,8 +46,19 @@
                         :uuid ,(organ-uuid head)
                         :time ,(get-internal-real-time))))
 
+(defmethod update-peer ((head agent-head) peer-info)
+  "Update or store information about a peer we have heard about."
+  (let ((uuid (getf peer-info :uuid))
+        (ear (getf peer-info :ear))
+        (mouth (getf peer-info :mouth)))
+    (unless (and uuid ear mouth)
+      (log-for (warn) "Info did not contain a UUID mouth or ear.")
+      (return-from update-peer))
+    (log-for (warn) "TODO: I have info on ~A => ~A/~A" uuid ear mouth)
+    :TODO))
+
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
   (let ((info (getf info :info)))
-    (format t "Agent info: ~A~%" info)))
+    (update-peer head info)))
 

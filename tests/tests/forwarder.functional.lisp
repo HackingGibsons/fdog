@@ -16,6 +16,8 @@
        (assert-response-200 meta))))
 
 (defmacro def-assert-response (code)
+  ;; TODO have a way to preserve "expected x got y" even when a format string given
+  ;; example: "test response - expected 200, got 404"
   `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta &key format)
      (let ((params `(,,code ,(getf meta :status-code))))
        (when format
@@ -105,18 +107,18 @@
     :eval (assert-forwarder-setup)
 
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/")
-      (assert-null res)
-      (assert-response-200 meta))
+      (assert-null res :format "aliases response nil")
+      (assert-response-200 meta :format "aliases response not 200"))
 
     (let ((req '((:name . "post-only") (method . "POST") (match . ".*"))))
       (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/create/" :method :POST
                                                   :content (json:encode-json-to-string req))
-        (assert-non-nil res)
-        (assert-response-200 meta)))
+        (assert-non-nil res :format "alliases/create response nil")
+        (assert-response-200 meta :format "aliases/create response not 200")))
 
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/")
-      (assert-non-nil res)
-      (assert-response-200 meta)
+      (assert-non-nil res :format "(after create) aliases response nil")
+      (assert-response-200 meta :format "(after create) aliases response not 200")
       (assert-non-nil (find "post-only" res :test #'string=)))
 
    ;; Ensure that nothing that used to work broke.
@@ -132,11 +134,11 @@
     (log-for (trace) "POST Requet sent.")
 
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/")
-      (assert-response-200 meta)
-      (assert-non-nil res)
+      (assert-response-200 meta :format "/test/ response not 200")
+      (assert-non-nil res :format "/test/ response nil")
 
-      (assert-non-nil (assoc :push res :test #'equal))
-      (assert-non-nil (assoc :sub res :test #'equal))
+      (assert-non-nil (assoc :push res :test #'equal) :format "/test/ does not have a push socket")
+      (assert-non-nil (assoc :sub res :test #'equal) :format "/test/ does not have a sub socket")
 
       (let ((push (cdr (assoc :push res :test #'equal)))
             (sub (cdr (assoc :sub res :test #'equal))))
@@ -144,15 +146,15 @@
 
           (m2cl:with-handler (handler "test" push sub)
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
-              (assert-null (zerop (length raw)))
-              (assert-non-nil (equal "/" (m2cl:request-path req))))))))
+              (assert-null (zerop (length raw)) :format "mongrel2 response length zero, expected nonzero")
+              (assert-non-nil (equal "/" (m2cl:request-path req)) :format "mongrel2 request path not /"))))))
 
     (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/aliases/post-only/")
-      (assert-response-200 meta)
-      (assert-non-nil res)
+      (assert-response-200 meta :format "/post-only/ response not 200")
+      (assert-non-nil res :format "/post-only/ response nil")
 
-      (assert-non-nil (assoc :push res :test #'equal))
-      (assert-non-nil (assoc :sub res :test #'equal))
+      (assert-non-nil (assoc :push res :test #'equal) :format "/post-only/ does not have a push socket")
+      (assert-non-nil (assoc :sub res :test #'equal) :format "/post-only/ does not have a sub socket")
 
       (let ((push (cdr (assoc :push res :test #'equal)))
             (sub (cdr (assoc :sub res :test #'equal))))
@@ -161,7 +163,7 @@
           (m2cl:with-handler (handler "test" push sub)
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
               (assert-null (zerop (length raw)) :format "mongrel response expected nonzero length, got zero")
-              (assert-non-nil (equal "/" (m2cl:request-path req)))))))))
+              (assert-non-nil (equal "/" (m2cl:request-path req)) :format "mongrel2 request path not /")))))))
 
 (def-test+func (cannot-delete-nonexistent-forwarder) :eval
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/deleteme/")

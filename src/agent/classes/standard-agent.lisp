@@ -45,3 +45,14 @@
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
+;; Child agent
+(defclass standard-child-mixin ()
+  ((parent-uuid :initarg :parent-uuid
+                :reader parent-uuid)
+   (parent-addr :initarg :parent-addr
+                :reader parent-addr))
+  (:documentation "An agent that has a parent which it listens to, and dies without."))
+
+(defmethod agent-special-event :after ((agent standard-child-mixin) (head (eql :boot)) event)
+  "Boot event for a child agent."
+  (log-for (warn) "TODO: Handle booting a child agent by connecting to it."))

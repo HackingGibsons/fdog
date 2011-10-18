@@ -31,7 +31,7 @@
                                              (:file "standard-organ")))
 
                                    ;; Behavior definiton
-                                   (:module "behavior" :depends-on ("package") :components
+                                   (:module "behavior" :depends-on ("package" "organs") :components
                                             ((:file "classes")
                                              (:file "defbehavior" :depends-on ("classes"))
                                              (:module "behaviors" :depends-on ("defbehavior") :components

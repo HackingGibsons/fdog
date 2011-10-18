@@ -8,7 +8,7 @@
 ;; Test fixtures
 (def-fixtures with-agent-and-runner ()
   (agent (make-instance 'test-agent))
-  (agent-runner (lambda () (run-agent agent))))
+  (agent-runner (lambda () (agent::run-agent agent))))
 
 ;; TODO: Garbage
 (def-test (can-test-nothing :group basic-tests)

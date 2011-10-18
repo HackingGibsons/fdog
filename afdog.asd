@@ -56,3 +56,7 @@
 
 
 
+;; Test operation
+(defmethod perform ((o asdf:test-op) (c (eql (asdf:find-system :afdog))))
+  (funcall (intern (symbol-name :start-logging) :afdog))
+  (funcall (intern (symbol-name :run-all) :afdog-tests)))

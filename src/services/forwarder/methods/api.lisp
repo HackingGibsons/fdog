@@ -3,6 +3,17 @@
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
+(defmethod api/forwarder/metrics (handler request forwarder args)
+  "Cloudkick-compatible metrics for forwarders"
+  (log-for (trace) "Fetching forwarder metrics for: ~A" forwarder)
+  (with-slots (name) forwarder
+    (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+      (json:encode-json `((:state . "ok")
+                          (:metrics .
+                           (((:type . "int") (:name . "queue_length") (:value . ,(request-queue-length forwarder)))
+                            ((:type . "gauge") (:name . "request_throughput") (:value . ,(request-count name)))
+                            ((:type . "gauge") (:name . "response_throughput") (:value . ,(response-count name)))))) stream))))
+
 (defmethod api/forwarder/update (handler request forwarder args)
   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
          (enabled (forwarder-queuing-p forwarder)))
@@ -125,6 +136,7 @@
        (funcall &route handler request forwarder rest)
 
        (:regex "/aliases/.*"  :responder 'api/forwarder/aliases/route)
+       (:exact "/metrics/" :responder 'api/forwarder/metrics)
        (:exact "/" :responder 'api/forwarder/root)
        (:404 :responder 'api/forwarder/404))))
 

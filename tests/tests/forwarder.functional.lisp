@@ -159,3 +159,9 @@
             (multiple-value-bind (req raw) (m2cl:handler-receive handler :timeout (s2us 1))
               (assert-null (zerop (length raw)))
               (assert-non-nil (equal "/" (m2cl:request-path req)))))))))
+
+(def-test+func (can-get-metrics) :eval
+  (assert-forwarder-setup)
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/metrics/")
+    (assert-non-nil res)
+    (assert-response-200 meta)))

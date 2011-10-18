@@ -4,7 +4,8 @@
 #.(clsql:locally-enable-sql-reader-syntax)
 
 (defmethod api/forwarder/metrics (handler request forwarder args)
-  "Cloudkick-compatible metrics for forwarders"
+  "Cloudkick-compatible metrics for forwarders
+https://support.cloudkick.com/HTTP_JSON_Checks"
   (log-for (trace) "Fetching forwarder metrics for: ~A" forwarder)
   (with-slots (name) forwarder
     (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))

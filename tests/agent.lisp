@@ -6,12 +6,16 @@
   (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
 
 ;; Test fixtures
-(def-fixtures with-agent-and-runner ()
+(def-fixtures agent-and-runner ()
   (agent (make-instance 'test-agent))
   (agent-runner (lambda () (agent::run-agent agent))))
 
-;; TODO: Garbage
-(def-test (can-test-nothing :group basic-tests)
-    :true
+;; Test cases
+(def-test (can-test-nothing :group basic-tests) :true
   t)
+
+(def-test (fresh-agent-is-fresh :group basic-tests :fixtures (agent-and-runner))
+    (:all (:apply agent::agent-event-count (:predicate zerop))
+          (:apply agent::agent-context (:not :true)))
+  agent)
 

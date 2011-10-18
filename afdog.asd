@@ -6,6 +6,7 @@
                #:log5
                #:bordeaux-threads
                #:zeromq)
+  :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components
                         ;; Base project scaffold
                         ((:file "package" :depends-on ("patches"))
@@ -58,5 +59,4 @@
 
 ;; Test operation
 (defmethod perform ((o asdf:test-op) (c (eql (asdf:find-system :afdog))))
-  (funcall (intern (symbol-name :start-logging) :afdog))
   (funcall (intern (symbol-name :run-all) :afdog-tests)))

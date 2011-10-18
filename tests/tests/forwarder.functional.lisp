@@ -19,6 +19,9 @@
   `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta)
      (assert-equal ,code (getf meta :status-code))))
 
+(defun assert-string= (expected actual)
+  (assert-non-nil (string= expected actual) :format (format nil "Expected ~A, got ~A" expected actual)))
+
 (def-assert-response 200)
 (def-assert-response 400)
 (def-assert-response 404)
@@ -164,4 +167,16 @@
   (assert-forwarder-setup)
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/metrics/")
     (assert-non-nil res)
-    (assert-response-200 meta)))
+    (assert-response-200 meta)
+    (format t "~A" res)
+
+    ;; Expected format: {"status": "ok", "metrics":[
+    ;; {"type": "int", "name": "queue_length", "value": ##}
+    ;; {"type": "gauge", "name": "request_throughput", "value": ##}
+    ;; {"type": "gauge", "name": "response_throughput", "value": ##}]}
+    (assert-string= "ok" (cdr (assoc :state res)))
+    (assert-string= "int" (cdr (assoc :type (first (cdr (assoc :metrics res))))))
+    (assert-string= "gauge" (cdr (assoc :type (second (cdr (assoc :metrics res))))))
+    (assert-string= "request_throughput" (cdr (assoc :name (second (cdr (assoc :metrics res))))))
+    (assert-string= "gauge" (cdr (assoc :type (third (cdr (assoc :metrics res))))))
+    (assert-string= "response_throughput" (cdr (assoc :name (third (cdr (assoc :metrics res))))))))

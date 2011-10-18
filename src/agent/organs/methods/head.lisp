@@ -54,8 +54,9 @@
     (unless (and uuid ear mouth)
       (log-for (warn) "Info did not contain a UUID mouth or ear.")
       (return-from update-peer))
-    (log-for (warn) "TODO: I have info on ~A => ~A/~A" uuid ear mouth)
-    :TODO))
+    (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
+    (setf (gethash uuid (agent-peers head))
+          `(:time ,(get-internal-real-time) :ear ,ear :mouth ,mouth))))
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."

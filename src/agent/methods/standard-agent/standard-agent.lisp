@@ -29,7 +29,8 @@
         (format nil "inproc://~A" (agent-uuid agent)))
   (log-for (trace) "Setting the event-addr to inproc://msg-uuid")
   (setf (slot-value agent 'message-addr)
-        (format nil "inproc://msg-~A" (agent-uuid agent))))
+        (format nil "inproc://msg-~A" (agent-uuid agent)))
+  (initialize-instance-organs agent))
 
 (defmethod agent-poll-timeout ((agent standard-agent))
   "Determine how long the poll timeout should be for the current poll

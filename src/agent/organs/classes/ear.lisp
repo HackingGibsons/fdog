@@ -13,6 +13,9 @@
   (:documentation "Responsible for delivering incoming inter-agent messages.")
   (:default-initargs . (:tag :ear)))
 
+(defmethod initialize-instance :after ((ear agent-ear) &key)
+  (make-listen-where-told ear))
+
 (defmethod agent-boot :after ((agent standard-agent) (ear agent-ear) &rest options)
   "Ear specific socket init."
   (declare (ignorable options))

@@ -11,6 +11,9 @@
   (:documentation "Responsible for outgoing cross-agent communication.")
   (:default-initargs . (:tag :mouth)))
 
+(defmethod initialize-instance :after ((mouth agent-mouth) &key)
+  (make-speak-when-told mouth))
+
 (defmethod agent-boot :after ((agent standard-agent) (mouth agent-mouth) &rest options)
   "Mouth specific socket inits."
   (declare (ignorable options))

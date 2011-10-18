@@ -27,7 +27,8 @@
                                              (:file "standard-organ")))
                                    (:module "methods" :depends-on ("classes") :components
                                             ((:module "standard-agent" :components
-                                                      ((:file "standard-agent")))
+                                                      ((:file "standard-agent")
+                                                       (:file "init")))
                                              (:file "standard-organ")))
 
                                    ;; Behavior definiton

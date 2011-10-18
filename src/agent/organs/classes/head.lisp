@@ -9,3 +9,7 @@
   (:documentation "This organ is responsible for decision making and task scheduling, but none of the work.")
   (:default-initargs . (:tag :head)))
 
+(defmethod initialize-instance :after ((head agent-head) &rest initargs)
+  "Attach default behaviors"
+  (make-announce-self head)
+  (make-have-hearing head))

@@ -7,6 +7,8 @@
            :agent-event-count
            :agent-context
            :agent-organs
-           :run-agent))
+           :run-agent
+           :next-event
+           :suicide))
 
 (in-package :agent)

@@ -1,11 +1,11 @@
 (in-package :afdog-tests)
 
 ;; Test structures
-(defclass test-agent (agent::standard-agent)
+(defclass test-agent (standard-agent)
   ()
   (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
 
-(defmethod agent::agent-special-event :after ((agent test-agent) (head (eql :boot)) event)
+(defmethod agent-special-event :after ((agent test-agent) (head (eql :boot)) event)
   "Boot event for the test agent"
   (format t "Agent is booting.~%")
   (nst:nst-cmd :run-group booted-agent-tests))
@@ -15,14 +15,14 @@
   t)
 
 (def-test (fresh-agent-is-fresh :group basic-tests :fixtures (agent-fixture))
-    (:all (:apply agent::agent-event-count (:predicate zerop))
-          (:apply agent::agent-context (:not :true)))
+    (:all (:apply agent-event-count (:predicate zerop))
+          (:apply agent-context (:not :true)))
   agent)
 
 ;; Boots up the running agent tests
 (def-test (test-running-agent :group basic-tests :fixtures (agent-fixture))
     (:process (:eval (handler-case (bt:with-timeout (1)
-                                     (agent::run-agent agent))
+                                     (run-agent agent))
                        (bt:timeout () nil)))))
 
 ;; Running agent tests
@@ -30,4 +30,4 @@
   agent)
 
 (def-test (running-agent-has-context :group booted-agent-tests) :true
-  (agent::agent-context agent))
+  (agent-context agent))

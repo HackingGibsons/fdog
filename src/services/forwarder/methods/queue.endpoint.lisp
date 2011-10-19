@@ -76,7 +76,7 @@
 (defmethod request-queue-length ((forwarder fdog-forwarder))
   (redis:with-named-connection (redis :host *redis-host*
                                       :port *redis-port*)
-   (or (redis:lred-hget redis (endpoint-queue-key forwarder) :count) "0")))
+   (parse-integer (or (redis:lred-hget redis (endpoint-queue-key forwarder) :count) "0"))))
 
 (defun format-decoded-time ()
   "Returns the universal time formatted in YYYYMMDDHHmmss"

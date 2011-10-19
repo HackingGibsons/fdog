@@ -21,19 +21,23 @@
   (nst:nst-cmd :run-group booted-agent-tests))
 
 (defmethod next-event :after ((agent test-agent))
-  (format t "Events now: ~A~%" (agent::agent-event-count agent))
   (case (agent::agent-event-count agent)
     (5 (nst:nst-cmd :run-group running-with-events-tests))
-    (10 (suicide agent))))
+    (6 (let ((organ (agent::find-organ agent :appendix)))
+         (zmq:close (agent::organ-incoming-sock organ))
+         (zmq:close (agent::organ-outgoing-sock organ))
+         (setf (agent::organ-incoming-sock organ) nil (agent::organ-outgoing-sock organ) nil)
+         (setf (agent-organs agent) (remove :appendix (agent-organs agent) :key #'agent::organ-tag))))))
 
 ;; This test will scaffold a running agent and run any tests driven by the event loop
 ;; then execute the terminated agent group
 (def-test (test-running-agent :group basic-tests :fixtures (agent-fixture))
-    (:process (:eval (handler-case (bt:with-timeout (5)
+    (:process (:eval (handler-case (bt:with-timeout (30)
                                      (run-agent agent))
                        (bt:timeout ()
                          (format t "Timing out!~%")
                          nil)))
+              (:check (:true-form (< (agent-event-count agent) 100)))
               (:eval (nst:nst-cmd :run-group terminated-agent-tests))))
 
 ;; Booted agent tests

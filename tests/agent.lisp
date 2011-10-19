@@ -23,9 +23,10 @@
 (def-test (test-running-agent :group basic-tests :fixtures (agent-fixture))
     (:process (:eval (handler-case (bt:with-timeout (1)
                                      (run-agent agent))
-                       (bt:timeout () nil)))))
+                       (bt:timeout () nil)))
+              (:eval (nst:nst-cmd :run-group terminated-agent-tests))))
 
-;; Running agent tests
+;; Booted agent tests
 (def-test (running-agent-sanity-check :group booted-agent-tests) :true
   agent)
 
@@ -35,4 +36,11 @@
 (def-test (organs-have-sockets :group booted-agent-tests) 
     (:each (:all (:apply agent::organ-incoming-sock :true)
                  (:apply agent::organ-outgoing-sock :true)))
+  (agent-organs agent))
+
+
+;; Termianted agent tests
+(def-test (organs-closed-sockets :group terminated-agent-tests) 
+    (:each (:all (:apply agent::organ-incoming-sock (:not :true))
+                 (:apply agent::organ-outgoing-sock (:not :true))))
   (agent-organs agent))

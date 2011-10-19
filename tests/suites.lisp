@@ -6,6 +6,8 @@
   (:cleanup (let ((head (agent::find-organ agent :head)))
               (agent::suicide head))))
 
+(def-test-group terminated-agent-tests ())
+
 (def-test-group all-tests ()
   (:documentation "All tests are rooted here")
   (:include-groups basic-tests))

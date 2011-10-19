@@ -53,14 +53,13 @@
                  :reader parent-mouth))
   (:documentation "An agent that has a parent which it listens to, and dies without."))
 
-(defmethod agent-special-event :after ((agent standard-child-mixin) (head (eql :boot)) event)
+(defmethod agent-special-event :after ((agent standard-child-mixin) (event-head (eql :boot)) event)
   "Boot event for a child agent."
-  (format t "~A is booted!~%" agent)
-  (loop for organ in (agent-organs agent) do
-       (format t "Organ: ~A: " organ)
-       (describe organ))
-  (log-for (warn) "TODO: Handle booting a child agent by connecting to it."))
-
+  (let ((head (find-organ agent :head)))
+    (send-message head `(,(organ-tag head) :command
+                          :command :listen
+                          :uuid ,(organ-uuid head)
+                          :listen ,(parent-mouth agent)))))
 ;; An leaf agent base
 (defclass standard-leaf-agent (standard-agent standard-child-mixin)
   ())

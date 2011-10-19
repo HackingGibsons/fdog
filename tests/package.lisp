@@ -1,6 +1,7 @@
 (defpackage #:afdog-tests
   (:use #:cl
-        #:afdog)
+        #:afdog
+        #:agent)
   (:use #:nst)
   (:shadowing-import-from :log5
                           :log-for)

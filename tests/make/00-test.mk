@@ -1,4 +1,4 @@
-test: clean init
+test: clean-all init
 	@echo "=> Running tests."
 	$(MAKE) run-tests
 	$(MAKE) clean

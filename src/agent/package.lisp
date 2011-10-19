@@ -6,6 +6,7 @@
            :agent-special-event
            :agent-event-count
            :agent-context
+           :agent-organs
            :run-agent))
 
 (in-package :agent)

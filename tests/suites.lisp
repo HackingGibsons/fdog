@@ -2,7 +2,7 @@
 
 (def-test-group basic-tests ())
 
-(def-test-group running-agent-tests ()
+(def-test-group booted-agent-tests ()
   (:cleanup (let ((head (agent::find-organ agent :head)))
               (agent::suicide head))))
 

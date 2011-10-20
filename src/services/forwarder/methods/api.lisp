@@ -56,9 +56,8 @@
       (json:encode-json `((:ok . ,alias-name)) stream))))
 
 (defmethod api/forwarder/alias/update (handler request forwarder args)
-   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
-         (alias (find-forwarder-alias forwarder alias-name))
-         (spec (json:decode-json-from-string (m2cl:request-body request)))
+  (multiple-value-bind (alias-name alias) (find-name-and-alias forwarder args)
+   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
          (name (cdr (assoc :name spec)))
          (match (cdr (assoc :match spec)))
          (method (cdr (assoc :method spec))))
@@ -77,7 +76,7 @@
      (init-forwarders)
      (log-for (trace) "Re-inited.")
      (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
-       (json:encode-json spec stream))))
+       (json:encode-json spec stream)))))
 
 (defmethod api/forwarder/alias/create (handler request forwarder args)
   (log-for (trace) "Forwarder alias creation for: ~A" forwarder)

@@ -3,6 +3,7 @@
 ;; Utils
 
 (defun decode-alias-json (request)
+  "Given a request containing a JSON representation of a forwarder alias, return the JSON as values."
   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
          (name (cdr (assoc :name spec)))
          (match (cdr (assoc :match spec)))
@@ -10,6 +11,7 @@
     (values spec name method match)))
 
 (defmethod find-name-and-alias ((forwarder fdog-forwarder) args)
+  "Given a forwarder model and a request URL, find the alias and its name."
   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
          (alias (find-forwarder-alias forwarder alias-name)))
     (values alias-name alias)))

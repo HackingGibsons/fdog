@@ -1,5 +1,12 @@
 (in-package :fdog-forwarder)
 
+;; Utils
+
+(defmethod find-name-and-alias ((forwarder fdog-forwarder) args)
+  (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
+         (alias (find-forwarder-alias forwarder alias-name)))
+    (values alias-name alias)))
+
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
@@ -34,8 +41,7 @@
                       stream)))
 
 (defmethod api/forwarder/alias/delete (handler request forwarder args)
-  (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
-         (alias (find-forwarder-alias forwarder alias-name)))
+  (multiple-value-bind (alias-name alias) (find-name-and-alias forwarder args)
 
     (log-for (trace) "Deleting forwarder alias: ~A => ~A => ~A")
     (unless alias

@@ -2,6 +2,13 @@
 
 ;; Utils
 
+(defun decode-alias-json (request)
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (match (cdr (assoc :match spec)))
+         (method (cdr (assoc :method spec))))
+    (values spec name method match)))
+
 (defmethod find-name-and-alias ((forwarder fdog-forwarder) args)
   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
          (alias (find-forwarder-alias forwarder alias-name)))
@@ -57,10 +64,7 @@
 
 (defmethod api/forwarder/alias/update (handler request forwarder args)
   (multiple-value-bind (alias-name alias) (find-name-and-alias forwarder args)
-   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
-         (name (cdr (assoc :name spec)))
-         (match (cdr (assoc :match spec)))
-         (method (cdr (assoc :method spec))))
+   (multiple-value-bind (spec name method match) (decode-alias-json request)
 
      (log-for (trace) "Updating forwarder alias: ~A => ~A => ~A" forwarder alias-name alias)
      (unless alias

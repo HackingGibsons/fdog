@@ -14,8 +14,7 @@
                                       (asdf:system-source-directory :afdog-tests))))
     (nst-cmd :run-group all-tests)
 
-    (log-for (trace) "Storing junit in ~A" results-dir))
+    (log-for (trace) "Storing junit in ~A" results-dir)
     (junit-results-by-group :dir results-dir
                             :if-file-exists :supersede
-                            :if-dir-does-not-exist :create))
-
+                            :if-dir-does-not-exist :create)))

@@ -5,6 +5,10 @@
   ()
   (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
 
+(defclass runner-agent (standard-agent)
+  ()
+  (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
+
 ;; Test cases
 (def-test (can-test-nothing :group basic-tests) :true
   t)
@@ -67,8 +71,7 @@
 (def-test (agent-starts :group runner-tests) :true
   (agent::running-p agent-runner))
 
-(def-test (agent-stops :group runner-tests) :true
-  (progn
-    (agent::stop agent-runner)
-    (agent::running-p agent-runner)))
+(def-test (agent-stops :group runner-tests)
+    (:process (:eval (agent::stop agent-runner))
+              (:check (:not (:true-form (agent::running-p agent-runner))))))
 

@@ -29,10 +29,39 @@ result into the desired type.")
   (:method ((runner agent-runner))
     "Default running state is the presense of the handle."
     (agent-handle runner)))
-
+;;
+;; A runer that runs the given agent in a thread of the current process.
+;;
 (defclass thread-runner (agent-runner)
   ())
 
+(defmethod make-runner ((style (eql :thread)) &key)
+  (let ((runner (call-next-method)))
+    (change-class runner 'thread-runner)))
+
+(defmethod start ((runner thread-runner))
+  (unless (running-p runner)
+    (setf (agent-handle runner)
+          (bt:make-thread #'(lambda () (run-agent (agent-instance runner)))))
+    runner))
+
+
+(defmethod running-p ((runner thread-runner))
+  (with-accessors ((handle agent-handle)) runner
+    (and handle
+         (bt:threadp handle)
+         (bt:thread-alive-p handle))))
+
+(defmethod stop ((runner thread-runner))
+  (when (running-p runner)
+    (bt:destroy-thread (agent-handle runner))
+    (setf (agent-handle runner) nil)
+    runner))
+
+
+;;
+;; A runner that forks a child process to run the agent
+;;
 (defclass proc-runner (agent-runner)
   ())
 

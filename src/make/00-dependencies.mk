@@ -1,15 +1,11 @@
 # Dependency targets
 
-CORE = $(ROOT)/fdog.core
-
-$(CORE):
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/src/lib/.libs \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(LISP) --eval '(ql:quickload :fdog)' \
-		    --eval '(save-lisp-and-die #p"fdog.core")';
-
-core-clean:
-	rm -f $(CORE)
+buildapp: quicklisp $(BUILDAPP)
+$(BUILDAPP):
+	$(LISP) --eval '(sb-ext:disable-debugger)' \
+	        --eval '(ql:quickload :buildapp)' \
+	        --eval '(buildapp:build-buildapp "$(BUILDAPP)")' \
+	        --eval '(quit)'
 
 QL_TEST ?= $(LISP) --eval '(quit :unix-status (if (find-package :ql) 0 1))'
 QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp.lisp"

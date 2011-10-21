@@ -57,6 +57,7 @@ result into the desired type.")
     (setf (init-forms runner)
           (append (init-forms runner)
                   `((ql:quickload ,system)))))
+
   (setf (exec-forms runner)
         (append (exec-forms runner)
                 `((in-package ,(package-name (symbol-package (agent-instance runner))))
@@ -70,7 +71,9 @@ result into the desired type.")
                      :initial-value (cond ((null list) nil)
                                           ((equalp (car list) key) (remove-from-plist (cddr list) key))
                                           (t (append (list (first list) (second list)) (remove-from-plist (cddr list) key)))))))
-    (make-instance 'exec-runner :agent class :initargs (remove-from-plist initargs :class :agent))))
+    ;; TODO: Make this not make me want to gouge my eyes out.
+    (make-instance 'exec-runner :agent class
+                   :initargs (remove-from-plist initargs :class :agent :include))))
 
 (defmethod start ((runner exec-runner))
   "Starts a runner by starting a new lisp."
@@ -81,7 +84,7 @@ result into the desired type.")
                         (with-output-to-string (s) (prin1 form s))))))
 
       (setf (agent-handle runner)
-            (sb-ext:run-program (runner-lisp runner)
+            (list 'sb-ext:run-program (runner-lisp runner)
                                 `(,@(runner-lisp-options runner)
                                   ,@(prepare-forms (init-forms runner))
                                   ,@(prepare-forms (exec-forms runner))

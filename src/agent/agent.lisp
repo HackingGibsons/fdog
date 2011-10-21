@@ -60,11 +60,12 @@ result into the desired type.")
 
 (defmethod make-runner ((style (eql :exec)) &rest initargs &key (class 'standard-agent) &allow-other-keys)
   (log-for (warn) "Exec runner initargs: ~A" initargs)
-  (labels ((remove-from-plist (list key)
-             (cond ((null list) nil)
-                   ((equalp (car list) key) (remove-from-plist (cddr list) key))
-                   (t (append (list (first list) (second list)) (remove-from-plist (cddr list) key))))))
-    (make-instance 'exec-runner :agent class :initargs (remove-from-plist initargs :class))))
+  (labels ((remove-from-plist (list key &rest keys)
+             (reduce #'(lambda (acc b) (remove-from-plist acc b)) keys
+                     :initial-value (cond ((null list) nil)
+                                          ((equalp (car list) key) (remove-from-plist (cddr list) key))
+                                          (t (append (list (first list) (second list)) (remove-from-plist (cddr list) key)))))))
+    (make-instance 'exec-runner :agent class :initargs (remove-from-plist initargs :class :agent))))
 
 (defmethod start ((runner exec-runner))
   "Starts a runner by starting a new lisp."
@@ -76,7 +77,7 @@ result into the desired type.")
 
       (setf (agent-handle runner)
             ;; TODO: Drop "(list '" and it should work. Using this to debug before starting a pile of procs
-            (list 'sb-ext:run-program (runner-lisp runner)
+            (sb-ext:run-program (runner-lisp runner)
                                 `(,@(runner-lisp-options runner)
                                   ,@(prepare-forms (init-forms runner))
                                   ,@(prepare-forms (exec-forms runner))

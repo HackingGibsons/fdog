@@ -33,7 +33,9 @@ result into the desired type.")
 ;; A runner that executes and external lisp and loads code to boot the agent
 ;;
 (defclass exec-runner (agent-runner)
-  ((lisp :initform sb-ext:*runtime-pathname*
+  ((agent-initargs :initform () :initarg :initargs
+                   :accessor runner-agent-initargs)
+   (lisp :initform sb-ext:*runtime-pathname*
          :accessor runner-lisp
          :initarg :lisp)
    (lisp-options :initform '("--disable-debugger")
@@ -42,7 +44,7 @@ result into the desired type.")
                            (ql:quickload :afdog))
                :accessor init-forms
                :documentation "Forms to get the lisp image ready to execute the runtime code.")
-   (exec-forms :initform `((sleep 120))
+   (exec-forms :initform `((in-package :agent))
                :accessor exec-forms
                :documentation "Forms to cause the execution of the agent.")
    (terminate-forms :initform `((sb-ext:quit :unix-status 0))
@@ -50,9 +52,19 @@ result into the desired type.")
                     :documentation "Forms to cause the death of this process after execution."))
   (:documentation "Load up a new interpreter, and follow some steps to load an agent as requested."))
 
+(defmethod initialize-instance :after ((runner exec-runner) &rest initargs)
+  (declare (ignorable initargs))
+  (setf (exec-forms runner)
+        (append (exec-forms runner)
+                `((start (make-runner :blocked :class (quote ,(agent-instance runner)) ,@(runner-agent-initargs runner)))))))
+
 (defmethod make-runner ((style (eql :exec)) &rest initargs &key (class 'standard-agent) &allow-other-keys)
   (log-for (warn) "Exec runner initargs: ~A" initargs)
-  (make-instance 'exec-runner :agent class))
+  (labels ((remove-from-plist (list key)
+             (cond ((null list) nil)
+                   ((equalp (car list) key) (remove-from-plist (cddr list) key))
+                   (t (append (list (first list) (second list)) (remove-from-plist (cddr list) key))))))
+    (make-instance 'exec-runner :agent class :initargs (remove-from-plist initargs :class))))
 
 (defmethod start ((runner exec-runner))
   "Starts a runner by starting a new lisp."
@@ -63,7 +75,7 @@ result into the desired type.")
                         (with-output-to-string (s) (prin1 form s))))))
 
       (setf (agent-handle runner)
-            (sb-ext:run-program (runner-lisp runner)
+            (list 'sb-ext:run-program (runner-lisp runner)
                                 `(,@(runner-lisp-options runner)
                                   ,@(prepare-forms (init-forms runner))
                                   ,@(prepare-forms (exec-forms runner))

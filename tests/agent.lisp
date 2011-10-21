@@ -51,7 +51,6 @@
                  (:apply agent::organ-outgoing-sock :true)))
   (agent-organs agent))
 
-
 ;; Termianted agent tests
 (def-test (organs-closed-sockets :group terminated-agent-tests)
     (:each (:all (:apply agent::organ-incoming-sock (:not :true))
@@ -62,3 +61,14 @@
 (def-test (running-agent-has-events :group running-with-events-tests)
     (:predicate (lambda (v) (> v 0)))
   (agent-event-count agent))
+
+
+;; Tests to run while agent is running
+(def-test (agent-starts :group runner-tests) :true
+  (agent::running-p agent-runner))
+
+(def-test (agent-stops :group runner-tests) :true
+  (progn
+    (agent::stop agent-runner)
+    (agent::running-p agent-runner)))
+

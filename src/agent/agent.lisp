@@ -65,6 +65,41 @@ result into the desired type.")
 (defclass proc-runner (agent-runner)
   ())
 
+(defmethod make-runner ((style (eql :proc)) &key)
+  (change-class (call-next-method) 'proc-runner))
+
+(defmethod running-p ((runner proc-runner))
+  (handler-case
+      (and (agent-handle runner)
+           (iolib.syscalls:kill (agent-handle runner) 0)
+           (agent-handle runner))
+
+    (iolib.syscalls:ESRCH () nil)))
+
+(defmethod start ((runner proc-runner))
+  (unless (running-p runner)
+    (let ((child (iolib.syscalls:fork)))
+      (if (= child 0)
+          (progn
+            (setf (agent-handle runner) (iolib.syscalls:getpid))
+            (unwind-protect (run-agent (agent-instance runner))
+              (setf (agent-handle runner) nil)
+              (iolib.syscalls:exit 0)))
+          (setf (agent-handle runner) child)))))
+
+(defmethod stop ((runner proc-runner))
+  (when (running-p runner)
+    (prog1 (agent-handle runner)
+      (iolib.syscalls:kill (agent-handle runner) iolib.syscalls:sigkill)
+
+      (handler-case (bt:with-timeout (1)
+                      (iolib.syscalls:waitpid (agent-handle runner) 0))
+
+        (bt:timeout () nil)
+        (iolib.syscalls:echild () nil))
+
+      (setf (agent-handle runner) nil))))
+
 ;;
 ;; Blocked runner, for operation within the current thread.
 ;;

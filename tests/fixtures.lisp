@@ -21,4 +21,4 @@
                              :cleanup
                              (if (agent::running-p agent-runner)
                                  (agent::stop agent-runner)))
-  (agent-runner (agent::make-runner :test :class 'afdog-tests::test-agent)))
+  (agent-runner (agent::make-runner :test :class 'test-agent :include '(:afdog-tests))))

@@ -247,3 +247,6 @@ as fire any callbacks that may be pending IO when it is ready."
 ;; TODO: Extract these to a file
 (defmethod find-organ (agent tag)
   (find tag (agent-organs agent) :key #'organ-tag))
+
+(defmethod local-ipc-addr ((agent standard-agent))
+  (format nil "ipc:///tmp/agent.sock.~A" (agent-uuid agent)))

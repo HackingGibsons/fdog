@@ -37,7 +37,6 @@
                        (bt:timeout ()
                          (format t "Timing out!~%")
                          nil)))
-              (:check (:true-form (< (agent-event-count agent) 100)))
               (:eval (nst:nst-cmd :run-group terminated-agent-tests))))
 
 ;; Booted agent tests

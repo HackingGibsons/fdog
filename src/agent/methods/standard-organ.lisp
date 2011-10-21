@@ -5,6 +5,10 @@
   "Wraps context access for organs"
   (agent-context (organ-agent organ)))
 
+(defmethod local-ipc-addr ((organ standard-organ) &optional organ-tag)
+  (declare (ignore organ-tag))
+  (local-ipc-addr (organ-agent organ) (organ-tag organ)))
+
 ;; Agent linkage methods
 (defmethod agent-boot ((agent standard-agent) (organ standard-organ) &rest options)
   (declare (ignorable options))

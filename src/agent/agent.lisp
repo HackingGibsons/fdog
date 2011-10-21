@@ -10,7 +10,7 @@
            :documentation "Handle to whatever ends up running the agent. Should be non-nil during operation."))
   (:documentation "Base class for agent runners, only tracks an instance and abstract `handle'"))
 
-(defgeneric make-runner (style &key)
+(defgeneric make-runner (style &key class &allow-other-keys)
   (:documentation "Make an agent running wrapper of the desired `style'.
 Style specializations should (call-next-method) to get a base isntance, then (change-class ..) the
 result into the desired type.")
@@ -29,6 +29,60 @@ result into the desired type.")
   (:method ((runner agent-runner))
     "Default running state is the presense of the handle."
     (agent-handle runner)))
+;;
+;; A runner that executes and external lisp and loads code to boot the agent
+;;
+(defclass exec-runner (agent-runner)
+  ((lisp :initform sb-ext:*runtime-pathname*
+         :accessor runner-lisp
+         :initarg :lisp)
+   (lisp-options :initform '("--disable-debugger")
+                 :accessor runner-lisp-options)
+   (init-forms :initform `((load ,(namestring (merge-pathnames "setup.lisp" ql:*quicklisp-home*)))
+                           (ql:quickload :afdog))
+               :accessor init-forms
+               :documentation "Forms to get the lisp image ready to execute the runtime code.")
+   (exec-forms :initform `((sleep 120))
+               :accessor exec-forms
+               :documentation "Forms to cause the execution of the agent.")
+   (terminate-forms :initform `((sb-ext:quit :unix-status 0))
+                    :accessor terminate-forms
+                    :documentation "Forms to cause the death of this process after execution."))
+  (:documentation "Load up a new interpreter, and follow some steps to load an agent as requested."))
+
+(defmethod make-runner ((style (eql :exec)) &rest initargs &key (class 'standard-agent) &allow-other-keys)
+  (log-for (warn) "Exec runner initargs: ~A" initargs)
+  (make-instance 'exec-runner :agent class))
+
+(defmethod start ((runner exec-runner))
+  "Starts a runner by starting a new lisp."
+  (unless (running-p runner)
+    (flet ((prepare-forms (forms)
+             (loop for form in forms appending
+                  (list "--eval"
+                        (with-output-to-string (s) (prin1 form s))))))
+
+      (setf (agent-handle runner)
+            (sb-ext:run-program (runner-lisp runner)
+                                `(,@(runner-lisp-options runner)
+                                  ,@(prepare-forms (init-forms runner))
+                                  ,@(prepare-forms (exec-forms runner))
+                                  ,@(prepare-forms (terminate-forms runner)))
+                                :wait nil)))))
+
+(defmethod running-p ((runner exec-runner))
+  (and (agent-handle runner)
+       (sb-ext:process-p (agent-handle runner))
+       (sb-ext:process-alive-p (agent-handle runner))))
+
+(defmethod stop ((runner exec-runner))
+  (when (running-p runner)
+    (sb-ext:process-kill (agent-handle runner) iolib.syscalls:sigquit)
+    (handler-case (bt:with-timeout (1)
+                    (sb-ext:process-wait (agent-handle runner) t))
+      (bt:timeout () :timeout))))
+
+
 ;;
 ;; A runer that runs the given agent in a thread of the current process.
 ;;

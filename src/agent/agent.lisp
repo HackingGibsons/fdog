@@ -76,7 +76,6 @@ result into the desired type.")
                         (with-output-to-string (s) (prin1 form s))))))
 
       (setf (agent-handle runner)
-            ;; TODO: Drop "(list '" and it should work. Using this to debug before starting a pile of procs
             (sb-ext:run-program (runner-lisp runner)
                                 `(,@(runner-lisp-options runner)
                                   ,@(prepare-forms (init-forms runner))

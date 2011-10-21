@@ -56,7 +56,10 @@
 ;;   (setf (get 'request-event-info 'lock) (bt:make-lock "request-event-info")))
 
 
-;; TODO: Add another generic for fdog-forwarder-name :(
+;; TODO: better way to handle fdog-queue:
+(defmethod endpoint-queue-key ((forwarder fdog-forwarder))
+  (format nil "~A:~A:request-queue" "fdog-queue:" (fdog-forwarder-name forwarder)))
+
 (defmethod endpoint-queue-key ((endpoint forwarder-queue-endpoint))
   (with-slots (queue-prefix) endpoint
     (let* ((name (fdog-forwarder-name (endpoint-engine endpoint)))
@@ -66,8 +69,14 @@
       (format nil "~A:~A:request-queue" queue-prefix
               name))))
 
+;; TODO: need a way to handle aliases?
 (defmethod endpoint-queue-counter ((endpoint forwarder-queue-endpoint))
   (format nil "~A:counter" (endpoint-queue-key endpoint)))
+
+(defmethod request-queue-length ((forwarder fdog-forwarder))
+  (redis:with-named-connection (redis :host *redis-host*
+                                      :port *redis-port*)
+   (parse-integer (or (redis:lred-hget redis (endpoint-queue-key forwarder) :count) "0"))))
 
 (defun format-decoded-time ()
   "Returns the universal time formatted in YYYYMMDDHHmmss"

@@ -248,5 +248,10 @@ as fire any callbacks that may be pending IO when it is ready."
 (defmethod find-organ (agent tag)
   (find tag (agent-organs agent) :key #'organ-tag))
 
-(defmethod local-ipc-addr ((agent standard-agent))
-  (format nil "ipc:///tmp/agent.sock.~A" (agent-uuid agent)))
+(defparameter *ipc-sock-prefix* "ipc:///tmp/agent.sock")
+
+(defmethod local-ipc-addr ((agent standard-agent) &optional organ-tag)
+  (local-ipc-addr (agent-uuid agent) organ-tag))
+
+(defmethod local-ipc-addr ((agent-uuid string) &optional organ-tag)
+  (format nil "~A.~A~@[.~A~]" *ipc-sock-prefix* agent-uuid organ-tag))

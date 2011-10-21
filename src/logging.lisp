@@ -9,7 +9,8 @@
   (when default
     (log5:start-sender 'default
                        (log5:stream-sender :location *error-output*)
-                       :category-spec '(log5:dribble+)
+;                       :category-spec '(log5:dribble+)
+                       :category-spec '(log5:warn+)
                        :output-spec '(human-time log5:category log5:message))))
 
 (defun stop-logging ()

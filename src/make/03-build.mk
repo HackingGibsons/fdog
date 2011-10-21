@@ -84,4 +84,3 @@ clean: externals-clean
 	rm -rf ~/.cache/common-lisp/
 	$(MAKE) clean-build
 
-clean-all: clean core-clean

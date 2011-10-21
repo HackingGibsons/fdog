@@ -1,5 +1,21 @@
 (in-package :fdog-forwarder)
 
+;; Utils
+
+(defun decode-alias-json (request)
+  "Given a request containing a JSON representation of a forwarder alias, return the JSON as values."
+  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (match (cdr (assoc :match spec)))
+         (method (cdr (assoc :method spec))))
+    (values spec name method match)))
+
+(defmethod find-name-and-alias ((forwarder fdog-forwarder) args)
+  "Given a forwarder model and a request URL, find the alias and its name."
+  (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
+         (alias (find-forwarder-alias forwarder alias-name)))
+    (values alias-name alias)))
+
 ;; API hooks
 #.(clsql:locally-enable-sql-reader-syntax)
 
@@ -34,8 +50,7 @@
                       stream)))
 
 (defmethod api/forwarder/alias/delete (handler request forwarder args)
-  (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
-         (alias (find-forwarder-alias forwarder alias-name)))
+  (multiple-value-bind (alias-name alias) (find-name-and-alias forwarder args)
 
     (log-for (trace) "Deleting forwarder alias: ~A => ~A => ~A")
     (unless alias
@@ -50,12 +65,8 @@
       (json:encode-json `((:ok . ,alias-name)) stream))))
 
 (defmethod api/forwarder/alias/update (handler request forwarder args)
-   (let* ((alias-name (ppcre:regex-replace "^/aliases/([\\w_-]+)/.*" args "\\1"))
-         (alias (find-forwarder-alias forwarder alias-name))
-         (spec (json:decode-json-from-string (m2cl:request-body request)))
-         (name (cdr (assoc :name spec)))
-         (match (cdr (assoc :match spec)))
-         (method (cdr (assoc :method spec))))
+  (multiple-value-bind (alias-name alias) (find-name-and-alias forwarder args)
+   (multiple-value-bind (spec name method match) (decode-alias-json request)
 
      (log-for (trace) "Updating forwarder alias: ~A => ~A => ~A" forwarder alias-name alias)
      (unless alias
@@ -71,16 +82,12 @@
      (init-forwarders)
      (log-for (trace) "Re-inited.")
      (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
-       (json:encode-json spec stream))))
+       (json:encode-json spec stream)))))
 
 (defmethod api/forwarder/alias/create (handler request forwarder args)
   (log-for (trace) "Forwarder alias creation for: ~A" forwarder)
   (log-for (trace) "Body: ~A" (m2cl:request-body request))
-  (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))
-         (name (cdr (assoc :name spec)))
-         (method (cdr (assoc :method spec)))
-         (match (cdr (assoc :match spec))))
-
+  (multiple-value-bind (spec name method match) (decode-alias-json request)
     (unless (and spec name (or method match))
       (log-for (trace) "Invalid spec: ~A" spec)
       (error 'fdog-control:400-condition :data (format nil "The must contain: (and name (or method match)) to be valid.")))

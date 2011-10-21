@@ -15,10 +15,11 @@
     (:special (agent))
   (agent (make-instance 'test-agent)))
 
-(def-fixtures running-agent-fixture (:setup
-                             (unless (agent::running-p agent-runner)
-                               (agent::start agent-runner))
-                             :cleanup
-                             (if (agent::running-p agent-runner)
-                                 (agent::stop agent-runner)))
+(def-fixtures running-agent-fixture 
+    (:setup
+     (unless (agent::running-p agent-runner)
+       (agent::start agent-runner))
+     :cleanup
+     (if (agent::running-p agent-runner)
+         (agent::stop agent-runner)))
   (agent-runner (agent::make-runner :test :class 'afdog-tests::runner-agent :include '(:afdog-tests))))

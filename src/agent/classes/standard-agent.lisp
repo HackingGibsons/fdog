@@ -56,6 +56,8 @@
 (defmethod agent-special-event :after ((agent standard-child-mixin) (event-head (eql :boot)) event)
   "Boot event for a child agent."
   (let ((head (find-organ agent :head)))
+    (make-die-without-parent head)
+
     (send-message head `(,(organ-tag head) :command
                           :command :listen
                           :uuid ,(organ-uuid head)

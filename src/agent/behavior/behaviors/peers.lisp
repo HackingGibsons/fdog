@@ -29,3 +29,10 @@
       (setf (gethash addr (listening-to organ))
             (zmq:connect (listen-sock organ) addr)))))
 
+;; TODO: Maybe something more like (:need (:agent :uuid :from #'parent-uuid) :do invoke) ?
+(defbehavior die-without-parent (:interval (:from :heart :nth 6) :do :invoke) (organ)
+  (let ((parent (gethash (parent-uuid (organ-agent organ)) (agent-peers organ))))
+    (if parent
+        (format t "I have a parent: ~A~%" parent)
+        (format t "Parent not found.~%"))))
+

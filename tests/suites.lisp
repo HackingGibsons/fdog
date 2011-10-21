@@ -2,8 +2,8 @@
 
 (def-test-group all-tests ()
   (:documentation "All tests are rooted here")
-  (:include-groups basic-tests)
-  (:include-groups running-agent-tests))
+  (:include-groups basic-tests runner-tests))
+
 
 ;; Directly runnable
 (def-test-group basic-tests ())

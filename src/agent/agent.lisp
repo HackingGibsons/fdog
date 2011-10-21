@@ -77,15 +77,20 @@ result into the desired type.")
     (iolib.syscalls:ESRCH () nil)))
 
 (defmethod start ((runner proc-runner))
+  "Forking starter. Does not work in multithreaded sbcl."
   (unless (running-p runner)
-    (let ((child (iolib.syscalls:fork)))
-      (if (= child 0)
-          (progn
-            (setf (agent-handle runner) (iolib.syscalls:getpid))
-            (unwind-protect (run-agent (agent-instance runner))
-              (setf (agent-handle runner) nil)
-              (iolib.syscalls:exit 0)))
-          (setf (agent-handle runner) child)))))
+    (let ((child  (handler-case (sb-posix:fork) (t () nil))))
+      (case child
+        (nil nil)
+        (-1 (log-for (warn) "~A: FORK FAILED!" runner)
+            nil)
+        (0
+         (setf (agent-handle runner) (iolib.syscalls:getpid))
+         (unwind-protect (run-agent (agent-instance runner))
+           (setf (agent-handle runner) nil)
+           (iolib.syscalls:exit 0)))
+        (t
+         (setf (agent-handle runner) child))))))
 
 (defmethod stop ((runner proc-runner))
   (when (running-p runner)

@@ -38,6 +38,10 @@
         (prog1 nil (log-for (warn) "~A/~A appears dead." uuid status))
         (prog1 t (log-for (trace) "~A/~A appears alive." uuid status)))))
 
+(defmethod suicide ((agent standard-agent))
+  "Suicide an agent rather than a head."
+  (suicide (find-organ agent :head)))
+
 (defmethod suicide ((head agent-head))
   "Send a death message down the bus, agent should terminate."
   (log-for (warn) "~A/~A I HAVE LOST THE WILL TO LIVE!" (organ-agent head) head)

@@ -2,6 +2,7 @@
 ROOT ?= $(shell pwd)
 TARGET ?= afdog
 include $(ROOT)/src/make/*.mk
+include $(ROOT)/tests/make/*.mk
 
 README ?= README.txt
 define HELP

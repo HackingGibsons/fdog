@@ -16,8 +16,6 @@
        (assert-response-200 meta))))
 
 (defmacro def-assert-response (code)
-  ;; TODO have a way to preserve "expected x got y" even when a format string given
-  ;; example: "test response - expected 200, got 404"
   `(defun ,(intern (string-upcase (format nil "assert-response-~A" code))) (meta &key format)
      (let ((params `(,,code ,(getf meta :status-code))))
        (when format

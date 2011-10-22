@@ -22,4 +22,5 @@
      :cleanup
      (if (agent::running-p agent-runner)
          (agent::stop agent-runner)))
-  (agent-runner (agent::make-runner :test :class 'afdog-tests::runner-agent :include '(:afdog-tests))))
+  (agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (agent-runner (agent::make-runner :test :class 'afdog-tests::runner-agent :include '(:afdog-tests) :uuid agent-uuid)))

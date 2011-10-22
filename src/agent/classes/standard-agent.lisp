@@ -58,10 +58,9 @@
   (let ((head (find-organ agent :head)))
     (make-die-without-parent head)
 
-    (send-message head `(,(organ-tag head) :command
-                          :command :listen
-                          :uuid ,(organ-uuid head)
-                          :listen ,(parent-mouth agent)))))
+    (send-message head :command `(:command :listen
+                                  :uuid ,(organ-uuid head)
+                                  :listen ,(parent-mouth agent)))))
 
 (defmethod agent-info :around ((agent standard-child-mixin))
   (append (call-next-method)

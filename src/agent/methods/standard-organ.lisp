@@ -47,9 +47,12 @@
     (setf (organ-incoming-sock organ) nil)))
 
 ;; Messaging
-(defmethod send-message ((organ standard-organ) message &key sock)
+(defmethod send-message ((organ standard-organ) msg-type message &key sock)
   (log-for (trace) "Organ sending message: [~A]" message)
-  (zmq:send! (or sock (organ-outgoing-sock organ)) (prepare-message message)))
+  (zmq:send! (or sock (organ-outgoing-sock organ))
+             (prepare-message (case msg-type
+                                (:raw message)
+                                (otherwise `(,(organ-tag organ) ,msg-type ,@message))))))
 
 (defgeneric reader-callbacks (organ)
   (:documentation "Returns two values both lists: any sockets to add to the poller
@@ -96,9 +99,8 @@ and callbacks for each socket mentioned.")
       (setf (last-beat organ) (subseq `(,(getf event :time) ,@(last-beat organ)) 0 (keep-beats organ)))
 
       (log-for (trace) "~A replying to heartbeat." organ)
-      (send-message organ `(,(organ-tag organ) :beat
-                             :uuid ,(organ-uuid organ)
-                             :time ,(get-internal-real-time))))))
+      (send-message organ :beat `(:uuid ,(organ-uuid organ)
+                                  :time ,(get-internal-real-time))))))
 ;; Hard ticks
 (defmethod agent-tick ((organ standard-organ) event)
   "By default, an organ tick is a no-op"

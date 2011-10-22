@@ -4,7 +4,7 @@
   (declare (ignorable e))
   (let ((now (get-internal-real-time)))
     (when (>= now (heart-next-beat heart))
-      (send-message heart `(:heart :beat :uuid ,(organ-uuid heart) :time ,now))
+      (send-message heart :beat `(:uuid ,(organ-uuid heart) :time ,now))
 
       (setf (heart-last-beat heart) now
             (heart-next-beat heart) (round (+ now (* (heart-beat-every heart)

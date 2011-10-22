@@ -9,3 +9,5 @@
               :accessor heart-last-beat)
    (next-beat :initform (get-internal-real-time)
               :accessor heart-next-beat)))
+
+(defmethod organ-tag ((heart agent-heart)) :heart)

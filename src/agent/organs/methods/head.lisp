@@ -47,10 +47,9 @@
 (defmethod suicide ((head agent-head))
   "Send a death message down the bus, agent should terminate."
   (log-for (warn) "~A/~A I HAVE LOST THE WILL TO LIVE!" (organ-agent head) head)
-  (send-message head `(,(organ-tag head) :command
-                        :command :die
-                        :uuid ,(organ-uuid head)
-                        :time ,(get-internal-real-time))))
+  (send-message head :command `(:command :die
+                                :uuid ,(organ-uuid head)
+                                :time ,(get-internal-real-time))))
 
 ;; Peer maintenence
 (defmethod update-peer ((head agent-head) peer-info)
@@ -70,10 +69,9 @@
   (flet ((listen-to (uuid peer)
            (let ((listen-addr (getf (getf peer :mouth) :addr)))
              (when listen-addr
-               (send-message head `(,(organ-tag head) :command
-                                     :command :listen
-                                     :uuid ,(organ-uuid head)
-                                     :listen ,listen-addr))))))
+               (send-message head :command `(:command :listen
+                                             :uuid ,(organ-uuid head)
+                                             :listen ,listen-addr))))))
     (maphash #'listen-to (agent-peers head))))
 
 

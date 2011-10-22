@@ -84,25 +84,19 @@ The default `too long` interval is 10 minutes"
   (let ((uuid (getf peer-info :uuid))
         (ear (getf peer-info :ear))
         (mouth (getf peer-info :mouth)))
+
     (unless (and uuid ear mouth)
       (log-for (warn) "Info did not contain a UUID mouth or ear.")
       (return-from update-peer))
+
     (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
+;; TODO: This is kinda hacky, and I hate it already
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."
-  (evict-old-peers head)
-
-  (flet ((listen-to (uuid peer)
-           (declare (ignorable uuid))
-           (let ((listen-addr (getf (getf peer :mouth) :addr)))
-             (when listen-addr
-               (send-message head :command `(:command :listen
-                                             :uuid ,(organ-uuid head)
-                                             :listen ,listen-addr))))))
-    (maphash #'listen-to (agent-peers head))))
+  (evict-old-peers head))
 
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)

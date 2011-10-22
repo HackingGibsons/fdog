@@ -62,6 +62,19 @@
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
+(defmethod update-peer :after ((head agent-head) peer-info)
+  "Walk all of the peers we have and listen to each of them."
+  (flet ((listen-to (uuid peer)
+           (let ((listen-addr (getf (getf peer :mouth) :addr)))
+             (format t "Asking to listen to: ~A~%" listen-addr)
+             (when listen-addr
+               (send-message head `(,(organ-tag head) :command
+                                     :command :listen
+                                     :uuid ,(organ-uuid head)
+                                     :listen ,listen-addr))))))
+    (maphash #'listen-to (agent-peers head))))
+
+
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
   (let ((info (getf info :info)))

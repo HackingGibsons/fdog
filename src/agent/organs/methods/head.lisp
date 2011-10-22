@@ -97,9 +97,16 @@ The default `too long` interval is 10 minutes"
   "Walk all of the peers we have and listen to each of them."
   (evict-old-peers head)
 
-  ;; TODO: Talk to all the discovered peers (getf peer-info :peers), too?
-  (labels ((talk-to-peer (uuid info)
+  (labels ((talk-to-discovered-peers (peers)
+             (dolist (peer peers)
+               (if (not (equalp (agent-uuid (organ-agent head)) (car peer)))
+                   (format t "Connect to: ~A~%" peer)
+                   (format t "Skipping connecting to myself: ~A~%" peer))))
+
+           (talk-to-peer (uuid info)
              (declare (ignorable uuid))
+             (talk-to-discovered-peers (getf info :peers))
+
              (send-message head :command
                            `(:command :speak-to
                              :speak-to ,(getf (getf info :ear) :addr)))))

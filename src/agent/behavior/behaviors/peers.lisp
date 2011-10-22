@@ -41,7 +41,7 @@
         (now (get-internal-real-time)))
 
     (when parent
-      (setf (last-seen behavior) (getf parent :time)))
+      (setf (last-seen behavior) (getf parent :time 0)))
 
     (when (<= (lonely-tolerance behavior)
               (- now (last-seen behavior)))

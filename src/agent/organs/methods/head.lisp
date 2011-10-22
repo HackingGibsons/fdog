@@ -98,10 +98,12 @@ The default `too long` interval is 10 minutes"
   (evict-old-peers head)
 
   ;; TODO: Talk to all the discovered peers (getf peer-info :peers), too?
-  (map-peers head (lambda (uuid info)
-                    (send-message head :command
-                                  `(:command :speak-to
-                                    :speak-to ,(getf (getf info :ear) :addr))))))
+  (labels ((talk-to-peer (uuid info)
+             (declare (ignorable uuid))
+             (send-message head :command
+                           `(:command :speak-to
+                             :speak-to ,(getf (getf info :ear) :addr)))))
+    (map-peers head #'talk-to-peer)))
 
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)

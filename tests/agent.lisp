@@ -67,7 +67,7 @@
   (agent-event-count agent))
 
 
-;; Tests to run while agent is running
+;; Test spawning an agent
 (def-test (agent-starts :group runner-tests) :true
   (agent::running-p agent-runner))
 
@@ -75,3 +75,15 @@
     (:process (:eval (agent::stop agent-runner))
               (:check (:not (:true-form (agent::running-p agent-runner))))))
 
+;; Behavior tests
+(def-test (agent-speaks :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (let ((msg (make-instance 'zmq:msg)))
+    (zmq:with-context (c 1)
+      (zmq:with-socket (s c zmq:sub)
+        (zmq:setsockopt s zmq:subscribe "")
+        (zmq:connect s (agent::local-ipc-addr agent-uuid :mouth))
+        (setf msg
+              (handler-case (bt:with-timeout (15)
+                              (agent::parse-message (agent::read-message s)))
+                (bt:timeout () nil)))))
+      msg))

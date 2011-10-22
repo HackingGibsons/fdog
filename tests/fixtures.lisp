@@ -15,11 +15,12 @@
     (:special (agent))
   (agent (make-instance 'test-agent)))
 
-(def-fixtures running-agent-fixture 
+(def-fixtures running-agent-fixture
     (:setup
      (unless (agent::running-p agent-runner)
        (agent::start agent-runner))
      :cleanup
      (if (agent::running-p agent-runner)
          (agent::stop agent-runner)))
-  (agent-runner (agent::make-runner :test :class 'afdog-tests::runner-agent :include '(:afdog-tests))))
+  (agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (agent-runner (agent::make-runner :test :class 'afdog-tests::runner-agent :include '(:afdog-tests) :uuid agent-uuid)))

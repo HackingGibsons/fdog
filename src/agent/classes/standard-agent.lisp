@@ -58,10 +58,27 @@
   (let ((head (find-organ agent :head)))
     (make-die-without-parent head)
 
-    (send-message head `(,(organ-tag head) :command
-                          :command :listen
-                          :uuid ,(organ-uuid head)
-                          :listen ,(parent-mouth agent)))))
+    (send-message head :command `(:command :listen
+                                  :uuid ,(organ-uuid head)
+                                  :listen ,(parent-mouth agent)))))
+
+(defmethod agent-info :around ((agent standard-child-mixin))
+  (append (call-next-method)
+          `(:parent ,(parent-uuid agent))))
+
 ;; An leaf agent base
 (defclass standard-leaf-agent (standard-agent standard-child-mixin)
   ())
+
+;; Parent agent tools
+(defclass standard-supervisor-mixin ()
+  ()
+  (:documentation "A mixin to enable supervision by this agent."))
+
+(defclass standard-hypervisor-agent (standard-agent standard-supervisor-mixin)
+  ())
+
+(defmethod agent-special-event :after ((agent standard-supervisor-mixin) (event-head (eql :boot)) event)
+  "Boot event for a child agent."
+  (let ((head (find-organ agent :head)))
+    (make-spawn-and-watch-children head)))

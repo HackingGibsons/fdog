@@ -27,9 +27,8 @@
 (agent::defbehavior speak-test-message (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (when (equalp message '(:test :ping))
-      (agent::send-message organ `(,(agent::organ-tag organ) :command
-                                    :command :speak
-                                    :say (:test :pong))))))
+      (agent::send-message organ :command `(:command :speak
+                                            :say (:test :pong))))))
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
   (make-speak-test-message (agent::find-organ agent :head)))

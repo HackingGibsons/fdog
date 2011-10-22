@@ -1,5 +1,6 @@
 (in-package :agent)
 
+;; Organ health check
 (defmethod act-on-event ((head agent-head) event)
   (prog1 event
     (cond ((and (listp event) (getf (reverse event) :beat))
@@ -38,6 +39,7 @@
         (prog1 nil (log-for (warn) "~A/~A appears dead." uuid status))
         (prog1 t (log-for (trace) "~A/~A appears alive." uuid status)))))
 
+;; Death
 (defmethod suicide ((agent standard-agent))
   "Suicide an agent rather than a head."
   (suicide (find-organ agent :head)))
@@ -45,11 +47,11 @@
 (defmethod suicide ((head agent-head))
   "Send a death message down the bus, agent should terminate."
   (log-for (warn) "~A/~A I HAVE LOST THE WILL TO LIVE!" (organ-agent head) head)
-  (send-message head `(,(organ-tag head) :command
-                        :command :die
-                        :uuid ,(organ-uuid head)
-                        :time ,(get-internal-real-time))))
+  (send-message head :command `(:command :die
+                                :uuid ,(organ-uuid head)
+                                :time ,(get-internal-real-time))))
 
+;; Peer maintenence
 (defmethod update-peer ((head agent-head) peer-info)
   "Update or store information about a peer we have heard about."
   (let ((uuid (getf peer-info :uuid))
@@ -60,7 +62,18 @@
       (return-from update-peer))
     (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
-          `(:time ,(get-internal-real-time) :ear ,ear :mouth ,mouth))))
+          `(:time ,(get-internal-real-time) ,@peer-info))))
+
+(defmethod update-peer :after ((head agent-head) peer-info)
+  "Walk all of the peers we have and listen to each of them."
+  (flet ((listen-to (uuid peer)
+           (let ((listen-addr (getf (getf peer :mouth) :addr)))
+             (when listen-addr
+               (send-message head :command `(:command :listen
+                                             :uuid ,(organ-uuid head)
+                                             :listen ,listen-addr))))))
+    (maphash #'listen-to (agent-peers head))))
+
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."

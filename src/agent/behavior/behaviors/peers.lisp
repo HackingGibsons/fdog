@@ -53,17 +53,22 @@
   ())
 
 (defmethod spawn-agent ((behavior supervisor-mixin) (organ standard-organ) event)
+  (format t "Spawn agent: ~A~%" event)
   :TODO)
 
 (defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
+  (format t "Check children of ~A~%" behavior)
   :TODO)
 
 (defbehavior spawn-and-watch-children (:or ((:on (:command :spawn :from :head))
                                             (:interval (:from :heart :nth 6)))
                                            :include (supervisor-mixin)
                                            :do :invoke-with-event)
-    (organ &optional event)
-  ;; TODO: HACK: Dispatch based on the call type
-  (cond (event (spawn-agent behavior organ event))
-        (:else (children-check behavior organ)))
-  (format t "~A: O[~A] E[~A]~%" behavior organ event))
+    (organ event)
+
+  (cond ((and (eql (second event) :command)
+              (getf event :command) :spawn)
+         (spawn-agent behavior organ event))
+
+        ((eql (second event) :beat)
+         (children-check behavior organ))))

@@ -1,5 +1,6 @@
 (in-package :agent)
 
+;; Organ health check
 (defmethod act-on-event ((head agent-head) event)
   (prog1 event
     (cond ((and (listp event) (getf (reverse event) :beat))
@@ -38,6 +39,7 @@
         (prog1 nil (log-for (warn) "~A/~A appears dead." uuid status))
         (prog1 t (log-for (trace) "~A/~A appears alive." uuid status)))))
 
+;; Death
 (defmethod suicide ((agent standard-agent))
   "Suicide an agent rather than a head."
   (suicide (find-organ agent :head)))
@@ -50,6 +52,7 @@
                         :uuid ,(organ-uuid head)
                         :time ,(get-internal-real-time))))
 
+;; Peer maintenence
 (defmethod update-peer ((head agent-head) peer-info)
   "Update or store information about a peer we have heard about."
   (let ((uuid (getf peer-info :uuid))
@@ -66,7 +69,6 @@
   "Walk all of the peers we have and listen to each of them."
   (flet ((listen-to (uuid peer)
            (let ((listen-addr (getf (getf peer :mouth) :addr)))
-             (format t "Asking to listen to: ~A~%" listen-addr)
              (when listen-addr
                (send-message head `(,(organ-tag head) :command
                                      :command :listen

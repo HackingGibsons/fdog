@@ -15,7 +15,7 @@
     (:special (agent))
   (agent (make-instance 'test-agent)))
 
-(def-fixtures running-agent-fixture 
+(def-fixtures running-agent-fixture
     (:setup
      (unless (agent::running-p agent-runner)
        (agent::start agent-runner))

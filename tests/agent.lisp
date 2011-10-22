@@ -67,7 +67,7 @@
   (agent-event-count agent))
 
 
-;; Tests to run while agent is running
+;; Test spawning an agent
 (def-test (agent-starts :group runner-tests) :true
   (agent::running-p agent-runner))
 

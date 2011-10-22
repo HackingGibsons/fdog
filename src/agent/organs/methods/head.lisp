@@ -60,7 +60,7 @@
       (return-from update-peer))
     (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
-          `(:time ,(get-internal-real-time) :ear ,ear :mouth ,mouth))))
+          `(:time ,(get-internal-real-time) ,@peer-info))))
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."

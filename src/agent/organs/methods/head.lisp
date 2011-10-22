@@ -52,6 +52,33 @@
                                 :time ,(get-internal-real-time))))
 
 ;; Peer maintenence
+(defmethod map-peers ((head agent-head) fun)
+  "Map `fun' across the known peers of `head' returning
+the result of accumulating the results."
+    (with-hash-table-iterator (peer-iter (agent-peers head))
+      (loop collecting
+           (multiple-value-bind (entry-p uuid info) (peer-iter)
+             (if entry-p
+                 (funcall fun uuid info)
+                 (return result)))
+           into result)))
+
+(defmethod evict-old-peers ((head agent-head))
+  "Remove old peers from the known peer list.
+The default `too long` interval is 10 minutes"
+  (let ((threshold (* (* 10 60) internal-time-units-per-second))
+        (now (get-internal-real-time))
+        (peer-times (map-peers head #'(lambda (k v) `(,k ,(getf v :time))))))
+
+    (flet ((check-peer (peer)
+             (destructuring-bind (uuid time) peer
+               (when (>= (- now time) threshold)
+                 (format t "Evicting: ~A~%" uuid)
+                 (remhash uuid (agent-peers head))
+                 uuid))))
+
+      (remove nil (mapcar #'check-peer peer-times)))))
+
 (defmethod update-peer ((head agent-head) peer-info)
   "Update or store information about a peer we have heard about."
   (let ((uuid (getf peer-info :uuid))
@@ -63,23 +90,6 @@
     (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
-
-(defmethod evict-old-peers ((head agent-head))
-  (let ((threshold (* (* 10 60) internal-time-units-per-second))
-        (now (get-internal-real-time))
-        to-evict)
-
-    (with-hash-table-iterator (peer-iter (agent-peers head))
-      (loop (multiple-value-bind (entry-p key value) (peer-iter)
-              (if entry-p
-                  (when (>= (- now (getf value :time 0)) threshold)
-                    (push key to-evict))
-                  (return)))))
-
-    (flet ((evict (uuid)
-             (format t "Evict: ~A~%" uuid)))
-      (mapc #'evict to-evict))))
-
 
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."

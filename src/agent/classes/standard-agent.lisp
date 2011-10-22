@@ -63,6 +63,10 @@
                           :uuid ,(organ-uuid head)
                           :listen ,(parent-mouth agent)))))
 
+(defmethod agent-info :around ((agent standard-child-mixin))
+  (append (call-next-method)
+          `(:parent ,(parent-uuid agent))))
+
 ;; An leaf agent base
 (defclass standard-leaf-agent (standard-agent standard-child-mixin)
   ())

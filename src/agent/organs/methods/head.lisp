@@ -64,8 +64,13 @@
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
+(defmethod evict-old-peers ((head agent-head))
+  :TODO)
+
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."
+  (evict-old-peers head)
+
   (flet ((listen-to (uuid peer)
            (declare (ignorable uuid))
            (let ((listen-addr (getf (getf peer :mouth) :addr)))

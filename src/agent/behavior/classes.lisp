@@ -30,8 +30,14 @@ The resulting predicate lambda will be checked in `act-on-event' specialization 
 behavior attached to predicate the invocation of the funcallabable lambda of that behavior."
   (eval
    `(let ((behavior ,behavior))
-      (macrolet ((:or (conditions &key include)
-                   `(lambda (event) nil))
+      (macrolet ((:or (definitions &key &allow-other-keys)
+                   (let* ((predicates (mapcar #'(lambda (def) (behavior-compile-invoke-p ,behavior def))
+                                             definitions)))
+                     (flet ((test-all (e)
+                              (some #'(lambda (f) (funcall f e))
+                                    predicates)))
+                       `(lambda (event)
+                          (funcall ,#'test-all event)))))
 
                  (:on (definition &key &allow-other-keys)
                    `(let ((from (getf ',definition :from))

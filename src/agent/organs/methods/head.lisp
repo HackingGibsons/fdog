@@ -67,6 +67,7 @@
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."
   (flet ((listen-to (uuid peer)
+           (declare (ignorable uuid))
            (let ((listen-addr (getf (getf peer :mouth) :addr)))
              (when listen-addr
                (send-message head :command `(:command :listen
@@ -80,3 +81,11 @@
   (let ((info (getf info :info)))
     (update-peer head info)))
 
+(defmethod agent-info ((head agent-head))
+  (let (acc)
+    (maphash #'(lambda (uuid peer)
+                 (push `(,uuid . (:ear ,(getf (getf peer :ear) :addr)
+                                  :mouth ,(getf (getf peer :mouth) :addr)))
+                       acc))
+             (agent-peers head))
+    `(:peers ,acc)))

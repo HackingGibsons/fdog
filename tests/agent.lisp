@@ -24,6 +24,16 @@
   (format t "Agent is booting.~%")
   (nst:nst-cmd :run-group booted-agent-tests))
 
+(agent::defbehavior speak-test-message (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (equalp message '(:test :ping))
+      (agent::send-message organ `(,(agent::organ-tag organ) :command
+                                    :command :speak
+                                    :say (:test :pong))))))
+
+(defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
+  (make-speak-test-message (agent::find-organ agent :head)))
+
 (defmethod next-event :after ((agent test-agent))
   (case (agent::agent-event-count agent)
     (5 (nst:nst-cmd :run-group running-with-events-tests))
@@ -87,3 +97,23 @@
                               (agent::parse-message (agent::read-message s)))
                 (bt:timeout () nil)))))
       msg))
+
+(def-test (agent-hears :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  `(let ((msg (make-instance 'zmq:msg :data "(:TEST :PING)"))
+         (pong '(:TEST :PONG))
+         (ponged-p nil))
+     (zmq:with-context (c 1)
+       (zmq:with-socket (read-sock c zmq:sub)
+         (zmq:with-socket (write-sock c zmq:pub)
+           (zmq:connect write-sock (agent::local-ipc-addr agent-uuid :ear))
+           (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
+           (zmq:setsockopt read-sock zmq:subscribe "")
+           (zmq:send! write-sock msg)
+           (bt:with-timeout (20)
+             (do ((msg
+                   (agent::parse-message (agent::read-message read-sock))
+                   (agent::parse-message (agent::read-message read-sock))))
+                 (ponged-p)
+               (when (equalp msg pong)
+                 (setf ponged-p t)))))))
+     ponged-p))

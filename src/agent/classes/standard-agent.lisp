@@ -75,4 +75,4 @@
 (defmethod agent-special-event :after ((agent standard-supervisor-mixin) (event-head (eql :boot)) event)
   "Boot event for a child agent."
   (let ((head (find-organ agent :head)))
-    (make-watch-children head)))
+    (spawn-and-watch-children head)))

@@ -29,14 +29,14 @@
       (setf (gethash addr (listening-to organ))
             (zmq:connect (listen-sock organ) addr)))))
 
-(defclass lonely-organ-mixin ()
+(defclass lonely-mixin ()
   ((last-seen :initform (get-internal-real-time)
               :accessor last-seen)
    (lonely-tolerance :initform (* 10 internal-time-units-per-second)
                      :accessor lonely-tolerance)))
 
 ;; TODO: Maybe something more like (:need (:agent :uuid :from #'parent-uuid) :do invoke) ?
-(defbehavior die-without-parent (:interval (:from :heart :nth 6) :include (lonely-organ-mixin) :do :invoke) (organ)
+(defbehavior die-without-parent (:interval (:from :heart :nth 6) :include (lonely-mixin) :do :invoke) (organ)
   (let ((parent (gethash (parent-uuid (organ-agent organ)) (agent-peers organ)))
         (now (get-internal-real-time)))
 
@@ -48,5 +48,21 @@
       (log-for (warn) "~A: My parent has died." organ)
       (suicide (organ-agent organ)))))
 
-(defbehavior watch-children (:interval (:from :heart :nth 6) :include () :do :invoke) (organ)
-  (log-for (warn) "TODO: I should do something to watch my children."))
+
+(defclass supervisor-mixin ()
+  ())
+
+(defmethod spawn-agent ((behavior supervisor-mixin) (organ standard-organ) event)
+  :TODO)
+
+(defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
+  :TODO)
+
+(defbehavior spawn-and-watch-children (:or ((:on (:command :spawn :from :head) :do :invoke-with-event)
+                                            (:interval (:from :heart :nth 6) :do :invoke))
+                                           :include (supervisor-mixin))
+    (organ &optional event)
+  ;; TODO: HACK: Dispatch based on the call type
+  (cond (event (spawn-agent behavior organ event))
+        (:else (children-check behavior organ)))
+  (format t "~A: O[~A] E[~A]" behavior organ event))

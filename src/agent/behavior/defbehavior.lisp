@@ -5,10 +5,14 @@
     "Generates a behavior class and and makes it funcallable with `invoke-lambda' as the lambda
 list, evaluating `body' on invokation as governed by the `behavior' list. The scope will
 contain `behavior' bound to the current instance of the behavior class `name'"
+    (labels ((behavior-subclass (b)
+               (cond ((eql (car b) :interval) '(interval-behavior))
+                     ((eql (car b) :or) (loop for sub-b in (second b)
+                                           appending (behavior-subclass sub-b))))))
     `(progn
        (defclass ,name (standard-behavior
                         ,@(getf behavior :include)
-                        ,@(cond ((eql (car behavior) :interval) '(interval-behavior))))
+                        ,@(behavior-subclass behavior))
          ()
          (:metaclass c2mop:funcallable-standard-class))
 
@@ -36,4 +40,4 @@ and attaching this behavior to the existing list."
          (c2mop:set-funcallable-instance-function
           behavior
           #'(lambda ,invoke-lambda (progn (log-for (trace) "Behavior ~A running" (symbol-name ',name))
-                                          ,@body)))))))
+                                          ,@body))))))))

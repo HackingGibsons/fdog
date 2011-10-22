@@ -47,3 +47,6 @@
               (- now (last-seen behavior)))
       (log-for (warn) "~A: My parent has died." organ)
       (suicide (organ-agent organ)))))
+
+(defbehavior watch-children (:interval (:from :heart :nth 6) :include () :do :invoke) (organ)
+  (log-for (warn) "TODO: I should do something to watch my children."))

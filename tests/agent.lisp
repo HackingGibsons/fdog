@@ -110,17 +110,10 @@
            (zmq:setsockopt read-sock zmq:subscribe "")
            (zmq:send! write-sock msg)
            (bt:with-timeout (20)
-             (do ((msg 
-                   (agent::parse-message (agent::read-message read-sock)) 
+             (do ((msg
+                   (agent::parse-message (agent::read-message read-sock))
                    (agent::parse-message (agent::read-message read-sock))))
                  (ponged-p)
                (when (equalp msg pong)
                  (setf ponged-p t)))))))
      ponged-p))
-      
-           
-
-    
-    
-    
-        

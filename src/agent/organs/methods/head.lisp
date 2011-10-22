@@ -65,7 +65,21 @@
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
 (defmethod evict-old-peers ((head agent-head))
-  :TODO)
+  (let ((threshold (* (* 10 60) internal-time-units-per-second))
+        (now (get-internal-real-time))
+        to-evict)
+
+    (with-hash-table-iterator (peer-iter (agent-peers head))
+      (loop (multiple-value-bind (entry-p key value) (peer-iter)
+              (if entry-p
+                  (when (>= (- now (getf value :time 0)) threshold)
+                    (push key to-evict))
+                  (return)))))
+
+    (flet ((evict (uuid)
+             (format t "Evict: ~A~%" uuid)))
+      (mapc #'evict to-evict))))
+
 
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."

@@ -29,10 +29,21 @@
       (setf (gethash addr (listening-to organ))
             (zmq:connect (listen-sock organ) addr)))))
 
-;; TODO: Maybe something more like (:need (:agent :uuid :from #'parent-uuid) :do invoke) ?
-(defbehavior die-without-parent (:interval (:from :heart :nth 6) :do :invoke) (organ)
-  (let ((parent (gethash (parent-uuid (organ-agent organ)) (agent-peers organ))))
-    (if parent
-        (format t "I have a parent: ~A~%" parent)
-        (format t "Parent not found.~%"))))
+(defclass lonely-organ-mixin ()
+  ((last-seen :initform (get-internal-real-time)
+              :accessor last-seen)
+   (lonely-tolerance :initform (* 10 internal-time-units-per-second)
+                     :accessor lonely-tolerance)))
 
+;; TODO: Maybe something more like (:need (:agent :uuid :from #'parent-uuid) :do invoke) ?
+(defbehavior die-without-parent (:interval (:from :heart :nth 6) :include (lonely-organ-mixin) :do :invoke) (organ)
+  (let ((parent (gethash (parent-uuid (organ-agent organ)) (agent-peers organ)))
+        (now (get-internal-real-time)))
+
+    (when parent
+      (setf (last-seen behavior) (getf parent :time)))
+
+    (when (<= (lonely-tolerance behavior)
+              (- now (last-seen behavior)))
+      (log-for (warn) "~A: My parent has died." organ)
+      (suicide (organ-agent organ)))))

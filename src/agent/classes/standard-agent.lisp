@@ -45,3 +45,23 @@
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
+;; Child agent mixin
+(defclass standard-child-mixin ()
+  ((parent-uuid :initarg :parent-uuid
+                :reader parent-uuid)
+   (parent-mouth :initarg :parent-mouth
+                 :reader parent-mouth))
+  (:documentation "An agent that has a parent which it listens to, and dies without."))
+
+(defmethod agent-special-event :after ((agent standard-child-mixin) (event-head (eql :boot)) event)
+  "Boot event for a child agent."
+  (let ((head (find-organ agent :head)))
+    (make-die-without-parent head)
+
+    (send-message head `(,(organ-tag head) :command
+                          :command :listen
+                          :uuid ,(organ-uuid head)
+                          :listen ,(parent-mouth agent)))))
+;; An leaf agent base
+(defclass standard-leaf-agent (standard-agent standard-child-mixin)
+  ())

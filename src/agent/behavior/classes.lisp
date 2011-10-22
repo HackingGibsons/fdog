@@ -30,7 +30,7 @@ The resulting predicate lambda will be checked in `act-on-event' specialization 
 behavior attached to predicate the invocation of the funcallabable lambda of that behavior."
   (eval
    `(let ((behavior ,behavior))
-      (macrolet ((:on (definition verb noun)
+      (macrolet ((:on (definition &key &allow-other-keys)
                    `(let ((from (getf ',definition :from))
                           (type (car ',definition))
                           (message (second ',definition)))
@@ -43,7 +43,7 @@ behavior attached to predicate the invocation of the funcallabable lambda of tha
                                      (eql (getf event type) message))
                             t)))))
 
-                 (:interval (definition verb noun)
+                 (:interval (definition &key &allow-other-keys)
                    `(let ((from (getf ',definition :from))
                           (nth (getf ',definition :nth)))
                       (lambda (event)

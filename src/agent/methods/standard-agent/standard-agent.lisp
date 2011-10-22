@@ -152,8 +152,9 @@ as fire any callbacks that may be pending IO when it is ready."
 
           ;; Event loop unwind
           (flet ((organ-disconnect (o) (agent-disconnect agent o)))
-            (log-for (trace) "Disconnecting organs.")
-            (mapcar #'organ-disconnect (agent-organs agent))))
+            (log-for (warn) "Disconnecting organs.")
+            (mapcar #'organ-disconnect (agent-organs agent))
+            (log-for (warn) "Organs disconnected.")))
 
         (log-for (trace) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))))
 

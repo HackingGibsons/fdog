@@ -93,10 +93,15 @@ The default `too long` interval is 10 minutes"
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
-;; TODO: This is kinda hacky, and I hate it already
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."
-  (evict-old-peers head))
+  (evict-old-peers head)
+
+  ;; TODO: Talk to all the discovered peers (getf peer-info :peers), too?
+  (map-peers head (lambda (uuid info)
+                    (send-message head :command
+                                  `(:command :speak-to
+                                    :speak-to ,(getf (getf info :ear) :addr))))))
 
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)

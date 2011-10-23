@@ -62,7 +62,7 @@
 (defmethod spawn-agent ((behavior supervisor-mixin) (organ standard-organ) event)
   (format t "Spawn agent: ~A~%" event)
   ;; TODO: Figure out slightly better how to select the spawn class
-  (let* ((child-id (format nil "~A" (uuid:make-v4-uuid)))
+  (let* ((child-uuid (format nil "~A" (uuid:make-v4-uuid)))
          (runner (make-runner *spawner* :class 'standard-leaf-agent
                               :uuid child-uuid :parent-uuid (agent-uuid (organ-agent organ))
                               :parent-mouth (speak-addr (find-organ (organ-agent organ) :mouth)))))

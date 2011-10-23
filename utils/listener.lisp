@@ -3,6 +3,7 @@
 (defun zmq-connect-and-dump (socktype addr &rest keys &key (use-log t) &allow-other-keys)
   (zmq:with-context (ctx 1)
     (zmq:with-socket (sock ctx socktype)
+      (zmq:setsockopt sock zmq:linger 250)
       (zmq:connect sock addr)
 
       (when (getf keys :subscribe)

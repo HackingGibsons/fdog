@@ -67,8 +67,7 @@
                               :uuid child-uuid :parent-uuid (agent-uuid (organ-agent organ))
                               :parent-mouth (speak-addr (find-organ (organ-agent organ) :mouth)))))
     ;; TODO: Do something with the UUID of the agent we spawned to supervise it
-    (format t "Spawned agent: ~A~%" runner)
-    (start runner)))
+    (format t "Would have spawned agent: ~A~%" runner)))
 
 (defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
   (format t "Check children of ~A~%" behavior)

@@ -9,7 +9,7 @@
 (defmethod see ((organ standard-organ) (subject (eql :process)) &rest info)
   (log-for (trace eye organ) "~A is looking at ~A and notices ~A" organ subject info)
   (let* ((pid (getf info :pid))
-         (running-p (and (numberp pid) 
+         (running-p (and (numberp pid)
                          (handler-case (zerop (iolib.syscalls:kill pid 0))
                            (iolib.syscalls:syscall-error () nil))))
          (message `(:saw :process :process (:pid ,pid :alive ,(if running-p t nil)))))

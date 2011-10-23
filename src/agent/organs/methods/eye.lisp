@@ -11,6 +11,6 @@
   (let* ((pid (getf info :pid))
          (running-p (handler-case (zerop (iolib.syscalls:kill pid 0))
                       (iolib.syscalls:syscall-error () nil)))
-         (message `(:saw :pid :pid ,pid :alive ,(if running-p t nil))))
+         (message `(:saw :process :process (:pid ,pid :alive ,(if running-p t nil)))))
     (log-for (trace eye organ) "Sending message ~A" message)
     (send-message organ :saw message)))

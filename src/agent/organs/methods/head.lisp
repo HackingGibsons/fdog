@@ -99,9 +99,10 @@ The default `too long` interval is 10 minutes"
 
   (labels ((talk-to-discovered-peers (peers)
              (dolist (peer peers)
-               (if (not (equalp (agent-uuid (organ-agent head)) (car peer)))
-                   (format t "Connect to: ~A~%" peer)
-                   (format t "Skipping connecting to myself: ~A~%" peer))))
+               (unless (equalp (agent-uuid (organ-agent head)) (car peer))
+                 (send-message head :command
+                               `(:command :speak-to
+                                 :speak-to ,(getf (rest peer) :ear))))))
 
            (talk-to-peer (uuid info)
              (declare (ignorable uuid))
@@ -110,6 +111,7 @@ The default `too long` interval is 10 minutes"
              (send-message head :command
                            `(:command :speak-to
                              :speak-to ,(getf (getf info :ear) :addr)))))
+
     (map-peers head #'talk-to-peer)))
 
 

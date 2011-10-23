@@ -33,12 +33,12 @@
 (agent::defbehavior look-at-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (format t "look at self when asked called ~A ~A ~%" organ event)
   (let ((message (getf event :message)))
-    (agent::send-message organ :command `(:command :speak 
+    (agent::send-message organ :command `(:command :speak
                                                    :say ,message))
     (when (equalp message '(:look :self))
       (agent::send-message organ :command `(:command :look
                                                      :at (:process :pid :pid ,(iolib.syscalls:getpid))))
-        (agent::send-message organ :command `(:command :speak 
+        (agent::send-message organ :command `(:command :speak
                                                  :say (:sent :ok))))))
 
 
@@ -127,7 +127,7 @@
           (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
           (zmq:setsockopt read-sock zmq:subscribe "")
           (zmq:send! write-sock msg)
-          (handler-case 
+          (handler-case
               (bt:with-timeout (10)
                 (do ((msg
                       (agent::parse-message (agent::read-message read-sock))
@@ -146,7 +146,7 @@
           (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
           (zmq:setsockopt read-sock zmq:subscribe "")
           (zmq:send! write-sock (make-instance 'zmq:msg :data "(:look :self)"))
-          (handler-case 
+          (handler-case
               (bt:with-timeout (30)
                 (do* ((msg
                       (agent::parse-message (agent::read-message read-sock))

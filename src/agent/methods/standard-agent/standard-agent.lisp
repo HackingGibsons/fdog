@@ -114,7 +114,9 @@ as fire any callbacks that may be pending IO when it is ready."
   "Enter the agent event loop, return only when agent is dead."
   (zmq:with-context (ctx *context-threads*)
     (zmq:with-socket (event-sock ctx zmq:sub)
+      (zmq:setsockopt event-sock zmq:linger *socket-linger*)
       (zmq:with-socket (message-sock ctx zmq:pub)
+        (zmq:setsockopt message-sock zmq:linger *socket-linger*)
         (log-for (trace) "Binding event sock to: ~A" (agent-event-addr agent))
         (zmq:bind event-sock (agent-event-addr agent))
         (log-for (warn) "Subscribing event sock to everyting")
@@ -152,10 +154,11 @@ as fire any callbacks that may be pending IO when it is ready."
 
           ;; Event loop unwind
           (flet ((organ-disconnect (o) (agent-disconnect agent o)))
-            (log-for (trace) "Disconnecting organs.")
-            (mapcar #'organ-disconnect (agent-organs agent))))
+            (log-for (warn) "Disconnecting organs.")
+            (mapcar #'organ-disconnect (agent-organs agent))
+            (log-for (warn) "Organs disconnected.")))
 
-        (log-for (trace) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))))
+        (log-for (warn) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))))
 
 (defgeneric prepare-message (message)
   (:method (message)
@@ -167,8 +170,9 @@ as fire any callbacks that may be pending IO when it is ready."
   (:method ((agent standard-agent) event)
     (log-for (trace) "Publishing event: [~A]" (with-output-to-string (s) (prin1 event s)))
     (zmq:with-socket (esock (agent-context agent) zmq:pub)
-        (zmq:connect esock (agent-event-addr agent))
-        (zmq:send! esock (prepare-message event)))))
+      (zmq:setsockopt esock zmq:linger *socket-linger*)
+      (zmq:connect esock (agent-event-addr agent))
+      (zmq:send! esock (prepare-message event)))))
 
 (defgeneric agent-send-message (agent event)
   (:method ((agent standard-agent) event)

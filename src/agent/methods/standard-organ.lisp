@@ -21,6 +21,8 @@
 
         (organ-outgoing-sock organ)
         (zmq:socket (agent-context agent) zmq:pub))
+  (zmq:setsockopt (organ-incoming-sock organ) zmq:linger *socket-linger*)
+  (zmq:setsockopt (organ-outgoing-sock organ) zmq:linger *socket-linger*)
 
   (log-for (trace) "Connecting the incoming socket: ~A" (agent-message-addr agent))
   (zmq:connect (organ-incoming-sock organ) (agent-message-addr agent))

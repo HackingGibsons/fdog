@@ -62,15 +62,28 @@
 (defmethod spawn-agent ((behavior supervisor-mixin) (organ standard-organ) event)
   (format t "Spawn agent: ~A~%" event)
   ;; TODO: Figure out slightly better how to select the spawn class
-  (let* ((child-uuid (format nil "~A" (uuid:make-v4-uuid)))
-         (runner (make-runner *spawner* :class 'standard-leaf-agent
-                              :uuid child-uuid :parent-uuid (agent-uuid (organ-agent organ))
-                              :parent-mouth (speak-addr (find-organ (organ-agent organ) :mouth)))))
-    ;; TODO: Do something with the UUID of the agent we spawned to supervise it
-    (format t "Would have spawned agent: ~A~%" runner)))
+  (let* ((spec (getf event :spawn))
+         (package (find-package (getf spec :package)))
+
+         (class (and package
+                     (getf spec :class)))
+         (class (and class (find-symbol (symbol-name class) package)))
+         (class (and class (handler-case
+                               (prog1 (find-class class)
+                                 (c2mop:finalize-inheritance (find-class class)))
+                             (simple-error () nil))))
+         (class (and class
+                     (find (find-class 'standard-agent)
+                           (c2mop:class-precedence-list class))
+                     class)))
+
+    (when (and class package)
+      ;; At this point we have assured that `class' is a real class
+      ;; and is a subclass of `standard-agent'
+      (format t "Would have spawned agent: ~A/~A~%" class package))))
 
 (defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
-  (format t "Check children of ~A~%" behavior)
+  (format t "TODO: Check children of ~A~%" behavior)
   :TODO)
 
 (defbehavior spawn-and-watch-children (:or ((:on (:command :spawn :from :head))

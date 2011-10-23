@@ -241,4 +241,30 @@
                                                      (when (getf (getf msg :process) :alive)
                                                        (setf watching t))))
                                      (bt:timeout () nil)))))
-                             watching)))))
+                             watching)))
+
+              (:eval (zmq:with-context (ctx 1)
+                                       (zmq:with-socket (write-sock ctx zmq:pub)
+                                           (zmq:connect write-sock (agent::local-ipc-addr agent-uuid :ear))
+
+                                           (zmq:send! write-sock (agent::prepare-message '(:stop-watching :self))))))
+
+              (:check
+               (:true-form (equalp 0
+                                   (let (watching)
+                                     (zmq:with-context (ctx 1)
+                                       (zmq:with-socket (write-sock ctx zmq:pub)
+                                         (zmq:with-socket (read-sock ctx zmq:sub)
+                                           (zmq:connect write-sock (agent::local-ipc-addr agent-uuid :ear))
+                                           (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
+                                           (zmq:setsockopt read-sock zmq:subscribe "")
+
+                                           (zmq:send! write-sock (agent::prepare-message '(:count :watching)))
+                                           (handler-case (bt:with-timeout (15)
+                                                           (do* ((msg (agent::parse-message (agent::read-message read-sock))
+                                                                      (agent::parse-message (agent::read-message read-sock))))
+                                                                (watching)
+                                                             (when (equalp (car msg) :count)
+                                                               (setf watching (second msg)))))
+                                             (bt:timeout () nil)))))
+                                     watching))))))

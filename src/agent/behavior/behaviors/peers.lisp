@@ -59,6 +59,11 @@
 (defclass supervisor-mixin ()
   ())
 
+(defmethod agent-spawned ((behavior supervisor-mixin) uuid)
+  "Drive the event machine attached to a given peer."
+  (format t "Agent spawned as per ~A: ~A~%" behavior uuid)
+  :TODO)
+
 (defmethod spawn-agent ((behavior supervisor-mixin) (organ standard-organ) event)
   (format t "Spawn agent: ~A~%" event)
   ;; TODO: Figure out slightly better how to select the spawn class
@@ -77,15 +82,19 @@
                            (c2mop:class-precedence-list class))
                      class)))
 
+    ;; At this point we have assured that `class' is a real class
+    ;; and is a subclass of `standard-agent'
     (when (and class package)
-      (let* ((uuid (uuid:make-v4-uuid))
+      (let* ((uuid (format nil "~A" (uuid:make-v4-uuid)))
              (initargs `(:uuid ,uuid
                          :parent-uuid ,(agent-uuid (organ-agent organ))
-                         :parent-mouth ,(mouth-addr (find-organ (organ-agent organ) :mouth)))))
+                         :parent-mouth ,(mouth-addr (find-organ (organ-agent organ) :mouth))))
+             (runner (apply #'make-runner *spawner* :class (class-name class) initargs)))
 
-        ;; At this point we have assured that `class' is a real class
-        ;; and is a subclass of `standard-agent'
-        (format t "Would have spawned agent: ~A/~A => ~A~%" class package initargs)))))
+        (and runner
+             (start runner)
+             (agent-spawned behavior uuid))))))
+
 
 (defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
   (format t "TODO: Check children of ~A~%" behavior)

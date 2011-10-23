@@ -31,16 +31,10 @@
                                             :say (:test :pong))))))
 
 (agent::defbehavior look-at-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (format t "look at self when asked called ~A ~A ~%" organ event)
   (let ((message (getf event :message)))
-    (agent::send-message organ :command `(:command :speak
-                                                   :say ,message))
     (when (equalp message '(:look :self))
       (agent::send-message organ :command `(:command :look
-                                                     :at (:process :pid :pid ,(iolib.syscalls:getpid))))
-        (agent::send-message organ :command `(:command :speak
-                                                 :say (:sent :ok))))))
-
+                                                     :at (:process :pid :pid ,(iolib.syscalls:getpid)))))))
 
 (agent::defbehavior announce-what-i-see (:on (:saw :process :from :eye) :do :invoke-with-event) (organ event)
   (log-for (trace agent::organ) "organ: ~A sees pid ~A and alive is ~A" organ (getf event :pid) (getf event :alive))

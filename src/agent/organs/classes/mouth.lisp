@@ -1,7 +1,9 @@
 (in-package :agent)
 
 (defclass agent-mouth (standard-beating-organ)
-  ((speak-addr :initform nil
+  ((speaking-to :initform (make-hash-table :test 'equalp)
+                :accessor speaking-to)
+   (speak-addr :initform nil
                :accessor speak-addr
                :accessor mouth-addr)
    (speak-sock :initform nil
@@ -12,6 +14,7 @@
   (:default-initargs . (:tag :mouth)))
 
 (defmethod initialize-instance :after ((mouth agent-mouth) &key)
+  (make-talk-where-told mouth)
   (make-speak-when-told mouth))
 
 (defmethod agent-boot :after ((agent standard-agent) (mouth agent-mouth) &rest options)

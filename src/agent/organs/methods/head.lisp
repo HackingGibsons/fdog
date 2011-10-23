@@ -52,27 +52,67 @@
                                 :time ,(get-internal-real-time))))
 
 ;; Peer maintenence
+(defmethod map-peers ((head agent-head) fun)
+  "Map `fun' across the known peers of `head' returning
+the result of accumulating the results."
+    (with-hash-table-iterator (peer-iter (agent-peers head))
+      (loop collecting
+           (multiple-value-bind (entry-p uuid info) (peer-iter)
+             (if entry-p
+                 (funcall fun uuid info)
+                 (return result)))
+           into result)))
+
+(defmethod evict-old-peers ((head agent-head))
+  "Remove old peers from the known peer list.
+The default `too long` interval is 10 minutes"
+  (let ((threshold (* (* 10 60) internal-time-units-per-second))
+        (now (get-internal-real-time))
+        (peer-times (map-peers head #'(lambda (k v) `(,k ,(getf v :time))))))
+
+    (flet ((check-peer (peer)
+             (destructuring-bind (uuid time) peer
+               (when (>= (- now time) threshold)
+                 (format t "Evicting: ~A~%" uuid)
+                 (remhash uuid (agent-peers head))
+                 uuid))))
+
+      (remove nil (mapcar #'check-peer peer-times)))))
+
 (defmethod update-peer ((head agent-head) peer-info)
   "Update or store information about a peer we have heard about."
   (let ((uuid (getf peer-info :uuid))
         (ear (getf peer-info :ear))
         (mouth (getf peer-info :mouth)))
+
     (unless (and uuid ear mouth)
       (log-for (warn) "Info did not contain a UUID mouth or ear.")
       (return-from update-peer))
+
     (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."
-  (flet ((listen-to (uuid peer)
-           (let ((listen-addr (getf (getf peer :mouth) :addr)))
-             (when listen-addr
-               (send-message head :command `(:command :listen
-                                             :uuid ,(organ-uuid head)
-                                             :listen ,listen-addr))))))
-    (maphash #'listen-to (agent-peers head))))
+  (evict-old-peers head)
+
+  (labels ((talk-to-discovered-peers (peers)
+             (dolist (peer peers)
+               (unless (equalp (agent-uuid (organ-agent head)) (car peer))
+                 (send-message head :command
+                               `(:command :speak-to
+                                 :speak-to ,(getf (rest peer) :ear))))))
+
+           (talk-to-peer (uuid info)
+             (declare (ignorable uuid))
+             (talk-to-discovered-peers (getf info :peers))
+
+             (send-message head :command
+                           `(:command :speak-to
+                             :speak-to ,(getf (getf info :ear) :addr)))))
+
+    (map-peers head #'talk-to-peer)))
 
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
@@ -80,3 +120,11 @@
   (let ((info (getf info :info)))
     (update-peer head info)))
 
+(defmethod agent-info ((head agent-head))
+  (let (acc)
+    (maphash #'(lambda (uuid peer)
+                 (push `(,uuid . (:ear ,(getf (getf peer :ear) :addr)
+                                  :mouth ,(getf (getf peer :mouth) :addr)))
+                       acc))
+             (agent-peers head))
+    `(:peers ,acc)))

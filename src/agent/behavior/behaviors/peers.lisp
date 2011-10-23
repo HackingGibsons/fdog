@@ -21,6 +21,14 @@
   (let ((message (getf event :message)))
     (apply #'heard-message `(,organ ,@message))))
 
+(defbehavior talk-where-told (:on (:command :speak-to :from :head) :do :invoke-with-event) (organ event)
+  (let ((addr (getf event :speak-to)))
+    (when (and addr (speak-sock organ)
+               (not (gethash addr (speaking-to organ))))
+
+      (setf (gethash addr (speaking-to organ))
+            (zmq:connect (speak-sock organ) addr)))))
+
 (defbehavior listen-where-told (:on (:command :listen :from :head) :do :invoke-with-event) (organ event)
   (let ((addr (getf event :listen)))
     (when (and addr (listen-sock organ)

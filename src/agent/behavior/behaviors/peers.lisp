@@ -78,9 +78,14 @@
                      class)))
 
     (when (and class package)
-      ;; At this point we have assured that `class' is a real class
-      ;; and is a subclass of `standard-agent'
-      (format t "Would have spawned agent: ~A/~A~%" class package))))
+      (let* ((uuid (uuid:make-v4-uuid))
+             (initargs `(:uuid ,uuid
+                         :parent-uuid ,(agent-uuid (organ-agent organ))
+                         :parent-mouth ,(mouth-addr (find-organ (organ-agent organ) :mouth)))))
+
+        ;; At this point we have assured that `class' is a real class
+        ;; and is a subclass of `standard-agent'
+        (format t "Would have spawned agent: ~A/~A => ~A~%" class package initargs)))))
 
 (defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
   (format t "TODO: Check children of ~A~%" behavior)

@@ -1,7 +1,8 @@
 (in-package :agent)
 
 (defmethod initialize-instance :after ((eye agent-eye) &key)
-  (make-look-when-told eye))
+  (make-look-when-told eye)
+  (make-watch-when-told eye))
 
 (defgeneric see (organ subject &rest args)
   (:documentation "the act of looking at something"))

@@ -61,7 +61,14 @@
 
 (defmethod spawn-agent ((behavior supervisor-mixin) (organ standard-organ) event)
   (format t "Spawn agent: ~A~%" event)
-  :TODO)
+  ;; TODO: Figure out slightly better how to select the spawn class
+  (let* ((child-id (format nil "~A" (uuid:make-v4-uuid)))
+         (runner (make-runner *spawner* :class 'standard-leaf-agent
+                              :uuid child-uuid :parent-uuid (agent-uuid (organ-agent organ))
+                              :parent-mouth (speak-addr (find-organ (organ-agent organ) :mouth)))))
+    ;; TODO: Do something with the UUID of the agent we spawned to supervise it
+    (format t "Spawned agent: ~A~%" runner)
+    (start runner)))
 
 (defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
   (format t "Check children of ~A~%" behavior)

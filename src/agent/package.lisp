@@ -13,3 +13,6 @@
 
 (in-package :agent)
 
+(defparameter *spawner* :thread
+  "The type of maker to use to spawn agents.")
+

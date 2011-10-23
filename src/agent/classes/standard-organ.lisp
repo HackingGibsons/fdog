@@ -28,3 +28,5 @@
 (defmethod organ-tag ((organ t))
   "An untagged `organ' should look like it's type. Makes mapping across them easier."
   (intern (symbol-name (type-of organ)) :keyword))
+
+(defcategory organ)

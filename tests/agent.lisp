@@ -27,11 +27,25 @@
 (agent::defbehavior speak-test-message (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (when (equalp message '(:test :ping))
-      (agent::send-message organ :command `(:command :speak
+      (agent::send-message organ :command '(:command :speak
                                             :say (:test :pong))))))
 
+(agent::defbehavior look-at-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (equalp message '(:look :self))
+      (agent::send-message organ :command `(:command :look
+                                                     :at (:process :pid :pid ,(iolib.syscalls:getpid)))))))
+
+(agent::defbehavior announce-what-i-see (:on (:saw :process :from :eye) :do :invoke-with-event) (organ event)
+  (log-for (trace agent::organ) "organ: ~A sees pid ~A and alive is ~A" organ (getf event :pid) (getf event :alive))
+  (agent::send-message organ :command `(:command :speak
+                                       :say ,event)))
+
+
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
-  (make-speak-test-message (agent::find-organ agent :head)))
+  (make-speak-test-message (agent::find-organ agent :head))
+  (make-look-at-self-when-asked (agent::find-organ agent :head))
+  (make-announce-what-i-see (agent::find-organ agent :head)))
 
 (defmethod next-event :after ((agent test-agent))
   (case (agent::agent-event-count agent)
@@ -40,7 +54,7 @@
          (zmq:close (agent::organ-incoming-sock organ))
          (zmq:close (agent::organ-outgoing-sock organ))
          (setf (agent::organ-incoming-sock organ) nil (agent::organ-outgoing-sock organ) nil)
-         (setf (agent-organs agent) (remove :appendix (agent-organs agent) :key #'agent::organ-tag))))))
+         (setf (agent::agent-organs agent) (remove :appendix (agent::agent-organs agent) :key #'agent::organ-tag))))))
 
 ;; This test will scaffold a running agent and run any tests driven by the event loop
 ;; then execute the terminated agent group
@@ -98,21 +112,40 @@
       msg))
 
 (def-test (agent-hears :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
-  `(let ((msg (make-instance 'zmq:msg :data "(:TEST :PING)"))
-         (pong '(:TEST :PONG))
-         (ponged-p nil))
-     (zmq:with-context (c 1)
-       (zmq:with-socket (read-sock c zmq:sub)
-         (zmq:with-socket (write-sock c zmq:pub)
-           (zmq:connect write-sock (agent::local-ipc-addr agent-uuid :ear))
-           (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
-           (zmq:setsockopt read-sock zmq:subscribe "")
-           (zmq:send! write-sock msg)
-           (bt:with-timeout (20)
-             (do ((msg
-                   (agent::parse-message (agent::read-message read-sock))
-                   (agent::parse-message (agent::read-message read-sock))))
-                 (ponged-p)
-               (when (equalp msg pong)
-                 (setf ponged-p t)))))))
-     ponged-p))
+  (let ((msg (make-instance 'zmq:msg :data "(:TEST :PING)"))
+        (ponged-p nil))
+    (zmq:with-context (c 1)
+      (zmq:with-socket (read-sock c zmq:sub)
+        (zmq:with-socket (write-sock c zmq:pub)
+          (zmq:connect write-sock (agent::local-ipc-addr agent-uuid :ear))
+          (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
+          (zmq:setsockopt read-sock zmq:subscribe "")
+          (zmq:send! write-sock msg)
+          (handler-case
+              (bt:with-timeout (10)
+                (do ((msg
+                      (agent::parse-message (agent::read-message read-sock))
+                      (agent::parse-message (agent::read-message read-sock))))
+                     (ponged-p t)
+                     (when (equalp (getf msg :test) :pong)
+                         (setf ponged-p t))))
+                (bt:timeout () ponged-p)))))))
+
+(def-test (agent-sees :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (let ((seen-self-p nil))
+    (zmq:with-context (c 1)
+      (zmq:with-socket (read-sock c zmq:sub)
+        (zmq:with-socket (write-sock c zmq:pub)
+          (zmq:connect write-sock (agent::local-ipc-addr agent-uuid :ear))
+          (zmq:connect read-sock (agent::local-ipc-addr agent-uuid :mouth))
+          (zmq:setsockopt read-sock zmq:subscribe "")
+          (zmq:send! write-sock (make-instance 'zmq:msg :data "(:look :self)"))
+          (handler-case
+              (bt:with-timeout (30)
+                (do* ((msg
+                      (agent::parse-message (agent::read-message read-sock))
+                      (agent::parse-message (agent::read-message read-sock))))
+                    (seen-self-p t)
+                  (when (getf (getf msg :process) :alive)
+                      (setf seen-self-p t))))
+            (bt:timeout () seen-self-p)))))))

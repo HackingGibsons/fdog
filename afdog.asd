@@ -37,7 +37,8 @@
                                             ((:file "classes")
                                              (:file "defbehavior" :depends-on ("classes"))
                                              (:module "behaviors" :depends-on ("defbehavior") :components
-                                                      ((:file "peers")))))
+                                                      ((:file "peers")
+                                                       (:file "vision")))))
 
                                    ;; Standard organ definitions
                                    (:module "organs" :depends-on ("classes") :components
@@ -46,9 +47,11 @@
                                                        (:file "head")
                                                        (:file "mouth")
                                                        (:file "ear")
+                                                       (:file "eye")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")
+                                                       (:file "eye")
                                                        (:file "head")))))))))
 
                (:module "utils" :depends-on ("src") :components

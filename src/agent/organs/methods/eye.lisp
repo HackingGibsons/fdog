@@ -6,7 +6,7 @@
 (defgeneric see (organ subject &rest args)
   (:documentation "the act of looking at something"))
 
-(defmethod see (organ (subject (eql :process)) &rest info)
+(defmethod see ((organ standard-organ) (subject (eql :process)) &rest info)
   (log-for (trace eye organ) "~A is looking at ~A and notices ~A" organ subject info)
   (let* ((pid (getf info :pid))
          (running-p (handler-case (zerop (iolib.syscalls:kill pid 0))

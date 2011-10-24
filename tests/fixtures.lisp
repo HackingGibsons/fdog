@@ -1,5 +1,6 @@
 (in-package :afdog-tests)
 
+;; Runner encapsulation
 (defclass test-runner (agent::exec-runner) ())
 
 (defmethod update-instance-for-different-class :after (previous (current test-runner) &key)

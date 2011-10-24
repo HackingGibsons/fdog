@@ -38,6 +38,7 @@
                                              (:file "defbehavior" :depends-on ("classes"))
                                              (:module "behaviors" :depends-on ("defbehavior") :components
                                                       ((:file "peers")
+                                                       (:file "manipulation")
                                                        (:file "vision")))))
 
                                    ;; Standard organ definitions
@@ -48,6 +49,7 @@
                                                        (:file "mouth")
                                                        (:file "ear")
                                                        (:file "eye")
+                                                       (:file "hand")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")

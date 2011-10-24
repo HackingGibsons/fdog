@@ -16,4 +16,5 @@
                                   ((:file "basic")
                                    (:file "booted")
                                    (:file "behavior")
+                                   (:file "supervision")
                                    (:file "agent")))))))

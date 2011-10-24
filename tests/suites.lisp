@@ -4,7 +4,8 @@
   (:documentation "All tests are rooted here")
   (:include-groups basic-tests
                    runner-tests
-                   basic-behavior-tests))
+                   basic-behavior-tests
+                   supervision-tests))
 
 
 ;; Directly runnable
@@ -20,4 +21,6 @@
 (def-test-group runner-tests (running-agent-fixture))
 
 (def-test-group basic-behavior-tests ())
+
+(def-test-group supervision-tests ())
 

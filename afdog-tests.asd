@@ -13,4 +13,7 @@
                          (:file "suites"   :depends-on ("fixtures"))
 
                          (:module "tests" :depends-on ("suites") :components
-                                  ((:file "agent")))))))
+                                  ((:file "basic")
+                                   (:file "booted")
+                                   (:file "behavior")
+                                   (:file "agent")))))))

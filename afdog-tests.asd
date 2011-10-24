@@ -4,7 +4,9 @@
                         ((:file "package")
                          (:file "fixtures" :depends-on ("package"))
                          (:file "suites"   :depends-on ("fixtures"))
-                         (:file "agent"    :depends-on ("suites"))))))
+
+                         (:module "tests" :depends-on ("suites") :components
+                                  ((:file "agent")))))))
 
 
 

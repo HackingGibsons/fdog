@@ -1,6 +1,5 @@
 (in-package :afdog-tests)
 
-;;
 ;; Runner encapsulation
 (defclass test-runner (agent::exec-runner) ())
 

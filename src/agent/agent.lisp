@@ -89,7 +89,8 @@ result into the desired type.")
                                     ,@(prepare-forms (init-forms runner))
                                     ,@(prepare-forms (exec-forms runner))
                                     ,@(prepare-forms (terminate-forms runner)))
-                                :wait nil)))))
+                                :wait nil))
+      runner)))
 
 (defmethod running-p ((runner exec-runner))
   (and (agent-handle runner)
@@ -154,18 +155,19 @@ result into the desired type.")
 (defmethod start ((runner proc-runner))
   "Forking starter. Does not work in multithreaded sbcl."
   (unless (running-p runner)
-    (let ((child  (handler-case (sb-posix:fork) (t () nil))))
-      (case child
-        (nil nil)
-        (-1 (log-for (warn) "~A: FORK FAILED!" runner)
-            nil)
-        (0
-         (setf (agent-handle runner) (iolib.syscalls:getpid))
-         (unwind-protect (run-agent (agent-instance runner))
-           (setf (agent-handle runner) nil)
-           (iolib.syscalls:exit 0)))
-        (t
-         (setf (agent-handle runner) child))))))
+    (prog1 runner
+      (let ((child  (handler-case (sb-posix:fork) (t () nil))))
+        (case child
+          (nil nil)
+          (-1 (log-for (warn) "~A: FORK FAILED!" runner)
+              nil)
+          (0
+           (setf (agent-handle runner) (iolib.syscalls:getpid))
+           (unwind-protect (run-agent (agent-instance runner))
+             (setf (agent-handle runner) nil)
+             (iolib.syscalls:exit 0)))
+          (t
+           (setf (agent-handle runner) child)))))))
 
 (defmethod stop ((runner proc-runner))
   (when (running-p runner)

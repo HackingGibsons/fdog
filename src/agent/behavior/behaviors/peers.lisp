@@ -96,19 +96,6 @@
              (agent-spawned behavior uuid))))))
 
 
-(defmethod children-check ((behavior supervisor-mixin) (organ standard-organ))
-  (format t "TODO: Check children of ~A~%" behavior)
-  :TODO)
-
-(defbehavior spawn-and-watch-children (:or ((:on (:command :spawn :from :head))
-                                            (:interval (:from :heart :nth 6)))
-                                           :include (supervisor-mixin)
-                                           :do :invoke-with-event)
-    (organ event)
-
-  (cond ((and (eql (second event) :command)
-              (getf event :command) :spawn)
-         (spawn-agent behavior organ event))
-
-        ((eql (second event) :beat)
-         (children-check behavior organ))))
+(defbehavior spawn-things (:on (:command :spawn :from :head) :include (supervisor-mixin)
+                           :do :invoke-with-event) (organ event)
+  (spawn-agent behavior organ event))

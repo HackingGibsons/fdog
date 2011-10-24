@@ -9,7 +9,7 @@
   ()
   (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
 
-(defclass hypervisor-test-agent (standard-hypervisor-agent)
+(defclass hypervisor-test-agent (agent::standard-hypervisor-agent)
   ()
   (:documentation "A `standard-hypervisor-agent' that I can instrument."))
 

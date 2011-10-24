@@ -18,7 +18,7 @@
                                   :do :invoke-with-event) (organ event)
   (log-for (trace organ) "organ: ~A event: ~A watch event" organ event)
   ; (:HEAD :COMMAND :COMMAND :WATCH :WATCH (:PROCESS :PID :PID PID))
-  ; (:HEAD :COMMAND :COMMAND :WATCH :WATCH (:PEER :UUID :UUID UUID))
+  ; (:HEAD :COMMAND :COMMAND :WATCH :WATCH (:AGENT :UUID :UUID UUID))
   (case (getf event :command)
     (:watch (watch behavior (getf event :watch)))
     (:stop-watching (stop-watching behavior (getf event :stop-watching)))

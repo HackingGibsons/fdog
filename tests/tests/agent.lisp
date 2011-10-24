@@ -1,23 +1,5 @@
 (in-package :afdog-tests)
 
-;; Test structures
-(defclass test-agent (standard-agent)
-  ()
-  (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
-
-(defclass runner-agent (standard-agent)
-  ()
-  (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
-
-(defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
-  (make-speak-test-message (agent::find-organ agent :head))
-
-  ;; Blatant test drivers
-  (make-look-at-self-when-asked (agent::find-organ agent :head))
-  (make-watch-self-when-asked (agent::find-organ agent :head))
-
-  (make-announce-what-i-see (agent::find-organ agent :head)))
-
 ;; Test cases
 (def-test (can-test-nothing :group basic-tests) :true
   t)
@@ -33,32 +15,20 @@
   (format t "Agent is booting.~%")
   (nst:nst-cmd :run-group booted-agent-tests))
 
-(agent::defbehavior speak-test-message (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (let ((message (getf event :message)))
-    (when (equalp message '(:test :ping))
-      (agent::send-message organ :command '(:command :speak
-                                            :say (:test :pong))))))
-
-(agent::defbehavior look-at-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (let ((message (getf event :message)))
-    (when (equalp message '(:look :self))
-      (agent::send-message organ :command `(:command :look
-                                                     :at (:process :pid :pid ,(iolib.syscalls:getpid)))))))
-
-(agent::defbehavior announce-what-i-see (:on (:saw :process :from :eye) :do :invoke-with-event) (organ event)
-  (log-for (trace agent::organ) "organ: ~A sees pid ~A and alive is ~A" organ (getf event :pid) (getf event :alive))
-  (agent::send-message organ :command `(:command :speak
-                                       :say ,event)))
-
-
 (defmethod next-event :after ((agent test-agent))
   (case (agent::agent-event-count agent)
+    ;; Run the event tests
     (5 (nst:nst-cmd :run-group running-with-events-tests))
+
+    ;; Remove an organ to test death from system failure
+    ;; should race a timeout to fail
     (6 (let ((organ (agent::find-organ agent :appendix)))
          (zmq:close (agent::organ-incoming-sock organ))
          (zmq:close (agent::organ-outgoing-sock organ))
-         (setf (agent::organ-incoming-sock organ) nil (agent::organ-outgoing-sock organ) nil)
-         (setf (agent::agent-organs agent) (remove :appendix (agent::agent-organs agent) :key #'agent::organ-tag))))))
+         (setf (agent::organ-incoming-sock organ) nil
+               (agent::organ-outgoing-sock organ) nil)
+         (setf (agent::agent-organs agent)
+               (remove :appendix (agent::agent-organs agent) :key #'agent::organ-tag))))))
 
 ;; This test will scaffold a running agent and run any tests driven by the event loop
 ;; then execute the terminated agent group
@@ -153,29 +123,6 @@
                   (when (getf (getf msg :process) :alive)
                       (setf seen-self-p t))))
             (bt:timeout () seen-self-p)))))))
-
-;; This goes with the test below, as part of it, really
-;; TODO: Maybe bind these behaviors to the organs in the test fixture?
-(agent::defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (let ((message (getf event :message)))
-    (cond
-      ((equalp message '(:watch :self))
-       (agent::send-message organ :command `(:command :watch
-                                                      :watch (:process :pid :pid ,(iolib.syscalls:getpid)))))
-
-      ((equalp message `(:count :watching))
-       (let* ((eye (agent::find-organ (agent::organ-agent organ) :eye))
-              (behavior (and eye
-                             (find-if #'(lambda (b) (typep b 'agent::watch-when-told)) (agent::behaviors eye))))
-              (watching (and behavior
-                             (agent::watching behavior))))
-         (agent::send-message organ :command `(:command :speak
-                                                        :say (:count ,(and watching
-                                                                           (hash-table-count watching)))))))
-
-      ((equalp message '(:stop-watching :self))
-       (agent::send-message organ :command `(:command :stop-watching
-                                                      :stop-watching (:process :pid :pid ,(iolib.syscalls:getpid))))))))
 
 (def-test (agent-watches :group basic-behavior-tests :fixtures (running-agent-fixture))
     (:process (:check

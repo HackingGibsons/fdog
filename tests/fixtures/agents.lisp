@@ -9,6 +9,10 @@
   ()
   (:documentation "A `standard-agent' derivative we can insert probes into to test things."))
 
+(defclass leaf-test-agent (agent::standard-leaf-agent)
+  ()
+  (:documentation "A `standard-leaf-agent' that can be instrumented."))
+
 (defclass hypervisor-test-agent (agent::standard-hypervisor-agent)
   ()
   (:documentation "A `standard-hypervisor-agent' that I can instrument."))

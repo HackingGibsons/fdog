@@ -9,4 +9,4 @@
 
 
 (defmethod initialize-instance :after ((hand agent-hand) &rest initargs)
-  (make-spawn-things hand))
+  (make-make-things hand))

@@ -4,6 +4,7 @@
         #:agent)
   (:use #:nst)
   (:shadowing-import-from :log5
+                          :defcategory
                           :log-for)
   (:export :run-all))
 
@@ -18,3 +19,5 @@
     (junit-results-by-group :dir results-dir
                             :if-file-exists :supersede
                             :if-dir-does-not-exist :create)))
+
+(defcategory test)

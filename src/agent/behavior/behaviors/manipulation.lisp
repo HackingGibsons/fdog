@@ -1,7 +1,6 @@
 (in-package :agent)
 
 (defbehavior make-things (:on (:command :make :from :head) :do :invoke-with-event) (organ event)
-  (declare (ignorable organ))
   ;; (:head :command
   ;;  :command :make
   ;;  :make :agent

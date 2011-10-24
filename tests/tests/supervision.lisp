@@ -16,3 +16,11 @@
 (def-test (child-is-speaking :group supervision-tests :fixtures (running-hypervisor-child)) :true
   (with-agent-conversation (mouth-sock ear-sock) child-uuid
     (agent::parse-message (agent::read-message mouth-sock))))
+
+(def-test (parent-notices-child :group supervision-tests :fixtures (running-hypervisor-child)) :true
+  (with-agent-conversation (mouth ear :timeout 30) agent-uuid
+    (do* ((msg (agent::parse-message (agent::read-message mouth))
+               (agent::parse-message (agent::read-message mouth)))
+          (peers (getf (getf msg :info) :peers)
+                 (getf (getf msg :info) :peers)))
+         ((assoc child-uuid peers :test #'equalp) t))))

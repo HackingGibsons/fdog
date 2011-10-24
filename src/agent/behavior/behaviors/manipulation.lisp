@@ -1,6 +1,7 @@
 (in-package :agent)
 
 (defbehavior make-things (:on (:command :make :from :head) :do :invoke-with-event) (organ event)
+  (declare (ignorable organ))
   ;; (:head :command
   ;;  :command :make
   ;;  :make :agent
@@ -40,10 +41,4 @@
              (runner (apply #'make-runner *spawner* :class (class-name class) initargs)))
 
         (and runner
-             (start runner)
-             (agent-spawned behavior uuid))))))
-
-
-
-
-
+             (start runner))))))

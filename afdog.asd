@@ -48,6 +48,7 @@
                                                        (:file "mouth")
                                                        (:file "ear")
                                                        (:file "eye")
+                                                       (:file "hand")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")

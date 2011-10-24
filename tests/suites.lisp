@@ -22,5 +22,5 @@
 
 (def-test-group basic-behavior-tests ())
 
-(def-test-group supervision-tests ())
+(def-test-group supervision-tests (running-hypervisor-fixture))
 

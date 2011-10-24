@@ -1,4 +1,4 @@
 (in-package :afdog-tests)
 
-(def-test (agent-can-make-child :group supervision-tests) :true
-  nil)
+(def-test (hyperrunner-is-running :group supervision-tests) :true
+  (agent::running-p agent-runner))

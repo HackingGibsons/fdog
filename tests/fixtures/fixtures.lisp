@@ -16,6 +16,18 @@
     (:special (agent))
   (agent (make-instance 'test-agent)))
 
+(def-fixtures running-hypervisor-fixture
+    (:setup
+     (agent::start agent-runner)
+
+     :cleanup
+     (agent::stop agent-runner))
+
+  (agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (agent-runner (agent::make-runner :test :include '(:afdog-tests)
+                                    :class 'hypervisor-test-agent
+                                    :uuid agent-uuid)))
+
 (def-fixtures running-agent-fixture
     (:setup
      (unless (agent::running-p agent-runner)

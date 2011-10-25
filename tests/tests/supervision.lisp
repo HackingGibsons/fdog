@@ -31,7 +31,7 @@
       (do* ((msg (agent::parse-message (agent::read-message mouth))
                  (agent::parse-message (agent::read-message mouth))))
            ((and (equalp (subseq msg 0 2) '(:AGENT :INFO))
-                 (getf (getf msg :info) :peers))
+                 (assoc child-uuid (getf (getf msg :info) :peers) :test #'equalp))
             (setf parent-info msg))))
 
     (with-agent-conversation (mouth ear :timeout 15) child-uuid
@@ -59,7 +59,7 @@
     (let* ((child-ear (getf (getf child-info :info) :ear))
            (child-mouth (getf (getf child-info :info) :mouth))
            (parent-peers (getf (getf parent-info :info) :peers))
-           (parent-child-peer nil))
+           (parent-child-peer (assoc child-uuid (getf (getf parent-info :info) :peers) :test #'equalp)))
 
       (assert-non-nil child-ear :format "Child should have mentioned an ear.")
       (assert-non-nil child-mouth :format "Child should have mentioned a mouth.")

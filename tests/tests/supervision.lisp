@@ -66,3 +66,9 @@
       (assert-non-nil parent-peers :format "Parent should have peers.")
 
       (assert-non-nil parent-child-peer :format "Parent should know about the child by UUID"))))
+
+(def-test (parent-can-use-eyes-to-see-child :group supervision-tests :fixtures (running-hypervisor-child)) (:not :true)
+  "A parent should be able to use the eyes to see an agent by UUID.")
+
+(def-test (child-dies-when-orphaned :group supervision-tests :fixtures (running-hypervisor-child)) (:not :true)
+  "When a leaf agent loses its parent it should also die.")

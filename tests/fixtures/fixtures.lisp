@@ -39,6 +39,24 @@
                                     :parent-uuid agent-uuid
                                     :parent-mouth (agent::local-ipc-addr agent-uuid :mouth))))
 
+(def-fixtures started-parent-and-child
+    (:setup (progn (agent::start parent)
+                   (agent::start child))
+
+     :cleanup (progn (agent::stop parent)
+                     (agent::stop child)))
+
+  (uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (kid-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (parent (agent::make-runner :test :include '(:afdog-tests)
+                              :class 'hypervisor-test-agent
+                              :uuid uuid))
+  (child (agent::make-runner :test :include '(:afdog-tests)
+                             :class 'leaf-test-agent
+                             :uuid kid-uuid
+                             :parent-uuid uuid
+                             :parent-mouth (agent::local-ipc-addr uuid :mouth))))
+
 (def-fixtures running-agent-fixture
     (:setup
      (unless (agent::running-p agent-runner)

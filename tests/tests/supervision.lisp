@@ -70,5 +70,10 @@
 (def-test (parent-can-use-eyes-to-see-child :group supervision-tests :fixtures (running-hypervisor-child)) :true
   nil)
 
-(def-test (child-dies-when-orphaned :group supervision-tests :fixtures (running-hypervisor-child)) (:not :true)
-  "When a leaf agent loses its parent it should also die.")
+(def-test (child-dies-when-orphaned :group supervision-tests :fixtures (started-parent-and-child)) :true
+  (handler-case (bt:with-timeout (30)
+                  (loop until (agent::running-p child))
+                  (agent::stop parent)
+                  (loop while (agent::running-p child))
+                  :true)
+    (bt:timeout () nil)))

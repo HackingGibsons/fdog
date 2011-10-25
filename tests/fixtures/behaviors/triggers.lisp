@@ -7,6 +7,13 @@
       (agent::send-message organ :command '(:command :speak
                                             :say (:test :pong))))))
 
+(agent::defbehavior look-at-agent-when-asked (:on (:head :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (and (equalp (subseq message 0 2) '(:look :agent))
+               (getf message :agent))
+      (agent::send-message organ :command `(:command :look
+                                            :at (:agent :uuid :uuid ,(getf message :agent)))))))
+
 (agent::defbehavior look-at-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (when (equalp message '(:look :self))

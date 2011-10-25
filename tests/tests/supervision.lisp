@@ -37,7 +37,8 @@
     (with-agent-conversation (mouth ear :timeout 15) child-uuid
       (do* ((msg (agent::parse-message (agent::read-message mouth))
                  (agent::parse-message (agent::read-message mouth))))
-           ((equalp (subseq msg 0 2) '(:AGENT :INFO))
+           ((and (equalp (subseq msg 0 2) '(:AGENT :INFO))
+                 (getf (getf msg :info) :peers))
             (setf child-info msg))))
 
     (assert-non-nil child-info :format "Didn't get `child-info'")
@@ -58,18 +59,18 @@
     (let* ((child-ear (getf (getf child-info :info) :ear))
            (child-mouth (getf (getf child-info :info) :mouth))
            (parent-peers (getf (getf parent-info :info) :peers))
-           (parent-child-peer (cdr (assoc child-uuid parent-peers :test #'equalp))))
+           (parent-child-peer nil))
 
       (assert-non-nil child-ear :format "Child should have mentioned an ear.")
       (assert-non-nil child-mouth :format "Child should have mentioned a mouth.")
       (assert-non-nil parent-peers :format "Parent should have peers.")
-      (assert-non-nil parent-child-peer :format "Parent should know about the child by UUID")
 
-      (assert-non-nil (and (getf child-ear :addr) (getf child-mouth :addr))
-                      :format "This child should have both ear and mouth addresses.")
+      ;; TODO: WTF: For some reason the parent always has a strange UUID in its announced peer list, but the child is always correct.
+      (format t "Parent: ~A~%" parent-info)
+      (format t "Child: ~A~%" child-info)
+      (format t "First key type: ~A~%" (type-of (car (car parent-peers))))
+      (format t "Peers: ~A~%" parent-peers)
+      (format t "Child uuid: ~A~%" child-uuid)
+      (format t "Child?: ~A~%" (assoc child-uuid parent-peers :test #'string=))
 
-      (assert-equalp (getf child-ear :addr) (getf parent-child-peer :ear)
-                     :format "The ear the parent knows about should be the same ear the child advertises.")
-
-      (assert-equalp (getf child-mouth :addr) (getf parent-child-peer :mouth)
-                     :format "The mouth the parent knows about should be the same mouth the child advertises."))))
+      (assert-non-nil parent-child-peer :format "Parent should know about the child by UUID"))))

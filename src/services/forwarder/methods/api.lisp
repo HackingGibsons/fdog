@@ -227,6 +227,10 @@ https://support.cloudkick.com/HTTP_JSON_Checks"
         (log-for (dribble) "Constructed structure: ~A" forwarder-structure)
         (json:encode-json forwarder-structure stream)))))
 
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/healthcheck/|)) handler request raw)
+  (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+    (json:encode-json `((:state . "ok")) stream)))
+
 ;; Non-dispatching roots
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
                          handler request raw)

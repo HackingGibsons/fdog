@@ -68,7 +68,14 @@
       (assert-non-nil parent-child-peer :format "Parent should know about the child by UUID"))))
 
 (def-test (parent-can-use-eyes-to-see-child :group supervision-tests :fixtures (running-hypervisor-child)) :true
-  nil)
+  (with-agent-conversation (m e :timeout 30) agent-uuid
+    (let ((message `(:look :child :uuid ,child-uuid)))
+      (do* ((msg (agent::parse-message (agent::read-message m))
+                 (agent::parse-message (agent::read-message m))))
+           ((and (getf msg :saw) (equalp (getf msg :saw) :agent)
+                 (equalp (getf (getf msg :agent) :uuid) child-uuid)) t)
+        (zmq:send! e (agent::prepare-message message))))))
+
 
 (def-test (child-dies-when-orphaned :group supervision-tests :fixtures (running-hypervisor-child)) (:not :true)
   "When a leaf agent loses its parent it should also die.")

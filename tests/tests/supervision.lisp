@@ -76,4 +76,4 @@
                   (agent::stop parent)
                   (loop while (agent::running-p child))
                   :true)
-    (bt:timeout () (format t "Timeout~%") nil)))
+    (bt:timeout () nil)))

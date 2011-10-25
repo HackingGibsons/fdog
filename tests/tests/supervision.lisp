@@ -71,7 +71,7 @@
   nil)
 
 (def-test (child-dies-when-orphaned :group supervision-tests :fixtures (started-parent-and-child)) :true
-  (handler-case (bt:with-timeout (20)
+  (handler-case (bt:with-timeout (30)
                   (loop until (agent::running-p child))
                   (agent::stop parent)
                   (loop while (agent::running-p child))

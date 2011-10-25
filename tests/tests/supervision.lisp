@@ -65,12 +65,4 @@
       (assert-non-nil child-mouth :format "Child should have mentioned a mouth.")
       (assert-non-nil parent-peers :format "Parent should have peers.")
 
-      ;; TODO: WTF: For some reason the parent always has a strange UUID in its announced peer list, but the child is always correct.
-      (format t "Parent: ~A~%" parent-info)
-      (format t "Child: ~A~%" child-info)
-      (format t "First key type: ~A~%" (type-of (car (car parent-peers))))
-      (format t "Peers: ~A~%" parent-peers)
-      (format t "Child uuid: ~A~%" child-uuid)
-      (format t "Child?: ~A~%" (assoc child-uuid parent-peers :test #'string=))
-
       (assert-non-nil parent-child-peer :format "Parent should know about the child by UUID"))))

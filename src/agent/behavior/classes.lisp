@@ -30,6 +30,7 @@ The resulting predicate lambda will be checked in `act-on-event' specialization 
 behavior attached to predicate the invocation of the funcallabable lambda of that behavior."
   (eval
    `(let ((behavior ,behavior))
+      (declare (ignorable behavior))
       (macrolet ((:or (definitions &key &allow-other-keys)
                    (let* ((predicates (mapcar #'(lambda (def) (behavior-compile-invoke-p ,behavior def))
                                              definitions)))

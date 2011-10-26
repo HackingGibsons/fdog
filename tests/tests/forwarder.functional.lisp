@@ -98,11 +98,13 @@
                                                 :port fdog-forwarder:*redis-port*)
               (assert-null (zerop (length raw)) :format "Mongrel response not empty")
               (assert-non-nil (equal "/awesome/" (m2cl:request-path req)) :format "Path did not contain /awesome/")
-              (let ((old-response-count (fdog-forwarder:response-count "test")))
+              (let ((old-response-count (fdog-forwarder:response-count "test"))
+                    (old-total-response-count (fdog-forwarder:total-response-count)))
                 (m2cl:handler-send-http handler "awesome!" :request req)
                 (sleep 3) ;; TODO: the laziest test (race condition from response and actually hitting redis)
                 (assert-non-nil (redis:lred-keys redis (format nil "~A*" fdog-forwarder:*response-prefix*)) :format "Could not find response key in redis")
-                (assert-equal (1+ old-response-count) (fdog-forwarder:response-count "test") :format "Response count did not increment")))))))))
+                (assert-equal (1+ old-response-count) (fdog-forwarder:response-count "test") :format "Response count did not increment")
+                (assert-equal (1+ old-total-response-count) (fdog-forwarder:total-response-count) :format "Total response count did not increment")))))))))
 
 (def-test+func (test-alias-function-and-routing)
     :eval (assert-forwarder-setup)
@@ -259,6 +261,24 @@
 (def-test+func (can-get-metrics) :eval
   (assert-forwarder-setup)
   (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/forwarders/test/metrics/")
+    (assert-non-nil res)
+    (assert-response-200 meta)
+    (format t "~A" res)
+
+    ;; Expected format: {"status": "ok", "metrics":[
+    ;; {"type": "int", "name": "queue_length", "value": ##}
+    ;; {"type": "gauge", "name": "request_throughput", "value": ##}
+    ;; {"type": "gauge", "name": "response_throughput", "value": ##}]}
+    (assert-string= "ok" (cdr (assoc :state res)))
+    (assert-string= "int" (cdr (assoc :type (first (cdr (assoc :metrics res))))))
+    (assert-string= "gauge" (cdr (assoc :type (second (cdr (assoc :metrics res))))))
+    (assert-string= "request_throughput" (cdr (assoc :name (second (cdr (assoc :metrics res))))))
+    (assert-string= "gauge" (cdr (assoc :type (third (cdr (assoc :metrics res))))))
+    (assert-string= "response_throughput" (cdr (assoc :name (third (cdr (assoc :metrics res))))))))
+
+(def-test+func (can-get-aggregate-metrics) :eval
+  (assert-forwarder-setup)
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/metrics/")
     (assert-non-nil res)
     (assert-response-200 meta)
     (format t "~A" res)

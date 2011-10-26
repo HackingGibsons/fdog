@@ -33,16 +33,19 @@
                 (redis:lred-hmset redis (endpoint-queue-counter endpoint)
                                   :count 0
                                   :last-pop 0
-                                  :last-sent 0))
+                                  :last-sent 0)
+                (redis:lred-set redis *total-queue-counter-key* 0))
         (:popped (log-for (trace) "Request popped from queue")
                  (redis:lred-multi redis)
                  (redis:lred-hincrby redis (endpoint-queue-counter endpoint) :count 1)
+                 (redis:lred-incrby redis *total-queue-counter-key* 1)
                  (redis:lred-hset redis (endpoint-queue-counter endpoint) :last-pop (get-internal-real-time))
                  (redis:lred-publish redis (endpoint-queue-key endpoint) :popped)
                  (redis:lred-exec redis))
         (:sent (log-for (trace) "Request sent to handler.")
                (redis:lred-multi redis)
                (redis:lred-hincrby redis (endpoint-queue-counter endpoint) :count -1)
+               (redis:lred-incrby redis *total-queue-counter-key* -1)
                (redis:lred-hset redis (endpoint-queue-counter endpoint) :last-sent (get-internal-real-time))
                (redis:lred-publish redis (endpoint-queue-key endpoint) :sent)
                (redis:lred-exec redis))))))
@@ -78,6 +81,11 @@
                                       :port *redis-port*)
    (parse-integer (or (redis:lred-hget redis (endpoint-queue-key forwarder) :count) "0"))))
 
+(defun total-request-queue-length ()
+  (redis:with-named-connection (redis :host *redis-host*
+                                      :port *redis-port*)
+    (parse-integer (or (redis:lred-get redis *total-queue-counter-key*) "0"))))
+
 (defun format-decoded-time ()
   "Returns the universal time formatted in YYYYMMDDHHmmss"
   (multiple-value-bind (seconds minutes hours date month year) (get-decoded-time)
@@ -110,20 +118,37 @@
   "Retrieves the number of requests served for a given forwarder."
   (msg-count (endpoint-request-counter-key) forwarder-name))
 
+(defun total-request-count ()
+  "Retrieves the total number of requests served by fdog."
+  (total-msg-count *total-request-counter-key*))
+
 (defun response-count (forwarder-name)
   "Retrieves the number of responses served for a given forwarder."
   (msg-count (endpoint-response-counter-key) forwarder-name))
+
+(defun total-response-count ()
+  "Retrieves the total number of responses served by fdog."
+  (total-msg-count *total-response-counter-key*))
 
 (defun msg-count (key forwarder-name)
   (redis:with-named-connection (redis :host *redis-host*
                                       :port *redis-port*)
     (parse-integer (or (redis:lred-hget redis key forwarder-name) "0"))))
 
+(defun total-msg-count (key)
+  (redis:with-named-connection (redis :host *redis-host*
+                                      :port *redis-port*)
+    (parse-integer (or (redis:lred-get redis key) "0"))))
+
+(defun average-response-time ()
+  0)
+
 (defmethod store-request ((endpoint forwarder-queue-endpoint) redis msg)
   "Store the request in redis and return a key that can be used to reffer to it."
   (let ((key (endpoint-request-key endpoint msg))
         (counter-key (endpoint-request-counter-key)))
     (store-msg endpoint redis key counter-key msg)
+    (redis:lred-incrby redis *total-request-counter-key* 1)
     key))
 
 (defmethod store-response ((endpoint forwarder-queue-endpoint) redis msg)
@@ -131,6 +156,7 @@
   (let ((key (endpoint-response-key endpoint msg))
         (counter-key (endpoint-response-counter-key)))
     (store-msg endpoint redis key counter-key msg)
+    (redis:lred-incrby redis *total-response-counter-key* 1)
     key))
 
 (defmethod store-msg ((endpoint forwarder-queue-endpoint) redis key counter-key msg)

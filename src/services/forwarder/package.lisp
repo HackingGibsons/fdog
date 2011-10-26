@@ -62,6 +62,8 @@
   (:export :init-forwarders
            :request-count
            :response-count
+           :total-request-count
+           :total-response-count
            :*redis-host*
            :*redis-port*
            :*request-prefix*
@@ -89,3 +91,6 @@
 (defvar *request-prefix* "fdog-request:")
 (defvar *response-prefix* "fdog-response:")
 (defvar *counter-prefix* "fdog-counter:")
+(defvar *total-queue-counter-key* "fdog-total-queue")
+(defvar *total-request-counter-key* "fdog-total-request")
+(defvar *total-response-counter-key* "fdog-total-response")

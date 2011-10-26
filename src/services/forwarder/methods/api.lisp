@@ -228,6 +228,16 @@ https://support.cloudkick.com/HTTP_JSON_Checks"
         (json:encode-json forwarder-structure stream)))))
 
 ;; Non-dispatching roots
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/metrics/|)) handler request raw)
+  "Cloudkick-compatible aggregate metrics
+https://support.cloudkick.com/HTTP_JSON_Checks"
+  (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+    (json:encode-json `((:state . "ok")
+                        (:metrics .
+                         (((:type . "int") (:name . "queue_length") (:value . ,(total-request-queue-length)))
+                          ((:type . "gauge") (:name . "request_throughput") (:value . ,(total-request-count)))
+                          ((:type . "gauge") (:name . "response_throughput") (:value . ,(total-response-count)))))) stream)))
+
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
                          handler request raw)
   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))

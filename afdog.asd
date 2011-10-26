@@ -40,6 +40,7 @@
                                              (:module "behaviors" :depends-on ("defbehavior") :components
                                                       ((:file "peers")
                                                        (:file "manipulation")
+                                                       (:file "supervision")
                                                        (:file "vision")))))
 
                                    ;; Standard organ definitions

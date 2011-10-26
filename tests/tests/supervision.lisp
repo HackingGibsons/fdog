@@ -98,7 +98,9 @@
 
 (def-test (agent-can-spawn-child :group supervision-tests) :true
   (with-agent-conversation (m e :timeout 30) agent-uuid
+    (format t "Sending message~%")
     (zmq:send! e (agent::prepare-message `(:spawn :child)))
+    (format t "Sent message~%")
     (do* ((msg (agent::parse-message (agent::read-message m))
                (agent::parse-message (agent::read-message m))))
          (nil t)

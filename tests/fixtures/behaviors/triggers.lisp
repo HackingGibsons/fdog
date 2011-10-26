@@ -32,6 +32,12 @@
   (send-message organ :command `(:command :speak
                                           :say ,event)))
 
+(defbehavior spawn-dependant-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (equalp message '(:spawn :child))
+      (send-message organ :command `(:command :speak
+                                     :say (:todo :spawn :child))))))
+
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (cond

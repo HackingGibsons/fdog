@@ -95,3 +95,11 @@
                   (loop while (running-p child))
                   :true)
     (bt:timeout () nil)))
+
+(def-test (agent-can-spawn-child :group supervision-tests) :true
+  (with-agent-conversation (m e :timeout 30) agent-uuid
+    (zmq:send! e (agent::prepare-message `(:spawn :child)))
+    (do* ((msg (agent::parse-message (agent::read-message m))
+               (agent::parse-message (agent::read-message m))))
+         (nil t)
+      (format t "Message: ~A~%" msg))))

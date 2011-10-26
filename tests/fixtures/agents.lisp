@@ -19,6 +19,7 @@
 
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
+  (make-spawn-dependant-when-asked (agent::find-organ agent :head))
   (make-announce-what-i-see (find-organ agent :head))
   (make-announce-what-i-make (find-organ agent :head))
   (make-make-agent-when-asked (find-organ agent :head))
@@ -33,5 +34,5 @@
   (make-look-at-self-when-asked (find-organ agent :head))
   (make-watch-self-when-asked (find-organ agent :head))
 
-  (make-announce-what-i-see (find-organ agent :head)) 
+  (make-announce-what-i-see (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))

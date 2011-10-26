@@ -37,7 +37,10 @@
         (uuid (format nil "~A" (uuid:make-v4-uuid))))
     (when (equalp message '(:spawn :child))
       (send-message organ :command `(:command :speak
-                                     :say (:todo :spawn :child ,uuid))))))
+                                                     :say (:todo :spawn :child ,uuid)))
+      (send-message organ :command `(:command :link
+                                                     :link :agent
+                                                     :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests))))))
 
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

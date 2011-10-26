@@ -28,6 +28,7 @@
   ;;           :link :agent
   ;;           :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests)
   ;;   --or --
+  ;;           :link :process
   ;;           :process (:pid pid :make (:cmd "string" :args ("list" "of" "strings") :pwd ""))
   ;;           .. or something
 

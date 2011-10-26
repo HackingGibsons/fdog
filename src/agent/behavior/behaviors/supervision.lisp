@@ -32,7 +32,23 @@
   ;;           .. or something
 
   ;; TODO: Not this, do the real thing, damnit
-  (send-message organ :command `(:command :speak
-                                          :debug t
-                                          :say (:spawning :with ,event))))
+  (let* ((link-what (getf event :link))
+         (link (and link-what
+                    (getf event link-what))))
 
+    (and link-what link
+         (send-message organ :command `(:command :speak
+                                                 :debug t
+                                                 :say (:spawning :what ,link-what :with ,link
+                                                                 :key ,(link-key link-what link)))))))
+
+
+(defgeneric link-key (what info)
+  (:documentation "Generate a hash table string key for the thing described by `what' and `info'")
+  (:method (what info) "Default operation is a noop" nil)
+
+  (:method ((what (eql :agent)) (info list))
+    "Generates an agent-uuid hash key"
+    (let ((uuid (getf info :uuid)))
+      (and uuid
+           (format nil "agent-~A" uuid)))))

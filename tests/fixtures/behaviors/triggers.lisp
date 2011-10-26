@@ -13,8 +13,15 @@
       (agent::send-message organ :command `(:command :look
                                                      :at (:process :pid :pid ,(iolib.syscalls:getpid)))))))
 
-;; TODO: This only sees procs
-(agent::defbehavior announce-what-i-see (:on (:saw :process :from :eye) :do :invoke-with-event) (organ event)
+(agent::defbehavior look-at-child-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (equalp (getf message :look) :child)
+      (agent::send-message organ :command `(:command :look
+                                                     :at (:agent :uuid :uuid ,(getf message :uuid)))))))
+
+(agent::defbehavior announce-what-i-see (:or ((:on (:saw :process :from :eye))
+                                              (:on (:saw :agent :from :eye)))
+                                             :do :invoke-with-event) (organ event)
   (log-for (trace agent::organ) "organ: ~A sees pid ~A and alive is ~A" organ (getf event :pid) (getf event :alive))
   (agent::send-message organ :command `(:command :speak
                                        :say ,event)))

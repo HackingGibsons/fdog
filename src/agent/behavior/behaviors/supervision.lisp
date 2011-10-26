@@ -1,5 +1,11 @@
 (in-package :agent)
 
+(defclass lonely-mixin ()
+  ((last-seen :initform (get-internal-real-time)
+              :accessor last-seen)
+   (lonely-tolerance :initform (* 10 internal-time-units-per-second)
+                     :accessor lonely-tolerance)))
+
 ;; TODO: Maybe something more like (:need (:agent :uuid :from #'parent-uuid) :do invoke) ?
 (defbehavior die-without-parent (:interval (:from :heart :nth 6) :include (lonely-mixin) :do :invoke) (organ)
   (let ((parent (gethash (parent-uuid (organ-agent organ)) (agent-peers organ)))

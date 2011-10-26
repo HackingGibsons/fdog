@@ -35,10 +35,3 @@
                (not (gethash addr (listening-to organ))))
       (setf (gethash addr (listening-to organ))
             (zmq:connect (listen-sock organ) addr)))))
-
-(defclass lonely-mixin ()
-  ((last-seen :initform (get-internal-real-time)
-              :accessor last-seen)
-   (lonely-tolerance :initform (* 10 internal-time-units-per-second)
-                     :accessor lonely-tolerance)))
-

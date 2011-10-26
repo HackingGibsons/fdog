@@ -33,10 +33,11 @@
                                           :say ,event)))
 
 (defbehavior spawn-dependant-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (let ((message (getf event :message)))
+  (let ((message (getf event :message))
+        (uuid (format nil "~A" (uuid:make-v4-uuid))))
     (when (equalp message '(:spawn :child))
       (send-message organ :command `(:command :speak
-                                     :say (:todo :spawn :child))))))
+                                     :say (:todo :spawn :child ,uuid))))))
 
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

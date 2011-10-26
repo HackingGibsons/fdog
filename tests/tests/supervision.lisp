@@ -76,7 +76,17 @@
                  (equalp (getf (getf msg :agent) :uuid) child-uuid)) t)
         (zmq:send! e (agent::prepare-message message))))))
 
-
+(def-test (agents-cant-see-ghosts :group supervision-tests) :true
+  (let ((uuid (format nil "~A" (uuid:make-v4-uuid))))
+    (with-agent-conversation (m e :timeout 30) agent-uuid
+      (let ((message `(:look :child :uuid ,uuid)))
+        (do* ((msg (agent::parse-message (agent::read-message m))
+                   (agent::parse-message (agent::read-message m))))
+             ((and (getf msg :saw) (equalp (getf msg :saw) :agent)
+                   (and (equalp (getf (getf msg :agent) :uuid) uuid) 
+                        (equalp (getf (getf msg :agent) :info) nil))) t)
+          (zmq:send! e (agent::prepare-message message)))))))
+  
 (def-test (child-dies-when-orphaned :group supervision-tests :fixtures (started-parent-and-child)) :true
   (handler-case (bt:with-timeout (30)
                   (loop until (agent::running-p child))

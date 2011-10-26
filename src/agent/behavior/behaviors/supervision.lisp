@@ -19,7 +19,18 @@
       (log-for (warn) "~A: My parent has died." organ)
       (suicide (organ-agent organ)))))
 
-(defbehavior create-links (:on (:command :link :from :head) :do :invoke-with-event) (organ event)
+(defclass link-manager ()
+  ((links :initform (make-hash-table :test 'equalp)
+          :accessor links)))
+
+(defbehavior create-links (:on (:command :link :from :head) :include (link-manager) :do :invoke-with-event) (organ event)
+  ;; (:command :link
+  ;;           :link :agent
+  ;;           :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests)
+  ;;   --or --
+  ;;           :process (:pid pid :make (:cmd "string" :args ("list" "of" "strings") :pwd ""))
+  ;;           .. or something
+
   ;; TODO: Not this, do the real thing, damnit
   (send-message organ :command `(:command :speak
                                           :debug t

@@ -73,7 +73,8 @@
       (do* ((msg (agent::parse-message (agent::read-message m))
                  (agent::parse-message (agent::read-message m))))
            ((and (getf msg :saw) (equalp (getf msg :saw) :agent)
-                 (equalp (getf (getf msg :agent) :uuid) child-uuid)) t)
+                 (and (not (null (getf (getf msg :agent) :info)))
+                      (equalp (getf (getf msg :agent) :uuid) child-uuid))) t)
         (zmq:send! e (agent::prepare-message message))))))
 
 (def-test (agents-cant-see-ghosts :group supervision-tests) :true

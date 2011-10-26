@@ -33,21 +33,23 @@
 
   ;; TODO: Not this, do the real thing, damnit
   (let* ((link-what (getf event :link))
-         (link (and link-what
+         (link-info (and link-what
                     (getf event link-what))))
+    (link-init behavior link-what link-info)))
 
-    (and link-what link
-         (send-message organ :command `(:command :speak
-                                                 :debug t
-                                                 :say (:spawning :what ,link-what :with ,link
-                                                                 :key ,(link-key link-what link)))))))
+(defgeneric link-init (behavior what info)
+  (:method (b w i) nil))
 
+(defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
+  (let ((key (link-key what info)))
+    (format t "Linking: ~A => ~A/~A~%" key what info)
+    :todo))
 
-(defgeneric link-key (what info)
+(defgeneric link-key (behavior what info)
   (:documentation "Generate a hash table string key for the thing described by `what' and `info'")
-  (:method (what info) "Default operation is a noop" nil)
+  (:method (b what info) "Default operation is a noop" nil)
 
-  (:method ((what (eql :agent)) (info list))
+  (:method ((behavior link-manager) (what (eql :agent)) (info list))
     "Generates an agent-uuid hash key"
     (let ((uuid (getf info :uuid)))
       (and uuid

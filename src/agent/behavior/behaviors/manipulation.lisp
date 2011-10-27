@@ -29,11 +29,15 @@
     ;; At this point we have assured that `class' is a real class
     ;; and is a subclass of `standard-agent'
     (when (and class package)
-      (let* ((initargs `(:uuid ,uuid
+      ;; Find a spawner in the package of the agent class or use the default
+      (let* ((spawner-sym (or (find-symbol (symbol-name '*spawner*) (package-name package))
+                              '*spawner*))
+             (spawner (symbol-value spawner-sym))
+
+             (initargs `(:uuid ,uuid
                                :parent-uuid ,(agent-uuid (organ-agent (behavior-organ behavior)))
                                :parent-mouth ,(mouth-addr (find-organ (organ-agent (behavior-organ behavior)) :mouth))))
-             (runner (apply #'make-runner *spawner* :class (class-name class) initargs)))
-        (format t "*spawner* => ~A" *spawner*)
+             (runner (apply #'make-runner spawner :class (class-name class) initargs)))
 
         (and runner
              (start runner))))))

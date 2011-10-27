@@ -26,6 +26,12 @@
   (agent::send-message organ :command `(:command :speak
                                        :say ,event)))
 
+(agent::defbehavior announce-what-i-make (:or ((:on (:made :agent :from :hand))
+                                               (:on (:made :process :from :hand)))
+                                              :do :invoke-with-event) (organ event)
+    (agent::send-message organ :command `(:command :speak
+                                       :say ,event)))
+
 (agent::defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (cond

@@ -20,6 +20,7 @@
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-announce-what-i-see (agent::find-organ agent :head))
+  (make-announce-what-i-make (agent::find-organ agent :head))
   (make-look-at-child-when-asked (agent::find-organ agent :head)))
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)

@@ -5,8 +5,9 @@
   ;;  :command :make
   ;;  :make :agent
   ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent)))
-  (let ((what (get event :make)))
-    (make-item behavior what (getf event what))))
+  (let ((what (getf event :make)))
+    (make-item behavior what (getf event what))
+    (send-message organ :made `(:made ,what ,what ,(getf event what)))))
 
 (defgeneric make-item (behavior what info)
   (:documentation "Generic protocol for construction of things.")
@@ -36,8 +37,10 @@
     (when (and class package)
       (let* ((initargs `(:uuid ,uuid
                          :parent-uuid ,(agent-uuid (organ-agent (behavior-organ behavior)))
-                         :parent-mouth ,(mouth-addr (find-organ (organ-agent (behavior-organ behavior)) :mouth))))
-             (runner (apply #'make-runner *spawner* :class (class-name class) initargs)))
+                         :parent-mouth ,(mouth-addr (find-organ (organ-agent (behavior-organ behavior)) :mouth)))))
+             (format t "*spawner* => ~A" *spawner*)
+
+             (runner (apply #'make-runner *spawner* :class (class-name class) initargs))
 
         (and runner
              (start runner))))))

@@ -293,3 +293,9 @@
     (assert-string= "request_throughput" (cdr (assoc :name (second (cdr (assoc :metrics res))))))
     (assert-string= "gauge" (cdr (assoc :type (third (cdr (assoc :metrics res))))))
     (assert-string= "response_throughput" (cdr (assoc :name (third (cdr (assoc :metrics res))))))))
+
+(def-test+func (can-check-health) :eval
+  (multiple-value-bind (res meta) (http->json "http://localhost:1337/api/healthcheck/")
+    (assert-non-nil res)
+    (assert-response-200 meta)
+    (assert-string= "ok" (cdr (assoc :state res)))))

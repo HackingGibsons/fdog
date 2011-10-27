@@ -238,6 +238,11 @@ https://support.cloudkick.com/HTTP_JSON_Checks"
                           ((:type . "gauge") (:name . "request_throughput") (:value . ,(total-request-count)))
                           ((:type . "gauge") (:name . "response_throughput") (:value . ,(total-response-count)))))) stream)))
 
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/healthcheck/|)) handler request raw)
+  "Health check. Currently always returns {\"state\":\"ok\"} if request successful."
+  (with-chunked-stream-reply (handler request stream :headers ((header-json-type)))
+    (json:encode-json `((:state . "ok")) stream)))
+
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|))
                          handler request raw)
   (let* ((spec (json:decode-json-from-string (m2cl:request-body request)))

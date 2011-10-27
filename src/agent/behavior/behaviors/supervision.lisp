@@ -23,7 +23,10 @@
   ((links :initform (make-hash-table :test 'equalp)
           :accessor links)))
 
-(defbehavior create-links (:on (:command :link :from :head) :include (link-manager) :do :invoke-with-event) (organ event)
+(defbehavior create-links (:or ((:on (:command :link :from :head))
+                                (:on (:saw :process :from :eye))
+                                (:on (:saw :agent :from :eye)))
+                               :include (link-manager) :do :invoke-with-event) (organ event)
   ;; (:command :link
   ;;           :link :agent
   ;;           :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests)
@@ -31,8 +34,21 @@
   ;;           :link :process
   ;;           :process (:pid pid :make (:cmd "string" :args ("list" "of" "strings") :pwd ""))
   ;;           .. or something
+  (send-message (behavior-organ behavior) :command `(:command :speak
+                                                      :say (:event ,event)))
 
-  ;; TODO: Not this, do the real thing, damnit
+  ;; TODO: Not this, write a dispawtching :do for compound events
+  (cond
+    ((getf event :saw)
+     (create-links-saw behavior organ event))
+
+    ((getf event :link)
+     (create-links-link behavior organ event))))
+
+(defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
+  :TODO)
+
+(defmethod create-links-link ((behavior create-links) (organ standard-organ) event)
   (let* ((link-what (getf event :link))
          (link-info (and link-what
                     (getf event link-what))))

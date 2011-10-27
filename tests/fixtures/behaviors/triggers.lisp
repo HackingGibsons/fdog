@@ -52,3 +52,16 @@
       ((equalp message '(:stop-watching :self))
        (agent::send-message organ :command `(:command :stop-watching
                                                       :stop-watching (:process :pid :pid ,(iolib.syscalls:getpid))))))))
+
+(agent::defbehavior make-agent-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (agent::send-message organ :command `(:command :speak
+                                       :say ,event))
+  (let* ((message (getf event :message))
+        (command `(:command :make
+                            :make :agent
+                            :agent (:uuid ,(getf message :uuid)
+                                          :class 'leaf-test-agent
+                                          :package :afdog-tests))))
+    (agent::send-message organ :command `(:command :speak
+                                                   :say ,command))
+    (agent::send-message organ :command command)))

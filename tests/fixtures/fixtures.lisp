@@ -70,3 +70,6 @@
   (agent-runner (agent::make-runner :test :include '(:afdog-tests)
                                     :class 'afdog-tests::runner-agent
                                     :uuid agent-uuid)))
+
+(def-fixtures spawner-fixture (:special (agent::*spawner*))
+  (agent::*spawner* :test))

@@ -26,6 +26,12 @@
   (agent::send-message organ :command `(:command :speak
                                        :say ,event)))
 
+(agent::defbehavior announce-what-i-make (:or ((:on (:made :agent :from :hand))
+                                               (:on (:made :process :from :hand)))
+                                              :do :invoke-with-event) (organ event)
+    (agent::send-message organ :command `(:command :speak
+                                       :say ,event)))
+
 (agent::defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (cond
@@ -46,3 +52,14 @@
       ((equalp message '(:stop-watching :self))
        (agent::send-message organ :command `(:command :stop-watching
                                                       :stop-watching (:process :pid :pid ,(iolib.syscalls:getpid))))))))
+
+(agent::defbehavior make-agent-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let* ((message (getf event :message))
+        (command `(:command :make
+                            :make :agent
+                            :agent (:uuid ,(getf message :uuid)
+                                          :class leaf-test-agent
+                                          :package :afdog-tests))))
+    (when (and (> (length message) 3) 
+               (equalp (subseq message 0 3) '(:make :agent :uuid)))
+      (agent::send-message organ :command command))))

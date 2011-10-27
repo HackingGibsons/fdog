@@ -10,6 +10,9 @@
 
 (in-package :afdog-tests)
 
+(defparameter *spawner* :test
+  "Use the :test spawner in the :afdog-tests package")
+
 (defun run-all ()
   (let ((results-dir (merge-pathnames (make-pathname :directory '(:relative "tests" "results"))
                                       (asdf:system-source-directory :afdog-tests))))

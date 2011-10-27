@@ -98,16 +98,17 @@
 
 (def-test (agent-can-spawn-child :group supervision-tests) :true
   (let (child-uuid)
-    (with-agent-conversation (m e :timeout 30) agent-uuid
+    (with-agent-conversation (m e :timeout 20) agent-uuid
       (zmq:send! e (agent::prepare-message `(:spawn :child)))
-      (and (do* ((msg (agent::parse-message (agent::read-message m))
-                      (agent::parse-message (agent::read-message m))))
-                ((equalp (subseq msg 0 2) '(:echo :spawn))
-                 (setf child-uuid (getf msg :child))))
+      (do* ((msg (agent::parse-message (agent::read-message m))
+                 (agent::parse-message (agent::read-message m))))
+           ((equalp (subseq msg 0 2) '(:echo :spawn))
+            (setf child-uuid (getf msg :child)))))
 
-           (with-agent-conversation (cm ce :timeout 30) child-uuid
-             (do* ((msg (agent::parse-message (agent::read-message cm))
-                      (agent::parse-message (agent::read-message cm))))
-                  ((equalp (subseq msg 0 2) '(:AGENT :INFO))
-                   t)))))))
+    (when child-uuid
+      (with-agent-conversation (cm ce :timeout 20) child-uuid
+        (do* ((msg (agent::parse-message (agent::read-message cm))
+                   (agent::parse-message (agent::read-message cm))))
+             ((equalp (subseq msg 0 2) '(:AGENT :INFO))
+              t))))))
 

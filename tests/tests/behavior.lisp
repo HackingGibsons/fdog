@@ -157,7 +157,3 @@
       (do ((msg (agent::parse-message (agent::read-message m))
                 (agent::parse-message (agent::read-message m))))
           ((equalp (subseq msg 0 2) '(:agent :info)) t)))))
-
-
-
-

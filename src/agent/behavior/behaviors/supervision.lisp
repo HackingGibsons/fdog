@@ -61,19 +61,8 @@
       (declare (ignorable value))
       (unless foundp
 
-        ;; TODO: Debug trace
-        (let ((message (format nil "~A: Inserting ~A into table ~A~%" behavior key (links behavior))))
-          (format t message)
-          (send-message (behavior-organ behavior) :command `(:command :speak
-                                                  :say ,message)))
-
         (setf (gethash key (links behavior))
               `(:state :initial :time ,(get-internal-real-time)))
-
-        ;; TODO: Debug trace
-        (send-message (behavior-organ behavior) :command `(:command :speak
-                                                  :say (:ht ,(format nil "~A" (links behavior)))))
-
 
         (send-message (behavior-organ behavior) :command `(:command :watch
                                                 :watch (:agent :uuid :uuid ,(getf info :uuid))))))))

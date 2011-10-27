@@ -42,9 +42,27 @@
   (:method (b w i) nil))
 
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
-  (let ((key (link-key what info)))
-    (format t "Linking: ~A => ~A/~A~%" key what info)
-    :todo))
+  (let ((key (link-key behavior what info)))
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (declare (ignorable value))
+      (unless foundp
+
+        ;; TODO: Debug trace
+        (let ((message (format nil "~A: Inserting ~A into table ~A~%" behavior key (links behavior))))
+          (format t message)
+          (send-message (behavior-organ behavior) :command `(:command :speak
+                                                  :say ,message)))
+
+        (setf (gethash key (links behavior))
+              `(:state :initial :time ,(get-internal-real-time)))
+
+        ;; TODO: Debug trace
+        (send-message (behavior-organ behavior) :command `(:command :speak
+                                                  :say (:ht ,(format nil "~A" (links behavior)))))
+
+
+        (send-message (behavior-organ behavior) :command `(:command :watch
+                                                :watch (:agent :uuid :uuid ,(getf info :uuid))))))))
 
 (defgeneric link-key (behavior what info)
   (:documentation "Generate a hash table string key for the thing described by `what' and `info'")

@@ -54,14 +54,11 @@
                                                       :stop-watching (:process :pid :pid ,(iolib.syscalls:getpid))))))))
 
 (agent::defbehavior make-agent-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (agent::send-message organ :command `(:command :speak
-                                       :say ,event))
   (let* ((message (getf event :message))
         (command `(:command :make
                             :make :agent
                             :agent (:uuid ,(getf message :uuid)
-                                          :class 'leaf-test-agent
+                                          :class leaf-test-agent
                                           :package :afdog-tests))))
-    (agent::send-message organ :command `(:command :speak
-                                                   :say ,command))
-    (agent::send-message organ :command command)))
+    (unless (null (getf message :uuid))
+      (agent::send-message organ :command command))))

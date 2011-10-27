@@ -26,12 +26,11 @@
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
   (make-speak-test-message (agent::find-organ agent :head))
-  (make-make-agent-when-asked (agent::find-organ agent :head))
 
   ;; Blatant test drivers
   (make-look-at-self-when-asked (agent::find-organ agent :head))
   (make-watch-self-when-asked (agent::find-organ agent :head))
 
-  (make-announce-what-i-see (agent::find-organ agent :head))
-  (make-announce-what-i-make (agent::find-organ agent :head)))
+  (make-announce-what-i-see (agent::find-organ agent :head)))
+
 

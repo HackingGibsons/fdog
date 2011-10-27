@@ -11,4 +11,4 @@
 
 (def-test (spawner-is-test :group basic-tests :fixtures (spawner-fixture))
     (:eql :test)
-  agent::*spawner*)
+  afdog-tests::*spawner*)

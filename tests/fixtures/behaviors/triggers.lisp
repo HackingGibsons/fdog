@@ -60,6 +60,6 @@
                             :agent (:uuid ,(getf message :uuid)
                                           :class leaf-test-agent
                                           :package :afdog-tests))))
-    (unless (and (> (length message) 3) 
-                 (equalp (subseq message 0 3) '(:make :agent :uuid)))
+    (when (and (> (length message) 3) 
+               (equalp (subseq message 0 3) '(:make :agent :uuid)))
       (agent::send-message organ :command command))))

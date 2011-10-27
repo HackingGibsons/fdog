@@ -34,8 +34,6 @@
   ;;           :link :process
   ;;           :process (:pid pid :make (:cmd "string" :args ("list" "of" "strings") :pwd ""))
   ;;           .. or something
-  (send-message (behavior-organ behavior) :command `(:command :speak
-                                                      :say (:event ,event)))
 
   ;; TODO: Not this, write a dispawtching :do for compound events
   (cond

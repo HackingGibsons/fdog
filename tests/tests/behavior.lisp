@@ -147,13 +147,9 @@
 
 (def-test (agent-hands-can-make :group basic-behavior-tests :fixtures (spawner-fixture running-hypervisor-fixture)) :true
   (let ((child-uuid (format nil "~A" (uuid:make-v4-uuid))))
-    (with-agent-conversation (m e :timeout 30) agent-uuid
-      (zmq:send! e (agent::prepare-message `(:make :agent :uuid ,child-uuid)))
-      (do ((msg (agent::parse-message (agent::read-message m))
-                (agent::parse-message (agent::read-message m))))
-          (nil)))
-    
-    (with-agent-conversation (m e :timeout 60) child-uuid
+    (with-agent-conversation (m e :timeout 10) agent-uuid
+      (zmq:send! e (agent::prepare-message `(:make :agent :uuid ,child-uuid))))
+    (with-agent-conversation (m e :timeout 30) child-uuid
       (do ((msg (agent::parse-message (agent::read-message m))
                 (agent::parse-message (agent::read-message m))))
           ((equalp (subseq msg 0 2) '(:agent :info)) t)))))

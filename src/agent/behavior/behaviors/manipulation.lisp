@@ -11,7 +11,7 @@
 
 (defgeneric make-item (behavior what info)
   (:documentation "Generic protocol for construction of things.")
-  (:method ((behavior standard-behavior) what info)
+  (:method (behavior what info)
     nil))
 
 (defmethod make-item ((behavior make-things) (what (eql :agent)) info)
@@ -21,14 +21,8 @@
 
          (class (and package (getf info :class)))
          (class (and class (find-symbol (symbol-name class) package)))
-         (class (and class (handler-case
-                               (prog1 (find-class class)
-                                 (c2mop:finalize-inheritance (find-class class)))
+         (class (and class (handler-case (find-class class)
                              (simple-error () nil))))
-         (class (and class
-                     (find (find-class 'standard-agent)
-                           (c2mop:class-precedence-list class))
-                     class))
 
          (uuid (getf info :uuid)))
 
@@ -36,11 +30,10 @@
     ;; and is a subclass of `standard-agent'
     (when (and class package)
       (let* ((initargs `(:uuid ,uuid
-                         :parent-uuid ,(agent-uuid (organ-agent (behavior-organ behavior)))
-                         :parent-mouth ,(mouth-addr (find-organ (organ-agent (behavior-organ behavior)) :mouth)))))
-             (format t "*spawner* => ~A" *spawner*)
-
-             (runner (apply #'make-runner *spawner* :class (class-name class) initargs))
+                               :parent-uuid ,(agent-uuid (organ-agent (behavior-organ behavior)))
+                               :parent-mouth ,(mouth-addr (find-organ (organ-agent (behavior-organ behavior)) :mouth))))
+             (runner (apply #'make-runner *spawner* :class (class-name class) initargs)))
+        (format t "*spawner* => ~A" *spawner*)
 
         (and runner
              (start runner))))))

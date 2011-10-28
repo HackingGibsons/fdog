@@ -4,7 +4,7 @@
 (defun send! (sock msg &optional flags (count 0))
   "Keep trying to `zmq:send' while it keeps returning -1 with an errno
 of EINTR recursively.  Second value returned is the number of times the operation was retried."
-  (let* ((res (zmq:send sock msg flags))
+  (let* ((res (handler-case (zmq:send sock msg flags) (simple-error () -1)))
          (res (cond ((and (= res -1)
                           (or (= (sb-alien:get-errno) sb-posix:eintr)
                               (= (sb-alien:get-errno) sb-posix:eagain)))

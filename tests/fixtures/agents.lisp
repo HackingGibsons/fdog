@@ -1,6 +1,7 @@
 (in-package :afdog-tests)
 
 ;; Agents
+;; TODO: Please make inheritence sense out of this mess :(
 (defclass test-agent (standard-agent)
   ()
   (:documentation "A `standard-agent' derivative we can insert probes into to test things."))

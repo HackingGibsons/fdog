@@ -71,9 +71,8 @@
                     (getf event link-what))))
     (link-init behavior link-what link-info)))
 
-(defgeneric link-init (behavior what info)
-  (:method (b w i) nil))
 
+;; Agent init and event
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
   (let ((key (link-key behavior what info)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))
@@ -92,12 +91,10 @@
         (send-message (behavior-organ behavior) :command `(:command :watch
                                                 :watch (:agent :uuid :uuid ,(getf info :uuid))))))))
 
-(defgeneric link-key (behavior what info)
-  (:documentation "Generate a hash table string key for the thing described by `what' and `info'")
-  (:method (b what info) "Default operation is a noop" nil)
 
-  (:method ((behavior link-manager) (what (eql :agent)) (info list))
-    "Generates an agent-uuid hash key"
-    (let ((uuid (getf info :uuid)))
-      (and uuid
-           (format nil "agent-~A" uuid)))))
+(defmethod link-event ((behavior link-manager) (what (eql :agent)) info)
+  (let (key (link-key behavior what info))
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when foundp
+        (format t "Found: ~A~%" value)
+        :TODO))))

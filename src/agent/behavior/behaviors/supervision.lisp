@@ -60,7 +60,10 @@
      (create-links-link behavior organ event))))
 
 (defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
-  :TODO)
+  (let* ((saw-what (getf event :saw))
+         (saw-info (and saw-what
+                        (getf event saw-what))))
+    (link-event behavior saw-what saw-info)))
 
 (defmethod create-links-link ((behavior create-links) (organ standard-organ) event)
   (let* ((link-what (getf event :link))

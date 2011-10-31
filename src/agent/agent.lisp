@@ -83,6 +83,8 @@ result into the desired type.")
                   (list "--eval"
                         (with-output-to-string (s) (prin1 form s))))))
 
+      (start-logging)
+
       (setf (agent-handle runner)
             (sb-ext:run-program (runner-lisp runner)
                                 `(,@(runner-lisp-options runner)

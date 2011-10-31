@@ -28,10 +28,13 @@
      :accessor address
      :documentation "The address to send log messages to")))
 
+(defparameter *logging-socket-linger* 1000)
+
 (defmethod initialize-instance :after ((stream zmq-logging-stream) &key)
   (with-slots (ctx socket address) stream
     (setf ctx (zmq:init 1))
     (setf socket (zmq:socket ctx zmq:push))
+    (zmq:setsockopt socket zmq:linger *logging-socket-linger*)
     (zmq:connect socket address)))
 
 (defmethod close ((stream zmq-logging-stream) &key abort)

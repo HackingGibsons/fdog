@@ -93,7 +93,7 @@
 
 
 (defmethod link-event ((behavior link-manager) (what (eql :agent)) info)
-  (let (key (link-key behavior what info))
+  (let ((key (link-key behavior what info)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when foundp
         (format t "Found: ~A~%" value)

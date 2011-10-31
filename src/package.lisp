@@ -1,6 +1,7 @@
 (defpackage #:afdog
   (:use #:cl)
   (:use #:log5)
+  (:use :sb-gray)
   (:export :start-logging
            :stop-logging
            :make-local-sock

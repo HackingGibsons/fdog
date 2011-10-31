@@ -64,15 +64,14 @@
                                                :stop-watching (:process :pid :pid ,(iolib.syscalls:getpid))))))))
 
 (defbehavior make-agent-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (let* ((message (getf event :message))
-         (command `(:command :make
-                             :make :agent
-                             :agent (:uuid ,(getf message :uuid)
-                                           :class leaf-test-agent
-                                           :package :afdog-tests))))
+  (let* ((message (getf event :message)))
     (when (and (> (length message) 3)
                (equalp (subseq message 0 3) '(:make :agent :uuid)))
-      (send-message organ :command command))))
+      (send-message organ :command `(:command :make
+                                                     :make :agent
+                                                     :agent (:uuid ,(getf message :uuid)
+                                                                   :class leaf-test-agent
+                                                                   :package :afdog-tests))))))
 
 (defbehavior make-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let* ((message (getf event :message)))

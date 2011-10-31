@@ -5,12 +5,11 @@
                              (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
 
 ;;; Logging functions for zmq senders
-(defun start-logging (&key (default t))
+(defun start-logging (&key (default t) (category '(log5:dribble+)))
   (when default
     (log5:start-sender 'default
                        (log5:stream-sender :location (make-instance 'zmq-logging-stream))
-                       :category-spec '(log5:dribble+)
-;                       :category-spec '(log5:warn+)
+                       :category-spec category
                        :output-spec '(human-time log5:category log5:message))))
 
 (defun stop-logging ()

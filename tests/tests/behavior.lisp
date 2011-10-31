@@ -222,3 +222,11 @@
                 info
                 (not (getf info :peers)))
            :gone)))))
+
+(def-test (agent-dies-after-timeout :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  ;; Send a message to agent's head to change the interval to 10 seconds
+  ;; after a 15 second timeout, agent should be dead
+  (with-agent-conversation (m e :timeout 30) agent-uuid
+    (zmq:send! e (prepare-message `(:new-timeout-interval 10)))
+    (do ((msg t))
+      ((not (running-p agent-runner)) t))))

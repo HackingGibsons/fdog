@@ -23,7 +23,8 @@
   (make-announce-what-i-make (find-organ agent :head))
   (make-make-agent-when-asked (find-organ agent :head))
   (make-make-process-when-asked (find-organ agent :head))
-  (make-look-at-child-when-asked (find-organ agent :head)))
+  (make-look-at-child-when-asked (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
   (make-speak-test-message (find-organ agent :head))
@@ -32,6 +33,5 @@
   (make-look-at-self-when-asked (find-organ agent :head))
   (make-watch-self-when-asked (find-organ agent :head))
 
-  (make-announce-what-i-see (find-organ agent :head)))
-
-
+  (make-announce-what-i-see (find-organ agent :head)) 
+  (make-kill-self-after-timeout (find-organ agent :head)))

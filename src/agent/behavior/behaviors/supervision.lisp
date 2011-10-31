@@ -60,10 +60,16 @@
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (declare (ignorable value))
       (unless foundp
-
+        ;; Store a state under the generated key
         (setf (gethash key (links behavior))
-              `(:state :initial :time ,(get-internal-real-time)))
+              `(:state :initial :time ,(get-internal-real-time) :what ,what :how ,info))
 
+        ;; Make an agent
+        (send-message (behavior-organ behavior) :command `(:command :make
+                                                :make :agent
+                                                :agent ,info))
+
+        ;; Watch an agent
         (send-message (behavior-organ behavior) :command `(:command :watch
                                                 :watch (:agent :uuid :uuid ,(getf info :uuid))))))))
 

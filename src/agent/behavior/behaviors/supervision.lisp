@@ -23,6 +23,22 @@
   ((links :initform (make-hash-table :test 'equalp)
           :accessor links)))
 
+(defgeneric link-key (behavior what info)
+  (:documentation "Generate a hash table string key for the thing described by `what' and `info'")
+  (:method (b what info) "Default operation is a noop" nil)
+
+  (:method ((behavior link-manager) (what (eql :agent)) (info list))
+    "Generates an agent-uuid hash key"
+    (let ((uuid (getf info :uuid)))
+      (and uuid
+           (format nil "agent-~A" uuid)))))
+
+(defgeneric link-init (behavior what info)
+  (:method (b w i) nil))
+
+(defgeneric link-event (behavior what info)
+  (:method (b w i) nil))
+
 (defbehavior create-links (:or ((:on (:command :link :from :head))
                                 (:on (:saw :process :from :eye))
                                 (:on (:saw :agent :from :eye)))

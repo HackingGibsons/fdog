@@ -51,17 +51,6 @@
     (let ((msg (make-instance 'zmq:msg :data (subseq seq (or start 0) end))))
       (zmq:send! socket msg))))
 
-(defparameter *fdog-log-dir* "logs/")
-(defparameter *default-root-path*
-    (truename (probe-file (asdf:system-source-directory :afdog)))
-      "Default for the root of the project: [Defaults to location of this file at load, if possible]")
-
-(defparameter *root-path*
-    *default-root-path*
-      "The currently configured root path.")
-
-(defparameter *socket-address* "ipc:///tmp/afdog-logging")
-
 ;;; Logging functions for the zmq receiver to output to console/disk
 (defcategory output)
 

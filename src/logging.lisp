@@ -86,15 +86,5 @@
                    (let ((string (zmq:msg-data-as-string msg)))
                      (unless (string-empty string)
                        (log-for (output) (trim-whitespace string))))
-                   :always-run)
-
-                 (handle-condition (c)
-                   (or (when (or :always-run
-                                 (= (sb-alien:get-errno) sb-posix:eintr))
-                         t)
-                                       (prog1 nil (signal c))))
-
-                 (run-device ()
-                   (handler-case (run-once)
-                     (simple-error (c) (handle-condition c)))))
-          (loop while (run-device) do ':nothing))))))
+                   :always-run))
+          (loop while (run-once) do ':nothing))))))

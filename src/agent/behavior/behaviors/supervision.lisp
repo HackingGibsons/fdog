@@ -83,9 +83,9 @@
               `(:state :initial :time ,(get-internal-real-time) :what ,what :how ,info))
 
         ;; Make an agent
-        (send-message (behavior-organ behavior) :command `(:command :make
-                                                :make :agent
-                                                :agent ,info))
+        ;; (send-message (behavior-organ behavior) :command `(:command :make
+        ;;                                         :make :agent
+        ;;                                         :agent ,info))
 
         ;; Watch an agent
         (send-message (behavior-organ behavior) :command `(:command :watch
@@ -97,4 +97,5 @@
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when foundp
         (format t "Found: ~A~%" value)
+        (format t "Info: ~A~%" info)
         :TODO))))

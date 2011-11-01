@@ -53,7 +53,7 @@
 
 (defparameter *fdog-log-dir* "logs/")
 (defparameter *default-root-path*
-    (truename (probe-file (asdf:system-relative-pathname :afdog ".")))
+    (truename (probe-file (asdf:system-source-directory :afdog)))
       "Default for the root of the project: [Defaults to location of this file at load, if possible]")
 
 (defparameter *root-path*

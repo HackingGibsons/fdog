@@ -123,9 +123,12 @@
                              (format t "[WARN] Entry under key ~A is in a failed terminal state.~%" key))
 
                             (:watch
-                             (format t "Watching: ~A~%" key)
-                             (format t "Value: ~A~%" value)
-                             (format t "Info: ~A~%" info)))))
+                             (unless info
+                               :died))
+
+                            (:died
+                             (format t "~A seems to have died.~%" key)
+                             :initial))))
 
           (format t "Current state: ~A~%" (getf value :state))
           (format t "Next state: ~A~%" next-state)

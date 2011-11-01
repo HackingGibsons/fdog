@@ -93,22 +93,45 @@
 
 
 (defmethod link-event ((behavior link-manager) (what (eql :agent)) info)
-  (let ((key (link-key behavior what info)))
+  (let ((key (link-key behavior what info))
+        (now (get-internal-real-time)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when (and foundp value)
         (let ((next-state (ecase (getf value :state)
                             (:initial
-                             (format t "In initial state.~%")
-                             (format t "~A => ~A~%" key value)
-                             (format t "Info: ~A~%" info)
-                             :proof)
+                             (prog1 :made
+                               (send-message (behavior-organ behavior) :command
+                                             `(:command :make
+                                                        :make :agent
+                                                        :transaction-id ,(format nil "~A" (uuid:make-v4-uuid))
+                                                        :agent ,(getf value :how)))))
 
-                            (:proof
-                             (format t "Proving a point!~%")
-                             (format t "~A => ~A~%" key value)
-                             (format t "Info: ~A~%" info)
-                             :initial))))
+                            (:made
+                             (let* ((made (or (getf value :made)
+                                              (setf (getf value :made) now)))
+                                    (fail-after (* internal-time-units-per-second 15)))
+                               (cond (info
+                                      :watch)
+                                     ((>= (- now made) fail-after)
+                                      :make-fail))))
 
+                            (:make-fail
+                             (format t "It would appear something failed to make!~%")
+                             :failed)
+
+                            (:failed
+                             (format t "[WARN] Entry under key ~A is in a failed terminal state.~%" key))
+
+                            (:watch
+                             (format t "Watching: ~A~%" key)
+                             (format t "Value: ~A~%" value)
+                             (format t "Info: ~A~%" info)))))
+
+          (format t "Current state: ~A~%" (getf value :state))
           (format t "Next state: ~A~%" next-state)
-          (setf (getf value :state) next-state)
+          ;; Default transition is loopback
+          (and next-state
+               (setf (getf value :state) next-state))
+          (setf (getf value :time) (get-internal-real-time))
+          ;; Update the entry
           (setf (gethash key (links behavior)) value))))))

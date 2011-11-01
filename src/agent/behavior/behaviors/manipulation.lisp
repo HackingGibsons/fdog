@@ -48,6 +48,4 @@
          (trans-id (getf info :transaction-id))
          (process (sb-ext:run-program path args))
          (pid (and process (sb-ext:process-pid process))))
-    (send-message (behavior-organ behavior) :command `(:command :speak
-                                                                :say (:info ,info)))
     (send-message (behavior-organ behavior) :made `(:made ,what :pid ,pid :transaction-id ,trans-id))))

@@ -23,7 +23,7 @@
      :accessor socket
      :documentation "The zeromq socket")
    (address
-     :initform "tcp://127.0.0.1:5555"
+     :initform *socket-address*
      :accessor address
      :documentation "The address to send log messages to")))
 
@@ -60,8 +60,11 @@
     *default-root-path*
       "The currently configured root path.")
 
+(defparameter *socket-address* "ipc:///tmp/afdog-logging")
+
 ;;; Logging functions for the zmq receiver to output to console/disk
 (defcategory output)
+
 (defun start-logging-collect (&key logfile (default t))
   (format t "Log collector started.")
   (when default
@@ -80,7 +83,7 @@
                        :output-spec '(log5:message)))
   (zmq:with-context (ctx 1)
     (zmq:with-socket (socket ctx zmq:pull)
-      (zmq:bind socket "tcp://127.0.0.1:5555")
+      (zmq:bind socket *socket-address*)
       (let ((msg (make-instance 'zmq:msg)))
         (labels ((trim-whitespace (string)
                    (string-trim '(#\Space #\Tab #\Newline) string))

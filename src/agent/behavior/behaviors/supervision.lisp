@@ -95,7 +95,20 @@
 (defmethod link-event ((behavior link-manager) (what (eql :agent)) info)
   (let ((key (link-key behavior what info)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))
-      (when foundp
-        (format t "Found: ~A~%" value)
-        (format t "Info: ~A~%" info)
-        :TODO))))
+      (when (and foundp value)
+        (let ((next-state (ecase (getf value :state)
+                            (:initial
+                             (format t "In initial state.~%")
+                             (format t "~A => ~A~%" key value)
+                             (format t "Info: ~A~%" info)
+                             :proof)
+
+                            (:proof
+                             (format t "Proving a point!~%")
+                             (format t "~A => ~A~%" key value)
+                             (format t "Info: ~A~%" info)
+                             :initial))))
+
+          (format t "Next state: ~A~%" next-state)
+          (setf (getf value :state) next-state)
+          (setf (gethash key (links behavior)) value))))))

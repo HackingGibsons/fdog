@@ -58,7 +58,7 @@
   (format t "Log collector started.")
   (when default
     (log5:start-sender 'default-collector
-                       (log5:stream-sender :location *error-output*)
+                       (log5:stream-sender :location *standard-output*)
                        :category-spec '(output)
                        :output-spec '(log5:message)))
 

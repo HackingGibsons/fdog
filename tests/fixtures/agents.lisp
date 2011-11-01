@@ -22,6 +22,7 @@
   (make-announce-what-i-see (agent::find-organ agent :head))
   (make-announce-what-i-make (agent::find-organ agent :head))
   (make-make-agent-when-asked (agent::find-organ agent :head))
+  (make-make-process-when-asked (agent::find-organ agent :head))
   (make-look-at-child-when-asked (agent::find-organ agent :head)))
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)

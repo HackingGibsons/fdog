@@ -73,3 +73,6 @@
 
 (def-fixtures spawner-fixture (:special (agent::*spawner*))
   (agent::*spawner* :test))
+
+(def-fixtures transaction-id-fixture ()
+  (transaction-id (format nil "~A" (uuid:make-v4-uuid))))

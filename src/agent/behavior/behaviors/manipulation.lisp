@@ -6,8 +6,7 @@
   ;;  :make :agent
   ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent)))
   (let ((what (getf event :make)))
-    (make-item behavior what (getf event what))
-    (send-message organ :made `(:made ,what ,what ,(getf event what)))))
+    (make-item behavior what (getf event what))))
 
 (defgeneric make-item (behavior what info)
   (:documentation "Generic protocol for construction of things.")
@@ -40,4 +39,13 @@
              (runner (apply #'make-runner spawner :class (class-name class) initargs)))
 
         (and runner
-             (start runner))))))
+             (start runner))
+        (send-message (behavior-organ behavior) :made `(:made ,what ,what ,(getf info what)))))))
+
+(defmethod make-item ((behavior make-things) (what (eql :process)) info)
+  (let* ((path (getf info :path))
+         (args (getf info :args))
+         (trans-id (getf info :transaction-id))
+         (process (sb-ext:run-program path args))
+         (pid (and process (sb-ext:process-pid process))))
+    (send-message (behavior-organ behavior) :made `(:made ,what :pid ,pid :transaction-id ,trans-id))))

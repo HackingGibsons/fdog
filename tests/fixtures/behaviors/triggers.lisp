@@ -60,6 +60,17 @@
                             :agent (:uuid ,(getf message :uuid)
                                           :class leaf-test-agent
                                           :package :afdog-tests))))
-    (when (and (> (length message) 3) 
+    (when (and (> (length message) 3)
                (equalp (subseq message 0 3) '(:make :agent :uuid)))
       (agent::send-message organ :command command))))
+
+(agent::defbehavior make-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let* ((message (getf event :message)))
+    (when (and (> (length message) 3) 
+               (equalp (subseq message 0 2)  '(:make :process)))
+
+      (agent::send-message organ :command `(:command :make
+                                                     :make :process
+                                                     :process (:path "/usr/bin/env" 
+                                                               :args ("echo") 
+                                                               :transaction-id ,(getf message :transaction-id)))))))

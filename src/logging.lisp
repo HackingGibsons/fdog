@@ -15,7 +15,7 @@
 (defun stop-logging ()
   (log5:stop-all-senders))
 
-(defclass zmq-logging-stream (fundamental-character-output-stream)
+(defclass zmq-logging-stream (fundamental-character-output-stream trivial-gray-stream-mixin)
   ((ctx
      :accessor ctx
      :documentation "The zeromq context")
@@ -41,12 +41,12 @@
 
 (defmethod stream-write-char ((stream zmq-logging-stream) char)
   (stream-write-sequence stream
-    (with-output-to-string (cheating) (format cheating "~C" char))))
+    (with-output-to-string (cheating) (format cheating "~C" char)) 0 nil))
 
 (defmethod stream-write-string ((stream zmq-logging-stream) str &optional start end)
-  (stream-write-sequence stream (subseq str start end)))
+  (stream-write-sequence stream str start end))
 
-(defmethod stream-write-sequence ((stream zmq-logging-stream) seq &optional start end)
+(defmethod stream-write-sequence ((stream zmq-logging-stream) seq start end &key)
   (with-slots (socket) stream
     (let ((msg (make-instance 'zmq:msg :data (subseq seq (or start 0) end))))
       (zmq:send! socket msg))))

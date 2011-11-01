@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sbcl --eval '(ql:quickload :afdog)' \
+     --eval '(in-package :afdog)' \
+     --eval '(start-logging-collect)'

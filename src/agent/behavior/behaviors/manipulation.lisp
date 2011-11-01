@@ -41,3 +41,13 @@
         (and runner
              (start runner))
         (send-message (behavior-organ behavior) :made `(:made ,what ,what ,(getf info what)))))))
+
+(defmethod make-item ((behavior make-things) (what (eql :process)) info)
+  (let* ((path (getf info :path))
+         (args (getf info :args))
+         (trans-id (getf info :transaction-id))
+         (process (sb-ext:run-program path args))
+         (pid (and process (sb-ext:process-pid process))))
+    (send-message (behavior-organ behavior) :command `(:command :speak
+                                                                :say (:info ,info)))
+    (send-message (behavior-organ behavior) :made `(:made ,what :pid ,pid :transaction-id ,trans-id))))

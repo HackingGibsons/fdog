@@ -167,8 +167,7 @@
               (equal (getf msg :transaction-id) transaction-id)) t))))
 
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
-    (:seq :true
-          (:not :true))
+    (:seq :true :true)
   (list
    ;; Does the agent make a noise when I ask it to die?
    (with-agent-conversation (m e) agent-uuid
@@ -183,7 +182,5 @@
 
    ;; Does it actually die?
    (with-agent-conversation (m e :timeout 5) agent-uuid
-     (do ((msg (agent::parse-message (agent::read-message m))
-               (agent::parse-message (agent::read-message m))))
-         (nil))
-     :did-not-timeout)))
+     (do ((alive (agent::running-p agent-runner) (agent::running-p agent-runner)))
+         ((not alive) t)))))

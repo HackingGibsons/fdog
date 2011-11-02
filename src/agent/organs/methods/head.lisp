@@ -120,6 +120,18 @@ The default `too long` interval is 10 minutes"
   (let ((info (getf info :info)))
     (update-peer head info)))
 
+(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :kill)) &rest info)
+  "Agent hearing that someone should die. Is it me? Then announce and suicide."
+  (let ((target-uuid (getf info :kill)))
+    (when (and target-uuid
+               (equalp target-uuid (agent-uuid (organ-agent head))))
+
+      ;; Yep, they want me dead :(
+      (send-message head :command `(:command :speak
+                                    :say (:agent :death :death ,(agent-uuid (organ-agent head)))))
+      (suicide head))))
+
+
 (defmethod agent-info ((head agent-head))
   (let (acc)
     (maphash #'(lambda (uuid peer)

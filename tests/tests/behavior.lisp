@@ -163,6 +163,16 @@
     (zmq:send! e (agent::prepare-message `(:make :process :transaction-id ,transaction-id)))
     (do ((msg (agent::parse-message (agent::read-message m))
               (agent::parse-message (agent::read-message m))))
-        ((and (equalp (getf msg :made) :process) 
+        ((and (equalp (getf msg :made) :process)
               (equal (getf msg :transaction-id) transaction-id)) t))))
-    
+
+(def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (with-agent-conversation (m e) agent-uuid
+    (zmq:send! e (agent::prepare-message `(:kill :agent :agent ,agent-uuid)))
+    (do ((msg (agent::parse-message (agent::read-message m))
+              (agent::parse-message (agent::read-message m))))
+        ;; Expecting to hear: (:agent :death :agent ,agent-uuid)
+        ((and (>= (length msg) 4)
+              (equalp (subseq msg 0 2) '(:agent :death))
+              (equalp (getf msg :agent) agent-uuid))
+         :dead))))

@@ -3,7 +3,33 @@
   (:use #:log5)
   (:use :afdog)
   (:export :standard-agent
+           :defbehavior
+           :send-message
+           :standard-leaf-agent
+           :standard-hypervisor-agent
+           :find-organ
+           :exec-runner
+           :init-forms
+           :organ
+           :eye
+           :organ-agent
+           :watch-when-told
+           :start
+           :stop
+           :make-runner
+           :*spawner*
+           :behaviors
+           :behavior-organ
+           :organ-incoming-sock
+           :organ-outgoing-sock
            :agent-special-event
+           :watching
+           :organ-tag
+           :running-p
+           :parse-message
+           :read-message
+           :prepare-message
+           :local-ipc-addr
            :agent-event-count
            :agent-context
            :agent-organs

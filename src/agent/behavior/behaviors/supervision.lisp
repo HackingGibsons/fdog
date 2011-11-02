@@ -89,8 +89,61 @@ Like the created-at date of a thing.")
                :accessor thing-info))
   (:metaclass c2mop:funcallable-standard-class))
 
-(defmethod watch-machine-event ((machine standard-watch-machine) (event (eql :initial)) info)
+(defmethod initialize-instance :before ((machine standard-watch-machine) &key)
+  "Bind a (funcallable machine event)  driver to the event machine instance."
+  (c2mop:set-funcallable-instance-function
+   machine
+   #'(lambda (event)
+       (let ((next-event (handler-case (watch-machine-event machine (state machine) event)
+                           (simple-error () (error "State ~A of ~A is not defined." (state machine) machine)))))
+         (setf (last-event machine) (get-internal-real-time)
+               (state machine) (or next-event (state machine)))
+       (values machine (state machine))))))
+
+(defmacro defstate (machine-type state-name (event-sym) &body body)
+  "Helper macro to define states for the machine of type named `machine-type'"
+  `(defmethod watch-machine-event ((machine ,machine-type) (state (eql ,state-name)) ,event-sym)
+     ,@body))
+
+;; Default states of thingwatching
+(defstate standard-watch-machine :made (info)
+  (format t "Looping main event!~%")
+  (unless (getf (timestamps machine) :made)
+    (setf (getf (timestamps machine) :made) (last-event machine)))
+
+  (cond (info :watch)
+        ((>= (- (last-event machine) (getf (timestamps machine) :made))
+             (fail-after machine))
+         :make-fail)))
+
+(defstate standard-watch-machine :make-fail (info)
+  :failed)
+
+(defstate standard-watch-machine :failed (info)
+  (prog1 nil
+    (format t "[WARN] ~A is still failing.~%" machine)))
+
+(defstate standard-watch-machine :watch (info)
+  (format t "Watching: ~A~%" machine)
+  (unless info
+    (format t "[WARN] Going to die ~A => ~A~%" machine info)
+    :died))
+
+(defstate standard-watch-machine :died (info)
+  (format t "[WARN] Dead, restarting ~A => ~A~%" machine info)
+  :initial)
+
+
+;; Agent-specific watch machine
+(defclass agent-watch-machine (standard-watch-machine)
+  ()
+  (:metaclass c2mop:funcallable-standard-class))
+
+;; Agent specific :initial state for agent watching,
+;; Spoilers: It makes the agent the rest of the machine watches
+(defstate agent-watch-machine :initial (info)
   (format t "Running :inital event of ~A~%" machine)
+  (setf (getf (timestamps machine) :made) nil)
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
                            :make :agent
@@ -98,24 +151,7 @@ Like the created-at date of a thing.")
                            :agent ,(thing-info machine)))
   :made)
 
-(defmethod watch-machine-event ((machine standard-watch-machine) (event (eql :made)) info)
-  (format t "Looping main event!~%")
-  :made)
 
-
-(defclass agent-watch-machine (standard-watch-machine)
-  ()
-  (:metaclass c2mop:funcallable-standard-class))
-
-(defmethod initialize-instance :before ((machine standard-watch-machine) &key)
-  (c2mop:set-funcallable-instance-function
-   machine
-   #'(lambda (event)
-       (format t "Calling ~A with ~A~%" machine event)
-       (setf (state machine)
-             (or (watch-machine-event machine (state machine) event)
-                 (state machine)))
-       (values machine (state machine)))))
 
 
 ;; Agent init and event
@@ -130,65 +166,13 @@ Like the created-at date of a thing.")
                              :thing-info info))
         ;;    `(:state :initial :time ,(get-internal-real-time) :what ,what :how ,info))
 
-        ;; Make an agent
-        ;; (send-message (behavior-organ behavior) :command `(:command :make
-        ;;                                         :make :agent
-        ;;                                         :agent ,info))
-
         ;; Watch an agent
+        ;; TODO: This should move to the event machine
         (send-message (behavior-organ behavior) :command `(:command :watch
                                                 :watch (:agent :uuid :uuid ,(getf info :uuid))))))))
 
 (defmethod link-event ((behavior link-manager) (what (eql :agent)) info)
-  (let ((key (link-key behavior what info))
-        (now (get-internal-real-time)))
+  (let ((key (link-key behavior what info)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when (and foundp value)
         (funcall value info)))))
-
-(defmethod link-event% ((behavior link-manager) (what (eql :agent)) info)
-  (let ((key (link-key behavior what info))
-        (now (get-internal-real-time)))
-    (multiple-value-bind (value foundp) (gethash key (links behavior))
-      (when (and foundp value)
-        (let ((next-state (ecase (getf value :state)
-                            (:initial
-                             (prog1 :made
-                               (send-message (behavior-organ behavior) :command
-                                             `(:command :make
-                                                        :make :agent
-                                                        :transaction-id ,(format nil "~A" (uuid:make-v4-uuid))
-                                                        :agent ,(getf value :how)))))
-
-                            (:made
-                             (let* ((made (or (getf value :made)
-                                              (setf (getf value :made) now)))
-                                    (fail-after (* internal-time-units-per-second 15)))
-                               (cond (info
-                                      :watch)
-                                     ((>= (- now made) fail-after)
-                                      :make-fail))))
-
-                            (:make-fail
-                             (format t "It would appear something failed to make!~%")
-                             :failed)
-
-                            (:failed
-                             (format t "[WARN] Entry under key ~A is in a failed terminal state.~%" key))
-
-                            (:watch
-                             (unless info
-                               :died))
-
-                            (:died
-                             (format t "~A seems to have died.~%" key)
-                             :initial))))
-
-          (format t "Current state: ~A~%" (getf value :state))
-          (format t "Next state: ~A~%" next-state)
-          ;; Default transition is loopback
-          (and next-state
-               (setf (getf value :state) next-state))
-          (setf (getf value :time) (get-internal-real-time))
-          ;; Update the entry
-          (setf (gethash key (links behavior)) value))))))

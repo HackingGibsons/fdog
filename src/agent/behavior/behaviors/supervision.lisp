@@ -71,6 +71,31 @@
                     (getf event link-what))))
     (link-init behavior link-what link-info)))
 
+(defclass standard-watch-machine ()
+  ((state :initform :initial
+          :accessor state)
+   (last-event :initform (get-internal-real-time)
+               :accessor last-event)
+
+   (timestamps :initform nil
+               :accessor timestamps
+               :documentation "A plist of timestamps that some events might need to use.
+Like the created-at date of a thing.")
+   (fail-after :initform (* internal-time-units-per-second 15)
+               :reader fail-after)
+   (thing-info :initform nil
+               :accessor thing-info)))
+
+(defclass agent-watch-machine (c2mop:funcallable-standard-object standard-watch-machine)
+  ()
+  (:metaclass c2mop:funcallable-standard-class))
+
+(defmethod initialize-instance :before ((machine agent-watch-machine) &key)
+  (c2mop:set-funcallable-instance-function
+   machine
+   #'(lambda (event)
+       (values (state machine) nil))))
+
 
 ;; Agent init and event
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)

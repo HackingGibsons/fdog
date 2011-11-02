@@ -4,6 +4,7 @@
   (:use :afdog)
   (:export :standard-agent
            :defbehavior
+           :behavior
            :send-message
            :standard-leaf-agent
            :standard-hypervisor-agent

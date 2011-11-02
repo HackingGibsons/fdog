@@ -5,7 +5,8 @@
                #:uuid
                #:log5
                #:bordeaux-threads
-               #:zeromq)
+               #:zeromq
+               #:trivial-gray-streams)
   :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components
                         ;; Base project scaffold

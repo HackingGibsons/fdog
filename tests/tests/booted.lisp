@@ -14,8 +14,8 @@
   (agent-context agent))
 
 (def-test (organs-have-sockets :group booted-agent-tests)
-    (:each (:all (:apply agent::organ-incoming-sock :true)
-                 (:apply agent::organ-outgoing-sock :true)))
+    (:each (:all (:apply organ-incoming-sock :true)
+                 (:apply organ-outgoing-sock :true)))
   (agent-organs agent))
 
 ;; This test will scaffold a running agent and run any tests driven by the event loop
@@ -30,6 +30,6 @@
 
 ;; Termianted agent tests
 (def-test (organs-closed-sockets :group terminated-agent-tests)
-    (:each (:all (:apply agent::organ-incoming-sock (:not :true))
-                 (:apply agent::organ-outgoing-sock (:not :true))))
+    (:each (:all (:apply organ-incoming-sock (:not :true))
+                 (:apply organ-outgoing-sock (:not :true))))
   (agent-organs agent))

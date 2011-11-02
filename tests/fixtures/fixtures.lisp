@@ -1,15 +1,15 @@
 (in-package :afdog-tests)
 
 ;; Runner encapsulation
-(defclass test-runner (agent::exec-runner) ())
+(defclass test-runner (exec-runner) ())
 
 (defmethod update-instance-for-different-class :after (previous (current test-runner) &key)
-  (setf (agent::init-forms current)
-        (append (agent::init-forms current)
+  (setf (init-forms current)
+        (append (init-forms current)
                 '((ql:quickload :afdog-tests)))))
 
-(defmethod agent::make-runner ((style (eql :test)) &rest keys &key)
-  (change-class (apply #'agent::make-runner :exec keys) 'test-runner))
+(defmethod make-runner ((style (eql :test)) &rest keys &key)
+  (change-class (apply #'make-runner :exec keys) 'test-runner))
 
 ;; Test fixtures
 (def-fixtures agent-fixture
@@ -18,61 +18,61 @@
 
 (def-fixtures running-hypervisor-fixture
     (:setup
-     (agent::start agent-runner)
+     (start agent-runner)
 
      :cleanup
-     (agent::stop agent-runner))
+     (stop agent-runner))
 
   (agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
-  (agent-runner (agent::make-runner :test :include '(:afdog-tests)
-                                    :class 'hypervisor-test-agent
-                                    :uuid agent-uuid)))
+  (agent-runner (make-runner :test :include '(:afdog-tests)
+                             :class 'hypervisor-test-agent
+                             :uuid agent-uuid)))
 
 (def-fixtures running-hypervisor-child
-    (:setup (agent::start child-runner)
-     :cleanup (agent::stop child-runner))
+    (:setup (start child-runner)
+            :cleanup (stop child-runner))
 
   (child-uuid (format nil "~A" (uuid:make-v4-uuid)))
-  (child-runner (agent::make-runner :test :include '(:afdog-tests)
-                                    :class 'leaf-test-agent
-                                    :uuid child-uuid
-                                    :parent-uuid agent-uuid
-                                    :parent-mouth (agent::local-ipc-addr agent-uuid :mouth))))
+  (child-runner (make-runner :test :include '(:afdog-tests)
+                             :class 'leaf-test-agent
+                             :uuid child-uuid
+                             :parent-uuid agent-uuid
+                             :parent-mouth (local-ipc-addr agent-uuid :mouth))))
 
 (def-fixtures started-parent-and-child
-    (:setup (progn (agent::start parent)
-                   (agent::start child))
+    (:setup (progn (start parent)
+                   (start child))
 
-     :cleanup (progn (agent::stop parent)
-                     (agent::stop child)))
+            :cleanup (progn (stop parent)
+                            (stop child)))
 
   (uuid (format nil "~A" (uuid:make-v4-uuid)))
   (kid-uuid (format nil "~A" (uuid:make-v4-uuid)))
-  (parent (agent::make-runner :test :include '(:afdog-tests)
-                              :class 'hypervisor-test-agent
-                              :uuid uuid))
-  (child (agent::make-runner :test :include '(:afdog-tests)
-                             :class 'leaf-test-agent
-                             :uuid kid-uuid
-                             :parent-uuid uuid
-                             :parent-mouth (agent::local-ipc-addr uuid :mouth))))
+  (parent (make-runner :test :include '(:afdog-tests)
+                       :class 'hypervisor-test-agent
+                       :uuid uuid))
+  (child (make-runner :test :include '(:afdog-tests)
+                      :class 'leaf-test-agent
+                      :uuid kid-uuid
+                      :parent-uuid uuid
+                      :parent-mouth (local-ipc-addr uuid :mouth))))
 
 (def-fixtures running-agent-fixture
     (:setup
-     (unless (agent::running-p agent-runner)
-       (agent::start agent-runner))
+     (unless (running-p agent-runner)
+       (start agent-runner))
 
      :cleanup
-     (if (agent::running-p agent-runner)
-         (agent::stop agent-runner)))
+     (if (running-p agent-runner)
+         (stop agent-runner)))
 
   (agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
-  (agent-runner (agent::make-runner :test :include '(:afdog-tests)
-                                    :class 'afdog-tests::runner-agent
-                                    :uuid agent-uuid)))
+  (agent-runner (make-runner :test :include '(:afdog-tests)
+                             :class 'afdog-tests::runner-agent
+                             :uuid agent-uuid)))
 
-(def-fixtures spawner-fixture (:special (agent::*spawner*))
-  (agent::*spawner* :test))
+(def-fixtures spawner-fixture (:special (*spawner*))
+  (*spawner* :test))
 
 (def-fixtures transaction-id-fixture ()
   (transaction-id (format nil "~A" (uuid:make-v4-uuid))))

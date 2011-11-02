@@ -174,5 +174,5 @@
         ;; Expecting to hear: (:agent :death :death ,agent-uuid)
         ((and (>= (length msg) 4)
               (equalp (subseq msg 0 2) '(:agent :death))
-              (equalp (getf msg :agent) agent-uuid))
+              (equalp (getf msg :death) agent-uuid))
          :dead))))

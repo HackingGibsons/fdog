@@ -71,8 +71,10 @@
                     (getf event link-what))))
     (link-init behavior link-what link-info)))
 
-(defclass standard-watch-machine ()
-  ((state :initform :initial
+(defclass standard-watch-machine (c2mop:funcallable-standard-object)
+  ((behavior :initform nil :initarg :behavior
+             :accessor behavior)
+   (state :initform :initial
           :accessor state)
    (last-event :initform (get-internal-real-time)
                :accessor last-event)
@@ -83,18 +85,37 @@
 Like the created-at date of a thing.")
    (fail-after :initform (* internal-time-units-per-second 15)
                :reader fail-after)
-   (thing-info :initform nil
-               :accessor thing-info)))
+   (thing-info :initform nil :initarg :thing-info
+               :accessor thing-info))
+  (:metaclass c2mop:funcallable-standard-class))
 
-(defclass agent-watch-machine (c2mop:funcallable-standard-object standard-watch-machine)
+(defmethod watch-machine-event ((machine standard-watch-machine) (event (eql :initial)) info)
+  (format t "Running :inital event of ~A~%" machine)
+  (send-message (behavior-organ (behavior machine)) :command
+                `(:command :make
+                           :make :agent
+                           :transaction-id ,(format nil "~A" (uuid:make-v4-uuid))
+                           :agent ,(thing-info machine)))
+  :made)
+
+(defmethod watch-machine-event ((machine standard-watch-machine) (event (eql :made)) info)
+  (format t "Looping main event!~%")
+  :made)
+
+
+(defclass agent-watch-machine (standard-watch-machine)
   ()
   (:metaclass c2mop:funcallable-standard-class))
 
-(defmethod initialize-instance :before ((machine agent-watch-machine) &key)
+(defmethod initialize-instance :before ((machine standard-watch-machine) &key)
   (c2mop:set-funcallable-instance-function
    machine
    #'(lambda (event)
-       (values (state machine) nil))))
+       (format t "Calling ~A with ~A~%" machine event)
+       (setf (state machine)
+             (or (watch-machine-event machine (state machine) event)
+                 (state machine)))
+       (values machine (state machine)))))
 
 
 ;; Agent init and event
@@ -105,7 +126,9 @@ Like the created-at date of a thing.")
       (unless foundp
         ;; Store a state under the generated key
         (setf (gethash key (links behavior))
-              `(:state :initial :time ,(get-internal-real-time) :what ,what :how ,info))
+              (make-instance 'agent-watch-machine :behavior behavior
+                             :thing-info info))
+        ;;    `(:state :initial :time ,(get-internal-real-time) :what ,what :how ,info))
 
         ;; Make an agent
         ;; (send-message (behavior-organ behavior) :command `(:command :make
@@ -116,8 +139,14 @@ Like the created-at date of a thing.")
         (send-message (behavior-organ behavior) :command `(:command :watch
                                                 :watch (:agent :uuid :uuid ,(getf info :uuid))))))))
 
-
 (defmethod link-event ((behavior link-manager) (what (eql :agent)) info)
+  (let ((key (link-key behavior what info))
+        (now (get-internal-real-time)))
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when (and foundp value)
+        (funcall value info)))))
+
+(defmethod link-event% ((behavior link-manager) (what (eql :agent)) info)
   (let ((key (link-key behavior what info))
         (now (get-internal-real-time)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))

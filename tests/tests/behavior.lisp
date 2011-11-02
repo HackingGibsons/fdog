@@ -166,13 +166,24 @@
         ((and (equalp (getf msg :made) :process)
               (equal (getf msg :transaction-id) transaction-id)) t))))
 
-(def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
-  (with-agent-conversation (m e) agent-uuid
-    (zmq:send! e (agent::prepare-message `(:agent :kill :kill ,agent-uuid)))
-    (do ((msg (agent::parse-message (agent::read-message m))
-              (agent::parse-message (agent::read-message m))))
-        ;; Expecting to hear: (:agent :death :death ,agent-uuid)
-        ((and (>= (length msg) 4)
-              (equalp (subseq msg 0 2) '(:agent :death))
-              (equalp (getf msg :death) agent-uuid))
-         :dead))))
+(def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
+    (:seq :true
+          (:not :true))
+  (list
+   ;; Does the agent make a noise when I ask it to die?
+   (with-agent-conversation (m e) agent-uuid
+     (zmq:send! e (agent::prepare-message `(:agent :kill :kill ,agent-uuid)))
+     (do ((msg (agent::parse-message (agent::read-message m))
+               (agent::parse-message (agent::read-message m))))
+         ;; Expecting to hear: (:agent :death :death ,agent-uuid)
+         ((and (>= (length msg) 4)
+               (equalp (subseq msg 0 2) '(:agent :death))
+               (equalp (getf msg :death) agent-uuid))
+          :dead)))
+
+   ;; Does it actually die?
+   (with-agent-conversation (m e :timeout 5) agent-uuid
+     (do ((msg (agent::parse-message (agent::read-message m))
+               (agent::parse-message (agent::read-message m))))
+         (nil))
+     :did-not-timeout)))

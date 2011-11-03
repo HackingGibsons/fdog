@@ -51,13 +51,13 @@ and drive the `standard-watch-machine'"
  of the type `what' with the reconstruction information `info' and insert it into the watch table.
 Parameter meanings are the same as for `link-key'")
 
-  (:method ((b behavior) w i)
+  (:method ((b link-manager) w i)
     "Default operation is a no-op" nil))
 
 (defgeneric link-event (behavior what info)
   (:documentation "Dispatch to the right method to potentially drive a `standard-watch-machine' if one is found.
 Parameter meanings are the same as `link-key'")
-  (:method ((b behavior) w i)
+  (:method ((b link-manager) w i)
     "Default operation is a no-op" nil))
 
 (defbehavior create-links (:or ((:on (:command :link :from :head))

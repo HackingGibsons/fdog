@@ -129,3 +129,40 @@
                    (equalp (getf msg :saw) :agent)
                    (equalp (getf (getf msg :agent) :uuid) child-uuid))
               t))))))
+
+(def-test (agent-restarts-killed-child :group supervision-tests) :true
+  (let (child-uuid)
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (agent::prepare-message `(:spawn :child)))
+      (do* ((msg (agent::parse-message (agent::read-message m))
+                 (agent::parse-message (agent::read-message m))))
+           ((equalp (subseq msg 0 2) '(:echo :spawn))
+            (setf child-uuid (getf msg :child)))))
+
+    (when child-uuid
+      (with-agent-conversation (cm ce :timeout 20) agent-uuid
+        (do* ((msg (agent::parse-message (agent::read-message cm))
+                   (agent::parse-message (agent::read-message cm))))
+             ((and (equalp (second msg) :saw)
+                   (equalp (getf msg :saw) :agent)
+                   (equalp (getf (getf msg :agent) :uuid) child-uuid))
+              t))))
+
+    (with-agent-conversation (m e) child-uuid
+      (zmq:send! e (prepare-message `(:agent :kill :kill ,child-uuid)))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+          ;; Expecting to hear: (:agent :death :death ,child-uuid)
+          ((and (>= (length msg) 4)
+                (equalp (subseq msg 0 2) '(:agent :death))
+                (equalp (getf msg :death) child-uuid))
+           :dead)))
+
+    (when child-uuid
+      (with-agent-conversation (cm ce :timeout 20) agent-uuid
+        (do* ((msg (agent::parse-message (agent::read-message cm))
+                   (agent::parse-message (agent::read-message cm))))
+             ((and (equalp (second msg) :saw)
+                   (equalp (getf msg :saw) :agent)
+                   (equalp (getf (getf msg :agent) :uuid) child-uuid))
+              t))))))

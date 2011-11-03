@@ -228,4 +228,42 @@
   (with-agent-conversation (m e :timeout 30) agent-uuid
     (zmq:send! e (prepare-message `(:new-timeout-interval 10)))
     (do (running (running-p agent-runner (running-p agent-runner)))
-      ((not running) :died))))
+        ((not running) :died))))
+
+(def-test (agent-can-look-at-directory-contents :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (with-agent-conversation (m e :timeout 20) agent-uuid
+    (zmq:send! e (prepare-message `(:look :directory :path ,(namestring (asdf:system-source-directory :afdog)))))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+        ((and (> (length msg) 4)
+              (equalp (subseq msg 2 4) '(:saw :directory))
+              (getf msg :exists)
+              (string-equal (pathname-type (find "afdog"
+                                                 (mapcar #'pathname (getf msg :contents))
+                                                 :key #'pathname-name
+                                                 :test #'string-equal))
+                            "asd"))
+         t))))
+
+
+(def-test (agent-can-look-at-empty-directory :group basic-behavior-tests :fixtures (running-agent-fixture empty-directory-fixture)) :true
+  (with-agent-conversation (m e :timeout 20) agent-uuid
+    (zmq:send! e (prepare-message `(:look :directory :path ,(namestring empty-directory))))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+        ((and (> (length msg) 4)
+              (equalp (subseq msg 2 4) '(:saw :directory))
+              (getf msg :exists)
+              (null (getf msg :contents)))
+         t))))
+
+(def-test (agent-can-fail-to-find-directory :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (with-agent-conversation (m e :timeout 20) agent-uuid
+    (zmq:send! e (prepare-message `(:look :directory :path ,(format nil "~A" (uuid:make-v4-uuid)))))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+        ((and (> (length msg) 4)
+              (equalp (subseq msg 2 4) '(:saw :directory))
+              (not (getf msg :exists))
+              (null (getf msg :contents)))
+         t))))

@@ -19,8 +19,17 @@
       (send-message organ :command `(:command :look
                                               :at (:agent :uuid :uuid ,(getf message :uuid)))))))
 
+(defbehavior look-at-directory-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (equalp (getf message :look) :directory)
+      (send-message organ :command `(:command :speak
+                                              :say ,event))
+      (send-message organ :command `(:command :look
+                                              :at (:directory :path :path ,(getf message :path)))))))
+
 (defbehavior announce-what-i-see (:or ((:on (:saw :process :from :eye))
-                                       (:on (:saw :agent :from :eye)))
+                                       (:on (:saw :agent :from :eye))
+                                       (:on (:saw :directory :from :eye)))
                                       :do :invoke-with-event) (organ event)
   (log-for (trace organ) "organ: ~A sees pid ~A and alive is ~A" organ (getf event :pid) (getf event :alive))
   (send-message organ :command `(:command :speak

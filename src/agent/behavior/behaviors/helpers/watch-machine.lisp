@@ -5,7 +5,7 @@
 (defclass standard-watch-machine (c2mop:funcallable-standard-object)
   ((behavior :initform nil :initarg :behavior
              :accessor behavior
-             :documentation "The behavior that owns this watch-machine"
+             :documentation "The behavior that owns this watch-machine")
    (state :initform :initial :initarg :state
           :accessor state
           :documentation "The current state of the watch-machine.")
@@ -22,7 +22,8 @@ Like the created-at date of a thing.")
                :documentation "The interval of time in internal time units to wait for the construction of a thing.")
    (thing-info :initform nil :initarg :thing-info
                :accessor thing-info
-               :documentation "The information required to re-construct the object initially and repeatedly in case of failure.")
+               :documentation "The information required to re-construct the object initially and repeatedly in case of failure."))
+
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "The `standard-watch-machine' is a class for storing state about a watchable 'thing'.
 It is used by `create-links' behavior to drive the supervision machinery. Every item in the watched items

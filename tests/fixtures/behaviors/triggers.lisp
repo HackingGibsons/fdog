@@ -77,8 +77,8 @@
 
 (defclass timeout-mixin ()
   ((start-time :initform (get-internal-real-time)
-            :accessor start-time
-            :documentation "Time the agent was started")
+               :accessor start-time
+               :documentation "Time the agent was started")
    (timeout :initform (* 120 internal-time-units-per-second)
             :accessor timeout
             :documentation "Interval in seconds before an agent kills itself. Defaults to 2 minutes")))
@@ -92,8 +92,7 @@
     (log-for (trace) "new-timeout-interval: ~A" new-timeout-interval)
     (when new-timeout-interval
       (log-for (trace) "new timeout interval: ~A" new-timeout-interval)
-      (with-slots (timeout) behavior
-        (setf timeout (* new-timeout-interval internal-time-units-per-second))))
+      (setf (timeout behavior) (* new-timeout-interval internal-time-units-per-second)))
     (log-for (trace) "no new interval, current time: ~A, timeout interval ~A" (- (get-internal-real-time) (start-time behavior)) (timeout behavior)))
   (when (>= (- (get-internal-real-time) (start-time behavior)) (timeout behavior))
     (log-for (warn) "~A: Timeout reached, killing myself" organ)

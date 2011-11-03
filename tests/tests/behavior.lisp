@@ -228,5 +228,5 @@
   ;; after a 15 second timeout, agent should be dead
   (with-agent-conversation (m e :timeout 30) agent-uuid
     (zmq:send! e (prepare-message `(:new-timeout-interval 10)))
-    (do ((msg t))
-      ((not (running-p agent-runner)) t))))
+    (do (running (running-p agent-runner (running-p agent-runner)))
+      ((not running) :died))))

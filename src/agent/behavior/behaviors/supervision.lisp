@@ -88,7 +88,7 @@ Fires the `link-init' method after destructurinng the `event' to determine the t
 of the object to be linked."
   (let* ((link-what (getf event :link))
          (link-info (and link-what
-                    (getf event link-what))))
+                         (getf event link-what))))
     (link-init behavior link-what link-info)))
 
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)

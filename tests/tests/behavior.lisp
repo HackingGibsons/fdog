@@ -93,8 +93,11 @@
                                            (handler-case (bt:with-timeout (15)
                                                            (do* ((msg (parse-message (read-message read-sock))
                                                                       (parse-message (read-message read-sock))))
-                                                                (watching)
+                                                                ((and watching
+                                                                      (numberp watching)
+                                                                      (> watching 0)))
                                                              (when (equalp (car msg) :count)
+                                                               (zmq:send! write-sock (prepare-message '(:count :watching)))
                                                                (setf watching (second msg)))))
                                              (bt:timeout () nil)))))
                                      watching))))
@@ -184,3 +187,38 @@
    (with-agent-conversation (m e :timeout 5) agent-uuid
      (do ((alive (running-p agent-runner) (running-p agent-runner)))
          ((not alive) t)))))
+
+(def-test (agent-notices-when-peers-die-in-silence :group basic-behavior-tests :fixtures (started-parent-and-child))
+    (:seq :true         ;; Find a peer
+          (:eql :dead)  ;; Kill the peer
+          (:eql :gone)) ;; See that the parent notices
+  (list
+    ;; Wait for a parent to acknoledge the peer
+    (with-agent-conversation (m e) uuid
+      (do* ((msg (parse-message (read-message m))
+                 (parse-message (read-message m)))
+            (info nil (getf msg :info)))
+          ((and (equalp (subseq msg 0 2) '(:agent :info))
+                info
+                (getf info :peers)) t)))
+
+    ;; Kill the child and make sure it dies
+    (with-agent-conversation (m e) kid-uuid
+     (zmq:send! e (prepare-message `(:agent :kill :kill ,kid-uuid)))
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ;; Expecting to hear: (:agent :death :death ,kid-uuid)
+         ((and (>= (length msg) 4)
+               (equalp (subseq msg 0 2) '(:agent :death))
+               (equalp (getf msg :death) kid-uuid))
+          :dead)))
+
+    ;; Try to find an agent info with a nil peers list
+    (with-agent-conversation (m e :timeout 20) uuid
+      (do* ((msg (parse-message (read-message m))
+                 (parse-message (read-message m)))
+            (info nil (getf msg :info)))
+          ((and (equalp (subseq msg 0 2) '(:agent :info))
+                info
+                (not (getf info :peers)))
+           :gone)))))

@@ -93,8 +93,11 @@
                                            (handler-case (bt:with-timeout (15)
                                                            (do* ((msg (parse-message (read-message read-sock))
                                                                       (parse-message (read-message read-sock))))
-                                                                (watching)
+                                                                ((and watching
+                                                                      (numberp watching)
+                                                                      (> watching 0)))
                                                              (when (equalp (car msg) :count)
+                                                               (zmq:send! write-sock (prepare-message '(:count :watching)))
                                                                (setf watching (second msg)))))
                                              (bt:timeout () nil)))))
                                      watching))))

@@ -43,15 +43,8 @@
                                 (:on (:saw :process :from :eye))
                                 (:on (:saw :agent :from :eye)))
                                :include (link-manager) :do :invoke-with-event) (organ event)
-  ;; (:command :link
-  ;;           :link :agent
-  ;;           :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests)
-  ;;   --or --
-  ;;           :link :process
-  ;;           :process (:pid pid :make (:cmd "string" :args ("list" "of" "strings") :pwd ""))
-  ;;           .. or something
-
-  ;; TODO: Not this, write a dispawtching :do for compound events
+  ;; Message format: `:link' message:
+  ;; https://github.com/vitrue/fdog/wiki/Internal-Messages
   (cond
     ((getf event :saw)
      (create-links-saw behavior organ event))
@@ -80,7 +73,6 @@
         (setf (gethash key (links behavior))
               (make-instance 'agent-watch-machine :behavior behavior
                              :thing-info info))
-        ;;    `(:state :initial :time ,(get-internal-real-time) :what ,what :how ,info))
 
         ;; Watch an agent
         ;; TODO: This should move to the event machine

@@ -34,7 +34,7 @@ table is an instance of a subclass of this class. It is funcalled as follows eve
 Every iteration of the event machine the `last-event' slot is updated with `get-internal-real-time' before
 the funcallable instance application.
 
-NOTE: The default implementation does not provide an `:initial' state, and should not be instanciated directly.
+NOTE: The default implementation does not provide an `:initial' state, and should not be instantiated directly.
 Provide an `:initial' state in your subclass of the watch machine that knows how to construct your objects,
 and look over the `:made' and `:watch' states to consider overriding them.
 
@@ -59,10 +59,10 @@ See `defstate' for the reasoning and function. This method is closure plumbing."
 The generated state methods will be specialized on `machine-type' and `state-name', and
 subclasses of `standard-watch-machine' should use this property to extend the state machine.
 
-`state-name' is the identifier for this state, and names it. Event invokations will
+`state-name' is the identifier for this state, and names it. Event invocations will
 use this name to determine which state the machine is in, and error out if one cannot be found.
 The event will be bound to the symbol named `event-sym' declared as in a one-argument lambda list.
-Each invokation of this state with the even bound to `event-sym' will evaluate `body' forms as
+Each invocation of this state with the even bound to `event-sym' will evaluate `body' forms as
 in a method invocation and the resulting value of the evaluation should return the next state
 for the machine as a `:keyword', or `nil' to indicate the machine should remain in its current state.
 The symbol `machine' will be bound to the currently executing state machine. The current state is

@@ -5,7 +5,8 @@
                #:uuid
                #:log5
                #:bordeaux-threads
-               #:zeromq)
+               #:zeromq
+               #:trivial-gray-streams)
   :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components
                         ;; Base project scaffold
@@ -37,7 +38,11 @@
                                             ((:file "classes")
                                              (:file "defbehavior" :depends-on ("classes"))
                                              (:module "behaviors" :depends-on ("defbehavior") :components
-                                                      ((:file "peers")
+                                                      ((:module "helpers" :components
+                                                                ((:file "watch-machine")))
+                                                       (:file "peers")
+                                                       (:file "manipulation")
+                                                       (:file "supervision" :depends-on ("helpers"))
                                                        (:file "vision")))))
 
                                    ;; Standard organ definitions
@@ -48,6 +53,7 @@
                                                        (:file "mouth")
                                                        (:file "ear")
                                                        (:file "eye")
+                                                       (:file "hand")
                                                        (:file "appendix")))
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")

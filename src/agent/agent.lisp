@@ -20,7 +20,7 @@ result into the desired type.")
     (let ((agent (apply #'make-instance class :allow-other-keys t initargs)))
       (make-instance 'agent-runner :agent agent))))
 
-(defgeneric start (runner)
+(defgeneric start (runner &key category)
   (:documentation "Start the `runner' by invoking `run-agent' on the enclosed agent"))
 (defgeneric stop (runner)
   (:documentation "Stop the running agent in the container."))
@@ -75,7 +75,7 @@ result into the desired type.")
     (make-instance 'exec-runner :agent class
                    :initargs (remove-from-plist initargs :class :agent :include))))
 
-(defmethod start ((runner exec-runner))
+(defmethod start ((runner exec-runner) &key (category '(log5:dribble+)))
   "Starts a runner by starting a new lisp."
   (unless (running-p runner)
     (flet ((prepare-forms (forms)
@@ -83,13 +83,16 @@ result into the desired type.")
                   (list "--eval"
                         (with-output-to-string (s) (prin1 form s))))))
 
+      (start-logging :category category)
+
       (setf (agent-handle runner)
             (sb-ext:run-program (runner-lisp runner)
                                 `(,@(runner-lisp-options runner)
                                     ,@(prepare-forms (init-forms runner))
                                     ,@(prepare-forms (exec-forms runner))
                                     ,@(prepare-forms (terminate-forms runner)))
-                                :wait nil)))))
+                                :wait nil))
+      runner)))
 
 (defmethod running-p ((runner exec-runner))
   (and (agent-handle runner)
@@ -114,8 +117,10 @@ result into the desired type.")
   (let ((runner (call-next-method)))
     (change-class runner 'thread-runner)))
 
-(defmethod start ((runner thread-runner))
+(defmethod start ((runner thread-runner) &key (category '(log5:dribble+)))
   (unless (running-p runner)
+    (start-logging :category category)
+
     (setf (agent-handle runner)
           (bt:make-thread #'(lambda () (run-agent (agent-instance runner)))))
     runner))
@@ -151,21 +156,26 @@ result into the desired type.")
 
     (iolib.syscalls:ESRCH () nil)))
 
-(defmethod start ((runner proc-runner))
+(defmethod start ((runner proc-runner) &key (category '(log5:dribble+)))
   "Forking starter. Does not work in multithreaded sbcl."
   (unless (running-p runner)
-    (let ((child  (handler-case (sb-posix:fork) (t () nil))))
-      (case child
-        (nil nil)
-        (-1 (log-for (warn) "~A: FORK FAILED!" runner)
-            nil)
-        (0
-         (setf (agent-handle runner) (iolib.syscalls:getpid))
-         (unwind-protect (run-agent (agent-instance runner))
-           (setf (agent-handle runner) nil)
-           (iolib.syscalls:exit 0)))
-        (t
-         (setf (agent-handle runner) child))))))
+    (prog1 runner
+      (let ((child  (handler-case (sb-posix:fork) (t () nil))))
+        (case child
+          (nil nil)
+          (-1 (log-for (warn) "~A: FORK FAILED!" runner)
+              nil)
+          (0
+           (start-logging :category category)
+
+           (setf (agent-handle runner) (iolib.syscalls:getpid))
+           (unwind-protect (run-agent (agent-instance runner))
+             (setf (agent-handle runner) nil)
+             (iolib.syscalls:exit 0)))
+          (t
+            (start-logging :category category)
+
+            (setf (agent-handle runner) child)))))))
 
 (defmethod stop ((runner proc-runner))
   (when (running-p runner)
@@ -190,8 +200,10 @@ result into the desired type.")
   (let ((runner (call-next-method)))
     (change-class runner 'blocked-runner)))
 
-(defmethod start ((runner blocked-runner))
+(defmethod start ((runner blocked-runner) &key (category '(log5:dribble+)))
   (prog1 runner
+    (start-logging :category category)
+
     (setf (agent-handle runner) (agent-instance runner))
     (unwind-protect (run-agent (agent-handle runner))
       (setf (agent-handle runner) nil))))

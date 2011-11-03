@@ -65,8 +65,8 @@ the result of accumulating the results."
 
 (defmethod evict-old-peers ((head agent-head))
   "Remove old peers from the known peer list.
-The default `too long` interval is 10 minutes"
-  (let ((threshold (* (* 10 60) internal-time-units-per-second))
+The default `too long` interval is 10 seconds"
+  (let ((threshold (* 10 internal-time-units-per-second))
         (now (get-internal-real-time))
         (peer-times (map-peers head #'(lambda (k v) `(,k ,(getf v :time))))))
 
@@ -95,8 +95,6 @@ The default `too long` interval is 10 minutes"
 
 (defmethod update-peer :after ((head agent-head) peer-info)
   "Walk all of the peers we have and listen to each of them."
-  (evict-old-peers head)
-
   (labels ((talk-to-discovered-peers (peers)
              (dolist (peer peers)
                (unless (equalp (agent-uuid (organ-agent head)) (car peer))
@@ -120,6 +118,18 @@ The default `too long` interval is 10 minutes"
   (let ((info (getf info :info)))
     (update-peer head info)))
 
+(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :kill)) &rest info)
+  "Agent hearing that someone should die. Is it me? Then announce and suicide."
+  (let ((target-uuid (getf info :kill)))
+    (when (and target-uuid
+               (equalp target-uuid (agent-uuid (organ-agent head))))
+
+      ;; Yep, they want me dead :(
+      (send-message head :command `(:command :speak
+                                    :say (:agent :death :death ,(agent-uuid (organ-agent head)))))
+      (suicide head))))
+
+
 (defmethod agent-info ((head agent-head))
   (let (acc)
     (maphash #'(lambda (uuid peer)
@@ -128,3 +138,7 @@ The default `too long` interval is 10 minutes"
                        acc))
              (agent-peers head))
     `(:peers ,acc)))
+
+(defmethod agent-info :before ((head agent-head))
+  "Evict any old peers before we send agent info."
+  (evict-old-peers head))

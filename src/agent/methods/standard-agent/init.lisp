@@ -14,4 +14,5 @@
                                   agent-mouth
                                   agent-ear
                                   agent-eye
+                                  agent-hand
                                   agent-appendix)))))

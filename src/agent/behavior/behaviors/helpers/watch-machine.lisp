@@ -49,7 +49,8 @@ the funcallable instance application."))
   (unless (getf (timestamps machine) :made)
     (setf (getf (timestamps machine) :made) (last-event machine)))
 
-  (cond (info :watch)
+  (cond (info
+         :watch)
         ((>= (- (last-event machine) (getf (timestamps machine) :made))
              (fail-after machine))
          :make-fail)))

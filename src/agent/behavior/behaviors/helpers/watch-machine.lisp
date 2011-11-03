@@ -18,7 +18,14 @@ Like the created-at date of a thing.")
                :reader fail-after)
    (thing-info :initform nil :initarg :thing-info
                :accessor thing-info))
-  (:metaclass c2mop:funcallable-standard-class))
+  (:metaclass c2mop:funcallable-standard-class)
+  (:documentation "The `standard-watch-machine' is a class for storing state about a watchable 'thing'.
+It is used by `create-links' behavior to drive the supervision machinery. Every item in the watched items
+table is an instance of a subclass of this class. It is funcalled as follows every time a :saw, and in the future
+:made event triggers the behavior, and the event is passed in:
+  (funcall this-instance event-from-bus)
+Every iteration of the event machine the `last-event' slot is updated with `get-internal-real-time' before
+the funcallable instance application."))
 
 (defmethod initialize-instance :before ((machine standard-watch-machine) &key)
   "Bind a (funcallable machine event)  driver to the event machine instance."

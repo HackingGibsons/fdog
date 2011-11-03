@@ -18,5 +18,9 @@ result."
                              (zmq:connect ,ear-binding (local-ipc-addr ,e!agent :ear))
                              (zmq:setsockopt ,mouth-binding zmq:subscribe "")
                              (setf ,g!result (progn ,@forms))))))
-         (bt:timeout () nil))
+         (bt:timeout ()
+           (log-for (warn) "Agent ~A conversation timing out!" ,e!agent)
+           ;; TODO: Keep the log, toss the format when logging is better :|
+           (format t "[WARN] Agent ~A conversation timing out!~%" ,e!agent)
+           nil))
        ,g!result)))

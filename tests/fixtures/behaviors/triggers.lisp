@@ -74,3 +74,26 @@
                                               :process (:path "/usr/bin/env"
                                                               :args ("echo")
                                                               :transaction-id ,(getf message :transaction-id)))))))
+
+(defclass timeout-mixin ()
+  ((start-time :initform (get-internal-real-time)
+               :accessor start-time
+               :documentation "Time the agent was started")
+   (timeout :initform (* 120 internal-time-units-per-second)
+            :accessor timeout
+            :documentation "Interval in seconds before an agent kills itself. Defaults to 2 minutes")))
+
+(defbehavior kill-self-after-timeout (:or ((:on (:heard :message :from :ear))
+                                                  (:interval (:from :heart :nth 1)))
+                                             :include (timeout-mixin)
+                                             :do :invoke-with-event) (organ event)
+  (log-for (trace) "event: ~A" event)
+  (let ((new-timeout-interval (getf (getf event :message) :new-timeout-interval)))
+    (log-for (trace) "new-timeout-interval: ~A" new-timeout-interval)
+    (when new-timeout-interval
+      (log-for (trace) "new timeout interval: ~A" new-timeout-interval)
+      (setf (timeout behavior) (* new-timeout-interval internal-time-units-per-second)))
+    (log-for (trace) "no new interval, current time: ~A, timeout interval ~A" (- (get-internal-real-time) (start-time behavior)) (timeout behavior)))
+  (when (>= (- (get-internal-real-time) (start-time behavior)) (timeout behavior))
+    (log-for (warn) "~A: Timeout reached, killing myself" organ)
+    (suicide (organ-agent organ))))

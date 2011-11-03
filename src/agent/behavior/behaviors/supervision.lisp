@@ -101,7 +101,7 @@
 ;; Agent specific :initial state for agent watching,
 ;; Spoilers: It makes the agent the rest of the machine watches
 (defstate agent-watch-machine :initial (info)
-  (format t "Running :inital event of ~A~%" machine)
+  (log-for (watch-machine) "Running :inital event of ~A" machine)
   (setf (getf (timestamps machine) :made) nil)
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make

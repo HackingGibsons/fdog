@@ -1,5 +1,7 @@
 (in-package :agent)
 
+(defcategory watch-machine)
+
 (defclass standard-watch-machine (c2mop:funcallable-standard-object)
   ((behavior :initform nil :initarg :behavior
              :accessor behavior)
@@ -36,7 +38,7 @@ Like the created-at date of a thing.")
 
 ;; Default states of thingwatching
 (defstate standard-watch-machine :made (info)
-  (format t "Looping main event!~%")
+  (log-for (watch-machine) "Looping main event!")
   (unless (getf (timestamps machine) :made)
     (setf (getf (timestamps machine) :made) (last-event machine)))
 
@@ -50,16 +52,16 @@ Like the created-at date of a thing.")
 
 (defstate standard-watch-machine :failed (info)
   (prog1 nil
-    (format t "[WARN] ~A is still failing.~%" machine)))
+    (log-for (watch-machine) "[WARN] ~A is still failing." machine)))
 
 (defstate standard-watch-machine :watch (info)
-  (format t "Watching: ~A => ~A~%" machine info)
+  (log-for (watch-machine) "Watching: ~A => ~A" machine info)
   (unless info
-    (format t "[WARN] Going to die.")
+    (log-for (watch-machine) "[WARN] Going to die.")
     :died))
 
 (defstate standard-watch-machine :died (info)
-  (format t "[WARN] Dead, restarting ~A => ~A~%" machine info)
+  (log-for (watch-machine) "[WARN] Dead, restarting ~A => ~A" machine info)
   :initial)
 
 

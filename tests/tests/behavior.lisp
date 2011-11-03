@@ -155,7 +155,6 @@
       (do ((msg (parse-message (read-message m))
                 (parse-message (read-message m))))
           ((equalp (car msg) :made) t)))
-
     (with-agent-conversation (m e :timeout 30) child-uuid
       (do ((msg (parse-message (read-message m))
                 (parse-message (read-message m))))

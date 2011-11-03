@@ -32,6 +32,16 @@
   (send-message organ :command `(:command :speak
                                           :say ,event)))
 
+(defbehavior spawn-dependant-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message))
+        (uuid (format nil "~A" (uuid:make-v4-uuid))))
+    (when (equalp message '(:spawn :child))
+      (send-message organ :command `(:command :speak
+                                                     :say (:echo :spawn :child ,uuid)))
+      (send-message organ :command `(:command :link
+                                                     :link :agent
+                                                     :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests))))))
+
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (cond
@@ -54,15 +64,14 @@
                                                :stop-watching (:process :pid :pid ,(iolib.syscalls:getpid))))))))
 
 (defbehavior make-agent-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
-  (let* ((message (getf event :message))
-         (command `(:command :make
-                             :make :agent
-                             :agent (:uuid ,(getf message :uuid)
-                                           :class leaf-test-agent
-                                           :package :afdog-tests))))
+  (let* ((message (getf event :message)))
     (when (and (> (length message) 3)
                (equalp (subseq message 0 3) '(:make :agent :uuid)))
-      (send-message organ :command command))))
+      (send-message organ :command `(:command :make
+                                                     :make :agent
+                                                     :agent (:uuid ,(getf message :uuid)
+                                                                   :class leaf-test-agent
+                                                                   :package :afdog-tests))))))
 
 (defbehavior make-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let* ((message (getf event :message)))

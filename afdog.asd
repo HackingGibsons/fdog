@@ -38,8 +38,11 @@
                                             ((:file "classes")
                                              (:file "defbehavior" :depends-on ("classes"))
                                              (:module "behaviors" :depends-on ("defbehavior") :components
-                                                      ((:file "peers")
+                                                      ((:module "helpers" :components
+                                                                ((:file "watch-machine")))
+                                                       (:file "peers")
                                                        (:file "manipulation")
+                                                       (:file "supervision" :depends-on ("helpers"))
                                                        (:file "vision")))))
 
                                    ;; Standard organ definitions

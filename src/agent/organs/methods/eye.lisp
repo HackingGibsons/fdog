@@ -30,10 +30,6 @@
 (defmethod see ((organ standard-organ) (subject (eql :directory)) &rest info)
   (log-for (trace eye organ) "~A is looking at a directory with info ~A" organ info)
 
-  (send-message (find-organ (organ-agent organ) :head)
-                :command `(:command :speak
-                                    :say ,info))
-
   (let* ((path (getf info :path))
          (type (or (getf info :type) :wild))
          (pathname (make-pathname :directory `(:absolute ,path)))

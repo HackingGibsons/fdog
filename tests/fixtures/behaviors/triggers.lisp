@@ -22,8 +22,6 @@
 (defbehavior look-at-directory-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (when (equalp (getf message :look) :directory)
-      (send-message organ :command `(:command :speak
-                                              :say ,event))
       (send-message organ :command `(:command :look
                                               :at (:directory :path :path ,(getf message :path)))))))
 

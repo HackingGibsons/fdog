@@ -65,7 +65,7 @@ the result of accumulating the results."
 
 (defmethod evict-old-peers ((head agent-head))
   "Remove old peers from the known peer list.
-The default `too long` interval is 10 minutes"
+The default `too long` interval is 10 seconds"
   (let ((threshold (* 10 internal-time-units-per-second))
         (now (get-internal-real-time))
         (peer-times (map-peers head #'(lambda (k v) `(,k ,(getf v :time))))))

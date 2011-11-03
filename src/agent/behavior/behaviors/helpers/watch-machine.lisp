@@ -26,12 +26,20 @@ Like the created-at date of a thing.")
 
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "The `standard-watch-machine' is a class for storing state about a watchable 'thing'.
+
 It is used by `create-links' behavior to drive the supervision machinery. Every item in the watched items
 table is an instance of a subclass of this class. It is funcalled as follows every time a :saw, and in the future
 :made event triggers the behavior, and the event is passed in:
   (funcall this-instance event-from-bus)
 Every iteration of the event machine the `last-event' slot is updated with `get-internal-real-time' before
-the funcallable instance application."))
+the funcallable instance application.
+
+NOTE: The default implementation does not provide an `:initial' state, and should not be instanciated directly.
+Provide an `:initial' state in your subclass of the watch machine that knows how to construct your objects,
+and look over the `:made' and `:watch' states to consider overriding them.
+
+SUBCLASS NOTE: Make sure to include ```(:metaclass c2mop:funcallable-standard-class)``` in your
+subclass definition, or else the funcallable instance will not function correctly."))
 
 (defmethod initialize-instance :before ((machine standard-watch-machine) &key)
   "Bind a (funcallable machine event) driver to the event machine instance.

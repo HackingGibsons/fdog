@@ -1,6 +1,6 @@
 #-*- mode:makefile-gmake; -*-
 ROOT ?= $(shell pwd)
-TARGET ?= afdog
+TARGET ?= bin/afdog
 include $(ROOT)/src/make/*.mk
 include $(ROOT)/tests/make/*.mk
 

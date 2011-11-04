@@ -5,6 +5,7 @@
                #:uuid
                #:log5
                #:bordeaux-threads
+               #:cl-ppcre
                #:zeromq
                #:trivial-gray-streams)
   :in-order-to ((test-op (load-op afdog-tests)))
@@ -58,7 +59,12 @@
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")
                                                        (:file "eye")
-                                                       (:file "head")))))))))
+                                                       (:file "head")))))))
+
+                         (:module "cli" :depends-on ("agent") :components
+                                  ((:file "package")
+                                   (:file "defcommand" :depends-on ("package"))
+                                   (:file "commands" :depends-on ("defcommand"))))))
 
                (:module "utils" :depends-on ("src") :components
                         ((:file "package")

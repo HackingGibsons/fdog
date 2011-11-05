@@ -1,5 +1,12 @@
 #-*- mode:makefile-gmake; -*-
 STAGEDIR ?= $(ROOT)/build
+BUNDLE ?= $(ROOT)/afdog.tgz
+
+.PHONY: bundle
+bundle: $(BUNDLE)
+$(BUNDLE): $(STAGEDIR)
+	@echo "=> Writing bundle to: $(BUNDLE)"
+	tar cz -C $(STAGEDIR) -f $(BUNDLE) .
 
 $(STAGEDIR): $(BIN)
 	@echo "=> Preparing release in $(STAGEDIR)"

@@ -2,9 +2,6 @@
 BINDIR ?= $(ROOT)/bin
 BIN ?= $(BINDIR)/$(TARGET)
 
-## Clean ##
-.PHONY: clean-build
-clean-build: | clean-buildapp clean-afdog
 
 ## Buildapp ##
 BUILDAPP ?= $(BINDIR)/buildapp
@@ -16,7 +13,7 @@ $(BUILDAPP):
 	        --eval '(ql:quickload :buildapp)' \
 	        --eval '(buildapp:build-buildapp "$(BUILDAPP)")' \
 	        --eval '(quit)'
-
+## Clean
 .PHONY: clean-buildapp
 clean-buildapp:
 	rm -rf $(BUILDAPP)
@@ -43,8 +40,13 @@ $(BIN): $(BUILDAPP)
            rm -f $(BIN); \
            exit 1; \
     }
-
-
+## Clean
 .PHONY: clean-afdog
 clean-afdog:
 	rm -fr $(BIN)
+
+
+## Generals ##
+.PHONY: clean-build all
+all: | afdog
+clean-build: | clean-buildapp clean-afdog

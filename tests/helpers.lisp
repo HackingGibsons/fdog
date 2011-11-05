@@ -1,6 +1,6 @@
 (in-package :afdog-tests)
 
-(defmacro with-agent-conversation ((mouth-binding ear-binding &key (timeout 15) (linger 250)) uuid &body forms)
+(defmacro with-agent-conversation ((mouth-binding ear-binding &key (timeout 25) (linger 250)) uuid &body forms)
   "Execute `forms' with `mouth-binding' and `ear-binding' bound to connected sockets
 to the ear and mouth of an agent with the `uuid' given using the local transport.
 The `forms' must execute within `timeout' (15 by default) or nil is returned instead of the

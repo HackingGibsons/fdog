@@ -30,6 +30,7 @@ $(BIN): $(BUILDAPP)
 				--asdf-path $(ROOT) \
 				--asdf-tree $(ROOT)/vendor \
 				--eval '(sb-ext:disable-debugger)' \
+                --load $(ROOT)/src/patches/build.lisp \
 				--require sb-aclrepl \
 				--load $(QL_SETUP) \
 				--eval '(ql:quickload :afdog)' \

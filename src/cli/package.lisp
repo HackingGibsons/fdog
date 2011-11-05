@@ -2,6 +2,7 @@
   (:use #:cl)
   (:use #:log5)
   (:use :afdog)
+  (:use :unix-options)
 
   #+sbcl
   (:shadowing-import-from :sb-ext quit)

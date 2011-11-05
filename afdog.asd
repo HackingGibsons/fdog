@@ -4,6 +4,7 @@
                #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
                #:uuid
                #:swank
+               #:unix-options
                #:log5
                #:bordeaux-threads
                #:cl-ppcre

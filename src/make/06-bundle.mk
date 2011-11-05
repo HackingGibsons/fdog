@@ -27,7 +27,7 @@ $(STAGEDIR): $(BIN)
 	touch $(STAGEDIR)/$(TARGET)
 	@echo '#!/bin/sh' > $(STAGEDIR)/$(TARGET)
 	@echo 'BASE=$$(dirname $$(greadlink -f $$0 2> /dev/null || readlink -f $$0 2> /dev/null))' >> $(STAGEDIR)/$(TARGET)
-	@echo 'export AFDOG="$$BASE/$$0"' >> $(STAGEDIR)/$(TARGET)
+	@echo 'export AFDOG="$$BASE/$$(basename $$0)"' >> $(STAGEDIR)/$(TARGET)
 	@echo 'LD_LIBRARY_PATH="$$BASE/lib":$$LD_LIBRARY_PATH $$BASE/bin/'$(TARGET) '$$@' >> $(STAGEDIR)/$(TARGET)
 	chmod +x $(STAGEDIR)/$(TARGET)
 

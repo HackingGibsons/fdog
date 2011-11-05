@@ -6,8 +6,8 @@ BIN ?= $(BINDIR)/$(TARGET)
 ## Buildapp ##
 BUILDAPP ?= $(BINDIR)/buildapp
 .PHONY: buildapp
-buildapp: init $(BUILDAPP)
-$(BUILDAPP):
+buildapp: $(BUILDAPP)
+$(BUILDAPP): | init
 	@echo "=> Building buildapp to $(BUILDAPP)"
 	$(LISP) --eval '(sb-ext:disable-debugger)' \
 	        --eval '(ql:quickload :buildapp)' \

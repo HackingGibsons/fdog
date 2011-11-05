@@ -21,7 +21,7 @@
 
   (:method (argv)
     (destructuring-bind (self &rest args) argv
-      (setf *self* self)
+      (setf *self* (or (iolib.syscalls:getenv "AFDOG") self))
 
       (unless args
         (funcall (get-command :help :function) nil))

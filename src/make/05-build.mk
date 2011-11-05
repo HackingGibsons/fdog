@@ -4,7 +4,7 @@ BIN ?= $(BINDIR)/$(TARGET)
 
 ## Clean ##
 .PHONY: clean-build
-clean-build: clean-buildapp clean-afdog
+clean-build: | clean-buildapp clean-afdog
 
 ## Buildapp ##
 BUILDAPP ?= $(BINDIR)/buildapp

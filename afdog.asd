@@ -3,6 +3,7 @@
                #:ip-interfaces
                #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
                #:uuid
+               #:swank
                #:log5
                #:bordeaux-threads
                #:cl-ppcre

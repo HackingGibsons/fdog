@@ -31,6 +31,9 @@ $(STAGEDIR): $(BIN)
 	@echo 'LD_LIBRARY_PATH="$$BASE/lib":$$LD_LIBRARY_PATH $$BASE/bin/'$(TARGET) '$$@' >> $(STAGEDIR)/$(TARGET)
 	chmod +x $(STAGEDIR)/$(TARGET)
 
-.PHONY: clean-stagedir
+.PHONY: clean-all-bundle clean-stagedir clean-bundle
+clean-all-bundle: | clean-stagedir clean-bundle
 clean-stagedir:
 	rm -rf $(STAGEDIR)
+clean-bundle:
+	rm -rf $(BUNDLE)

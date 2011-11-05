@@ -9,4 +9,4 @@ build/*
 /.test/*
 \#*
 .\#*
-afdog.tgz
+afdog.bundle.tgz

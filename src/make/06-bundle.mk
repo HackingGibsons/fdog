@@ -1,6 +1,6 @@
 #-*- mode:makefile-gmake; -*-
 STAGEDIR ?= $(ROOT)/build
-BUNDLE ?= $(ROOT)/afdog.tgz
+BUNDLE ?= $(ROOT)/afdog.bundle.tgz
 
 .PHONY: bundle
 bundle: $(BUNDLE)

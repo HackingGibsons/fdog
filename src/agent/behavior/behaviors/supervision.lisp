@@ -48,7 +48,7 @@ and drive the `standard-watch-machine'"
 
   (:method ((behavior link-manager) (what (eql :process)) (info list))
    "Generates a process-uuid hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
-    (let ((uuid (getf info :uuid)))
+    (let ((uuid (getf info :transaction-id)))
       (and uuid
            (format nil "process-~A" uuid)))))
 
@@ -155,25 +155,22 @@ of an agent and transitions to the `:made' state"
 
 ;; Process specific watch machine
 (defclass process-watch-machine (standard-watch-machine)
-  ((transaction-id
-     :initform (uuid:make-v4-uuid)
-     :accessor transaction-id))
+  ()
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "A specialization of the `standard-watch-machine' that knows how to create processes"))
 
-(defmethod initialize-instance :after ((machine process-watch-machine) &key)
-  (with-slots (transaction-id thing-info) machine
-    (setf thing-info (concatenate 'list thing-info `(:transaction-id ,transaction-id)))))
+;(defmethod initialize-instance :after ((machine process-watch-machine) &key)
+  ;(with-slots (transaction-id thing-info) machine
+    ;(setf thing-info (concatenate 'list thing-info `(:transaction-id ,transaction-id)))))
 
 (defstate process-watch-machine :initial (info)
   "An 'initial' agent for 'process-watch-machine', asks for the construction of a process and transitions to the `:made' state"
   (log-for (trace watch-machine) "Running :initial event of ~A" machine)
   (setf (getf (timestamps machine) :made) nil)
-  (log-for (warn watch-machine) "making process transaction-id: ~A" (transaction-id machine))
+  (log-for (warn watch-machine) "making process transaction-id: ~A" (getf info :transaction-id))
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
                           :make :process
-                          ;:transaction-id ,(format nil "~A" (transaction-id machine))
                           :process ,(thing-info machine)))
   :made)
 

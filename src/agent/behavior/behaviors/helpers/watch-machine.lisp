@@ -54,7 +54,7 @@ See `defstate' for the reasoning and function. This method is closure plumbing."
        (values machine (state machine))))))
 
 (defmethod initialize-instance :after ((machine standard-watch-machine) &key)
-  (funcall machine :boot))
+  (funcall machine '(:event :boot)))
 
 (defmacro defstate (machine-type state-name (event-sym) &body body)
   "Helper macro to define states for the machine of type `machine-type'.

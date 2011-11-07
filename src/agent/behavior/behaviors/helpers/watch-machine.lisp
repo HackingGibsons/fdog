@@ -53,6 +53,9 @@ See `defstate' for the reasoning and function. This method is closure plumbing."
                (state machine) (or next-event (state machine)))
        (values machine (state machine))))))
 
+(defmethod initialize-instance :after ((machine standard-watch-machine) &key)
+  (funcall machine :boot))
+
 (defmacro defstate (machine-type state-name (event-sym) &body body)
   "Helper macro to define states for the machine of type `machine-type'.
 
@@ -71,6 +74,9 @@ available in `state'"
      ,@body))
 
 ;; Default states of thingwatching
+(defstate standard-watch-machine :boot (info)
+  :initial)
+
 (defstate standard-watch-machine :made (info)
   "This event is responsible for making sure creation of a 'thing' occurs within a defined
 interval, and storing the time that occured in the `timestamps' plist of the machine."

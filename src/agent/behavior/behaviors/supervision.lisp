@@ -99,7 +99,9 @@ of the object to be linked."
   (let* ((link-what (getf event :link))
          (link-info (and link-what
                          (getf event link-what))))
-    (link-init behavior link-what link-info)))
+    (handler-case
+    (link-init behavior link-what link-info)
+    (t (cond) (log-for (error) cond)))))
 
 (defmethod create-links-made ((behavior create-links) (organ standard-organ) event)
   (let* ((made-info (getf event :made))
@@ -153,9 +155,15 @@ of an agent and transitions to the `:made' state"
 
 ;; Process specific watch machine
 (defclass process-watch-machine (standard-watch-machine)
-  ((transaction-id))
+  ((transaction-id
+     :initform (uuid:make-v4-uuid)
+     :accessor transaction-id))
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "A specialization of the `standard-watch-machine' that knows how to create processes"))
+
+(defmethod initialize-instance :after ((machine process-watch-machine) &key)
+  (with-slots (transaction-id thing-info) machine
+    (setf thing-info (concatenate 'list thing-info `(:transaction-id ,transaction-id)))))
 
 (defstate process-watch-machine :initial (info)
   "An 'initial' agent for 'process-watch-machine', asks for the construction of a process and transitions to the `:made' state"
@@ -176,11 +184,9 @@ of an agent and transitions to the `:made' state"
       (declare (ignorable value))
       (unless foundp
         ;; Store a state under the generated key
-        (let ((transaction-id (uuid:make-v4-uuid)))
-          (setf (gethash key (links behavior))
-                (make-instance 'process-watch-machine :behavior behavior
-                               :transaction-id transaction-id
-                               :thing-info (concatenate 'list info '(:transaction-id transaction-id)))))
+        (setf (gethash key (links behavior))
+              (make-instance 'process-watch-machine :behavior behavior
+                             :thing-info info))
 
 
         ;; Watch a process

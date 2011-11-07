@@ -152,7 +152,7 @@
           (:eql :gone)) ;; See that the parent notices
   (list
     ;; Wait for a parent to acknoledge the peer
-    (with-agent-conversation (m e) uuid
+    (with-agent-conversation (m e :timeout 20) uuid
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
             (info nil (getf msg :info)))

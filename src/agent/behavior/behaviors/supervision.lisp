@@ -177,6 +177,11 @@ of an agent and transitions to the `:made' state"
                           :process ,(thing-info machine)))
   :made)
 
+(defstate process-watch-machine :made (info)
+  (send-message (behavior-organ behavior) :command `(:command :watch
+                                                     :watch (:process :pid :pid ,(getf info :pid))))
+  (call-next-method))
+
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)
   "Specialization of a watch machine construction for an `:process' thing type."
   (let ((key (link-key behavior what info)))
@@ -186,13 +191,7 @@ of an agent and transitions to the `:made' state"
         ;; Store a state under the generated key
         (setf (gethash key (links behavior))
               (make-instance 'process-watch-machine :behavior behavior
-                             :thing-info info))
-
-
-        ;; Watch a process
-        ;; TODO: This should move to the event machine
-        (send-message (behavior-organ behavior) :command `(:command :watch
-                                                :watch (:process :pid :pid ,(getf info :pid))))))))
+                             :thing-info info))))))
 
 (defmethod link-event ((behavior link-manager) (what (eql :process)) info)
   "Specialization of a watch machine event driving for an `:process' thing type."

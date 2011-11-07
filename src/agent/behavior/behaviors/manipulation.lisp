@@ -4,16 +4,17 @@
   ;; (:head :command
   ;;  :command :make
   ;;  :make :agent
+  ;;  :transaction-id transaction-id
   ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent)))
   (let ((what (getf event :make)))
-    (make-item behavior what (getf event what))))
+    (make-item behavior what (getf event what) (getf event :transaction-id))))
 
-(defgeneric make-item (behavior what info)
+(defgeneric make-item (behavior what info transaction-id)
   (:documentation "Generic protocol for construction of things.")
-  (:method (behavior what info)
+  (:method (behavior what info transaction-id)
     nil))
 
-(defmethod make-item ((behavior make-things) (what (eql :agent)) info)
+(defmethod make-item ((behavior make-things) (what (eql :agent)) info transaction-id)
   (format t "Spawn agent: ~A~%" info)
   ;; TODO: Figure out slightly better how to select the spawn class
   (let* ((package (find-package (getf info :package)))
@@ -42,7 +43,7 @@
              (start runner))
         (send-message (behavior-organ behavior) :made `(:made ,what ,what ,(getf info what)))))))
 
-(defmethod make-item ((behavior make-things) (what (eql :process)) info)
+(defmethod make-item ((behavior make-things) (what (eql :process)) info transaction-id)
   (let* ((path (getf info :path))
          (args (getf info :args))
          (trans-id (getf info :transaction-id))

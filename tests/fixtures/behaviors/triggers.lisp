@@ -49,6 +49,15 @@
                                                      :link :agent
                                                      :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests))))))
 
+
+(defbehavior spawn-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message))
+        (uuid (format nil "~A" (uuid:make-v4-uuid))))
+    (when (equalp message '(:spawn :process))
+      (send-message organ :command `(:command :link
+                                     :link :process
+                                     :process (:path "/usr/bin/tail" :args ("-F" "test")))))))
+
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (cond

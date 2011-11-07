@@ -44,7 +44,13 @@ the type of 'thing' being linked."))
 and drive the `standard-watch-machine'"
     (let ((uuid (getf info :uuid)))
       (and uuid
-           (format nil "agent-~A" uuid)))))
+           (format nil "agent-~A" uuid))))
+
+  (:method ((behavior link-manager) (what (eql :process)) (info list))
+   "Generates a process-uuid hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
+    (let ((uuid (getf info :uuid)))
+      (and uuid
+           (format nil "process-~A" uuid)))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item
@@ -62,7 +68,8 @@ Parameter meanings are the same as `link-key'")
 
 (defbehavior create-links (:or ((:on (:command :link :from :head))
                                 (:on (:saw :process :from :eye))
-                                (:on (:saw :agent :from :eye)))
+                                (:on (:saw :agent :from :eye))
+                                (:on (:made :process :from :hand)))
                                :include (link-manager) :do :invoke-with-event) (organ event)
   ;; Message format: `:link' message:
   ;; https://github.com/vitrue/fdog/wiki/Internal-Messages
@@ -71,7 +78,10 @@ Parameter meanings are the same as `link-key'")
      (create-links-saw behavior organ event))
 
     ((getf event :link)
-     (create-links-link behavior organ event))))
+     (create-links-link behavior organ event))
+
+    ((getf event :made)
+     (create-links-made behavior organ event))))
 
 (defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
   "A handler for `:saw' type of events of the `create-links' behavior.
@@ -90,6 +100,12 @@ of the object to be linked."
          (link-info (and link-what
                          (getf event link-what))))
     (link-init behavior link-what link-info)))
+
+(defmethod create-links-made ((behavior create-links) (organ standard-organ) event)
+  (let* ((made-info (getf event :made))
+         (made-what (and made-info
+                         (getf event :made))))
+    (link-event behavior made-what event)))
 
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
   "Specialization of a watch machine construction for an `:agent' thing type."
@@ -126,7 +142,7 @@ knows how to create agents."))
 (defstate agent-watch-machine :initial (info)
   "An `:initial' event for `agent-watch-machine', asks for the construction
 of an agent and transitions to the `:made' state"
-  (log-for (watch-machine) "Running :inital event of ~A" machine)
+  (log-for (trace watch-machine) "Running :inital event of ~A" machine)
   (setf (getf (timestamps machine) :made) nil)
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
@@ -134,3 +150,45 @@ of an agent and transitions to the `:made' state"
                            :transaction-id ,(format nil "~A" (uuid:make-v4-uuid))
                            :agent ,(thing-info machine)))
   :made)
+
+;; Process specific watch machine
+(defclass process-watch-machine (standard-watch-machine)
+  ((transaction-id
+     :initform (uuid:make-v4-uuid)))
+  (:metaclass c2mop:funcallable-standard-class)
+  (:documentation "A specialization of the `standard-watch-machine' that knows how to create processes"))
+
+(defstate process-watch-machine :initial (info)
+  "An 'initial' agent for 'process-watch-machine', asks for the construction of a process and transitions to the `:made' state"
+  (log-for (trace watch-machine) "Running :initial event of ~A" machine)
+  (setf (getf (timestamps machine) :made) nil)
+  (log-for (warn watch-machine) "making process transaction-id: ~A" (transaction-id machine))
+  (send-message (behavior-organ (behavior machine)) :command
+                `(:command :make
+                          :make :process
+                          :transaction-id ,(format nil "~A" (transaction-id machine))
+                          :process ,(thing-info machine)))
+  :made)
+
+(defmethod link-init ((behavior link-manager) (what (eql :process)) info)
+  "Specialization of a watch machine construction for an `:process' thing type."
+  (let ((key (link-key behavior what info)))
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (declare (ignorable value))
+      (unless foundp
+        ;; Store a state under the generated key
+        (setf (gethash key (links behavior))
+              (make-instance 'process-watch-machine :behavior behavior
+                             :thing-info info))
+
+        ;; Watch a process
+        ;; TODO: This should move to the event machine
+        (send-message (behavior-organ behavior) :command `(:command :watch
+                                                :watch (:process :pid :pid ,(getf info :pid))))))))
+
+(defmethod link-event ((behavior link-manager) (what (eql :process)) info)
+  "Specialization of a watch machine event driving for an `:process' thing type."
+  (let ((key (link-key behavior what info)))
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when (and foundp value)
+        (funcall value info)))))

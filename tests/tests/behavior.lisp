@@ -65,7 +65,7 @@
                                            (setf watching (second msg)))))
                                      watching))))
 
-              (:eval (with-agent-conversation (m e) agent-uuid
+              (:eval (with-agent-conversation (m e :linger -1) agent-uuid
                          (zmq:send! e (prepare-message '(:watch :self)))))
               (:check
                (:true-form (equalp 1
@@ -92,7 +92,7 @@
                                        (setf watching t))))
                              watching)))
 
-              (:eval (with-agent-conversation (m e :timeout 15) agent-uuid
+              (:eval (with-agent-conversation (m e :timeout 15 :linger -1) agent-uuid
                          (zmq:send! e (prepare-message '(:stop-watching :self)))))
               (:check
                (:true-form (equalp 0

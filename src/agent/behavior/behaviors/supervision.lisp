@@ -153,8 +153,7 @@ of an agent and transitions to the `:made' state"
 
 ;; Process specific watch machine
 (defclass process-watch-machine (standard-watch-machine)
-  ((transaction-id
-     :initform (uuid:make-v4-uuid)))
+  ((transaction-id))
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "A specialization of the `standard-watch-machine' that knows how to create processes"))
 
@@ -166,7 +165,7 @@ of an agent and transitions to the `:made' state"
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
                           :make :process
-                          :transaction-id ,(format nil "~A" (transaction-id machine))
+                          ;:transaction-id ,(format nil "~A" (transaction-id machine))
                           :process ,(thing-info machine)))
   :made)
 
@@ -177,9 +176,12 @@ of an agent and transitions to the `:made' state"
       (declare (ignorable value))
       (unless foundp
         ;; Store a state under the generated key
-        (setf (gethash key (links behavior))
-              (make-instance 'process-watch-machine :behavior behavior
-                             :thing-info info))
+        (let ((transaction-id (uuid:make-v4-uuid)))
+          (setf (gethash key (links behavior))
+                (make-instance 'process-watch-machine :behavior behavior
+                               :transaction-id transaction-id
+                               :thing-info (concatenate 'list info '(:transaction-id transaction-id)))))
+
 
         ;; Watch a process
         ;; TODO: This should move to the event machine

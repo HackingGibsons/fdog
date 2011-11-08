@@ -57,7 +57,7 @@
       ;; IMPORTANT: mac tail exits immediately if file not found, gnu tail will wait for file to exist
       (send-message organ :command `(:command :link
                                      :link :process
-                                     :process (:path "/usr/bin/tee" :transaction-id ,(uuid:make-v4-uuid)))))))
+                                     :process (:path "/usr/bin/yes" :transaction-id ,(uuid:make-v4-uuid)))))))
 
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

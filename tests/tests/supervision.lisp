@@ -174,34 +174,31 @@
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m))))
         ((equalp (getf msg :made) :process)
-         (setf child-pid (getf msg :pid)))))
+         (setf child-pid (getf msg :pid))))
 
-    (when child-pid
-      (with-agent-conversation (m e :timeout 20) agent-uuid
+      (when child-pid
         (do* ((msg (parse-message (read-message m))
                    (parse-message (read-message m))))
           ((and (getf msg :saw)
                 (equalp (getf msg :saw) :process)
                 (getf (getf msg :process) :pid) child-pid)
-           t)))
+           child-pid))
 
-;      ;; kill the process to simulate it dying
-;      (sb-posix:kill child-pid sb-posix:sigterm)
-;
-;      ;; Get the new pid
-;      (with-agent-conversation (m e :timeout 20) agent-uuid
-;        (do* ((msg (parse-message (read-message m))
-;                   (parse-message (read-message m))))
-;          ((equalp (getf msg :made) :process)
-;           (setf child-pid (getf msg :pid)))))
-;
-;      (when child-pid
-;        ;; Make sure we've seen it
-;        (with-agent-conversation (m e :timeout 20) agent-uuid
-;          (do* ((msg (parse-message (read-message m))
-;                     (parse-message (read-message m))))
-;            ((and (getf msg :saw)
-;                  (equalp (getf msg :saw) :process)
-;                  (getf (getf msg :process) :pid) child-pid)
-;             child-pid))))
-      )))
+        ;; kill the process to simulate it dying
+        (sb-posix:kill child-pid sb-posix:sigterm)
+
+        ;; Get the new pid
+        (do* ((msg (parse-message (read-message m))
+                   (parse-message (read-message m))))
+          ((equalp (getf msg :made) :process)
+           (setf child-pid (getf msg :pid))))
+
+        (when child-pid
+          ;; Make sure we've seen it
+          (do* ((msg (parse-message (read-message m))
+                     (parse-message (read-message m))))
+            ((and (getf msg :saw)
+                  (equalp (getf msg :saw) :process)
+                  (getf (getf msg :process) :pid) child-pid)
+             child-pid)))
+      ))))

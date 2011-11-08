@@ -37,7 +37,7 @@ the type of 'thing' being linked."))
 `what' takes the form of something like `:agent' or `:process' and used to find the right key constructor.
 `info' is a representation of the thing to watch and enough information to recreate it with a `:make' message.")
   (:method ((b link-manager) what info)
-    "Default operation is a noop" nil)
+   (error "No link key for ~A" what))
 
   (:method ((behavior link-manager) (what (eql :agent)) (info list))
     "Generates an agent-uuid hash key, used in `link-init' and `link-event' to insert

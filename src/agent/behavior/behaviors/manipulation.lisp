@@ -48,4 +48,5 @@
          (trans-id (getf info :transaction-id))
          (process (sb-ext:run-program path args))
          (pid (and process (sb-ext:process-pid process))))
+    (log-for (trace) "made process - path: ~A args: ~A transaction-id: ~A pid: ~A" path args trans-id pid)
     (send-message (behavior-organ behavior) :made `(:made ,what :pid ,pid :transaction-id ,trans-id))))

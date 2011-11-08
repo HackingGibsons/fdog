@@ -54,9 +54,10 @@
   (let ((message (getf event :message))
         (uuid (format nil "~A" (uuid:make-v4-uuid))))
     (when (equalp message '(:spawn :process))
+      ;; IMPORTANT: mac tail exits immediately if file not found, gnu tail will wait for file to exist
       (send-message organ :command `(:command :link
                                      :link :process
-                                     :process (:path "/usr/bin/tail" :args ("-F" "test") :transaction-id ,(uuid:make-v4-uuid)))))))
+                                     :process (:path "/usr/bin/tee" :transaction-id ,(uuid:make-v4-uuid)))))))
 
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

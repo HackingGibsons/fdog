@@ -167,7 +167,6 @@ of an agent and transitions to the `:made' state"
   "An 'initial' agent for 'process-watch-machine', asks for the construction of a process and transitions to the `:made' state"
   (log-for (trace watch-machine) "Running :initial event of ~A" machine)
   (setf (getf (timestamps machine) :made) nil)
-  (log-for (warn watch-machine) "making process transaction-id: ~A" (getf info :transaction-id))
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
                           :make :process

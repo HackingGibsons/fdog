@@ -16,22 +16,15 @@
 (def-test (agent-hears :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   (let ((msg (make-instance 'zmq:msg :data "(:TEST :PING)"))
         (ponged-p nil))
-    (zmq:with-context (c 1)
-      (zmq:with-socket (read-sock c zmq:sub)
-        (zmq:with-socket (write-sock c zmq:pub)
-          (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-          (zmq:connect read-sock (local-ipc-addr agent-uuid :mouth))
-          (zmq:setsockopt read-sock zmq:subscribe "")
-          (zmq:send! write-sock msg)
-          (handler-case
-              (bt:with-timeout (10)
-                (do ((msg
-                      (parse-message (read-message read-sock))
-                      (parse-message (read-message read-sock))))
-                    (ponged-p t)
-                  (when (equalp (getf msg :test) :pong)
-                    (setf ponged-p t))))
-            (bt:timeout () ponged-p)))))))
+    (with-agent-conversation (m e) agent-uuid
+      (zmq:send! e msg)
+      (do ((msg
+            (parse-message (read-message m))
+            (parse-message (read-message m))))
+          (ponged-p t)
+        (when (equalp (getf msg :test) :pong)
+          (setf ponged-p t))))
+    ponged-p))
 
 (def-test (agent-sees :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   (let ((seen-self-p nil))
@@ -56,95 +49,54 @@
     (:process (:check
                (:true-form (equalp 0
                                    (let (watching)
-                                     (zmq:with-context (ctx 1)
-                                       (zmq:with-socket (write-sock ctx zmq:pub)
-                                         (zmq:with-socket (read-sock ctx zmq:sub)
-                                           (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-                                           (zmq:connect read-sock (local-ipc-addr agent-uuid :mouth))
-                                           (zmq:setsockopt read-sock zmq:subscribe "")
-
-                                           (zmq:send! write-sock (prepare-message '(:count :watching)))
-                                           (handler-case (bt:with-timeout (15)
-                                                           (do* ((msg (parse-message (read-message read-sock))
-                                                                      (parse-message (read-message read-sock))))
-                                                                (watching)
-                                                             (when (equalp (car msg) :count)
-                                                               (setf watching (second msg)))))
-                                             (bt:timeout () nil)))))
+                                     (with-agent-conversation (m e :timeout 15) agent-uuid
+                                       (zmq:send! e (prepare-message '(:count :watching)))
+                                       (do* ((msg (parse-message (read-message m))
+                                                  (parse-message (read-message m))))
+                                            (watching)
+                                         (when (equalp (car msg) :count)
+                                           (setf watching (second msg)))))
                                      watching))))
 
-              (:eval (zmq:with-context (ctx 1)
-                       (zmq:with-socket (write-sock ctx zmq:pub)
-                         (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-
-                         (zmq:send! write-sock (prepare-message '(:watch :self))))))
-
+              (:eval (with-agent-conversation (m e :linger -1) agent-uuid
+                         (zmq:send! e (prepare-message '(:watch :self)))))
               (:check
                (:true-form (equalp 1
                                    (let (watching)
-                                     (zmq:with-context (ctx 1)
-                                       (zmq:with-socket (write-sock ctx zmq:pub)
-                                         (zmq:with-socket (read-sock ctx zmq:sub)
-                                           (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-                                           (zmq:connect read-sock (local-ipc-addr agent-uuid :mouth))
-                                           (zmq:setsockopt read-sock zmq:subscribe "")
-
-                                           (zmq:send! write-sock (prepare-message '(:count :watching)))
-                                           (handler-case (bt:with-timeout (15)
-                                                           (do* ((msg (parse-message (read-message read-sock))
-                                                                      (parse-message (read-message read-sock))))
-                                                                ((and watching
-                                                                      (numberp watching)
-                                                                      (> watching 0)))
-                                                             (when (equalp (car msg) :count)
-                                                               (zmq:send! write-sock (prepare-message '(:count :watching)))
-                                                               (setf watching (second msg)))))
-                                             (bt:timeout () nil)))))
+                                     (with-agent-conversation (m e :timeout 15) agent-uuid
+                                           (zmq:send! e (prepare-message '(:count :watching)))
+                                           (do* ((msg (parse-message (read-message m))
+                                                      (parse-message (read-message m))))
+                                                ((and watching
+                                                      (numberp watching)
+                                                      (> watching 0)))
+                                             (when (equalp (car msg) :count)
+                                               (zmq:send! e (prepare-message '(:count :watching)))
+                                               (setf watching (second msg)))))
                                      watching))))
-
               (:check
                (:true-form (let (watching)
-                             (zmq:with-context (ctx 1)
-                               (zmq:with-socket (write-sock ctx zmq:pub)
-                                 (zmq:with-socket (read-sock ctx zmq:sub)
-                                   (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-                                   (zmq:connect read-sock (local-ipc-addr agent-uuid :mouth))
-                                   (zmq:setsockopt read-sock zmq:subscribe "")
-
-                                   (zmq:send! write-sock (prepare-message '(:count :watching)))
-                                   (handler-case (bt:with-timeout (15)
-                                                   (do* ((msg (parse-message (read-message read-sock))
-                                                              (parse-message (read-message read-sock))))
-                                                        (watching)
-                                                     (when (getf (getf msg :process) :alive)
-                                                       (setf watching t))))
-                                     (bt:timeout () nil)))))
+                             (with-agent-conversation (m e :timeout 15) agent-uuid
+                                   (zmq:send! e (prepare-message '(:count :watching)))
+                                   (do* ((msg (parse-message (read-message m))
+                                              (parse-message (read-message m))))
+                                        (watching)
+                                     (when (getf (getf msg :process) :alive)
+                                       (setf watching t))))
                              watching)))
 
-              (:eval (zmq:with-context (ctx 1)
-                       (zmq:with-socket (write-sock ctx zmq:pub)
-                         (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-
-                         (zmq:send! write-sock (prepare-message '(:stop-watching :self))))))
-
+              (:eval (with-agent-conversation (m e :timeout 15 :linger -1) agent-uuid
+                         (zmq:send! e (prepare-message '(:stop-watching :self)))))
               (:check
                (:true-form (equalp 0
                                    (let (watching)
-                                     (zmq:with-context (ctx 1)
-                                       (zmq:with-socket (write-sock ctx zmq:pub)
-                                         (zmq:with-socket (read-sock ctx zmq:sub)
-                                           (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-                                           (zmq:connect read-sock (local-ipc-addr agent-uuid :mouth))
-                                           (zmq:setsockopt read-sock zmq:subscribe "")
-
-                                           (zmq:send! write-sock (prepare-message '(:count :watching)))
-                                           (handler-case (bt:with-timeout (15)
-                                                           (do* ((msg (parse-message (read-message read-sock))
-                                                                      (parse-message (read-message read-sock))))
-                                                                (watching)
-                                                             (when (equalp (car msg) :count)
-                                                               (setf watching (second msg)))))
-                                             (bt:timeout () nil)))))
+                                     (with-agent-conversation (m e :timeout 15) agent-uuid
+                                       (zmq:send! e (prepare-message '(:count :watching)))
+                                       (do* ((msg (parse-message (read-message m))
+                                                  (parse-message (read-message m))))
+                                            (watching)
+                                         (when (equalp (car msg) :count)
+                                           (setf watching (second msg)))))
                                      watching))))))
 
 
@@ -193,7 +145,7 @@
           (:eql :gone)) ;; See that the parent notices
   (list
     ;; Wait for a parent to acknoledge the peer
-    (with-agent-conversation (m e) uuid
+    (with-agent-conversation (m e :timeout 20) uuid
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
             (info nil (getf msg :info)))
@@ -228,4 +180,39 @@
   (with-agent-conversation (m e :timeout 30) agent-uuid
     (zmq:send! e (prepare-message `(:new-timeout-interval 10)))
     (do (running (running-p agent-runner (running-p agent-runner)))
-      ((not running) :died))))
+        ((not running) :died))))
+
+(def-test (agent-can-look-at-directory-contents :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (with-agent-conversation (m e :timeout 20) agent-uuid
+    (zmq:send! e (prepare-message `(:look :directory :path ,(namestring (asdf:system-source-directory :afdog)))))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+        ((and (equalp (getf msg :saw) :directory)
+              (getf msg :exists)
+              (string-equal (pathname-type (find "afdog"
+                                                 (mapcar #'pathname (getf msg :contents))
+                                                 :key #'pathname-name
+                                                 :test #'string-equal))
+                            "asd"))
+         t))))
+
+
+(def-test (agent-can-look-at-empty-directory :group basic-behavior-tests :fixtures (running-agent-fixture empty-directory-fixture)) :true
+  (with-agent-conversation (m e :timeout 20) agent-uuid
+    (zmq:send! e (prepare-message `(:look :directory :path ,(namestring empty-directory))))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+        ((and (equalp (getf msg :saw) :directory)
+              (getf msg :exists)
+              (null (getf msg :contents)))
+         t))))
+
+(def-test (agent-can-fail-to-find-directory :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (with-agent-conversation (m e :timeout 20) agent-uuid
+    (zmq:send! e (prepare-message `(:look :directory :path ,(format nil "~A" (uuid:make-v4-uuid)))))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+        ((and (equalp (getf msg :saw) :directory)
+              (not (getf msg :exists))
+              (null (getf msg :contents)))
+         t))))

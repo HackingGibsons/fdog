@@ -26,3 +26,14 @@
          (message `(:saw :process :process (:pid ,pid :alive ,(if running-p t nil)))))
     (log-for (trace eye organ) "Sending message ~A" message)
     (send-message organ :saw message)))
+
+(defmethod see ((organ standard-organ) (subject (eql :directory)) &rest info)
+  (log-for (trace eye organ) "~A is looking at a directory with info ~A" organ info)
+
+  (let* ((path (getf info :path))
+         (type (or (getf info :type) :wild))
+         (pathname (make-pathname :directory `(:absolute ,path)))
+         (exists (when (probe-file pathname) t))
+         (contents (mapcar #'namestring ;; convert pathnames to strings
+                           (directory (merge-pathnames pathname (make-pathname :name :wild :type type))))))
+    (send-message organ :saw `(:saw :directory :path ,path :exists ,exists :contents ,contents))))

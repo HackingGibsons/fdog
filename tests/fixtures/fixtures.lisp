@@ -76,3 +76,12 @@
 
 (def-fixtures transaction-id-fixture ()
   (transaction-id (format nil "~A" (uuid:make-v4-uuid))))
+
+(def-fixtures empty-directory-fixture
+    (:setup
+     (ensure-directories-exist empty-directory)
+     :cleanup
+     (sb-posix:rmdir empty-directory))
+  (empty-directory (asdf:system-relative-pathname :afdog
+                                                  (format nil "~A/" (uuid:make-v4-uuid))
+                                                  :type :directory)))

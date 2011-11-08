@@ -33,6 +33,7 @@
 
   ;; Blatant test drivers
   (make-look-at-self-when-asked (find-organ agent :head))
+  (make-look-at-directory-when-asked (find-organ agent :head))
   (make-watch-self-when-asked (find-organ agent :head))
 
   (make-announce-what-i-see (find-organ agent :head))

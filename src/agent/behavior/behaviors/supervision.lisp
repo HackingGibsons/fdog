@@ -175,8 +175,8 @@ of an agent and transitions to the `:made' state"
   :made)
 
 (defstate process-watch-machine :made (info)
-  (send-message (behavior-organ behavior) :command `(:command :watch
-                                                     :watch (:process :pid :pid ,(getf info :pid))))
+  (send-message (behavior-organ (behavior machine)) :command `(:command :watch
+                                                               :watch (:process :pid :pid ,(getf info :pid))))
   (call-next-method))
 
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)

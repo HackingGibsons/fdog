@@ -54,7 +54,6 @@
   (let ((message (getf event :message))
         (uuid (format nil "~A" (uuid:make-v4-uuid))))
     (when (equalp message '(:spawn :process))
-      ;; IMPORTANT: mac tail exits immediately if file not found, gnu tail will wait for file to exist
       (send-message organ :command `(:command :link
                                      :link :process
                                      :process (:path "/usr/bin/yes"))))))

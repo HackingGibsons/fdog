@@ -26,7 +26,11 @@
   ((links :initform (make-hash-table :test 'equalp)
           :accessor links
           :documentation "Hash table of string keys => `standard-watch-machine' instances.
-Represents all of the things being supervised by this behavior."))
+Represents all of the things being supervised by this behavior.")
+
+   (pids :initform (make-hash-table :test 'equalp)
+         :accessor pids
+         :documentation "Hash table of pids => `links' keys."))
 
   (:documentation "Mixin to the `create-links' behavior.
 Gives storage space to the hash table of stable 'thing' keys to `standard-watch-machine' derivatives based on
@@ -48,9 +52,18 @@ and drive the `standard-watch-machine'"
 
   (:method ((behavior link-manager) (what (eql :process)) (info list))
    "Generates a process-uuid hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
-    (let ((uuid (getf info :transaction-id)))
+    (let ((uuid (hash-process info behavior)))
       (and uuid
            (format nil "process-~A" uuid)))))
+
+(defmethod hash-process ((info list) (behavior link-manager))
+  (let ((path (getf info :path))
+        (args (getf info :args))
+        (pid (getf info :pid)))
+    (when (and path args)
+      (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (format nil "~A ~{~A ~}" path args))))
+    (when pid
+      (gethash pid (pids behavior)))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item
@@ -174,8 +187,19 @@ of an agent and transitions to the `:made' state"
   :made)
 
 (defstate process-watch-machine :made (info)
-  (send-message (behavior-organ (behavior machine)) :command `(:command :watch
-                                                               :watch (:process :pid :pid ,(getf info :pid))))
+  (let ((pid (getf info :pid)))
+    (send-message (behavior-organ (behavior machine)) :command `(:command :watch
+                                                                 :watch (:process :pid :pid ,pid)))
+    (setf (gethash pid (pids (behavior machine))) (hash-process info (behavior machine)))
+    (call-next-method)))
+
+(defstate process-watch-machine :watch (info)
+  (unless (getf info :alive)
+    (log-for (warn watch-machine) "process has died")
+    :died))
+
+(defstate process-watch-machine :died (info)
+  (remhash (getf info :pid) (pids (behavior machine)))
   (call-next-method))
 
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)

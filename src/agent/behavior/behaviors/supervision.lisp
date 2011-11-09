@@ -169,8 +169,8 @@ of an agent and transitions to the `:made' state"
   (setf (getf (timestamps machine) :made) nil)
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
-                          :make :process
-                          :process ,(thing-info machine)))
+                  :make :process
+                  :process ,(concatenate 'list (thing-info machine) `(:transaction-id ,(format nil "~A" (uuid:make-v4-uuid))))))
   :made)
 
 (defstate process-watch-machine :made (info)

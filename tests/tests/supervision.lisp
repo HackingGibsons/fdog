@@ -168,8 +168,8 @@
               t))))))
 
 (def-test (agent-restarts-killed-process :group supervision-tests) :true
-  (let (child-pid)
-    (with-agent-conversation (m e :timeout 20) agent-uuid
+  (let (child-pid old-child-pid)
+    (with-agent-conversation (m e :timeout 60) agent-uuid
       (zmq:send! e (prepare-message `(:spawn :process)))
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m))))
@@ -191,6 +191,7 @@
         (do* ((msg (parse-message (read-message m))
                    (parse-message (read-message m))))
           ((equalp (getf msg :made) :process)
+           (setf old-child-pid child-pid)
            (setf child-pid (getf msg :pid))))
 
         (when child-pid
@@ -200,5 +201,9 @@
             ((and (getf msg :saw)
                   (equalp (getf msg :saw) :process)
                   (getf (getf msg :process) :pid) child-pid)
-             child-pid)))
-      ))))
+             child-pid))
+
+          ;; clean up so process doesn't run after test is done
+          ;; TODO: move this to cleanup
+          (sb-posix:kill child-pid sb-posix:sigterm)
+          (not (equalp child-pid old-child-pid)))))))

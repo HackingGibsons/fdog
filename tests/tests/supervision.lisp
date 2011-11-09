@@ -171,13 +171,13 @@
   (let (child-pid old-child-pid)
     (with-agent-conversation (m e :timeout 60) agent-uuid
       (zmq:send! e (prepare-message `(:spawn :process)))
-      (do* ((msg (parse-message (read-message m))
+      (do ((msg (parse-message (read-message m))
                  (parse-message (read-message m))))
         ((equalp (getf msg :made) :process)
          (setf child-pid (getf msg :pid))))
 
       (when child-pid
-        (do* ((msg (parse-message (read-message m))
+        (do ((msg (parse-message (read-message m))
                    (parse-message (read-message m))))
           ((and (getf msg :saw)
                 (equalp (getf msg :saw) :process)
@@ -188,7 +188,7 @@
         (sb-posix:kill child-pid sb-posix:sigterm)
 
         ;; Get the new pid
-        (do* ((msg (parse-message (read-message m))
+        (do ((msg (parse-message (read-message m))
                    (parse-message (read-message m))))
           ((equalp (getf msg :made) :process)
            (setf old-child-pid child-pid)
@@ -196,7 +196,7 @@
 
         (when child-pid
           ;; Make sure we've seen it
-          (do* ((msg (parse-message (read-message m))
+          (do ((msg (parse-message (read-message m))
                      (parse-message (read-message m))))
             ((and (getf msg :saw)
                   (equalp (getf msg :saw) :process)

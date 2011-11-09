@@ -198,10 +198,11 @@
   "Make a request device that pumps requests into redis."
   #'(lambda ()
       (log-for (trace) "Starting request queue device.")
-        (let ((msg (make-instance 'zmq:msg)))
+      (let ((msg (make-instance 'zmq:msg)))
+        (redis:with-named-connection (redis :host *redis-host*
+                                            :port *redis-port*)
           (labels ((run-once ()
-                     (redis:with-named-connection (redis :host *redis-host*
-                                                         :port *redis-port*)
+                     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
                        (log-for (trace) "Waiting for message to queue for endpoint: ~A" endpoint)
                        (log-for (trace) "Recv() result for endpoint->queue[~A]: ~A" endpoint
                                 (zmq:recv! (endpoint-queue-sock endpoint) msg))
@@ -223,7 +224,7 @@
                      (handler-case (run-once)
                        (simple-error (c) (handle-condition c)))))
 
-            (loop while (run-device) do ':nothing)))))
+            (loop while (run-device) do ':nothing))))))
 
 ;; Methods to start the request writing "device" when the endpoint is started and stopped
 (defmethod make-request-writer-device ((endpoint forwarder-queue-endpoint))
@@ -233,12 +234,12 @@
                                                             :port *redis-port*)
                           (request-event-info endpoint redis :count)))
             cur-count)
-        (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
-          (maybe-linger-socket forward-sock)
-          (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
-          (labels ((run-once ()
-                     (redis:with-named-connection (redis :host *redis-host*
-                                                         :port *redis-port*)
+        (redis:with-named-connection (redis :host *redis-host*
+                                            :port *redis-port*)
+          (zmq:with-socket (forward-sock (endpoint-context endpoint) zmq:push)
+            (maybe-linger-socket forward-sock)
+            (zmq:connect forward-sock (endpoint-proxy-addr endpoint))
+            (labels ((run-once ()
                        (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
                          (redis:lred-watch redis (endpoint-queue-counter endpoint))
                          (setf cur-count (request-event-info endpoint redis :count))
@@ -272,21 +273,21 @@
                            (and
                             (setf prev-count cur-count)
                             (request-queue-event endpoint redis :popped)
-                            (= 0 (zmq:send! forward-sock (make-instance 'zmq:msg :data request))))))))
+                            (= 0 (zmq:send! forward-sock (make-instance 'zmq:msg :data request)))))))
 
 
-                   (handle-condition (c)
-                     (if (= (sb-alien:get-errno) sb-posix:eintr)
-                         t
-                         (prog1 :always-run ;; Search for ":always-run" for the explanation
-                           (log-for (warn) "Queue request writer device exited with condition: ~A" c)
-                           (error c))))
+                     (handle-condition (c)
+                       (if (= (sb-alien:get-errno) sb-posix:eintr)
+                           t
+                           (prog1 :always-run ;; Search for ":always-run" for the explanation
+                             (log-for (warn) "Queue request writer device exited with condition: ~A" c)
+                             (error c))))
 
-                   (run-device ()
-                     (handler-case (run-once)
-                       (simple-error (c) (handle-condition c)))))
+                     (run-device ()
+                       (handler-case (run-once)
+                         (simple-error (c) (handle-condition c)))))
 
-            (loop while (run-device) do ':nothing))))))
+              (loop while (run-device) do ':nothing)))))))
 
 (defmethod make-response-logging-device ((endpoint forwarder-queue-endpoint))
   #'(lambda ()

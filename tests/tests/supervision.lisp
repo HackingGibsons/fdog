@@ -167,43 +167,40 @@
                    (equalp (getf (getf msg :agent) :uuid) child-uuid))
               t))))))
 
-(def-test (agent-restarts-killed-process :group supervision-tests) :true
-  (let (child-pid old-child-pid)
+(def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture)) :true
+  (let (old-pid)
     (with-agent-conversation (m e :timeout 60) agent-uuid
       (zmq:send! e (prepare-message `(:spawn :process)))
       (do ((msg (parse-message (read-message m))
                  (parse-message (read-message m))))
         ((equalp (getf msg :made) :process)
-         (setf child-pid (getf msg :pid))))
+         (setf pid (getf msg :pid))))
 
-      (when child-pid
+      (when pid
         (do ((msg (parse-message (read-message m))
                    (parse-message (read-message m))))
           ((and (getf msg :saw)
                 (equalp (getf msg :saw) :process)
-                (getf (getf msg :process) :pid) child-pid)
-           child-pid))
+                (getf (getf msg :process) :pid) pid)
+           pid))
 
         ;; kill the process to simulate it dying
-        (iolib.syscalls:kill child-pid iolib.syscalls:sigterm)
+        (iolib.syscalls:kill pid iolib.syscalls:sigterm)
 
         ;; Get the new pid
         (do ((msg (parse-message (read-message m))
                    (parse-message (read-message m))))
           ((equalp (getf msg :made) :process)
-           (setf old-child-pid child-pid)
-           (setf child-pid (getf msg :pid))))
+           (setf old-pid pid)
+           (setf pid (getf msg :pid))))
 
-        (when child-pid
+        (when pid
           ;; Make sure we've seen it
           (do ((msg (parse-message (read-message m))
                      (parse-message (read-message m))))
             ((and (getf msg :saw)
                   (equalp (getf msg :saw) :process)
-                  (getf (getf msg :process) :pid) child-pid)
-             child-pid))
+                  (getf (getf msg :process) :pid) pid)
+             pid))
 
-          ;; clean up so process doesn't run after test is done
-          ;; TODO: move this to cleanup
-          (iolib.syscalls:kill child-pid iolib.syscalls:sigterm)
-          (not (equalp child-pid old-child-pid)))))))
+          (not (equalp pid old-pid)))))))

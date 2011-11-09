@@ -85,3 +85,8 @@
   (empty-directory (asdf:system-relative-pathname :afdog
                                                   (format nil "~A/" (uuid:make-v4-uuid))
                                                   :type :directory)))
+
+(def-fixtures pid-fixture
+  (:cleanup (iolib.syscalls:kill pid iolib.syscalls:sigterm)
+   :documentation "A fixture to hold a pid that needs to be killed.")
+  (pid))

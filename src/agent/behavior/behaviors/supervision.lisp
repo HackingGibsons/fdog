@@ -172,10 +172,6 @@ of an agent and transitions to the `:made' state"
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "A specialization of the `standard-watch-machine' that knows how to create processes"))
 
-;(defmethod initialize-instance :after ((machine process-watch-machine) &key)
-  ;(with-slots (transaction-id thing-info) machine
-    ;(setf thing-info (concatenate 'list thing-info `(:transaction-id ,transaction-id)))))
-
 (defstate process-watch-machine :initial (info)
   "An 'initial' agent for 'process-watch-machine', asks for the construction of a process and transitions to the `:made' state"
   (log-for (trace watch-machine) "Running :initial event of ~A" machine)

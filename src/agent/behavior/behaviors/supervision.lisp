@@ -51,10 +51,10 @@ and drive the `standard-watch-machine'"
            (format nil "agent-~A" uuid))))
 
   (:method ((behavior link-manager) (what (eql :process)) (info list))
-   "Generates a process-uuid hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
-    (let ((uuid (hash-process info behavior)))
-      (and uuid
-           (format nil "process-~A" uuid)))))
+   "Generates a process hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
+    (let ((hash (hash-process info behavior)))
+      (and hash
+           (format nil "process-~A" hash)))))
 
 (defmethod hash-process ((info list) (behavior link-manager))
   "Converts process info into a hash to lookup the right state machine.

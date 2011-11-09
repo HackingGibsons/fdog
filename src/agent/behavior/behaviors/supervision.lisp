@@ -121,6 +121,8 @@ of the object to be linked."
     (link-init behavior link-what link-info)))
 
 (defmethod create-links-made ((behavior create-links) (organ standard-organ) event)
+  "A handler for `:made' event of the `create-links' behavior.
+Fires messages into the `link-event' method after destructuring the event to determine the type and info of the object."
   (let* ((made-info (getf event :made))
          (made-what (and made-info
                          (getf event :made))))

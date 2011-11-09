@@ -63,10 +63,11 @@ If a pid exists, use the pid to look up the hash in the behavior's `pids' table.
   (let ((path (getf info :path))
         (args (getf info :args))
         (pid (getf info :pid)))
-    (when (and path args)
-      (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (format nil "~A ~{~A ~}" path args))))
-    (when pid
-      (gethash pid (pids behavior)))))
+    (cond
+      ((and path args)
+       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (format nil "~A ~{~A ~}" path args))))
+      (pid
+        (gethash pid (pids behavior))))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item

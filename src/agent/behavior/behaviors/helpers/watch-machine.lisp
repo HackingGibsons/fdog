@@ -54,6 +54,7 @@ See `defstate' for the reasoning and function. This method is closure plumbing."
        (values machine (state machine))))))
 
 (defmethod initialize-instance :after ((machine standard-watch-machine) &key)
+  "Fire a boot event in order to get the machine into the :initial state."
   (funcall machine '(:event :boot)))
 
 (defmacro defstate (machine-type state-name (event-sym) &body body)
@@ -75,6 +76,7 @@ available in `state'"
 
 ;; Default states of thingwatching
 (defstate standard-watch-machine :boot (info)
+  "This event is an entry point to get the machine into the :initial state without having to wait on a watch event that might not exist yet."
   :initial)
 
 (defstate standard-watch-machine :made (info)

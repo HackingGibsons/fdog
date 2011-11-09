@@ -57,6 +57,9 @@ and drive the `standard-watch-machine'"
            (format nil "process-~A" uuid)))))
 
 (defmethod hash-process ((info list) (behavior link-manager))
+  "Converts process info into a hash to lookup the right state machine.
+If a path and args exist, return a hash of the pid/args.
+If a pid exists, use the pid to look up the hash in the behavior's `pids' table."
   (let ((path (getf info :path))
         (args (getf info :args))
         (pid (getf info :pid)))

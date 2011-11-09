@@ -295,25 +295,26 @@
         (zmq:with-socket (socket context zmq:sub)
           (zmq:connect socket response-proxy-addr)
           (zmq:setsockopt socket zmq:subscribe "")
-          (labels
-              ((run-once ()
-                 (let ((response (make-instance 'zmq:msg)))
-                   (zmq:recv! socket response)
-                   (redis:with-named-connection (redis :host *redis-host*
-                                                       :port *redis-port*)
-                   ;; Store in redis without queueing it,
-                   ;; and expire it after the response linger time
-                   (let ((key (store-response endpoint redis (zmq:msg-data-as-array response))))
-                     (log-for (trace) "Wrote response key to redis: ~A" key)
-                     (log-for (trace) "Expiring response in ~A seconds." (queue-endpoint-response-linger endpoint))
-                     (redis:lred-expire redis key (queue-endpoint-response-linger endpoint))))
-                   t))
+          (redis:with-named-connection (redis :host *redis-host*
+                                              :port *redis-port*)
+            (labels
+                ((run-once ()
+                   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+                     (let ((response (make-instance 'zmq:msg)))
+                       (zmq:recv! socket response)
+                       ;; Store in redis without queueing it,
+                       ;; and expire it after the response linger time
+                       (let ((key (store-response endpoint redis (zmq:msg-data-as-array response))))
+                         (log-for (trace) "Wrote response key to redis: ~A" key)
+                         (log-for (trace) "Expiring response in ~A seconds." (queue-endpoint-response-linger endpoint))
+                         (redis:lred-expire redis key (queue-endpoint-response-linger endpoint))))
+                     t))
 
-               (run-device ()
-                 (handler-case (run-once)
-                   (simple-error (c) t))))
+                 (run-device ()
+                   (handler-case (run-once)
+                     (simple-error (c) t))))
 
-            (loop while (run-device) do (run-device)))))))
+              (loop while (run-device) do (run-device))))))))
 
 (defmethod engine-endpoint-start :after ((endpoint forwarder-queue-endpoint))
   (redis:with-named-connection (redis :host *redis-host*
@@ -364,10 +365,10 @@
   #'(lambda ()
       (log-for (trace) "Starting queued proxy request device")
       (let (last-message)
-        (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+        (redis:with-named-connection (redis :host *redis-host*
+                                            :port *redis-port*)
             (labels ((run-once ()
-                       (redis:with-named-connection (redis :host *redis-host*
-                                                           :port *redis-port*)
+                       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
                          (let ((msg (make-instance 'zmq:msg))
                                recv send)
                            (log-for (trace) "Reading queued request")

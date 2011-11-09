@@ -185,7 +185,7 @@
            child-pid))
 
         ;; kill the process to simulate it dying
-        (sb-posix:kill child-pid sb-posix:sigterm)
+        (iolib.syscalls:kill child-pid iolib.syscalls:sigterm)
 
         ;; Get the new pid
         (do ((msg (parse-message (read-message m))
@@ -205,5 +205,5 @@
 
           ;; clean up so process doesn't run after test is done
           ;; TODO: move this to cleanup
-          (sb-posix:kill child-pid sb-posix:sigterm)
+          (iolib.syscalls:kill child-pid iolib.syscalls:sigterm)
           (not (equalp child-pid old-child-pid)))))))

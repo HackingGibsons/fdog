@@ -80,7 +80,7 @@ available in `state'"
 (defstate standard-watch-machine :made (info)
   "This event is responsible for making sure creation of a 'thing' occurs within a defined
 interval, and storing the time that occured in the `timestamps' plist of the machine."
-  (log-for (watch-machine) "Looping main event!")
+  (log-for (trace watch-machine) "Looping main event!")
   (unless (getf (timestamps machine) :made)
     (setf (getf (timestamps machine) :made) (last-event machine)))
 
@@ -103,9 +103,9 @@ is in a failure state."
 (defstate standard-watch-machine :watch (info)
   "The stable state of the machine after creation. `info' should contain the `:saw' message
 for the given object, which should be checked for validity"
-  (log-for (watch-machine) "Watching: ~A => ~A" machine info)
+  (log-for (trace watch-machine) "Watching: ~A => ~A" machine info)
   (unless info
-    (log-for (watch-machine) "[WARN] Going to die.")
+    (log-for (warn watch-machine) "Going to die.")
     :died))
 
 (defstate standard-watch-machine :died (info)

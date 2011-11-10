@@ -200,9 +200,9 @@ of an agent and transitions to the `:made' state"
 
 (defstate process-watch-machine :died (info)
   (let ((pid (getf info :pid)))
-    (remhash pid (pids (behavior machine))) 
-    (send-message (behavior-organ (behavior machine)) :command `(:command :watch
-                                                                 :watch (:process :pid :pid ,pid)))) 
+    (remhash pid (pids (behavior machine)))
+    (send-message (behavior-organ (behavior machine)) :command `(:command :stop-watching
+                                                                 :stop-watching (:process :pid :pid ,pid))))
   (call-next-method))
 
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)

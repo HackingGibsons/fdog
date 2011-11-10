@@ -3,6 +3,8 @@
         #:afdog
         #:agent)
   (:use #:nst)
+
+  (:shadow :*spawner*)
   (:shadowing-import-from :log5
                           :defcategory
                           :log-for)
@@ -10,7 +12,7 @@
 
 (in-package :afdog-tests)
 
-(defparameter *spawner* :test
+(defvar *spawner* :test
   "Use the :test spawner in the :afdog-tests package")
 
 (defun run-all ()

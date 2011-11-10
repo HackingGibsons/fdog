@@ -178,7 +178,7 @@
 
 (def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture)) :true
   (let (old-pid)
-    (with-agent-conversation (m e :timeout 60) agent-uuid
+    (with-agent-conversation (m e :timeout 120) agent-uuid
       (zmq:send! e (prepare-message `(:spawn :process)))
       (do ((msg (parse-message (read-message m))
                 (parse-message (read-message m))))

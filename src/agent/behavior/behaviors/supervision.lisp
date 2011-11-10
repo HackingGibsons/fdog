@@ -90,7 +90,6 @@ Parameter meanings are the same as `link-key'")
                                :include (link-manager) :do :invoke-with-event) (organ event)
   ;; Message format: `:link' message:
   ;; https://github.com/vitrue/fdog/wiki/Internal-Messages
-  (handler-case
   (cond
     ((getf event :saw)
      (create-links-saw behavior organ event))
@@ -99,8 +98,7 @@ Parameter meanings are the same as `link-key'")
      (create-links-link behavior organ event))
 
     ((getf event :made)
-     (create-links-made behavior organ event)))
-    (t (cond) (log-for (error) cond))))
+     (create-links-made behavior organ event))))
 
 (defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
   "A handler for `:saw' type of events of the `create-links' behavior.

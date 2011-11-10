@@ -207,7 +207,8 @@ of an agent and transitions to the `:made' state"
     (log-for (watch-machine trace) "Stopping the old watch of ~A" pid)
     (send-message (behavior-organ (behavior machine)) :command `(:command :stop-watching
                                                                  :stop-watching (:process :pid :pid ,pid))))
-  (call-next-method))
+  (values (call-next-method)
+          :fire-again))
 
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)
   "Specialization of a watch machine construction for an `:process' thing type."

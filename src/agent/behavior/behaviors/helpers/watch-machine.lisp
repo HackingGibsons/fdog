@@ -47,6 +47,7 @@ See `defstate' for the reasoning and function. This method is closure plumbing."
   (c2mop:set-funcallable-instance-function
    machine
    #'(lambda (event)
+       (log-for (watch-machine trace) "~A event ~A" machine event)
        (let ((next-event (handler-case (watch-machine-event machine (state machine) event)
                            (simple-error () (error "State ~A of ~A is not defined." (state machine) machine)))))
          (setf (last-event machine) (get-internal-real-time)
@@ -77,6 +78,7 @@ available in `state'"
 ;; Default states of thingwatching
 (defstate standard-watch-machine :boot (info)
   "This event is an entry point to get the machine into the :initial state without having to wait on a watch event that might not exist yet."
+  (log-for (trace watch-machine) "Booting ~A with :boot" machine)
   :initial)
 
 (defstate standard-watch-machine :made (info)
@@ -94,6 +96,7 @@ interval, and storing the time that occured in the `timestamps' plist of the mac
 
 (defstate standard-watch-machine :make-fail (info)
   "A transition state into failure"
+  (log-for (watch-machine warn) "In :make-fail of ~A" machine)
   :failed)
 
 (defstate standard-watch-machine :failed (info)
@@ -113,7 +116,5 @@ for the given object, which should be checked for validity"
 (defstate standard-watch-machine :died (info)
   "State of a dead item. Re-transitions to the `:initial' state of the current machine
 to attempt to recreate the item."
-  (log-for (watch-machine) "[WARN] Dead, restarting ~A => ~A" machine info)
+  (log-for (warn watch-machine) "[WARN] Dead, restarting ~A => ~A" machine info)
   :initial)
-
-

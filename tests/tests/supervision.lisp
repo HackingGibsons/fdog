@@ -167,6 +167,14 @@
                    (equalp (getf (getf msg :agent) :uuid) child-uuid))
               t))))))
 
+(def-test (agent-starts-linked-process :group supervision-texts):true
+  (with-agent-conversation (m e :timeout 60) agent-uuid
+    (zmq:send! e (prepare-message `(:spawn :process)))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+      ((equalp (getf msg :made) :process)
+       (getf msg :pid)))))
+
 (def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture)) :true
   (let (old-pid)
     (with-agent-conversation (m e :timeout 60) agent-uuid

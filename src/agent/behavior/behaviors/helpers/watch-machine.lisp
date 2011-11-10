@@ -34,6 +34,9 @@ table is an instance of a subclass of this class. It is funcalled as follows eve
 Every iteration of the event machine the `last-event' slot is updated with `get-internal-real-time' before
 the funcallable instance application.
 
+On `initialize-instance' a `:boot' event is fired into the machine into the current event. If your machine
+does not require bootstrapping, ensure this event does not fault your state transition.
+
 NOTE: The default implementation does not provide an `:initial' state, and should not be instantiated directly.
 Provide an `:initial' state in your subclass of the watch machine that knows how to construct your objects,
 and look over the `:made' and `:watch' states to consider overriding them.
@@ -48,11 +51,17 @@ See `defstate' for the reasoning and function. This method is closure plumbing."
    machine
    #'(lambda (event)
        (log-for (watch-machine trace) "~A event ~A" machine event)
-       (let ((next-event (handler-case (watch-machine-event machine (state machine) event)
-                           (simple-error () (error "State ~A of ~A is not defined." (state machine) machine)))))
+       (multiple-value-bind (next-state recur-p)
+           (handler-case (watch-machine-event machine (state machine) event)
+             (simple-error () (error "State ~A of ~A is not defined." (state machine) machine)))
+
+         (log-for (watch-machine trace) "Next state: ~A Recur?: ~A" next-state recur-p)
          (setf (last-event machine) (get-internal-real-time)
-               (state machine) (or next-event (state machine)))
-       (values machine (state machine))))))
+               (state machine) (or next-state (state machine)))
+
+         (if recur-p
+             (funcall machine event)
+             (values machine (state machine)))))))
 
 (defmethod initialize-instance :after ((machine standard-watch-machine) &key)
   "Fire a boot event in order to get the machine into the :initial state."
@@ -71,7 +80,12 @@ Each invocation of this state with the even bound to `event-sym' will evaluate `
 in a method invocation and the resulting value of the evaluation should return the next state
 for the machine as a `:keyword', or `nil' to indicate the machine should remain in its current state.
 The symbol `machine' will be bound to the currently executing state machine. The current state is
-available in `state'"
+available in `state'
+
+If the state produces two-value return, it is interpreted as (values next-state recur-event)
+and if recur-event is non-nil the same event is sent into the machine again after performing
+the transition into next-state. This is useful if simply performing a state transition would
+result in event starvation."
   `(defmethod watch-machine-event ((machine ,machine-type) (state (eql ,state-name)) ,event-sym)
      ,@body))
 

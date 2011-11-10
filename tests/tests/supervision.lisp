@@ -193,8 +193,8 @@
                 (getf (getf msg :process) :pid) pid)
            pid))
 
-        ;; kill the process to simulate it dying
-        (iolib.syscalls:kill pid iolib.syscalls:sigterm)
+        ;; kill -9 the process to simulate it dying
+        (iolib.syscalls:kill pid iolib.syscalls:sigkill)
 
         ;; Get the new pid
         (do ((msg (parse-message (read-message m))

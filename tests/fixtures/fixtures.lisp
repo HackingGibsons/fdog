@@ -87,7 +87,8 @@
                                                   :type :directory)))
 
 (def-fixtures pid-fixture
-  (:cleanup (iolib.syscalls:kill pid iolib.syscalls:sigkill)
+  (:cleanup (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
    :documentation "A fixture to hold a pid that needs to be killed.
 Does kill -9 to ensure the process dies in cleanup.")
+  (old-pid)
   (pid))

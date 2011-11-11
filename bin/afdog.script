@@ -9,7 +9,6 @@
 ;; Load up the app
 (ql:quickload :afdog)
 
-(defvar *me* (namestring (make-pathname :name (pathname-name *load-pathname*)
-                                        :type (pathname-type *load-pathname*))))
+(defvar *me* *load-pathname*)
 
 (afdog-cli:main `(,*me* ,@(rest sb-ext:*posix-argv*)))

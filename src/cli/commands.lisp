@@ -1,11 +1,15 @@
 (in-package :afdog-cli)
 
 (defcommand repl (argv)
-  "Start a repl and nothing else"
-  (with-cli-options (argv "Usage: repl [options]~%~@{~A~%~}~%")
-    nil ;; No option bindings
-    #+sbcl (sb-impl::toplevel-repl nil)))
+  "Start a REPL, or if forms are provided, evaluate the forms and terminate."
+  (with-cli-options (argv "Usage: repl [options] [form1 form2 form3]~%~@{~A~%~}~%")
+      (&free forms)
+    (flet ((read-eval (s)
+             "Read a string `s' and eval it"
+             (eval (read-from-string s))))
 
+      (or (mapc #'read-eval forms)
+          #+sbcl (sb-impl::toplevel-repl nil)))))
 
 (defcommand help (argv &key (exit 0))
   "Show help"

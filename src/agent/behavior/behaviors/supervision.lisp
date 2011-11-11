@@ -187,6 +187,7 @@ of an agent and transitions to the `:made' state"
   :made)
 
 (defstate process-watch-machine :made (info)
+  (log-for (trace watch-machine) ":made state of ~A" machine)
   (let ((pid (getf info :pid)))
     (send-message (behavior-organ (behavior machine)) :command `(:command :watch
                                                                  :watch (:process :pid :pid ,pid)))
@@ -194,16 +195,20 @@ of an agent and transitions to the `:made' state"
     (call-next-method)))
 
 (defstate process-watch-machine :watch (info)
+  (log-for (watch-machine trace) "In :watch state of ~A" machine)
   (unless (getf info :alive)
     (log-for (warn watch-machine) "process has died")
     :died))
 
 (defstate process-watch-machine :died (info)
+  (log-for (watch-machine trace) "In :died state of ~A" machine)
   (let ((pid (getf info :pid)))
     (remhash pid (pids (behavior machine)))
+    (log-for (watch-machine trace) "Stopping the old watch of ~A" pid)
     (send-message (behavior-organ (behavior machine)) :command `(:command :stop-watching
                                                                  :stop-watching (:process :pid :pid ,pid))))
-  (call-next-method))
+  (values (call-next-method)
+          :fire-again))
 
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)
   "Specialization of a watch machine construction for an `:process' thing type."

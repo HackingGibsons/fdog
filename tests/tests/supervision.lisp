@@ -176,40 +176,55 @@
        (setf pid (getf msg :pid)))
       pid)))
 
-(def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture)) :true
-  (let (old-pid)
-    (with-agent-conversation (m e :timeout 120) agent-uuid
-      (zmq:send! e (prepare-message `(:spawn :process)))
-      (do ((msg (parse-message (read-message m))
-                (parse-message (read-message m))))
-        ((equalp (getf msg :made) :process)
-         (setf pid (getf msg :pid))))
+(def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture))
+    (:seq :true
+          (:predicate numberp)
+          :true
+          :true
+          :true
+          :true)
 
-      (when pid
-        (do ((msg (parse-message (read-message m))
-                   (parse-message (read-message m))))
-          ((and (getf msg :saw)
-                (equalp (getf msg :saw) :process)
-                (getf (getf msg :process) :pid) pid)
-           pid))
+  (list
+   (with-agent-conversation (m e :timeout 30) agent-uuid
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((equalp (subseq msg 0 2) '(:agent :info)) t)))
 
-        ;; kill -9 the process to simulate it dying
-        (iolib.syscalls:kill pid iolib.syscalls:sigkill)
+   (with-agent-conversation (m e :timeout 35) agent-uuid
+     (zmq:send! e (prepare-message `(:spawn :process)))
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((equalp (getf msg :made) :process)
+          (setf pid (getf msg :pid)))))
 
-        ;; Get the new pid
-        (do ((msg (parse-message (read-message m))
-                   (parse-message (read-message m))))
-          ((equalp (getf msg :made) :process)
-           (setf old-pid pid)
-           (setf pid (getf msg :pid))))
+   (when pid
+     (with-agent-conversation (m e :timeout 35) agent-uuid
+       (do ((msg (parse-message (read-message m))
+                 (parse-message (read-message m))))
+           ((and (getf msg :saw)
+                 (equalp (getf msg :saw) :process)
+                 (getf (getf msg :process) :pid) pid)
+            pid)))
+     ;; kill -9 the process to simulate it dying
+     (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill)))
 
-        (when pid
-          ;; Make sure we've seen it
-          (do ((msg (parse-message (read-message m))
-                     (parse-message (read-message m))))
-            ((and (getf msg :saw)
-                  (equalp (getf msg :saw) :process)
-                  (getf (getf msg :process) :pid) pid)
-             pid))
+   ;; Get the new pid
+   (with-agent-conversation (m e :timeout 35) agent-uuid
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((equalp (getf msg :made) :process)
+          (setf old-pid pid)
+          (setf pid (getf msg :pid)))))
 
-          (not (equalp pid old-pid)))))))
+   (when pid
+     (with-agent-conversation (m e :timeout 35) agent-uuid
+       ;; Make sure we've seen it
+       (do ((msg (parse-message (read-message m))
+                 (parse-message (read-message m))))
+           ((and (getf msg :saw)
+                 (equalp (getf msg :saw) :process)
+                 (getf (getf msg :process) :pid)
+                 pid)
+            pid))))
+
+   (not (equalp pid old-pid))))

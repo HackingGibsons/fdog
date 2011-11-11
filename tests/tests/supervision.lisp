@@ -166,3 +166,65 @@
                    (equalp (getf msg :saw) :agent)
                    (equalp (getf (getf msg :agent) :uuid) child-uuid))
               t))))))
+
+(def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)):true
+  (with-agent-conversation (m e :timeout 60) agent-uuid
+    (zmq:send! e (prepare-message `(:spawn :process)))
+    (do ((msg (parse-message (read-message m))
+              (parse-message (read-message m))))
+      ((equalp (getf msg :made) :process)
+       (setf pid (getf msg :pid)))
+      pid)))
+
+(def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture))
+    (:seq :true
+          (:predicate numberp)
+          :true
+          :true
+          :true
+          :true)
+
+  (list
+   (with-agent-conversation (m e :timeout 30) agent-uuid
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((equalp (subseq msg 0 2) '(:agent :info)) t)))
+
+   (with-agent-conversation (m e :timeout 35) agent-uuid
+     (zmq:send! e (prepare-message `(:spawn :process)))
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((equalp (getf msg :made) :process)
+          (setf pid (getf msg :pid)))))
+
+   (when pid
+     (with-agent-conversation (m e :timeout 35) agent-uuid
+       (do ((msg (parse-message (read-message m))
+                 (parse-message (read-message m))))
+           ((and (getf msg :saw)
+                 (equalp (getf msg :saw) :process)
+                 (getf (getf msg :process) :pid) pid)
+            pid)))
+     ;; kill -9 the process to simulate it dying
+     (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill)))
+
+   ;; Get the new pid
+   (with-agent-conversation (m e :timeout 35) agent-uuid
+     (do ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((equalp (getf msg :made) :process)
+          (setf old-pid pid)
+          (setf pid (getf msg :pid)))))
+
+   (when pid
+     (with-agent-conversation (m e :timeout 35) agent-uuid
+       ;; Make sure we've seen it
+       (do ((msg (parse-message (read-message m))
+                 (parse-message (read-message m))))
+           ((and (getf msg :saw)
+                 (equalp (getf msg :saw) :process)
+                 (getf (getf msg :process) :pid)
+                 pid)
+            pid))))
+
+   (not (equalp pid old-pid))))

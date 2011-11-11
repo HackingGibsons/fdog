@@ -49,6 +49,15 @@
                                                      :link :agent
                                                      :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests))))))
 
+
+(defbehavior spawn-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message))
+        (uuid (format nil "~A" (uuid:make-v4-uuid))))
+    (when (equalp message '(:spawn :process))
+      (send-message organ :command `(:command :link
+                                     :link :process
+                                     :process (:path "/usr/bin/yes"))))))
+
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (cond
@@ -104,12 +113,21 @@
                                              :include (timeout-mixin)
                                              :do :invoke-with-event) (organ event)
   (log-for (trace) "event: ~A" event)
-  (let ((new-timeout-interval (getf (getf event :message) :new-timeout-interval)))
+  (let ((new-timeout-interval (getf (getf event :message) :new-timeout-interval))
+        (reset-timeout (eql (getf (getf event :message) :reset) :timeout)))
     (log-for (trace) "new-timeout-interval: ~A" new-timeout-interval)
-    (when new-timeout-interval
-      (log-for (trace) "new timeout interval: ~A" new-timeout-interval)
-      (setf (timeout behavior) (* new-timeout-interval internal-time-units-per-second)))
-    (log-for (trace) "no new interval, current time: ~A, timeout interval ~A" (- (get-internal-real-time) (start-time behavior)) (timeout behavior)))
+    (log-for (trace) "reset-timeout: ~A" reset-timeout)
+    (cond
+      (new-timeout-interval
+        (log-for (trace) "new timeout interval: ~A" new-timeout-interval)
+        (setf (timeout behavior) (* new-timeout-interval internal-time-units-per-second)))
+
+      (reset-timeout
+        (log-for (trace) "resetting timeout")
+        (setf (start-time behavior) (get-internal-real-time)))
+
+      (t
+        (log-for (trace) "no new interval, current time: ~A, timeout interval ~A" (- (get-internal-real-time) (start-time behavior)) (timeout behavior))  )))
   (when (>= (- (get-internal-real-time) (start-time behavior)) (timeout behavior))
     (log-for (warn) "~A: Timeout reached, killing myself" organ)
     (suicide (organ-agent organ))))

@@ -1,6 +1,6 @@
 (in-package :afdog-cli)
 
-(defparameter *cmd-name-prefix* "afdog-cmd")
+(defparameter *cmd-name-prefix* "afdog-cmd-")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *commands* ()

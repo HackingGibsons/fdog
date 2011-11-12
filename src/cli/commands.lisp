@@ -27,8 +27,12 @@
 
              ;; TODO: Add the right initargs conditionally
              (start-agent (agent)
-               (format t "~A~%"
-                       `(start (make-runner :cli :class agent)))))
+               (let* ((uuid (format nil "~A" (uuid:make-v4-uuid)))
+                      (runner (make-runner *agent-spawner* :class agent :uuid uuid)))
+                 (start runner)
+                 (format t "~A~%"
+                         `(start (make-runner ,*agent-spawner* :class ,agent :uuid ,uuid)))
+                 (format t "Started agent `~A'. UUID: ~A~%" agent uuid))))
 
       (let ((agents (mapcar #'find-agent-or-explode agent-names)))
         (unless (mapc #'start-agent agents)

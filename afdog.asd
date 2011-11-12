@@ -65,6 +65,7 @@
 
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")
+                                   (:file "runner" :depends-on ("package"))
                                    (:file "defcommand" :depends-on ("package"))
                                    (:file "commands" :depends-on ("defcommand"))))))
 

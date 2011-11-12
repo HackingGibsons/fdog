@@ -9,6 +9,6 @@
 ;; Load up the app
 (ql:quickload :afdog)
 
-(defvar *me* *load-pathname*)
+(defvar *me* (namestring *load-pathname*))
 
 (afdog-cli:main `(,*me* ,@(rest sb-ext:*posix-argv*)))

@@ -1,5 +1,25 @@
 (in-package :afdog-cli)
 
+(defcommand start (argv)
+  "Start an instance of the named agent with the given options."
+  (with-cli-options (argv "Usage: start [options] agent-type~%~@{~A~%~}~%")
+      (&parameters (parent-uuid "The uuid of the parent agent to declare")
+                   (parent-mouth "The mouth address of the parent named by the uuid. If omitted, a local IPC sock will be attempted instead.")
+       &free agent-names)
+    (format t "PWD: ~A ~%" (iolib.syscalls:getcwd))
+    (format t "Self: ~A => ~A~%" *self* agent-names)
+    (format t "UUID: ~A~%" parent-uuid)
+    (format t "Mouth: ~A~%" parent-mouth)
+
+    (flet ((find-agent-or-explode (agent) (error "No such agent: ~A" agent))
+           ;; TODO: Add the right initargs conditionally
+           (start-agent (agent) (start (make-runner :cli :class agent))))
+
+      (let ((agents (mapcar #'find-agent-or-explode agent-names)))
+        (unless (mapc #'start-agent agents)
+          (format t "ERROR: You must specify an agent.~%~%")
+          (funcall (get-command :help :function) "start"))))))
+
 (defcommand repl (argv)
   "Start a REPL, or if forms are provided, evaluate the forms and terminate."
   (with-cli-options (argv "Usage: repl [options] [form1 form2 form3]~%~@{~A~%~}~%")

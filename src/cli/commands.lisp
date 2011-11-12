@@ -1,5 +1,18 @@
 (in-package :afdog-cli)
 
+(defcommand agents (argv)
+  "List the agents available for spawning."
+  (with-cli-options (argv "Usage: agents [options]~%~@{~A~%~}~%") nil
+    (flet ((agents-in-package (package)
+             (let (agents)
+               (do-external-symbols (agent (find-package package) agents)
+                 (when (and (find-class agent nil)
+                            (find (find-class 'standard-agent)
+                                  (c2mop:class-direct-superclasses (find-class agent))))
+                   (push agent agents))))))
+      (format t "Available agents:~%~{  ~A~%~}"
+              (loop for package in *agent-packages* appending (agents-in-package package))))))
+
 (defcommand start (argv)
   "Start an instance of the named agent with the given options."
   (with-cli-options (argv "Usage: start [options] agent-type~%~@{~A~%~}~%")

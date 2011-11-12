@@ -7,10 +7,13 @@
            :make-local-sock
            :get-local-address
            :read-message
-           :parse-message)
+           :parse-message
+           :*git-revision*)
   (:export :*socket-linger*))
 
 (in-package :afdog)
+
+(defvar *git-revision* "HEAD")
 
 (defparameter *socket-linger* 250
   "The linger period to use on all the zmq sockets.")

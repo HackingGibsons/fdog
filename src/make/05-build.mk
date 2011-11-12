@@ -34,6 +34,7 @@ $(BIN): $(BUILDAPP)
 				--require sb-aclrepl \
 				--load $(QL_SETUP) \
 				--eval '(ql:quickload :afdog)' \
+                --eval "(setf afdog:*git-revision* \"$$(git rev-parse HEAD || echo UNKNOWN)\")" \
 				--eval "(swank-loader:init :load-contribs t)" \
 				--dispatched-entry '/afdog-cli:main' \
 	|| { \

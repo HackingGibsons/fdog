@@ -13,13 +13,18 @@
 
 (in-package :afdog-cli)
 
-(defparameter *self* "afdog" "The name of the binary.")
-(defparameter *agent-packages* '(:agent) "The packages to search for agent classes")
+(defvar *self* "afdog" "The name of the binary.")
+(defvar *agent-packages* '(:agent) "The packages to search for agent classes")
+(defvar *agent-spawner* :cli "The spawner to set the default to.")
 
 (defgeneric main (argv)
   (:documentation "The main entry point to the CLI interface of the application.")
   (:method :before (argv)
            #+sbcl (sb-ext:disable-debugger))
+
+  (:method :around (argv)
+           (let ((*spawner* *agent-spawner*))
+             (call-next-method)))
 
   (:method (argv)
     (destructuring-bind (self &rest args) argv

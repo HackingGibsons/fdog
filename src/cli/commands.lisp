@@ -65,7 +65,7 @@
                 (funcall (get-command (car argv) :function) '("-h")))
               (format t "  Unknown command.~%"))))
       (progn
-        (format t "Afdog Revision: ~A~%" *git-revision*)
+        (format t "Afdog ~A Revision: ~A~%" (asdf:component-version (asdf:find-system :afdog)) *git-revision*)
         (format t "Usage: ~A <command> [command-options]~%" *self*)
         (list-commands)))
   (when exit (quit :unix-status 0)))

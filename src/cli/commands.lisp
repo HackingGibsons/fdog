@@ -6,12 +6,12 @@
       (&parameters (parent-uuid "The uuid of the parent agent to declare")
                    (parent-mouth "The mouth address of the parent named by the uuid. If omitted, a local IPC sock will be attempted instead.")
        &free agent-names)
-    (format t "PWD: ~A ~%" (iolib.syscalls:getcwd))
-    (format t "Self: ~A => ~A~%" *self* agent-names)
-    (format t "UUID: ~A~%" parent-uuid)
-    (format t "Mouth: ~A~%" parent-mouth)
+    (when (and parent-uuid (not parent-mouth))
+      (format t "WARNING: UUID specified, but not an address. Trying local IPC.~%")
+      (setf parent-mouth (local-ipc-addr parent-uuid :mouth)))
 
     (labels ((find-symbol-in-agent-packages (symbol)
+               "Look up a symbol and quickly test if it's a class. Else, nil"
                (car (mapcar #'(lambda (package)
                                 (let ((sym (find-symbol (symbol-name symbol) package)))
                                   (and (find-class sym nil)
@@ -19,19 +19,20 @@
                             *agent-packages*)))
 
              (find-agent-or-explode (agent)
+               "Find an agent by the given name or raise an error"
                (let* ((agent-sym (ignore-errors (read-from-string agent)))
                       (agent-sym (and agent-sym (symbolp agent-sym)
                                       (find-symbol-in-agent-packages agent-sym))))
                  (or agent-sym
                      (error "No such agent `~A'" agent))))
 
-             ;; TODO: Add the right initargs conditionally
              (start-agent (agent)
+               "Start the agent named by the symbol `agent'"
                (let* ((uuid (format nil "~A" (uuid:make-v4-uuid)))
-                      (runner (make-runner *agent-spawner* :class agent :uuid uuid)))
+                      (runner (eval `(make-runner ,*agent-spawner* :class ',agent :uuid ,uuid
+                                                  ,@(when parent-uuid (list :parent-uuid parent-uuid))
+                                                  ,@(when parent-mouth (list :parent-mouth parent-mouth))))))
                  (start runner)
-                 (format t "~A~%"
-                         `(start (make-runner ,*agent-spawner* :class ,agent :uuid ,uuid)))
                  (format t "Started agent `~A'. UUID: ~A~%" agent uuid))))
 
       (let ((agents (mapcar #'find-agent-or-explode agent-names)))

@@ -14,6 +14,7 @@
 (in-package :afdog-cli)
 
 (defparameter *self* "afdog" "The name of the binary.")
+(defparameter *agent-packages* '(:agent) "The packages to search for agent classes")
 
 (defgeneric main (argv)
   (:documentation "The main entry point to the CLI interface of the application.")

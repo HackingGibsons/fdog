@@ -11,14 +11,29 @@
     (format t "UUID: ~A~%" parent-uuid)
     (format t "Mouth: ~A~%" parent-mouth)
 
-    (flet ((find-agent-or-explode (agent) (error "No such agent: ~A" agent))
-           ;; TODO: Add the right initargs conditionally
-           (start-agent (agent) (start (make-runner :cli :class agent))))
+    (labels ((find-symbol-in-agent-packages (symbol)
+               (car (mapcar #'(lambda (package)
+                                (let ((sym (find-symbol (symbol-name symbol) package)))
+                                  (and (find-class sym nil)
+                                       sym)))
+                            *agent-packages*)))
+
+             (find-agent-or-explode (agent)
+               (let* ((agent-sym (ignore-errors (read-from-string agent)))
+                      (agent-sym (and agent-sym (symbolp agent-sym)
+                                      (find-symbol-in-agent-packages agent-sym))))
+                 (or agent-sym
+                     (error "No such agent `~A'" agent))))
+
+             ;; TODO: Add the right initargs conditionally
+             (start-agent (agent)
+               (format t "~A~%"
+                       `(start (make-runner :cli :class agent)))))
 
       (let ((agents (mapcar #'find-agent-or-explode agent-names)))
         (unless (mapc #'start-agent agents)
           (format t "ERROR: You must specify an agent.~%~%")
-          (funcall (get-command :help :function) "start"))))))
+          (funcall (get-command :help :function) `("start")))))))
 
 (defcommand repl (argv)
   "Start a REPL, or if forms are provided, evaluate the forms and terminate."

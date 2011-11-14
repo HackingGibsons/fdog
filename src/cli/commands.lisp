@@ -1,5 +1,20 @@
 (in-package :afdog-cli)
 
+(defcommand kill (argv)
+  "Kill the agents listed by UUID[s]"
+  (with-cli-options (argv "Usage: kill [options] uuid .. uuid~%~@{~A~%~}~%")
+      (&parameters
+       (timeout "Maximum length of time to allocate to the kill task.")
+       &free agent-uuids)
+    (with-agent-conversation (m e :timeout (or timeout 10)) agent-uuids
+      (unless (mapc #'(lambda (uuid)
+                        (format t "Killing -> ~A~%" uuid)
+                        (zmq:send! e (prepare-message `(:agent :kill :kill ,uuid))))
+                    agent-uuids)
+
+        (format t "[ERROR] No UUIDs were supplied.~%")
+        (funcall (get-command :help :function) `("kill"))))))
+
 (defcommand agents (argv)
   "List the agents available for spawning."
   (with-cli-options (argv "Usage: agents [options]~%~@{~A~%~}~%") nil

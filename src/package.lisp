@@ -32,8 +32,10 @@
 (defparameter *socket-address* "ipc:///tmp/afdog-logging")
 
 
-(defun version-string (&optional (version t) (revision t))
-  "Get a version string for people to read."
-  (format nil "~@{~A~^/~}"
-          (asdf:component-version (asdf:find-system :afdog))
-          *git-revision*))
+(defun version-string (&key (separator "/") (version t) (revision t))
+  "Get a version string for people to read. The parameters
+`version' and `revision' control the emission of the ASDF version and
+the git revision, if available split by `separator' as a single string."
+  (format nil (concatenate 'string "~@{~@[~A~]~^~:*~@[~*~@["separator"~]~]~}")
+          (and version (asdf:component-version (asdf:find-system :afdog)))
+          (and revision *git-revision*)))

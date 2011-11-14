@@ -53,7 +53,8 @@
 (defcommand start (argv)
   "Start an instance of the named agent with the given options."
   (with-cli-options (argv "Usage: start [options] agent-type~%~@{~A~%~}~%")
-      (&parameters (parent-uuid "The uuid of the parent agent to declare")
+      (&parameters (uuid "Force a UUID on the agent")
+                   (parent-uuid "The uuid of the parent agent to declare")
                    (parent-mouth "The mouth address of the parent named by the uuid. If omitted, a local IPC sock will be attempted instead.")
        &free agent-names)
     (when (and parent-uuid (not parent-mouth))
@@ -78,7 +79,7 @@
 
              (start-agent (agent)
                "Start the agent named by the symbol `agent'"
-               (let* ((uuid (format nil "~A" (uuid:make-v4-uuid)))
+               (let* ((uuid (or uuid (format nil "~A" (uuid:make-v4-uuid))))
                       (runner (eval `(make-runner ,*agent-spawner* :class ',agent :uuid ,uuid
                                                   ,@(when parent-uuid (list :parent-uuid parent-uuid))
                                                   ,@(when parent-mouth (list :parent-mouth parent-mouth))))))

@@ -14,13 +14,13 @@
                (zmq:send! ear (prepare-message `(:agent :kill :kill ,uuid))))
 
              (kill-agents (agent-uuids)
-               (with-agent-conversation (m e :timeout (or timeout 10)) agent-uuids
-                     (if blind
-                         (mapc #'kill-agent
-                               (make-list (length agent-uuids) :initial-element e)
-                               agent-uuids)
+               (let (found)
+                 (or (with-agent-conversation (m e :timeout (or timeout 10)) agent-uuids
+                       (if blind
+                           (setf found (mapc #'kill-agent
+                                             (make-list (length agent-uuids) :initial-element e)
+                                             agent-uuids))
 
-                         (let (found)
                            (do* ((msg (parse-message (read-message m)) (parse-message (read-message m)))
                                  (uuid (getf (getf msg :info) :uuid) (getf (getf msg :info) :uuid))
                                  (type (getf (getf msg :info) :type) (getf (getf msg :info) :type)))
@@ -29,7 +29,9 @@
                                         (find uuid agent-uuids :test #'equalp))
                                (format t "Killing -> ~A => ~A~%" type uuid)
                                (kill-agent e uuid :verbose nil)
-                               (push uuid found))))))))
+                               (push uuid found))))))
+                   (prog1 :timeout
+                     (format t "[WARN] ~A/~A killed!~%" (length found) (length agent-uuids))))))
 
       (unless (and agent-uuids (kill-agents agent-uuids))
         (format t "[ERROR] No UUIDs were supplied.~%")

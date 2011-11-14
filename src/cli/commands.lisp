@@ -3,15 +3,35 @@
 (defcommand kill (argv)
   "Kill the agents listed by UUID[s]"
   (with-cli-options (argv "Usage: kill [options] uuid .. uuid~%~@{~A~%~}~%")
-      (&parameters
+      ((blind "Don't search for agents, just fire messages at where they should be.")
+       &parameters
        (timeout "Maximum length of time to allocate to the kill task.")
        &free agent-uuids)
-    (with-agent-conversation (m e :timeout (or timeout 10)) agent-uuids
-      (unless (mapc #'(lambda (uuid)
-                        (format t "Killing -> ~A~%" uuid)
-                        (zmq:send! e (prepare-message `(:agent :kill :kill ,uuid))))
-                    agent-uuids)
 
+    (labels ((kill-agent (ear uuid &key (verbose t))
+               (when verbose
+                 (format t "Killing without query -> ~A~%" uuid))
+               (zmq:send! ear (prepare-message `(:agent :kill :kill ,uuid))))
+
+             (kill-agents (agent-uuids)
+               (with-agent-conversation (m e :timeout (or timeout 10)) agent-uuids
+                     (if blind
+                         (mapc #'kill-agent
+                               (make-list (length agent-uuids) :initial-element e)
+                               agent-uuids)
+
+                         (let (found)
+                           (do* ((msg (parse-message (read-message m)) (parse-message (read-message m)))
+                                 (uuid (getf (getf msg :info) :uuid) (getf (getf msg :info) :uuid))
+                                 (type (getf (getf msg :info) :type) (getf (getf msg :info) :type)))
+                                ((= (length found) (length agent-uuids)) found)
+                             (when (and (equalp (getf msg :agent) :info)
+                                        (find uuid agent-uuids :test #'equalp))
+                               (format t "Killing -> ~A => ~A~%" type uuid)
+                               (kill-agent e uuid :verbose nil)
+                               (push uuid found))))))))
+
+      (unless (and agent-uuids (kill-agents agent-uuids))
         (format t "[ERROR] No UUIDs were supplied.~%")
         (funcall (get-command :help :function) `("kill"))))))
 

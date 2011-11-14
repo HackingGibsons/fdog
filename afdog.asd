@@ -26,6 +26,8 @@
                          (:module "agent" :depends-on ("logging" "utils") :components
                                   ((:file "package")
                                    (:file "agent" :depends-on ("classes" "organs" "behavior"))
+                                   (:file "helpers" :depends-on ("package" "methods"))
+
 
                                    ;; Agent classes and bases
                                    (:module "classes" :depends-on ("package") :components

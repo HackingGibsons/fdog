@@ -1,4 +1,4 @@
-(in-package :afdog-tests)
+(in-package :agent)
 
 (defmacro with-agent-conversation ((mouth-binding ear-binding &key (timeout 25) (linger 250)) uuid &body forms)
   "Execute `forms' with `mouth-binding' and `ear-binding' bound to connected sockets
@@ -18,8 +18,8 @@ result."
                            (zmq:with-socket (,ear-binding ,g!context zmq:pub)
                              (zmq:setsockopt ,mouth-binding zmq:linger ,e!linger)
                              (zmq:setsockopt ,ear-binding zmq:linger ,e!linger)
-                             (zmq:connect ,mouth-binding (agent::local-ipc-addr ,e!agent :mouth))
-                             (zmq:connect ,ear-binding (agent::local-ipc-addr ,e!agent :ear))
+                             (zmq:connect ,mouth-binding (local-ipc-addr ,e!agent :mouth))
+                             (zmq:connect ,ear-binding (local-ipc-addr ,e!agent :ear))
                              (zmq:setsockopt ,mouth-binding zmq:subscribe "")
                              (setf ,g!result (progn ,@forms))))))
          (bt:timeout ()

@@ -30,6 +30,7 @@
            :parse-message
            :read-message
            :prepare-message
+           :with-agent-conversation
            :local-ipc-addr
            :agent-event-count
            :agent-context

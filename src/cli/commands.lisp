@@ -29,9 +29,9 @@
                                         (find uuid agent-uuids :test #'equalp))
                                (format t "Killing -> ~A => ~A~%" type uuid)
                                (kill-agent e uuid :verbose nil)
-                               (push uuid found))))))
-                   (prog1 :timeout
-                     (format t "[WARN] ~A/~A killed!~%" (length found) (length agent-uuids))))))
+                               (push uuid found)))))
+                     (prog1 :timeout
+                       (format t "[WARN] ~A/~A killed!~%" (length found) (length agent-uuids)))))))
 
       (unless (and agent-uuids (kill-agents agent-uuids))
         (format t "[ERROR] No UUIDs were supplied.~%")

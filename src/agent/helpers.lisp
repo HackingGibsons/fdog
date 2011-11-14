@@ -9,9 +9,10 @@ result."
         (e!linger (gensym "LINGER"))
         (g!context (gensym "CONTEXT"))
         (g!result (gensym "RESULT")))
-    `(let ((,e!agents (list ,@(if (symbolp uuid)
-                                 (list uuid)
-                                 uuid)))
+    `(let* ((,e!agents ,uuid)
+            (,e!agents (if (listp ,e!agents)
+                           ,e!agents
+                           (list ,e!agents)))
            (,e!linger ,linger)
            ,g!result)
        (handler-case (bt:with-timeout (,timeout)

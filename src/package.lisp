@@ -8,7 +8,8 @@
            :get-local-address
            :read-message
            :parse-message
-           :*git-revision*)
+           :*git-revision*
+           :version-string)
   (:export :*socket-linger*))
 
 (in-package :afdog)
@@ -29,3 +30,10 @@
       "The currently configured root path.")
 
 (defparameter *socket-address* "ipc:///tmp/afdog-logging")
+
+
+(defun version-string (&optional (version t) (revision t))
+  "Get a version string for people to read."
+  (format nil "~@{~A~^/~}"
+          (asdf:component-version (asdf:find-system :afdog))
+          *git-revision*))

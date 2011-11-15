@@ -1,15 +1,17 @@
 (in-package :agent)
 
-(defmacro with-agent-conversation ((mouth-binding ear-binding &key (timeout 25) (linger 250)) uuid &body forms)
+(defmacro with-agent-conversation ((mouth-binding ear-binding &key (timeout 25) (linger 250)) uuid-or-many &body forms)
   "Execute `forms' with `mouth-binding' and `ear-binding' bound to connected sockets
-to the ear and mouth of an agent with the `uuid' given using the local transport.
+to the ear and mouth of an agent or agents with the `uuid-or-many' UUIDs given using the local transport.
+`uuid-or-many' can either be a single UUID string or a list of them. The sockets will connect
+to agents named by every `uuid-or-many' received.
 The `forms' must execute within `timeout' (15 by default) or nil is returned instead of the
 result."
   (let ((e!agents (gensym "AGENT"))
         (e!linger (gensym "LINGER"))
         (g!context (gensym "CONTEXT"))
         (g!result (gensym "RESULT")))
-    `(let* ((,e!agents ,uuid)
+    `(let* ((,e!agents ,uuid-or-many)
             (,e!agents (if (listp ,e!agents)
                            ,e!agents
                            (list ,e!agents)))

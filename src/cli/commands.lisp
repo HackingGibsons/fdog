@@ -81,7 +81,7 @@
                "Start the agent named by the symbol `agent'"
                (let* ((uuid (or uuid (format nil "~A" (uuid:make-v4-uuid))))
                       (runner (apply #'make-runner *agent-spawner*
-                                     `(:class ',agent :uuid ,uuid
+                                     `(:class ,agent :uuid ,uuid
                                        ,@(when parent-uuid (list :parent-uuid parent-uuid))
                                        ,@(when parent-mouth (list :parent-mouth parent-mouth))))))
                  (start runner)

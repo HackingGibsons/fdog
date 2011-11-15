@@ -7,7 +7,15 @@
   (log-for (trace) "Message sent."))
 
 (defbehavior try-grabbing-public-port (:interval (:from :heart :nth 10) :do :invoke) (organ)
-  (let ((addr (format nil "tcp://~A:~A" (get-local-address :update t :as :string) *common-mouth-port*)))
+  (let ((addr (format nil "tcp://~A:~A" (get-local-address :update t :as :string) *common-mouth-port*))
+        (local-addr (format nil "tcp://~A:~A" "127.0.0.1" *common-mouth-port*)))
+
+    ;; I find it acceptable that different agents might be able to race
+    ;; to grab the localhost vs the local-addr since they should end up announcing
+    ;; the same information
+    (ignore-errors
+      (zmq:bind (speak-sock organ) local-addr)
+      (log-for (trace) "I seem to have bind'd successfully to ~A" local-addr))
     (ignore-errors
       (zmq:bind (speak-sock organ) addr)
       (log-for (trace) "I seem to have bind'd successfully to ~A" addr))))

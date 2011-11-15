@@ -37,6 +37,7 @@
            :run-agent
            :standard-state-machine
            :state
+           :machine
            :defstate
            :standard-state-machine-event
            :next-event

@@ -12,3 +12,8 @@
 (def-test (spawner-is-test :group basic-tests :fixtures (spawner-fixture))
     (:eql :test)
   afdog-tests::*spawner*)
+
+(def-test (state-machine-fires-boot-event-and-be-in-initial-state :group basic-tests :fixtures (test-state-machine-fixture))
+    (:seq :true (:eql :initial))
+  (list (test-machine-booted test-machine) (state test-machine)))
+

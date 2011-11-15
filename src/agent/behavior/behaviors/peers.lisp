@@ -6,6 +6,12 @@
                                  :say (:agent :info :info ,(agent-info (organ-agent organ)))))
   (log-for (trace) "Message sent."))
 
+(defbehavior try-grabbing-public-port (:interval (:from :heart :nth 10) :do :invoke) (organ)
+  (let ((addr (format nil "tcp://~A:~A" (get-local-address :update t :as :string) *common-mouth-port*)))
+    (ignore-errors
+      (zmq:bind (speak-sock organ) addr)
+      (log-for (trace) "I seem to have bind'd successfully to ~A" addr))))
+
 (defbehavior speak-when-told (:on (:command :speak :from :head) :do :invoke-with-event) (organ event)
   (let ((message (getf event :say)))
     (send-message organ :raw message :sock (speak-sock organ))

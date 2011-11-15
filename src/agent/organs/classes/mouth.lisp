@@ -1,5 +1,9 @@
 (in-package :agent)
 
+(defvar *common-mouth-port* 10101
+  "The common port that every agent tries to grab to broadcast network information
+out of.")
+
 (defclass agent-mouth (standard-beating-organ)
   ((speaking-to :initform (make-hash-table :test 'equalp)
                 :accessor speaking-to)
@@ -14,6 +18,7 @@
   (:default-initargs . (:tag :mouth)))
 
 (defmethod initialize-instance :after ((mouth agent-mouth) &key)
+  (make-try-grabbing-public-port mouth)
   (make-talk-where-told mouth)
   (make-speak-when-told mouth))
 

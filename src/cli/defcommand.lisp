@@ -9,8 +9,7 @@
 
 ;; Command definition helpers
 (defmacro defcommand (name args &body body)
-  "Create a function named fdog-cmd-`name' and add
-an entry to the `*commands*' table"
+  "Create a function named `*cmd-name-prefix'`name' and adds an entry to the `*commands*' table"
   (let* ((title name)
         (cmd-name (intern (string-upcase (concatenate 'string *cmd-name-prefix* (symbol-name title))))))
 
@@ -28,12 +27,3 @@ an entry to the `*commands*' table"
            (:name (car cmd))
            (:function (cdr cmd))
            (:doc (documentation (get-command name :function) 'function))))))
-
-
-(defun path-or-cwd (maybe-path)
-  (let* ((path (or (if (listp maybe-path)
-                       (car maybe-path)
-                       maybe-path)
-                   (getcwd)))
-         (path (if (ppcre:scan "/$" path) path (format nil "~A/" path))))
-    path))

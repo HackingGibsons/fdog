@@ -243,9 +243,9 @@ as fire any callbacks that may be pending IO when it is ready."
   nil)
 
 (defmethod agent-info ((agent standard-agent))
-  (append `(:uuid ,(agent-uuid agent))
+  (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent))
           (loop for organ in (agent-organs agent)
-               appending (agent-info organ))))
+             appending (agent-info organ))))
 
 ;; Utils
 ;; TODO: Extract these to a file

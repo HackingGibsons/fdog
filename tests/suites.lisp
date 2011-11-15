@@ -5,11 +5,13 @@
   (:include-groups basic-tests
                    runner-tests
                    basic-behavior-tests
-                   supervision-tests))
+                   supervision-tests
+                   cli-tests))
 
 
 ;; Directly runnable
 (def-test-group basic-tests ())
+(def-test-group cli-tests ())
 
 ;; Event ran
 (def-test-group booted-agent-tests ())

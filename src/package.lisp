@@ -7,10 +7,14 @@
            :make-local-sock
            :get-local-address
            :read-message
-           :parse-message)
+           :parse-message
+           :*git-revision*
+           :version-string)
   (:export :*socket-linger*))
 
 (in-package :afdog)
+
+(defvar *git-revision* "HEAD")
 
 (defparameter *socket-linger* 250
   "The linger period to use on all the zmq sockets.")
@@ -26,3 +30,12 @@
       "The currently configured root path.")
 
 (defparameter *socket-address* "ipc:///tmp/afdog-logging")
+
+
+(defun version-string (&key (separator "/") (version t) (revision t))
+  "Get a version string for people to read. The parameters
+`version' and `revision' control the emission of the ASDF version and
+the git revision, if available split by `separator' as a single string."
+  (format nil (concatenate 'string "~@{~@[~A~]~^~:*~@[~*~@["separator"~]~]~}")
+          (and version (asdf:component-version (asdf:find-system :afdog)))
+          (and revision *git-revision*)))

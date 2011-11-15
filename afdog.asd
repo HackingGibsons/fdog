@@ -1,10 +1,14 @@
 (asdf:defsystem #:afdog
+  :version "0.0.0"
   :depends-on (#:closer-mop
                #:ip-interfaces
                #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
                #:uuid
+               #:swank
+               #:unix-options
                #:log5
                #:bordeaux-threads
+               #:cl-ppcre
                #:zeromq
                #:trivial-gray-streams)
   :in-order-to ((test-op (load-op afdog-tests)))
@@ -22,6 +26,8 @@
                          (:module "agent" :depends-on ("logging" "utils") :components
                                   ((:file "package")
                                    (:file "agent" :depends-on ("classes" "organs" "behavior"))
+                                   (:file "helpers" :depends-on ("package" "methods"))
+
 
                                    ;; Agent classes and bases
                                    (:module "classes" :depends-on ("package") :components
@@ -58,7 +64,13 @@
                                              (:module "methods" :depends-on ("classes") :components
                                                       ((:file "heart")
                                                        (:file "eye")
-                                                       (:file "head")))))))))
+                                                       (:file "head")))))))
+
+                         (:module "cli" :depends-on ("agent") :components
+                                  ((:file "package")
+                                   (:file "runner" :depends-on ("package"))
+                                   (:file "defcommand" :depends-on ("package"))
+                                   (:file "commands" :depends-on ("defcommand"))))))
 
                (:module "utils" :depends-on ("src") :components
                         ((:file "package")

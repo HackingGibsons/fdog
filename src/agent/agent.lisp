@@ -39,15 +39,23 @@ result into the desired type.")
          :accessor runner-lisp
          :initarg :lisp)
    (lisp-options :initform '("--disable-debugger")
+                 :initarg :options
                  :accessor runner-lisp-options)
    (init-forms :initform `((load ,(namestring (merge-pathnames "setup.lisp" ql:*quicklisp-home*)))
                            (ql:quickload :afdog))
+               :initarg :init
                :accessor init-forms
                :documentation "Forms to get the lisp image ready to execute the runtime code.")
+   (exec-form-prefix :initform "--eval"
+                     :initarg :exec-prefix
+                     :accessor exec-form-prefix
+                     :documentation "An argument to add before every form on the command line.")
    (exec-forms :initform `()
+               :accessor :exec
                :accessor exec-forms
                :documentation "Forms to cause the execution of the agent.")
    (terminate-forms :initform `((sb-ext:quit :unix-status 0))
+                    :initarg :terminate
                     :accessor terminate-forms
                     :documentation "Forms to cause the death of this process after execution."))
   (:documentation "Load up a new interpreter, and follow some steps to load an agent as requested."))
@@ -80,8 +88,9 @@ result into the desired type.")
   (unless (running-p runner)
     (flet ((prepare-forms (forms)
              (loop for form in forms appending
-                  (list "--eval"
-                        (with-output-to-string (s) (prin1 form s))))))
+                  (remove nil
+                          (list (exec-form-prefix runner)
+                                (with-output-to-string (s) (prin1 form s)))))))
 
       (start-logging :category category)
 

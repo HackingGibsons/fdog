@@ -30,6 +30,7 @@
            :parse-message
            :read-message
            :prepare-message
+           :with-agent-conversation
            :local-ipc-addr
            :agent-event-count
            :agent-context
@@ -40,7 +41,6 @@
 
 (in-package :agent)
 
-(defparameter *spawner* :thread
+(defvar *spawner* :thread
   "The type of maker to use to spawn agents. Define it in another package
 to specify how agents in that package should spawn.")
-

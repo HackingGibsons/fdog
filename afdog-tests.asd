@@ -2,9 +2,8 @@
   :depends-on (#:afdog #:nst)
   :components ((:module "tests" :components
                         ((:file "package")
-                         (:file "helpers" :depends-on ("package"))
 
-                         (:module "fixtures" :depends-on ("helpers") :components
+                         (:module "fixtures" :depends-on ("package") :components
                                   ((:module "behaviors" :components
                                             ((:file "triggers")))
 
@@ -14,9 +13,10 @@
 
                          (:file "suites"   :depends-on ("fixtures"))
 
-                         (:module "tests" :depends-on ("suites" "helpers") :components
+                         (:module "tests" :depends-on ("suites") :components
                                   ((:file "basic")
                                    (:file "booted")
+                                   (:file "cli")
                                    (:file "behavior")
                                    (:file "supervision")
                                    (:file "agent")))))))

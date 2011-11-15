@@ -5,9 +5,10 @@ VERBOSITY ?= 2 # [0, 3]
 # Helper
 SHUTUP = > /dev/null 2> /dev/null
 
-init: sanity-check quicklisp asdf externals
+init: sanity-check quicklisp asdf
 	@echo "=> Vendor init"
 	$(MAKE) -C $(ROOT)/vendor init
+	$(MAKE) externals
 
 
 sanity-check: $(ROOT)/$(TARGET).asd $(LISP) $(QL_SETUP)

@@ -1,6 +1,5 @@
 (defpackage #:afdog-cli
   (:use #:cl)
-  (:use #:log5)
   (:use :afdog)
   (:use :agent)
   (:use :unix-options)

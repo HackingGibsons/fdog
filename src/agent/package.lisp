@@ -36,6 +36,9 @@
            :agent-organs
            :run-agent
            :standard-state-machine
+           :state
+           :defstate
+           :standard-state-machine-event
            :next-event
            :suicide))
 

@@ -1,7 +1,8 @@
 (defpackage #:afdog-tests
   (:use #:cl
         #:afdog
-        #:agent)
+        #:agent
+        #:afdog-cli)
   (:use #:nst)
 
   (:shadow :*spawner*)

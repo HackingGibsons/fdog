@@ -9,7 +9,9 @@
   (:shadowing-import-from :sb-ext quit)
 
   (:export :main
-           :*self*))
+           :*self*
+           :defcommand
+           :get-command))
 
 (in-package :afdog-cli)
 

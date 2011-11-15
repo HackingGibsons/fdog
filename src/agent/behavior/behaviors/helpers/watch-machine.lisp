@@ -3,7 +3,17 @@
 (defcategory watch-machine)
 
 (defclass standard-watch-machine (standard-state-machine)
-  ((thing-info :initform nil :initarg :thing-info
+  ((behavior :initform nil :initarg :behavior
+             :accessor behavior
+             :documentation "The behavior that owns this watch-machine")
+   (timestamps :initform nil
+               :accessor timestamps
+               :documentation "A plist of timestamps that some events might need to use.
+Like the created-at date of a thing.")
+   (fail-after :initform (* internal-time-units-per-second 15)
+               :reader fail-after
+               :documentation "The interval of time in internal time units to wait for the construction of a thing.")
+   (thing-info :initform nil :initarg :thing-info
                :accessor thing-info
                :documentation "The information required to re-construct the object initially and repeatedly in case of failure."))
   (:metaclass c2mop:funcallable-standard-class)

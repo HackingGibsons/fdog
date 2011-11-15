@@ -3,23 +3,12 @@
 (defcategory state-machine)
 
 (defclass standard-state-machine (c2mop:funcallable-standard-object)
-  ((behavior :initform nil :initarg :behavior
-             :accessor behavior
-             :documentation "The behavior that owns this state-machine")
-   (state :initform :initial :initarg :state
+  ((state :initform :initial :initarg :state
           :accessor state
           :documentation "The current state of the state-machine.")
    (last-event :initform (get-internal-real-time)
                :accessor last-event
-               :documentation "The timestamp of the last event.")
-
-   (timestamps :initform nil
-               :accessor timestamps
-               :documentation "A plist of timestamps that some events might need to use.
-Like the created-at date of a thing.")
-   (fail-after :initform (* internal-time-units-per-second 15)
-               :reader fail-after
-               :documentation "The interval of time in internal time units to wait for the construction of a thing."))
+               :documentation "The timestamp of the last event."))
 
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "(funcall this-instance event-from-bus)

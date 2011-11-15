@@ -35,6 +35,7 @@
            :agent-context
            :agent-organs
            :run-agent
+           :standard-state-machine
            :next-event
            :suicide))
 

@@ -35,3 +35,40 @@ result."
            (format t "[WARN] Agent ~A conversation timing out!~%" ,e!agents)
            nil))
        ,g!result)))
+
+(defcategory discover-agents)
+(defmacro discover-agents-on-host ((&key (host "127.0.0.1") (timeout 25)) arglist &body forms)
+  "Look for an agent's public mouth on the host `host' for `timeout'
+Each time an agent info message arrives the `forms' will be evaluated with bindings as in the arglist
+invoked as in (flet ((f arglist forms)) (f uuid info-plist))
+If the `forms' evaluate to non-nil, the form terminates returning the result.
+If the timeout is reached nil is returned."
+  (let ((g!context (gensym "CONTEXT"))
+        (g!seek-sock (gensym "SEEK-SOCK"))
+        (g!msg (gensym "MSG"))
+        (g!info (gensym "INFO"))
+        (g!uuid (gensym "UUID"))
+        (g!process-agent (gensym "PROCESS-AGENT"))
+        (g!result (gensym "RESULT"))
+
+        (e!host (gensym "HOST")))
+    `(let ((,e!host ,host))
+       (labels ((,g!process-agent ,arglist ,@forms)
+                (discover-agents ()
+                  (zmq:with-context (,g!context 1)
+                    (zmq:with-socket (,g!seek-sock ,g!context zmq:sub)
+                      (zmq:connect ,g!seek-sock (format nil "tcp://~A:~A" ,e!host agent::*common-mouth-port*))
+                      (zmq:setsockopt ,g!seek-sock zmq:subscribe "")
+
+                      (do* ((,g!msg (parse-message (read-message ,g!seek-sock))
+                                    (parse-message (read-message ,g!seek-sock)))
+                            (,g!info (and (getf ,g!msg :agent) (getf ,g!msg :info))
+                                     (and (getf ,g!msg :agent) (getf ,g!msg :info)))
+                            (,g!uuid (getf ,g!info :uuid)
+                                     (getf ,g!info :uuid))
+                            (,g!result (and ,g!info ,g!uuid
+                                           (,g!process-agent ,g!uuid ,g!info))))
+                           (,g!result ,g!result))))))
+
+         (handler-case (bt:with-timeout (,timeout) (discover-agents))
+           (bt:timeout () nil))))))

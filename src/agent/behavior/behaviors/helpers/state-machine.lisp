@@ -80,6 +80,6 @@ result in event starvation."
 
 ;; Default state
 (defstate standard-state-machine :boot (info)
-  "This event is an entry point to get the machine into the :initial state with waiting for an event to fire"
+  "This event is an entry point to get the machine into the :initial state without waiting for an event to fire"
   (log-for (trace state-machine) "Booting ~A with :boot" machine)
   :initial)

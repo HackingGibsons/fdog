@@ -94,3 +94,22 @@
 Does kill -9 to ensure the process dies in cleanup.")
   (old-pid)
   (pid))
+
+(defclass test-state-machine (standard-state-machine)
+  ((booted :initform nil :accessor test-machine-booted :documentation "When the boot event is fired this should be set to true."))
+  (:metaclass c2mop:funcallable-standard-class)
+  (:documentation "A test state machine to assert against."))
+
+(defmethod standard-state-machine-event :after ((machine test-state-machine) (state (eql :initial)) info)
+  (setf (test-machine-booted machine) t))
+
+(defstate test-state-machine :initial (info)
+  (when (eql info '(:event :test))
+    :test))
+
+(defstate test-state-machine :test (info)
+  :test)
+
+(def-fixtures test-state-machine-fixture
+    (:documentation "A fixture that instantiates a test state machine.")
+  (test-machine (make-instance 'test-state-machine)))

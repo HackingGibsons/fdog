@@ -12,3 +12,16 @@
 (def-test (spawner-is-test :group basic-tests :fixtures (spawner-fixture))
     (:eql :test)
   afdog-tests::*spawner*)
+
+(def-test (state-machine-fires-boot-event-and-be-in-initial-state :group basic-tests :fixtures (test-state-machine-fixture))
+    (:seq :true (:eql :initial))
+  (list (test-machine-booted test-machine) (state test-machine)))
+
+(def-test (state-machine-transitions :group basic-tests :fixtures (test-state-machine-fixture)) :process
+  (:eval (funcall test-machine '(:event :test)))
+  (:check (:true-form (eql :test (state test-machine)))))
+
+(def-test (state-machine-does-not-transition-with-bogus-event :group basic-tests :fixtures (test-state-machine-fixture)) :process
+  (:eval (funcall test-machine '(:event :bogus)))
+  (:check (:true-form (eql :initial (state test-machine)))))
+

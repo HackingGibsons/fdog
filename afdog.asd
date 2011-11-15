@@ -45,7 +45,8 @@
                                              (:file "defbehavior" :depends-on ("classes"))
                                              (:module "behaviors" :depends-on ("defbehavior") :components
                                                       ((:module "helpers" :components
-                                                                ((:file "watch-machine")))
+                                                                ((:file "state-machine")
+                                                                 (:file "watch-machine" :depends-on ("state-machine"))))
                                                        (:file "peers")
                                                        (:file "manipulation")
                                                        (:file "supervision" :depends-on ("helpers"))

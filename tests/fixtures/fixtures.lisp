@@ -104,7 +104,11 @@ Does kill -9 to ensure the process dies in cleanup.")
   (setf (test-machine-booted machine) t))
 
 (defstate test-state-machine :initial (info)
-  :initial)
+  (when (eql info '(:event :test))
+    :test))
+
+(defstate test-state-machine :test (info)
+  :test)
 
 (def-fixtures test-state-machine-fixture
     (:documentation "A fixture that instantiates a test state machine.")

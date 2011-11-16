@@ -220,3 +220,14 @@
 (def-test (agent-opens-common-mouth :group basic-behavior-tests :fixtures (running-agent-fixture))
     :true
   (discover-agents-on-host () (uuid info) uuid))
+
+(def-test (can-discover-parent-and-child :group basic-behavior-tests :fixtures (started-parent-and-child))
+    :true
+    (flet ((has-both-uuids (found-uuids)
+             (and (find uuid found-uuids :test #'equalp)
+                  (find kid-uuid found-uuids :test #'equalp))))
+      (let (found)
+        (discover-agents-on-host (:traverse t) (uuid info)
+          (declare (ignorable info))
+          (has-both-uuids
+           (pushnew uuid found :test #'equalp))))))

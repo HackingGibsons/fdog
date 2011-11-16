@@ -1,5 +1,6 @@
 (in-package :agent)
 
+(export '*common-mouth-port*)
 (defvar *common-mouth-port* 10101
   "The common port that every agent tries to grab to broadcast network information
 out of.")

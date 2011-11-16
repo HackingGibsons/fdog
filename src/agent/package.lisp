@@ -31,6 +31,7 @@
            :read-message
            :prepare-message
            :with-agent-conversation
+           :discover-agents-on-host
            :local-ipc-addr
            :agent-event-count
            :agent-context

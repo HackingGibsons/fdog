@@ -85,6 +85,7 @@ If the timeout is reached nil is returned."
                                    (destructuring-bind (uuid &key ear mouth) peer
                                      (declare (ignorable ear))
                                      (unless (find uuid ,g!connected :test #'equalp)
+                                       (push uuid ,g!connected)
                                        (zmq:connect ,g!seek-sock mouth)))))
                             (mapc #'maybe-connect ,g!peers))))))))
 

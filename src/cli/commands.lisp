@@ -1,5 +1,26 @@
 (in-package :afdog-cli)
 
+(defcommand list (argv)
+  "List running agents that can be discovered."
+  (with-cli-options (argv "Usage: list [options]~%~@{~A~%~}~%")
+      (&parameters
+       (timeout "How long to collect data before quiting."))
+    (let ((wait (or (and timeout (parse-integer timeout))
+                    25))
+          agents)
+      (format t "Searching for agents for ~A seconds. ^C to stop...~%" wait)
+      (tagbody
+         (sb-sys:enable-interrupt sb-posix:sigint #'(lambda (&rest args)
+                                                      (format t "~&Exiting!~%")
+                                                      (go finish)))
+         (discover-agents-on-host (:traverse t :timeout wait) (uuid info)
+           (prog1 nil ;; Search until we hit timeout
+             (unless (find uuid agents :test #'equalp)
+               (format t "Agent: ~A / ~A~%" uuid (getf info :type))
+               (push uuid agents))))
+       finish
+         (format t "Found: ~A agents.~%" (length agents))))))
+
 (defcommand kill (argv)
   "Kill the agents listed by UUID[s]"
   (with-cli-options (argv "Usage: kill [options] uuid .. uuid~%~@{~A~%~}~%")

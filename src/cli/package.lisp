@@ -21,6 +21,14 @@
 (defgeneric main (argv)
   (:documentation "The main entry point to the CLI interface of the application.")
   (:method :before (argv)
+           ;; Without this we would get reliably random numbers in saved cores
+           ;; but not otherwise. And by reliably random, I mean identical sequences between
+           ;; execution. The bad kind.
+           (setf *random-state* (make-random-state t)
+                 ;; And isn't it nice of uuid to both keep a separate random state
+                 ;; and to make it private?
+                 uuid::*uuid-random-state* (make-random-state t))
+
            #+sbcl (sb-ext:disable-debugger))
 
   (:method :around (argv)

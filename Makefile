@@ -19,7 +19,7 @@ define HELP
 	echo "make help"
 	echo "  This noise"
 	echo
-	echo "make init"
+	echo "make develop"
 	echo "  Configures the submodules, vendor packages, user lisp dependencies"
 	echo "  and anything else needed to actually boot the package"
 	echo

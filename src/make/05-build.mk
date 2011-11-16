@@ -2,6 +2,11 @@
 BINDIR ?= $(ROOT)/bin
 BIN ?= $(BINDIR)/$(TARGET)
 
+## Developer setup ##
+.PHONY: develop
+develop: | init asdf
+	@echo "=> You should be good to go."
+
 
 ## Buildapp ##
 BUILDAPP ?= $(BINDIR)/buildapp

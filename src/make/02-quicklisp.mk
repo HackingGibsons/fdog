@@ -4,7 +4,7 @@ QL_URL ?= "https://github.com/quicklisp/quicklisp-bootstrap/raw/master/quicklisp
 QL_ROOT_PATH = $(HOME)/$(QL_ROOT_NAME)
 QL_SETUP = $(QL_ROOT_PATH)/setup.lisp
 
-quicklisp: $(LISP) $(QL_SETUP) quicklisp-test
+quicklisp: $(LISP_BIN) $(QL_SETUP) quicklisp-test
 
 quicklisp-test:
 	@echo "=> Verifying Quicklisp load ...\c"

@@ -1,5 +1,6 @@
 # Lithp thtuff
-LISP ?= $(shell which sbcl || echo /sbcl/does/not/exist)
+LISP_BIN ?= $(shell which sbcl || echo /sbcl/does/not/exist)
+LISP ?= CL_SOURCE_REGISTRY='$(ROOT):$(ROOT)/vendor//' $(LISP_BIN)
 
 # Asdf configuration
 REGISTRYD ?= $(HOME)/.config/common-lisp/source-registry.conf.d

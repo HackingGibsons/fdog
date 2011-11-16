@@ -216,3 +216,7 @@
               (not (getf msg :exists))
               (null (getf msg :contents)))
          t))))
+
+(def-test (agent-opens-common-mouth :group basic-behavior-tests :fixtures (running-agent-fixture))
+    :true
+  (discover-agents-on-host () (uuid info) uuid))

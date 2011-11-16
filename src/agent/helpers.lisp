@@ -37,10 +37,11 @@ result."
        ,g!result)))
 
 (defcategory discover-agents)
-(defmacro discover-agents-on-host ((&key (host "127.0.0.1") (timeout 25)) arglist &body forms)
+(defmacro discover-agents-on-host ((&key (host "127.0.0.1") (timeout 25) (traverse t)) arglist &body forms)
   "Look for an agent's public mouth on the host `host' for `timeout'
 Each time an agent info message arrives the `forms' will be evaluated with bindings as in the arglist
 invoked as in (flet ((f arglist forms)) (f uuid info-plist))
+If `traverse' is true, it will connect to every peer it finds after the first.
 If the `forms' evaluate to non-nil, the form terminates returning the result.
 If the timeout is reached nil is returned."
   (let ((g!context (gensym "CONTEXT"))
@@ -49,12 +50,18 @@ If the timeout is reached nil is returned."
         (g!info (gensym "INFO"))
         (g!uuid (gensym "UUID"))
         (g!process-agent (gensym "PROCESS-AGENT"))
-        (g!result (gensym "RESULT"))
+        (g!peers (gensym "PEERS"))
+        (g!connected (gensym "CONNECTED"))
+        (g!discover-agents (gensym "DISCOVER"))
 
+        (g!result (gensym "RESULT"))
+        (e!traverse (gensym "TRAVERSE"))
         (e!host (gensym "HOST")))
-    `(let ((,e!host ,host))
+    `(let ((,e!host ,host)
+           (,g!connected nil)
+           (,e!traverse ,traverse))
        (labels ((,g!process-agent ,arglist ,@forms)
-                (discover-agents ()
+                (,g!discover-agents ()
                   (zmq:with-context (,g!context 1)
                     (zmq:with-socket (,g!seek-sock ,g!context zmq:sub)
                       (zmq:connect ,g!seek-sock (format nil "tcp://~A:~A" ,e!host agent::*common-mouth-port*))
@@ -66,9 +73,20 @@ If the timeout is reached nil is returned."
                                      (and (getf ,g!msg :agent) (getf ,g!msg :info)))
                             (,g!uuid (getf ,g!info :uuid)
                                      (getf ,g!info :uuid))
+                            (,g!peers (getf ,g!info :peers)
+                                      (getf ,g!info :peers))
                             (,g!result (and ,g!info ,g!uuid
+                                           (,g!process-agent ,g!uuid ,g!info))
+                                       (and ,g!info ,g!uuid
                                            (,g!process-agent ,g!uuid ,g!info))))
-                           (,g!result ,g!result))))))
+                           (,g!result ,g!result)
+                        (when (and ,g!peers ,e!traverse)
+                          (flet ((maybe-connect (peer)
+                                   (destructuring-bind (uuid &key ear mouth) peer
+                                     (declare (ignorable ear))
+                                     (unless (find uuid ,g!connected :test #'equalp)
+                                       (zmq:connect ,g!seek-sock mouth)))))
+                            (mapc #'maybe-connect ,g!peers))))))))
 
-         (handler-case (bt:with-timeout (,timeout) (discover-agents))
+         (handler-case (bt:with-timeout (,timeout) (,g!discover-agents))
            (bt:timeout () nil))))))

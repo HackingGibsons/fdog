@@ -24,8 +24,14 @@
            #+sbcl (sb-ext:disable-debugger))
 
   (:method :around (argv)
+           (sb-sys:enable-interrupt sb-posix:sigint
+                                    #'(lambda (&rest args)
+                                        (format t "~&Interrupted!~%")
+                                        (quit :unix-status sb-posix:sigint)))
            (let ((*spawner* *agent-spawner*))
-             (call-next-method)))
+             (call-next-method))
+
+           (sb-sys:default-interrupt sb-posix:sigint))
 
   (:method (argv)
     (destructuring-bind (self &rest args) argv

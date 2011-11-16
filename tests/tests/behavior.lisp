@@ -219,7 +219,9 @@
 
 (def-test (agent-opens-common-mouth :group basic-behavior-tests :fixtures (running-agent-fixture))
     :true
-  (discover-agents-on-host () (uuid info) uuid))
+  (discover-agents-on-host () (uuid info)
+    (declare (ignorable info))
+    uuid))
 
 (def-test (can-discover-parent-and-child :group basic-behavior-tests :fixtures (started-parent-and-child))
     :true

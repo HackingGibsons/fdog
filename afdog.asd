@@ -70,7 +70,9 @@
                                                       ((:file "heart")
                                                        (:file "eye")
                                                        (:file "head")))))))
-
+                         (:module "agents" :depends-on ("agent") :components
+                                  ((:file "packages")
+                                   (:file "mongrel2-control-agent" :depends-on ("packages"))))
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")
                                    (:file "runner" :depends-on ("package"))
@@ -80,8 +82,6 @@
                (:module "utils" :depends-on ("src") :components
                         ((:file "package")
                          (:file "listener")))))
-
-
 
 ;; Test operation
 (defmethod perform ((o asdf:test-op) (c (eql (asdf:find-system :afdog))))

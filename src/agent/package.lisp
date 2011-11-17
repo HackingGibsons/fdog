@@ -6,6 +6,7 @@
            :defbehavior
            :behavior
            :send-message
+           :standard-manager-agent
            :standard-leaf-agent
            :standard-hypervisor-agent
            :find-organ

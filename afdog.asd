@@ -72,7 +72,7 @@
                                                        (:file "head")))))))
                          (:module "agents" :depends-on ("agent") :components
                                   ((:file "packages")
-                                   (:file "mongrel2-control-agent" :depends-on ("packages"))))
+                                   (:file "mongrel2-agent" :depends-on ("packages"))))
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")
                                    (:file "runner" :depends-on ("package"))

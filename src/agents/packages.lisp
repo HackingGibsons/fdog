@@ -1,4 +1,7 @@
 (defpackage #:mongrel2-agent
   (:documentation "Mongrel2 afdog agent and compontents.")
-  (:use #:agent #:cl #:log5 #:clsql))
+  (:use #:cl)
+  (:use #:agent
+        #:log5))
 
+;(clsql:initialize-database-type :database-type :sqlite3)

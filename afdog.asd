@@ -10,7 +10,11 @@
                #:bordeaux-threads
                #:cl-ppcre
                #:zeromq
-               #:trivial-gray-streams)
+               #:trivial-gray-streams
+
+               ;; Somehow, if these aren't the last deps iolib fails to build :(
+               #:alexandria
+               #:cffi)
   :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components
                         ;; Base project scaffold

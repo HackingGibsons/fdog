@@ -31,17 +31,17 @@ $(BIN): $(BUILDAPP)
 	@echo "=> Building $(TARGET) => $(BIN)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/build/lib/ \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(BUILDAPP) --output $(BIN) \
-				--asdf-path $(ROOT) \
-				--asdf-tree $(ROOT)/vendor \
-				--eval '(sb-ext:disable-debugger)' \
-                --load $(ROOT)/src/patches/build.lisp \
-				--require sb-aclrepl \
-				--load $(QL_SETUP) \
-				--eval '(ql:quickload :afdog)' \
-                --eval "(setf afdog:*git-revision* \"$$(git rev-parse HEAD || echo UNKNOWN)\")" \
-				--eval "(swank-loader:init :load-contribs t)" \
-				--dispatched-entry '/afdog-cli:main' \
+	$(LISP_PREFIX) $(BUILDAPP) --output $(BIN) \
+				               --asdf-path $(ROOT) \
+				               --asdf-tree $(ROOT)/vendor \
+				               --eval '(sb-ext:disable-debugger)' \
+                               --load $(ROOT)/src/patches/build.lisp \
+				               --require sb-aclrepl \
+				               --load $(QL_SETUP) \
+				               --eval '(ql:quickload :afdog)' \
+                               --eval "(setf afdog:*git-revision* \"$$(git rev-parse HEAD || echo UNKNOWN)\")" \
+				               --eval "(swank-loader:init :load-contribs t)" \
+				               --dispatched-entry '/afdog-cli:main' \
 	|| { \
 	       echo '[ERROR] Build failed!'; \
            rm -f $(BIN); \

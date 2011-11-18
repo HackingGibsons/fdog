@@ -84,6 +84,7 @@
        :db-kind :key
        :reader mongrel2-host-id)
    (server-id :type integer
+              :accessor mongrel2-host-server-id
               :initarg :server-id)
    (maintenance :type integer :db-type "BOOLEAN"
                 :initform 0)
@@ -168,6 +169,7 @@
              :initarg :reversed
              :initform 0)
    (host-id :type integer
+            :accessor mongrel2-route-host-id
             :initarg :host-id)
    (host :db-kind :join
          :accessor mongrel2-route-host

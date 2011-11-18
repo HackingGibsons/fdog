@@ -17,6 +17,9 @@
            ;; m2sh methods
            :init
            :make-server
+           :make-host
+           :make-route
+           :make-dir
            :servers
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
@@ -49,6 +52,7 @@
              :mongrel2-host-matching
              :mongrel2-host-routes
              :mongrel2-host-server
+             :mongrel2-host-server-id
            :mongrel2-handler
              :mongrel2-handler-send-ident
              :mongrel2-handler-recv-ident
@@ -64,6 +68,7 @@
              :mongrel2-route-path
              :mongrel2-route-target
              :mongrel2-route-host
+             :mongrel2-route-host-id
            :mongrel2-target-route
            :mongrel2-setting
              :make-mongrel2-setting

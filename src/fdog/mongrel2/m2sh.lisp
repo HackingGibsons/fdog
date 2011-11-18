@@ -18,6 +18,25 @@
     (clsql:update-records-from-instance server)
     server))
 
+(defun make-host (name &optional matching)
+  (let ((host (make-instance 'mongrel2-host :name name)))
+    (when matching
+      (setf (slot-value host 'fdog-models::matching) matching))
+    (clsql:update-records-from-instance host)
+    host))
+
+(defun make-route (path target)
+  (let ((route (make-instance 'mongrel2-route :path path)))
+    (setf (slot-value route 'fdog-models::target) target)
+    (clsql:update-records-from-instance route)
+    route))
+
+(defun make-dir (base &optional (index "index.html"))
+  (let ((dir (make-instance 'mongrel2-directory :base base :index index)))
+    (clsql:update-records-from-instance dir)
+    dir))
+
+
 (defun servers (&key uuid host name (refresh nil) one)
   "Return a list of servers given a :uuid and :host
 Omitted, all servers are returned"

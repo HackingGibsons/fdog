@@ -95,6 +95,15 @@ Does kill -9 to ensure the process dies in cleanup.")
   (old-pid)
   (pid))
 
+(def-fixtures running-process-fixture
+ (:cleanup (ignore-errors (iolib.syscalls:kill process-pid iolib.syscalls:sigkill))
+
+  :documentation "A fixture that holds a running process.
+Does kill -9 to ensure the process dies in cleanup.")
+
+  (process (sb-ext:run-program "/usr/bin/yes" `(,(prin1-to-string (uuid:make-v4-uuid))) :wait nil))
+  (process-pid (sb-ext:process-pid process)))
+
 (defclass test-state-machine (standard-state-machine)
   ((booted :initform nil :accessor test-machine-booted :documentation "When the boot event is fired this should be set to true."))
   (:metaclass c2mop:funcallable-standard-class)

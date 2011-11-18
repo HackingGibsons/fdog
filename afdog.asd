@@ -9,6 +9,7 @@
                #:bordeaux-threads
                #:cl-ppcre
                #:trivial-gray-streams
+               #:external-program
 
                ;; Vendord
                #:clsql
@@ -78,7 +79,14 @@
                          (:module "fdog" :depends-on ("agent") :components
                                   ((:module "agents" :components
                                            ((:file "packages")
-                                            (:file "mongrel2-agent" :depends-on ("packages"))))))
+                                            (:file "mongrel2-agent" :depends-on ("packages"))))
+
+                                   (:module "mongrel2" :depends-on ("agents") :components
+                                                     ((:file "package")
+                                                      (:file "data")
+                                                      (:file "models" :depends-on ("package" "helpers"))
+                                                      (:file "methods" :depends-on ("models"))
+                                                      (:file "helpers" :depends-on ("package"))))))
 
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")

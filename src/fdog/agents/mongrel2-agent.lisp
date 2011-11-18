@@ -39,9 +39,16 @@
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
-  (let ((head (find-organ agent :head))
-        (config (merge-pathnames (make-pathname :directory '(:relative "server") :name "config" :type "sqlite")
-                                 *root*)))
+  (let* ((head (find-organ agent :head))
+         (server (merge-pathnames (make-pathname :directory '(:relative "server")) *root*))
+         (config (merge-pathnames (make-pathname :name "config" :type "sqlite")
+                                  server))
+         (logs (merge-pathnames (make-pathname :directory '(:relative "logs"))
+                                server))
+         (tmp (merge-pathnames (make-pathname :directory '(:relative "tmp"))
+                               server))
+         (run (merge-pathnames (make-pathname :directory '(:relative "run"))
+                               server)))
     (labels ((make-mongrel2-arguments (server)
                (let ((uuid (fdog-models:mongrel2-server-uuid server)))
                  `(:path "mongrel2" :args ,(list (namestring config) uuid))))
@@ -56,11 +63,14 @@
                                                                        :make ,arguments))))))
 
       (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
-      (ensure-directories-exist config :verbose t)
+      (mapc #'(lambda (p)
+                (format t "path ~A ~%" p)
+                (ensure-directories-exist p :verbose t)) (list config logs run tmp))
 
       (fdog-models:connect)
       (let ((tables (clsql:list-tables)))
         (unless (find "SERVER" tables :test #'string-equal)
+          (format t "Setting up a default configuration.~%")
           (initialize-mongrel2-configuration)))
 
       (mapc #'link-server (fdog-models:servers)))))

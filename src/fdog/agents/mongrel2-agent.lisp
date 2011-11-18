@@ -11,7 +11,7 @@
   ()
   (:documentation "Mongrel2 Agent."))
 
-(defun initialize-mongrel2-configuration ()
+(defun initialize-mongrel2-configuration (root)
   (labels ((make-default-static-dir ()
              (fdog-models:make-dir "./public/"))
            (make-default-route (host)
@@ -26,7 +26,7 @@
                (clsql:update-records-from-instance host)
                host))
            (make-default-server ()
-             (fdog-models:make-server "control"))
+             (fdog-models:make-server "control" :chroot (namestring root)))
            (make-default-configuration ()
              (let* ((server (make-default-server))
                     (host (make-default-host server))
@@ -51,7 +51,7 @@
                                server)))
     (labels ((make-mongrel2-arguments (server)
                (let ((uuid (fdog-models:mongrel2-server-uuid server)))
-                 `(:path "mongrel2" :args (,(namestring config) ,uuid))))
+                 `(:path "/usr/bin/env" :args ("mongrel2" ,(namestring config) ,uuid))))
              (link-server (server)
                (let ((arguments (make-mongrel2-arguments server))
                      (pid (fdog-models:mongrel2-server-pid server)))
@@ -71,7 +71,7 @@
       (let ((tables (clsql:list-tables)))
         (unless (find "SERVER" tables :test #'string-equal)
           (format t "Setting up a default configuration.~%")
-          (initialize-mongrel2-configuration)))
+          (initialize-mongrel2-configuration server)))
 
       (mapc #'link-server (fdog-models:servers)))))
 

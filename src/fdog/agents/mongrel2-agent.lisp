@@ -2,7 +2,7 @@
 
 ;; TODO: Fold into the agents dump
 (defclass rooted-agent-mixin ()
-  ((root :initarg :root :initform nil
+  ((root :initarg :root :initform *root*
          :accessor agent-root)))
 
 ;; Agent
@@ -22,9 +22,6 @@
              :accessor behavior))
   (:documentation "State machine to search for mongrel2 servers to supervise.")
   (:metaclass c2mop:funcallable-standard-class))
-
-(defstate mongrel2-state-machine :initial (event)
-  (log-for (trace mongrel2-fsm)  ":initial FSM Event: ~A~%" event))
 
 ;; Behavior
 (defclass mongrel2-manager ()

@@ -9,10 +9,14 @@
            :read-message
            :parse-message
            :*git-revision*
-           :version-string)
+           :version-string
+           :*root*)
   (:export :*socket-linger*))
 
 (in-package :afdog)
+
+(defvar *root* (asdf:system-source-directory :afdog)
+  "What is considered the root of the application.")
 
 (defvar *git-revision* "HEAD")
 

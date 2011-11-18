@@ -70,9 +70,12 @@
                                                       ((:file "heart")
                                                        (:file "eye")
                                                        (:file "head")))))))
-                         (:module "agents" :depends-on ("agent") :components
-                                  ((:file "packages")
-                                   (:file "mongrel2-agent" :depends-on ("packages"))))
+
+                         (:module "fdog" :depends-on ("agent") :components
+                                  ((:module "agents" :components
+                                           ((:file "packages")
+                                            (:file "mongrel2-agent" :depends-on ("packages"))))))
+
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")
                                    (:file "runner" :depends-on ("package"))

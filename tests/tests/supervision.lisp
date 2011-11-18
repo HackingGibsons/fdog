@@ -177,12 +177,13 @@
               (equalp (getf (getf msg :process) :pid) process-pid))
          (getf (getf msg :process) :pid)))))
 
-(def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)):true
+(def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)) :true
   (with-agent-conversation (m e :timeout 60) agent-uuid
     (zmq:send! e (prepare-message `(:spawn :process)))
     (do ((msg (parse-message (read-message m))
               (parse-message (read-message m))))
-      ((equalp (getf msg :made) :process)
+      ((and (equalp (getf msg :made) :process)
+            (getf msg :pid))
        (setf pid (getf msg :pid)))
       pid)))
 

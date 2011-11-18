@@ -81,6 +81,9 @@
 (defvar *server-database* nil
   "A handle to the database connection to the server.")
 
+(defvar *server-dir* '(:relative "server"))
+(defvar *config-file* (make-pathname :name "config" :type "sqlite"))
+
 (defvar *mongrel2-bin* "mongrel2"
   "Mongrel2 binary")
 
@@ -89,7 +92,9 @@
   "Bool of the current connection state"
   (and *server-database* (member *server-database* (clsql:connected-databases))))
 
-(defun connect (db-path)
+(defun connect (&optional (db-path (merge-pathnames *config-file*
+                                                    (merge-pathnames (make-pathname :directory *server-dir*)
+                                                                     afdog:*root*))))
   "Connect to a mongrel2 configuration database."
   (log-for (dribble) "Connecting to database path: ~A" db-path)
   (unless (connected-p)

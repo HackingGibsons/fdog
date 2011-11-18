@@ -11,6 +11,10 @@
   ()
   (:documentation "Mongrel2 Agent."))
 
+(defun initialize-mongrel2-configuration ()
+  (fdog-models:init)
+  (fdog-models:make-server "control"))
+
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
   (let ((head (find-organ agent :head))
@@ -20,6 +24,8 @@
     (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
     (ensure-directories-exist config :verbose t)
 
-    (if (probe-file config)
-        (log-for (mongrel2-agent warn) "Config exists.")
-        (log-for (mongrel2-agent warn) "Config missing"))))
+    (fdog-models:connect)
+    (let ((servers (clsql:list-tables)))
+      (unless (find "SERVER" servers :test #'string-equal)
+        (initialze-mongrel2-configuration)))))
+

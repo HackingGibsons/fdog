@@ -4,7 +4,7 @@
   ;; (:head :command
   ;;  :command :make
   ;;  :make :agent
-  ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent)))
+  ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent))
   (let ((what (getf event :make)))
     (make-item behavior what (getf event what))))
 

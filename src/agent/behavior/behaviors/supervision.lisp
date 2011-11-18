@@ -106,6 +106,13 @@ Parameter meanings are the same as `link-key'")
     ((getf event :made)
      (create-links-made behavior organ event))))
 
+(defbehavior destroy-links (:on (:command :unlink :from :head)
+                            :include (link-manager) :do :invoke-with-event) (organ event)
+  (let* ((unlink-what (getf event :unlink))
+         (unlink-info (and link-what
+                           (getf event link-what))))
+    (unlink behavior unlink-what unlink-info)))
+
 (defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
   "A handler for `:saw' type of events of the `create-links' behavior.
 Fires messages into `link-event' to attempt to drive a `standard-watch-machine' after deconstructing the message to determine the type
@@ -155,6 +162,20 @@ Fires messages into the `link-event' method after destructuring the event to det
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when (and foundp value)
         (funcall value info)))))
+
+(defmethod unlink ((behavior link-manager) (what (eql :agent)) info)
+  (let ((key (link-key behavior what info))
+        (uuid (getf info :uuid)))
+    ;; Look up the agent in the links table
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when foundp
+        ;; when found, remove machine from list
+        (remhash key (links behavior))
+        ;; Stop watching the thing
+        (send-message (behavior-organ behavior) :command `(:command :stop-watching
+                                                                    :stop-watching (:agent :uuid :uuid ,uuid)))
+        ;; Send a callback
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :agent :uuid ,uuid))))))
 
 ;; Agent-specific watch machine
 (defclass agent-watch-machine (standard-watch-machine)

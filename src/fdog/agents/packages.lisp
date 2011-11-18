@@ -5,4 +5,4 @@
         #:agent
         #:log5))
 
-;(clsql:initialize-database-type :database-type :sqlite3)
+

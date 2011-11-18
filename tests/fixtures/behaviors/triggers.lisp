@@ -64,7 +64,8 @@
     (when (equalp message '(:spawn :process))
       (send-message organ :command `(:command :link
                                      :link :process
-                                     :process (:path "/usr/bin/yes"))))))
+                                     :process (:pid nil
+                                               :make (:path "/usr/bin/yes")))))))
 
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

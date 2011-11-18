@@ -25,7 +25,7 @@
     (ensure-directories-exist config :verbose t)
 
     (fdog-models:connect)
-    (let ((servers (clsql:list-tables)))
-      (unless (find "SERVER" servers :test #'string-equal)
+    (let ((tables (clsql:list-tables)))
+      (unless (find "SERVER" tables :test #'string-equal)
         (initialze-mongrel2-configuration)))))
 

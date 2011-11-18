@@ -179,20 +179,30 @@ of an agent and transitions to the `:made' state"
 (defstate process-watch-machine :initial (info)
   "An 'initial' agent for 'process-watch-machine', asks for the construction of a process and transitions to the `:made' state"
   (log-for (trace watch-machine) "Running :initial event of ~A" machine)
+  (log-for (trace watch-machine) "Thing info: ~A" (thing-info machine))
   (setf (getf (timestamps machine) :made) nil)
   (send-message (behavior-organ (behavior machine)) :command
                 `(:command :make
                   :make :process
-                  :process ,(concatenate 'list (getf (thing-info machine) :make) `(:transaction-id ,(format nil "~A" (uuid:make-v4-uuid))))))
+                  :process ,(concatenate 'list
+                                         (getf (thing-info machine) :make)
+                                         `(:transaction-id ,(format nil "~A" (uuid:make-v4-uuid))))))
   :made)
 
 (defstate process-watch-machine :made (info)
-  (log-for (trace watch-machine) ":made state of ~A" machine)
-  (let ((pid (getf info :pid)))
-    (send-message (behavior-organ (behavior machine)) :command `(:command :watch
-                                                                 :watch (:process :pid :pid ,pid)))
-    (setf (gethash pid (pids (behavior machine))) (hash-process info (behavior machine)))
-    (call-next-method)))
+  (log-for (trace watch-machine) ":made state of ~A => ~A" machine info)
+  (let ((pid (cond ((and (eql (car info) :event) (eql (getf info :event) :boot))
+                    (getf (thing-info machine) :pid))
+                   (t
+                    (getf info :pid)))))
+    (if (not pid)
+        (error ":made state wants to run with no pid. Event: ~A" info)
+
+        (progn
+          (send-message (behavior-organ (behavior machine)) :command `(:command :watch
+                                                                                :watch (:process :pid :pid ,pid)))
+          (setf (gethash pid (pids (behavior machine))) (hash-process info (behavior machine)))
+          (call-next-method)))))
 
 (defstate process-watch-machine :watch (info)
   (log-for (watch-machine trace) "In :watch state of ~A" machine)
@@ -216,6 +226,7 @@ of an agent and transitions to the `:made' state"
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (declare (ignorable value))
       (unless foundp
+        (log-for (trace watch-machine) "Making machine: ~A" info)
         ;; Store a state under the generated key
         (setf (gethash key (links behavior))
               (make-instance 'process-watch-machine :behavior behavior

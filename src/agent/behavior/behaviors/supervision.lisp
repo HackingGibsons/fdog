@@ -91,7 +91,8 @@ Parameter meanings are the same as `link-key'")
 (defbehavior create-links (:or ((:on (:command :link :from :head))
                                 (:on (:saw :process :from :eye))
                                 (:on (:saw :agent :from :eye))
-                                (:on (:made :process :from :hand)))
+                                (:on (:made :process :from :hand))
+                                (:on (:command :unlink :from :head)))
                                :include (link-manager) :do :invoke-with-event) (organ event)
   ;; Message format: `:link' message:
   ;; https://github.com/vitrue/fdog/wiki/Internal-Messages
@@ -104,14 +105,12 @@ Parameter meanings are the same as `link-key'")
      (create-links-link behavior organ event))
 
     ((getf event :made)
-     (create-links-made behavior organ event))))
+     (create-links-made behavior organ event))
 
-(defbehavior destroy-links (:on (:command :unlink :from :head)
-                            :include (link-manager) :do :invoke-with-event) (organ event)
-  (let* ((unlink-what (getf event :unlink))
-         (unlink-info (and link-what
-                           (getf event link-what))))
-    (unlink behavior unlink-what unlink-info)))
+    ;; Unlink is part of this behavior to have access to the same links hashtable
+    ;; (they're bound to behaviors)
+    ((getf event :unlink)
+     (create-links-unlink behavior organ event))))
 
 (defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
   "A handler for `:saw' type of events of the `create-links' behavior.
@@ -139,6 +138,14 @@ Fires messages into the `link-event' method after destructuring the event to det
                          (getf event made-what))))
     (log-for (trace watch-machine) "`create-links-made': What: ~A Info: ~A" made-what made-info)
     (link-event behavior made-what made-info)))
+
+(defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
+             (log-for (trace) "destroy behavior entered")
+  (let* ((unlink-what (getf event :unlink))
+         (unlink-info (and unlink-what
+                           (getf event unlink-what))))
+    (log-for (trace) "what: ~A event: ~A" unlink-what event)
+    (unlink behavior unlink-what event)))
 
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
   "Specialization of a watch machine construction for an `:agent' thing type."

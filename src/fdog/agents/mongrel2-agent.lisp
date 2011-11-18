@@ -51,7 +51,7 @@
                                server)))
     (labels ((make-mongrel2-arguments (server)
                (let ((uuid (fdog-models:mongrel2-server-uuid server)))
-                 `(:path "mongrel2" :args ,(list (namestring config) uuid))))
+                 `(:path "mongrel2" :args (,(namestring config) ,uuid))))
              (link-server (server)
                (let ((arguments (make-mongrel2-arguments server))
                      (pid (fdog-models:mongrel2-server-pid server)))

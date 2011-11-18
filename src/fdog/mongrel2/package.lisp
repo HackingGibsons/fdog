@@ -13,6 +13,11 @@
 
            ;; Helpers
            :model-pk
+
+           ;; m2sh methods
+           :init
+           :make-server
+           :servers
            ;; Mongrel2 Configuration Classes
            :mongrel2-server
              ;; Data access

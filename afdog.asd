@@ -2,18 +2,22 @@
   :version "0.0.0"
   :depends-on (#:closer-mop
                #:ip-interfaces
-               #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
                #:uuid
                #:swank
                #:unix-options
                #:log5
                #:bordeaux-threads
                #:cl-ppcre
-               #:zeromq
                #:trivial-gray-streams
 
-               ;; Somehow, if these aren't the last deps iolib fails to build :(
+               ;; Vendord
+               #:clsql
+               #:zeromq
+               #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
+
+               ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria
+               #:uffi
                #:cffi)
   :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components

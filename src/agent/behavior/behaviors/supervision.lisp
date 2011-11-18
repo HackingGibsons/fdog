@@ -185,7 +185,7 @@ of an agent and transitions to the `:made' state"
                 `(:command :make
                   :make :process
                   :process ,(concatenate 'list
-                                         (getf (thing-info machine) :make)
+                                         (thing-info machine)
                                          `(:transaction-id ,(format nil "~A" (uuid:make-v4-uuid))))))
   :made)
 

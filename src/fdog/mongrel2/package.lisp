@@ -10,6 +10,8 @@
                           :chdir)
   (:export :connected-p :connect :disconnect :reconnect
            :*server-database*
+           :*server-dir*
+           :*config-file*
 
            ;; Helpers
            :model-pk

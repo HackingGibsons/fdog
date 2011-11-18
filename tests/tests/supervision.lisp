@@ -251,3 +251,18 @@
             pid))))
 
    (not (equalp pid old-pid))))
+
+(def-test (agent-can-unlink-agents :group supervision-tests :fixtures (started-parent-and-child)) :true
+  ;; Start an agent (started in fixture)
+  ;; Unlink it
+  (with-agent-conversation (m e :timeout 20) uuid
+    (zmq:send! e (prepare-message `(:unlink :agent :uuid ,kid-uuid)))
+    ;; Listen for a callback
+    (do* ((msg (parse-message (agent::read-message m))
+               (parse-message (agent::read-message m))))
+      ((and (eql (getf msg :unlinked) :agent) (eql (getf msg :uuid) kid-uuid))
+       t))))
+
+(def-test (agent-can-unlink-process :group supervision-tests :fixtures (pid-fixture)) :true
+  ;; TODO see above
+)

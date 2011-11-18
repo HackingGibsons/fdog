@@ -20,12 +20,16 @@
   (let ((head (find-organ agent :head))
         (config (merge-pathnames (make-pathname :directory '(:relative "server") :name "config" :type "sqlite")
                                  *root*)))
+    (flet ((link-server (server)
+             :pass))
 
-    (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
-    (ensure-directories-exist config :verbose t)
+      (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
+      (ensure-directories-exist config :verbose t)
 
-    (fdog-models:connect)
-    (let ((tables (clsql:list-tables)))
-      (unless (find "SERVER" tables :test #'string-equal)
-        (initialze-mongrel2-configuration)))))
+      (fdog-models:connect)
+      (let ((tables (clsql:list-tables)))
+        (unless (find "SERVER" tables :test #'string-equal)
+          (initialze-mongrel2-configuration)))
+
+      (mapc #'link-server (fdog-models:servers)))))
 

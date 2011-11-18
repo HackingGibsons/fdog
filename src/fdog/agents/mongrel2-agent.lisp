@@ -20,8 +20,18 @@
   (let ((head (find-organ agent :head))
         (config (merge-pathnames (make-pathname :directory '(:relative "server") :name "config" :type "sqlite")
                                  *root*)))
-    (flet ((link-server (server)
-             :pass))
+    (labels ((make-mongrel2-arguments (server)
+               (let ((uuid (fdog-models:mongrel2-server-uuid server)))
+                 `(:path "mongrel2" :args ,(list (namestring config) uuid))))
+             (link-server (server)
+               (let ((arguments (make-mongrel2-arguments server))
+                     (pid (fdog-models:mongrel2-server-pid server)))
+                 (log-for (mongrel2-agent trace) "Found mongrel2 server ~A to link with make arguments of ~A." server arguments)
+                 (format t "Found mongrel2 server ~A to link with make arguments of ~A.~%" server arguments)
+                 (send-message head :command `(:command :link
+                                                        :link :process
+                                                        :process (:pid ,pid
+                                                                       :make ,arguments))))))
 
       (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
       (ensure-directories-exist config :verbose t)
@@ -29,7 +39,7 @@
       (fdog-models:connect)
       (let ((tables (clsql:list-tables)))
         (unless (find "SERVER" tables :test #'string-equal)
-          (initialze-mongrel2-configuration)))
+          (initialize-mongrel2-configuration)))
 
       (mapc #'link-server (fdog-models:servers)))))
 

@@ -219,6 +219,7 @@ of an agent and transitions to the `:made' state"
         ;; Store a state under the generated key
         (setf (gethash key (links behavior))
               (make-instance 'process-watch-machine :behavior behavior
+                             :state (if (getf info :pid) :made :initial)
                              :thing-info info))))))
 
 (defmethod link-event ((behavior link-manager) (what (eql :process)) info)

@@ -86,7 +86,8 @@
                                                       (:file "data")
                                                       (:file "models" :depends-on ("package" "helpers"))
                                                       (:file "methods" :depends-on ("models"))
-                                                      (:file "helpers" :depends-on ("package"))))))
+                                                      (:file "helpers" :depends-on ("package"))
+                                                      (:file "m2sh" :depends-on ("models" "methods"))))))
 
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")

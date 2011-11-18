@@ -255,3 +255,17 @@ of an agent and transitions to the `:made' state"
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when (and foundp value)
         (funcall value info)))))
+
+(defmethod unlink ((behavior link-manager) (what (eql :process)) info)
+  (let ((key (link-key behavior what info))
+        (pid (getf info :pid)))
+    ;; Look up the process in the links table
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when foundp
+        ;; when found, remove machine from list
+        (remhash key (links behavior))
+        ;; Stop watching the thing
+        (send-message (behavior-organ behavior) :command `(:command :stop-watching
+                                                                    :stop-watching (:process :pid :pid ,pid)))
+        ;; Send a callback
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :process :pid ,pid))))))

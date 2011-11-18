@@ -65,7 +65,7 @@
 
 (defbehavior unlink-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
-    (when (eql (getf message :unlink) :agent)
+    (when (find (getf message :unlink) '(:agent :process))
       (send-message organ :command `(:command :unlink ,@message)))))
 
 (defbehavior watch-self-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)

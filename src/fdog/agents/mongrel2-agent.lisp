@@ -40,8 +40,6 @@
 (defun ensure-mongrel2-root-layout (root)
   (let* ((server-root (merge-pathnames (make-pathname :directory fdog-models:*server-dir*)
                                        root))
-         (config (merge-pathnames fdog-models:*config-file*
-                                  server-root))
          (logs (merge-pathnames (make-pathname :directory '(:relative "logs"))
                                 server-root))
          (tmp (merge-pathnames (make-pathname :directory '(:relative "tmp"))
@@ -49,33 +47,36 @@
          (run (merge-pathnames (make-pathname :directory '(:relative "run"))
                                server-root)))
 
-          (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
+
           (mapc #'(lambda (p)
-                    (ensure-directories-exist p :verbose t)) (list config logs run tmp))
-          (values server-root config)))
+                    (ensure-directories-exist p :verbose t)) (list server-root logs run tmp))
+          server-root))
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
-  (let ((head (find-organ agent :head)))
-    (labels ((make-mongrel2-arguments (server config)
-               (let ((uuid (fdog-models:mongrel2-server-uuid server)))
-                 `(:path "/usr/bin/env" :args ("mongrel2" ,(namestring config) ,uuid))))
-             (link-server (server config)
-               (let ((arguments (make-mongrel2-arguments server config))
-                     (pid (fdog-models:mongrel2-server-pid server)))
-                 (log-for (mongrel2-agent trace) "Found mongrel2 server ~A to link with make arguments of ~A." server arguments)
-                 (send-message head :command `(:command :link
-                                                        :link :process
-                                                        :process (:pid ,pid
-                                                                       :make ,arguments))))))
+  (labels ((make-mongrel2-arguments (server config)
+             (let ((uuid (fdog-models:mongrel2-server-uuid server)))
+               `(:path "/usr/bin/env" :args ("mongrel2" ,(namestring config) ,uuid))))
+           (link-server (organ server config)
+             (let ((arguments (make-mongrel2-arguments server config))
+                   (pid (fdog-models:mongrel2-server-pid server)))
+               (log-for (mongrel2-agent trace) "Found mongrel2 server ~A to link with make arguments of ~A." server arguments)
+               (send-message organ :command `(:command :link
+                                                       :link :process
+                                                       :process (:pid ,pid
+                                                                      :make ,arguments))))))
+    (let* ((head (find-organ agent :head))
+           (server-root (ensure-mongrel2-root-layout *root*))
+           (config (merge-pathnames fdog-models:*config-file*
+                                    server-root))
+           tables)
+      (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
+      (fdog-models:connect)
+      (setf tables (clsql:list-tables))
+      (unless (find "SERVER" tables :test #'string-equal)
+        (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
+        (initialize-mongrel2-configuration server-root config))
 
-      (multiple-value-bind (server-root config) (ensure-mongrel2-root-layout *root*)
-        (fdog-models:connect)
-        (let ((tables (clsql:list-tables)))
-          (unless (find "SERVER" tables :test #'string-equal)
-            (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
-            (initialize-mongrel2-configuration server-root config)))
-
-        (mapc #'(lambda (server)
-                  (link-server server config)) (fdog-models:servers))))))
-
+      (mapc #'(lambda (server)
+                (link-server head server config))
+            (fdog-models:servers)))))

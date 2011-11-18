@@ -27,14 +27,14 @@
 
 (def-eval-test (parent-announces-child-as-peer-correctly :group supervision-tests :fixtures (running-hypervisor-child))
     (let (child-info parent-info)
-      (with-agent-conversation (mouth ear :timeout 15) agent-uuid
+      (with-agent-conversation (mouth ear) agent-uuid
         (do* ((msg (parse-message (read-message mouth))
                    (parse-message (read-message mouth))))
              ((and (equalp (subseq msg 0 2) '(:AGENT :INFO))
                    (assoc child-uuid (getf (getf msg :info) :peers) :test #'equalp))
               (setf parent-info msg))))
 
-      (with-agent-conversation (mouth ear :timeout 15) child-uuid
+      (with-agent-conversation (mouth ear) child-uuid
         (do* ((msg (parse-message (read-message mouth))
                    (parse-message (read-message mouth))))
              ((and (equalp (subseq msg 0 2) '(:AGENT :INFO))

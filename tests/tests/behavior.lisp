@@ -102,7 +102,7 @@
 
 (def-test (agent-hands-can-make-agents :group basic-behavior-tests :fixtures (spawner-fixture running-hypervisor-fixture)) :true
   (let ((child-uuid (format nil "~A" (uuid:make-v4-uuid))))
-    (with-agent-conversation (m e :timeout 10) agent-uuid
+    (with-agent-conversation (m e) agent-uuid
       (zmq:send! e (prepare-message `(:make :agent :uuid ,child-uuid)))
       (do ((msg (parse-message (read-message m))
                 (parse-message (read-message m))))

@@ -49,6 +49,14 @@
                                                      :link :agent
                                                      :agent (:uuid ,uuid :class leaf-test-agent :package :afdog-tests))))))
 
+(defbehavior link-to-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message))
+        (uuid (prin1-to-string (uuid:make-v4-uuid))))
+    (when (and (eql (car message) :link-running)
+               (getf message :pid))
+      (send-message organ :command `(:command :link
+                                     :link :process
+                                     :process (:pid ,(getf message :pid) :path "/usr/bin/yes"))))))
 
 (defbehavior spawn-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message))

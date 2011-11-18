@@ -21,13 +21,13 @@
 (defun make-host (name &optional matching)
   (let ((host (make-instance 'mongrel2-host :name name)))
     (when matching
-      (setf (slot-value host 'fdog-models::matching) matching))
+      (setf (fdog-models:mongrel2-host-matching host) matching))
     (clsql:update-records-from-instance host)
     host))
 
 (defun make-route (path target)
   (let ((route (make-instance 'mongrel2-route :path path)))
-    (setf (slot-value route 'fdog-models::target) target)
+    (setf (fdog-models:mongrel2-route-target route) target)
     (clsql:update-records-from-instance route)
     route))
 

@@ -168,13 +168,14 @@
               t))))))
 
 (def-test (agent-can-link-to-running-process :group supervision-tests :fixtures (running-process-fixture)) :true
-  (with-agent-conversation (m e :timeout 60) agent-uuid
-    (format t "Looking for pid: ~A~%" process-pid)
+  (with-agent-conversation (m e) agent-uuid
     (zmq:send! e (prepare-message `(:link-running :proccess :pid ,process-pid)))
     (do ((msg (parse-message (read-message m))
               (parse-message (read-message m))))
-        (nil)
-      (format t "Message: ~A~%" msg))))
+        ((and (getf msg :eye) (getf msg :saw) (getf msg :process)
+              (getf (getf msg :process) :pid)
+              (equalp (getf (getf msg :process) :pid) process-pid))
+         (getf (getf msg :process) :pid)))))
 
 (def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)):true
   (with-agent-conversation (m e :timeout 60) agent-uuid

@@ -65,7 +65,7 @@ If a pid exists, use the pid to look up the hash in the behavior's `pids' table.
         (pid (getf info :pid)))
     (cond
       ((and path args)
-       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (format nil "~A ~{~A ~}" path args))))
+       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args)))))
       (pid
         (gethash pid (pids behavior))))))
 

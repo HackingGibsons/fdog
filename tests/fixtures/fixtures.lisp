@@ -123,19 +123,24 @@ Does kill -9 to ensure the process dies in cleanup.")
     (:documentation "A fixture that instantiates a test state machine.")
   (test-machine (make-instance 'test-state-machine)))
 
+(def-fixtures db-path-fixture
+    (:documentation "Provides path to an sqlite database."
+                    :cleanup (delete-file db-path))
+  (db-path (merge-pathnames fdog-models:*config-file*
+                            (merge-pathnames (make-pathname :directory fdog-models:*server-dir*)
+                                             *root*)))
+  (connected-p nil))
+
 (def-fixtures mongrel2-agent-fixture
     (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn
-                             (fdog-models:connect)
                              (start mongrel2-runner))
-                    :special (pid afdog:*root*)
                     :cleanup (progn
                                (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
-                               (stop mongrel2-runner)
-                               (fdog-models:disconnect)))
+                               (stop mongrel2-runner)))
   (pid nil)
-  (afdog:*root* (asdf:system-source-directory :afdog-tests))
   (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (mongrel2-runner (make-runner :test :include '(:afdog-tests)
                                 :class 'mongrel2-test-agent
+                                :root *root* ;; different root for the test agents
                                 :uuid mongrel2-uuid)))

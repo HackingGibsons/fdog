@@ -171,7 +171,7 @@
             (info nil (getf msg :info)))
           ((and (equalp (subseq msg 0 2) '(:agent :info))
                 info
-                (not (getf info :peers)))
+                (not (find kid-uuid (getf info :peers) :key #'car :test #'equalp)))
            :gone)))))
 
 (def-test (agent-dies-after-timeout :group basic-behavior-tests :fixtures (running-agent-fixture)) :true

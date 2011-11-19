@@ -65,7 +65,7 @@
                                                        :link :process
                                                        :process (:pid ,pid ,@arguments))))))
     (let* ((head (find-organ agent :head))
-           (server-root (ensure-mongrel2-root-layout *root*))
+           (server-root (ensure-mongrel2-root-layout (agent-root agent)))
            (config (merge-pathnames fdog-models:*config-file*
                                     server-root))
            tables)

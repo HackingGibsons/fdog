@@ -6,7 +6,8 @@
                    runner-tests
                    basic-behavior-tests
                    supervision-tests
-                   cli-tests))
+                   cli-tests
+                   mongrel2-agent-tests))
 
 
 ;; Directly runnable

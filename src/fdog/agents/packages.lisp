@@ -3,6 +3,6 @@
   (:use #:cl)
   (:use #:afdog
         #:agent
-        #:log5))
-
-
+        #:log5)
+  (:export :mongrel2-agent
+           :rooted-agent-mixin))

@@ -2,10 +2,11 @@
   (:use #:cl
         #:afdog
         #:agent
+        #:mongrel2-agent
         #:afdog-cli)
   (:use #:nst)
 
-  (:shadow :*spawner*)
+  (:shadow :*spawner* :*root*)
   (:shadowing-import-from :log5
                           :defcategory
                           :log-for)

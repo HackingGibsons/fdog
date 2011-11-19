@@ -65,7 +65,7 @@ If a pid exists, use the pid to look up the hash in the behavior's `pids' table.
         (pid (getf info :pid)))
     (cond
       ((and path args)
-       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (format nil "~A ~{~A ~}" path args))))
+       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args)))))
       (pid
         (gethash pid (pids behavior))))))
 
@@ -196,7 +196,8 @@ of an agent and transitions to the `:made' state"
                    (t
                     (getf info :pid)))))
     (if (not pid)
-        (error ":made state wants to run with no pid. Event: ~A" info)
+        (prog1 nil
+          (log-for (watch-machine trace)  ":made state wants to run with no pid. Event: ~A" info))
 
         (progn
           (send-message (behavior-organ (behavior machine)) :command `(:command :watch

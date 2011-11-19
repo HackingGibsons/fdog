@@ -56,7 +56,7 @@
                (getf message :pid))
       (send-message organ :command `(:command :link
                                      :link :process
-                                     :process (:pid ,(getf message :pid) :path "/usr/bin/yes"))))))
+                                     :process (:pid ,(getf message :pid) :path "/usr/bin/yes" :args ("no")))))))
 
 (defbehavior spawn-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message))

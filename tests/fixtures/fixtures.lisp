@@ -122,3 +122,20 @@ Does kill -9 to ensure the process dies in cleanup.")
 (def-fixtures test-state-machine-fixture
     (:documentation "A fixture that instantiates a test state machine.")
   (test-machine (make-instance 'test-state-machine)))
+
+(def-fixtures mongrel2-agent-fixture
+    (:documentation "A fixture that instantiates a mongrel2 test agent."
+                    :setup (progn
+                             (fdog-models:connect)
+                             (start mongrel2-runner))
+                    :special (pid afdog:*root*)
+                    :cleanup (progn
+                               (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
+                               (stop mongrel2-runner)
+                               (fdog-models:disconnect)))
+  (pid nil)
+  (afdog:*root* (asdf:system-source-directory :afdog-tests))
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (mongrel2-runner (make-runner :test :include '(:afdog-tests)
+                                :class 'mongrel2-test-agent
+                                :uuid mongrel2-uuid)))

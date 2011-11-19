@@ -63,8 +63,7 @@
                (log-for (mongrel2-agent trace) "Found mongrel2 server ~A to link with make arguments of ~A." server arguments)
                (send-message organ :command `(:command :link
                                                        :link :process
-                                                       :process (:pid ,pid
-                                                                      :make ,arguments))))))
+                                                       :process (:pid ,pid ,@arguments))))))
     (let* ((head (find-organ agent :head))
            (server-root (ensure-mongrel2-root-layout *root*))
            (config (merge-pathnames fdog-models:*config-file*
@@ -76,7 +75,6 @@
       (unless (find "SERVER" tables :test #'string-equal)
         (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
         (initialize-mongrel2-configuration server-root config))
-
       (mapc #'(lambda (server)
                 (link-server head server config))
             (fdog-models:servers)))))

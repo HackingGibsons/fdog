@@ -6,10 +6,12 @@ test: clean-all init
 
 $(ROOT)/sbcl.core:
 	echo "=> Compiling test core."
-	/usr/bin/env sbcl --script $(ROOT)/bin/afdog.script \
-                               repl \
-                               '(ql:quickload :afdog-tests)' \
-                               '(sb-ext:save-lisp-and-die "sbcl.core")'
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
+	$(LISP)  --script $(ROOT)/bin/afdog.script \
+	                  repl \
+                      '(ql:quickload :afdog-tests)' \
+                      '(sb-ext:save-lisp-and-die "sbcl.core")'
 
 run-tests-with-core: $(ROOT)/sbcl.core
 	@echo "=> Making sure we don't use a stale core"

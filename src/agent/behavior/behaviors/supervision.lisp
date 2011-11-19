@@ -196,7 +196,8 @@ of an agent and transitions to the `:made' state"
                    (t
                     (getf info :pid)))))
     (if (not pid)
-        (error ":made state wants to run with no pid. Event: ~A" info)
+        (prog1 nil
+          (log-for (watch-machine trace)  ":made state wants to run with no pid. Event: ~A" info))
 
         (progn
           (send-message (behavior-organ (behavior machine)) :command `(:command :watch

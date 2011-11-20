@@ -11,7 +11,7 @@
   ()
   (:documentation "Mongrel2 Agent."))
 
-(defun initialize-mongrel2-configuration (server-root config)
+(defun initialize-mongrel2-configuration (server-root)
   (labels ((make-default-static-dir ()
              (fdog-models:make-dir "./public/"))
            (make-default-route (host)
@@ -32,9 +32,9 @@
                     (host (make-default-host server))
                     (route (make-default-route host)))
                (values server host route))))
-    (log5:log-for (trace mongrel2-agent) "Intializing ~%")
+    (log-for (trace mongrel2-agent) "Intializing sever layout.")
     (fdog-models:init)
-    (log5:log-for (trace mongrel2-agent) "Installing default configuration.~%")
+    (log-for (trace mongrel2-agent) "Installing default configuration.")
     (make-default-configuration)))
 
 (defun ensure-mongrel2-root-layout (root)
@@ -47,10 +47,10 @@
          (run (merge-pathnames (make-pathname :directory '(:relative "run"))
                                server-root)))
 
-
-          (mapc #'(lambda (p)
-                    (ensure-directories-exist p :verbose t)) (list server-root logs run tmp))
-          server-root))
+    (mapc #'(lambda (p)
+              (log-for (mongrel2-agent trace) "Ensuring ~A exists" p)
+              (ensure-directories-exist p :verbose t)) (list server-root logs run tmp))
+    server-root))
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
@@ -69,12 +69,14 @@
            (config (merge-pathnames fdog-models:*config-file*
                                     server-root))
            tables)
-      (log-for (mongrel2-agent trace) "Root path: ~A" config (probe-file config))
-      (fdog-models:connect)
+      (log-for (mongrel2-agent trace) "Root path: ~A" config)
+      (fdog-models:connect config)
       (setf tables (clsql:list-tables))
-      (unless (find "SERVER" tables :test #'string-equal)
+      (log-for (mongrel2-agent trace) "Found tables ~{~A~^ ~}" tables)
+      (unless (find "server" tables :test #'string-equal)
         (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
-        (initialize-mongrel2-configuration server-root config))
+        (initialize-mongrel2-configuration server-root))
       (mapc #'(lambda (server)
+                (log-for (trace mongrel2-agent) "Linking server ~A" server)
                 (link-server head server config))
             (fdog-models:servers)))))

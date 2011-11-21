@@ -96,6 +96,9 @@ Returns true of it can find a pidfile, and a process is running there."
       (handler-case (with-open-file (pid pidfile) (read pid))
         (end-of-file () nil)))))
 
+(defmethod mongrel2-server-root ((server mongrel2-server))
+  (make-pathname :directory (mongrel2-server-chroot server)))
+
 (defmethod mongrel2-server-config ((server mongrel2-server) &optional (config (make-pathname :name "config" :type "sqlite")))
   (merge-pathnames config
                    (mongrel2-server-root server)))

@@ -250,16 +250,17 @@
               t))))))
 
 (def-test (agent-can-unlink-process :group supervision-tests :fixtures (pid-fixture)) :true
-   (with-agent-conversation (m e :timeout 20) agent-uuid
-    (zmq:send! e (prepare-message `(:spawn :process)))
-     (do ((msg (parse-message (read-message m))
-               (parse-message (read-message m))))
-      ((equalp (getf msg :made) :process)
-       (setf pid (getf msg :pid)))))
+  (progn
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:spawn :process)))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+        ((equalp (getf msg :made) :process)
+         (setf pid (getf msg :pid)))))
 
-  (with-agent-conversation (m e :timeout 20) agent-uuid
-    (zmq:send! e (prepare-message `(:unlink :process :pid ,pid)))
-    (do ((msg (parse-message (read-message m))
-              (parse-message (read-message m))))
-        ((and (eql (getf msg :unlinked) :process) (equalp (getf msg :pid) pid))
-         t))))
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:unlink :process :pid ,pid)))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+        ((and (eql (getf msg :unlinked) :process)) (equalp (getf msg :pid) pid)
+         t)))))

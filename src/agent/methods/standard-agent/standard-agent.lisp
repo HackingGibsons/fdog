@@ -243,7 +243,8 @@ as fire any callbacks that may be pending IO when it is ready."
   nil)
 
 (defmethod agent-info ((agent standard-agent))
-  (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent))
+  (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent)
+            :timestamp ,(get-universal-time) :age ,(age agent))
           (loop for organ in (agent-organs agent)
              appending (agent-info organ))))
 
@@ -259,3 +260,7 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod local-ipc-addr ((agent-uuid string) &optional organ-tag)
   (format nil "~A.~A~@[.~A~]" *ipc-sock-prefix* agent-uuid organ-tag))
+
+(defmethod age ((agent standard-agent))
+  "Returns the age of the agent in `internal-time-units'"
+  (- (get-internal-real-time) (start-time agent)))

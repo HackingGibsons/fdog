@@ -41,7 +41,10 @@
    (last-tick :initform 0
               :accessor agent-last-tick)
    (tick-delta :initform 0
-               :accessor agent-tick-delta))
+               :accessor agent-tick-delta)
+
+   (start-time :initform (get-internal-real-time)
+               :accessor start-time))
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 

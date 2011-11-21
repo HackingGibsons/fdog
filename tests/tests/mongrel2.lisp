@@ -5,19 +5,24 @@
                (asdf:system-source-directory :afdog-tests))))
 
 (def-test (mongrel2-agent-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture)) :true
-  (with-agent-conversation (m e :timeout 60) mongrel2-uuid
-    (do ()
-        ((and (probe-file db-path)
-              (fdog-models:connect db-path)
-              (find "SERVER" (clsql:list-tables)))
-         (setf connected-p t)))
+  (progn
+    (with-agent-conversation (m e :timeout 60) mongrel2-uuid
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+          (msg))) ;; A message means the thing has booted.
 
-    (if connected-p
-        (do ((server-pid (fdog-models:mongrel2-server-pid (fdog-models:servers :refresh t :one t))
-                         (fdog-models:mongrel2-server-pid (fdog-models:servers :refresh t :one t))))
-            (pid pid)
-          (when (ignore-errors (iolib.syscalls:kill server-pid 0))
-            (setf pid server-pid)
-            pid)
-          (sleep 0.1))
-        nil)))
+    (fdog-models:connect db-path)
+
+    (format  t "Connected ~A Servers ~A~%"
+             (fdog-models:connected-p)
+             (fdog-models:servers :refresh t))
+
+    (let* ((server (fdog-models:servers :refresh t :one t))
+           (server-pid (and server (fdog-models:mongrel2-server-pid server)))
+           (running-p (fdog-models:mongrel2-server-running-p server)))
+      (format t "server is ~A. server-pid is ~A~%" server server-pid)
+      (setf pid server-pid)
+      running-p)))
+
+
+

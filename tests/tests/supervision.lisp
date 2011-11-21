@@ -239,3 +239,39 @@
             pid))))
 
    (not (equalp pid old-pid))))
+
+(def-test (agent-can-unlink-agents :group supervision-tests) :true
+  ;; Start an agent
+  (let (child-uuid)
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:spawn :child)))
+      (do* ((msg (parse-message (read-message m))
+                 (parse-message (read-message m))))
+           ((equalp (subseq msg 0 2) '(:echo :spawn))
+            (setf child-uuid (getf msg :child)))))
+
+    (when child-uuid
+      (with-agent-conversation (m e :timeout 20) agent-uuid
+        ;; Unlink it
+        (zmq:send! e (prepare-message `(:unlink :agent :uuid ,child-uuid)))
+        ;; Listen for a callback
+        (do* ((msg (parse-message (read-message m))
+                   (parse-message (read-message m))))
+             ((and (eql (getf msg :unlinked) :agent) (equalp (getf msg :uuid) child-uuid))
+              t))))))
+
+(def-test (agent-can-unlink-process :group supervision-tests :fixtures (pid-fixture)) :true
+  (progn
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:spawn :process)))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+        ((equalp (getf msg :made) :process)
+         (setf pid (getf msg :pid)))))
+
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:unlink :process :pid ,pid)))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+        ((and (eql (getf msg :unlinked) :process)) (equalp (getf msg :pid) pid)
+         t)))))

@@ -86,7 +86,8 @@ Parameter meanings are the same as `link-key'")
 (defbehavior create-links (:or ((:on (:command :link :from :head))
                                 (:on (:saw :process :from :eye))
                                 (:on (:saw :agent :from :eye))
-                                (:on (:made :process :from :hand)))
+                                (:on (:made :process :from :hand))
+                                (:on (:command :unlink :from :head)))
                                :include (link-manager) :do :invoke-with-event) (organ event)
   ;; Message format: `:link' message:
   ;; https://github.com/vitrue/fdog/wiki/Internal-Messages
@@ -98,7 +99,12 @@ Parameter meanings are the same as `link-key'")
      (create-links-link behavior organ event))
 
     ((getf event :made)
-     (create-links-made behavior organ event))))
+     (create-links-made behavior organ event))
+
+    ;; Unlink is part of this behavior to have access to the same links hashtable
+    ;; (they're bound to behaviors)
+    ((getf event :unlink)
+     (create-links-unlink behavior organ event))))
 
 (defmethod create-links-saw ((behavior create-links) (organ standard-organ) event)
   "A handler for `:saw' type of events of the `create-links' behavior.
@@ -126,6 +132,14 @@ Fires messages into the `link-event' method after destructuring the event to det
                          (getf event :made))))
     (link-event behavior made-what event)))
 
+(defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
+             (log-for (trace) "destroy behavior entered")
+  (let* ((unlink-what (getf event :unlink))
+         (unlink-info (and unlink-what
+                           (getf event unlink-what))))
+    (log-for (trace) "what: ~A event: ~A" unlink-what event)
+    (unlink behavior unlink-what event)))
+
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
   "Specialization of a watch machine construction for an `:agent' thing type."
   (let ((key (link-key behavior what info)))
@@ -148,6 +162,20 @@ Fires messages into the `link-event' method after destructuring the event to det
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when (and foundp value)
         (funcall value info)))))
+
+(defmethod unlink ((behavior link-manager) (what (eql :agent)) info)
+  (let ((key (link-key behavior what info))
+        (uuid (getf info :uuid)))
+    ;; Look up the agent in the links table
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when foundp
+        ;; when found, remove machine from list
+        (remhash key (links behavior))
+        ;; Stop watching the thing
+        (send-message (behavior-organ behavior) :command `(:command :stop-watching
+                                                                    :stop-watching (:agent :uuid :uuid ,uuid)))
+        ;; Send a callback
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :agent :uuid ,uuid))))))
 
 ;; Agent-specific watch machine
 (defclass agent-watch-machine (standard-watch-machine)
@@ -240,3 +268,17 @@ of an agent and transitions to the `:made' state"
     (multiple-value-bind (value foundp) (gethash key (links behavior))
       (when (and foundp value)
         (funcall value info)))))
+
+(defmethod unlink ((behavior link-manager) (what (eql :process)) info)
+  (let ((key (link-key behavior what info))
+        (pid (getf info :pid)))
+    ;; Look up the process in the links table
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (when foundp
+        ;; when found, remove machine from list
+        (remhash key (links behavior))
+        ;; Stop watching the thing
+        (send-message (behavior-organ behavior) :command `(:command :stop-watching
+                                                                    :stop-watching (:process :pid :pid ,pid)))
+        ;; Send a callback
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :process :pid ,pid))))))

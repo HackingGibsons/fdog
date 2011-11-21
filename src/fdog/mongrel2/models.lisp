@@ -57,7 +57,7 @@
           :db-info (:join-class mongrel2-host
                     :home-key id
                     :foreign-key server-id
-                    :set t))
+                    :set t)))
   (:base-table server
    :documentation
    "Mongrel2 Server configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-260003.4.1"))

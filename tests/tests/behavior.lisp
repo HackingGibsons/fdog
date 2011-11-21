@@ -233,3 +233,13 @@
           (declare (ignorable info))
           (has-both-uuids
            (pushnew uuid found :test #'equalp))))))
+
+(def-test (duplicate-agents-kill-themselves :group basic-behavior-tests :fixtures (running-hypervisor-fixture running-hypervisor-child)) :true
+  (let ((dupe-runner (make-runner :test :include '(:afdog-tests)
+                                  :class 'leaf-test-agent
+                                  :uuid child-uuid
+                                  :parent-uuid agent-uuid
+                                  :parent-mouth (local-ipc-addr agent-uuid :mouth))))
+    (start dupe-runner)
+    (sleep 10)
+    (not (running-p dupe-runner))))

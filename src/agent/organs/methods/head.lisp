@@ -79,6 +79,23 @@ The default `too long` interval is 10 seconds"
 
       (remove nil (mapcar #'check-peer peer-times)))))
 
+(defmethod update-peer :before ((head agent-head) peer-info)
+  "Check if the peer has the same UUID as the agent.
+If it does, the younger agent will kill itself."
+(log-for (trace) "before called")
+  (let* ((agent (organ-agent head))
+         (age (age agent))
+         (uuid (agent-uuid agent))
+         (peer-uuid (getf peer-info :uuid))
+         (peer-timestamp (getf peer-info :timestamp))
+         (peer-age (getf peer-info :age))
+         (corrected-age (correct-age peer-age peer-timestamp)))
+    (log-for (trace) "uuid: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid age peer-uuid peer-timestamp peer-age corrected-age)
+    (when (equalp uuid peer-uuid)
+      (log-for (warn) "Agent UUID collision found")
+      (when (younger-p agent corrected-age)
+        (suicide head)))))
+
 (defmethod update-peer ((head agent-head) peer-info)
   "Update or store information about a peer we have heard about."
   (let ((uuid (getf peer-info :uuid))
@@ -115,6 +132,7 @@ The default `too long` interval is 10 seconds"
 
 (defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
+  (log-for (trace) "heard info")
   (let ((info (getf info :info)))
     (update-peer head info)))
 

@@ -13,14 +13,9 @@
 
     (fdog-models:connect db-path)
 
-    (format  t "Connected ~A Servers ~A~%"
-             (fdog-models:connected-p)
-             (fdog-models:servers :refresh t))
-
     (let* ((server (fdog-models:servers :refresh t :one t))
            (server-pid (and server (fdog-models:mongrel2-server-pid server)))
            (running-p (fdog-models:mongrel2-server-running-p server)))
-      (format t "server is ~A. server-pid is ~A~%" server server-pid)
       (setf pid server-pid)
       running-p)))
 

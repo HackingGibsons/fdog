@@ -23,9 +23,10 @@
       running-p))))
 
 (def-test (mongrel2-agent-restarts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
-    (:seq :true
-          (:not :true)
-          :true)
+    (:seq (:eql :first-process)
+          (:eql :not-running)
+          (:eql :saw-new-process)
+          (:eql :made-new-process))
   (list
     (with-agent-conversation (m e) mongrel2-uuid
       (do* ((msg (parse-message (read-message m))
@@ -34,7 +35,9 @@
            ((or (and (eql (getf msg :saw) :process)
                      (getf process :pid))
                 (and (eql (getf msg :made) :process)
-                     (getf msg :pid))) t))) ;; We have a server
+                     (getf msg :pid)))
+            (format t "Msg ~A~%" msg)
+            :first-process))) ;; We have a server
       (progn
         (fdog-models:connect db-path)
 
@@ -45,27 +48,47 @@
           (when running-p
             (setf pid server-pid)
             (fdog-models:mongrel2-server-signal/block server :stop)
-            (fdog-models:mongrel2-server-running-p server))))
+            (if (fdog-models:mongrel2-server-running-p server)
+                :running
+                :not-running))))
 
-      ;; Wait for the next process to spawn.
+      ;; A new process has been made
       (with-agent-conversation (m e :timeout 30) mongrel2-uuid
         (do* ((msg (parse-message (read-message m))
                    (parse-message (read-message m)))
-              (process nil (getf msg :process))
-              (saw-p nil (getf process :saw))
-              (saw-pid nil (getf process :pid))
-              (made-p nil (getf msg :made))
+              (made nil (getf msg :made))
               (made-pid (getf msg :pid))
-              (process-pid (or made-pid saw-pid))
               (server (fdog-models:servers :name "control" :refresh t :one t)
                       (fdog-models:servers :name "control" :refresh t :one t))
               (running-p (fdog-models:mongrel2-server-running-p server)
                          (fdog-models:mongrel2-server-running-p server)))
-             ((and running-p
-                   (not (= pid process-pid)))
-              (setf pid process-pid)
-              t)
-          (format t "Message ~A.~%Process ~A~%Process Pid ~A~%Pid ~A~%Server ~A~%~%" msg process process-pid pid server))))) ;; a pid we saw or made is not the pid we've had before
+             ((and (eql made :process)
+                   running-p
+                   (not (= pid made-pid)))
+              (format t "Got Made!~%")
+              :made-new-process)
+          (format t "Waiting for Made But Got: ~A~%" msg)))
+
+
+      ;; And that process stuck around.
+      (with-agent-conversation (m e :timeout 30) mongrel2-uuid
+        (do* ((msg (parse-message (read-message m))
+                   (parse-message (read-message m)))
+              (saw nil (getf msg :saw))
+              (process nil (getf msg :process))
+              (saw-pid nil (getf process :pid))
+              (server (fdog-models:servers :name "control" :refresh t :one t)
+                      (fdog-models:servers :name "control" :refresh t :one t))
+              (running-p (fdog-models:mongrel2-server-running-p server)
+                         (fdog-models:mongrel2-server-running-p server)))
+             ((and (eql saw :process)
+                   process
+                   running-p
+                   (not (= pid saw-pid)))
+              (setf pid saw-pid)
+              (format t "Found our process!~%")
+              :saw-new-process)
+          (format t "Message ~A.~%Process ~A~%Process Pid ~A~%Pid ~A~%Server ~A~%~%" msg process saw-pid pid server))))) ;; a pid we saw or made is not the pid we've had before
 
 
 

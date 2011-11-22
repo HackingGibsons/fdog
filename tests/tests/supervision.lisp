@@ -27,14 +27,14 @@
 
 (def-eval-test (parent-announces-child-as-peer-correctly :group supervision-tests :fixtures (running-hypervisor-child))
     (let (child-info parent-info)
-      (with-agent-conversation (mouth ear :timeout 15) agent-uuid
+      (with-agent-conversation (mouth ear) agent-uuid
         (do* ((msg (parse-message (read-message mouth))
                    (parse-message (read-message mouth))))
              ((and (equalp (subseq msg 0 2) '(:AGENT :INFO))
                    (assoc child-uuid (getf (getf msg :info) :peers) :test #'equalp))
               (setf parent-info msg))))
 
-      (with-agent-conversation (mouth ear :timeout 15) child-uuid
+      (with-agent-conversation (mouth ear) child-uuid
         (do* ((msg (parse-message (read-message mouth))
                    (parse-message (read-message mouth))))
              ((and (equalp (subseq msg 0 2) '(:AGENT :INFO))
@@ -180,11 +180,14 @@
 (def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)) :true
   (with-agent-conversation (m e :timeout 60) agent-uuid
     (zmq:send! e (prepare-message `(:spawn :process)))
-    (do ((msg (parse-message (read-message m))
-              (parse-message (read-message m))))
-      ((and (equalp (getf msg :made) :process)
-            (getf msg :pid))
-       (setf pid (getf msg :pid)))
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (made (getf msg :made) (getf msg :made))
+          (made-info (getf msg made)
+                     (or made-info (getf msg made))))
+      ((and (equalp made :process)
+            (getf made-info :pid))
+       (setf pid (getf made-info :pid)))
       pid)))
 
 (def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture))
@@ -199,14 +202,19 @@
    (with-agent-conversation (m e :timeout 30) agent-uuid
      (do ((msg (parse-message (read-message m))
                (parse-message (read-message m))))
-         ((equalp (subseq msg 0 2) '(:agent :info)) t)))
+         ((equalp (subseq msg 0 2) '(:agent :info))
+          t)))
 
    (with-agent-conversation (m e :timeout 35) agent-uuid
      (zmq:send! e (prepare-message `(:spawn :process)))
-     (do ((msg (parse-message (read-message m))
-               (parse-message (read-message m))))
-         ((equalp (getf msg :made) :process)
-          (setf pid (getf msg :pid)))))
+     (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (made (getf msg :made) (getf msg :made))
+          (made-info (getf msg made)
+                     (or made-info (getf msg made))))
+      ((and (equalp made :process)
+            (getf made-info :pid))
+       (setf pid (getf made-info :pid)))))
 
    (when pid
      (with-agent-conversation (m e :timeout 35) agent-uuid
@@ -221,11 +229,15 @@
 
    ;; Get the new pid
    (with-agent-conversation (m e :timeout 35) agent-uuid
-     (do ((msg (parse-message (read-message m))
-               (parse-message (read-message m))))
-         ((equalp (getf msg :made) :process)
-          (setf old-pid pid)
-          (setf pid (getf msg :pid)))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (made (getf msg :made) (getf msg :made))
+           (made-info (getf msg made)
+                      (or made-info (getf msg made))))
+          ((and (equalp made :process)
+                (getf made-info :pid))
+           (setf old-pid pid)
+           (setf pid (getf made-info :pid)))))
 
    (when pid
      (with-agent-conversation (m e :timeout 35) agent-uuid

@@ -4,7 +4,7 @@
   ;; (:head :command
   ;;  :command :make
   ;;  :make :agent
-  ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent)))
+  ;;  :agent (:uuid uuid :class standard-leaf-agent :package :agent))
   (let ((what (getf event :make)))
     (make-item behavior what (getf event what))))
 
@@ -49,4 +49,4 @@
          (process (sb-ext:run-program path args :wait nil))
          (pid (and process (sb-ext:process-pid process))))
     (log-for (trace watch-machine) "made process - path: ~A args: ~A transaction-id: ~A pid: ~A" path args trans-id pid)
-    (send-message (behavior-organ behavior) :made `(:made ,what :pid ,pid :transaction-id ,trans-id))))
+    (send-message (behavior-organ behavior) :made `(:made ,what ,what (:pid ,pid :transaction-id ,trans-id)))))

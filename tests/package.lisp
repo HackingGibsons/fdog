@@ -2,10 +2,11 @@
   (:use #:cl
         #:afdog
         #:agent
+        #:mongrel2-agent
         #:afdog-cli)
   (:use #:nst)
 
-  (:shadow :*spawner*)
+  (:shadow :*spawner* :*root* :agent-root)
   (:shadowing-import-from :log5
                           :defcategory
                           :log-for)
@@ -15,6 +16,10 @@
 
 (defvar *spawner* :test
   "Use the :test spawner in the :afdog-tests package")
+
+(defvar *root* (merge-pathnames (make-pathname :directory '(:relative "tests"))
+                                (asdf:system-source-directory :afdog-tests))
+  "Root for test runs")
 
 (defun run-all ()
   (let ((results-dir (merge-pathnames (make-pathname :directory '(:relative "tests" "results"))

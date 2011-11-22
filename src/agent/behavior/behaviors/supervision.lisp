@@ -30,7 +30,11 @@ Represents all of the things being supervised by this behavior.")
 
    (pids :initform (make-hash-table :test 'equalp)
          :accessor pids
-         :documentation "Hash table of pids => `links' keys."))
+         :documentation "Hash table of pids => `links' keys.")
+
+   (transactions :initform (make-hash-table :test 'equalp)
+                 :accessor transactions
+                 :documentation "A table mapping transactions to `links' keys for process creation."))
 
   (:documentation "Mixin to the `create-links' behavior.
 Gives storage space to the hash table of stable 'thing' keys to `standard-watch-machine' derivatives based on
@@ -51,23 +55,24 @@ and drive the `standard-watch-machine'"
            (format nil "agent-~A" uuid))))
 
   (:method ((behavior link-manager) (what (eql :process)) (info list))
-   "Generates a process hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
-    (let ((hash (hash-process info behavior)))
-      (and hash
-           (format nil "process-~A" hash)))))
-
-(defmethod hash-process ((info list) (behavior link-manager))
-  "Converts process info into a hash to lookup the right state machine.
+   "Generates a process hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'
+Converts process info into a hash to lookup the right state machine.
 If a path and args exist, return a hash of the pid/args.
 If a pid exists, use the pid to look up the hash in the behavior's `pids' table."
-  (let ((path (getf info :path))
-        (args (getf info :args))
-        (pid (getf info :pid)))
-    (cond
-      ((and path args)
-       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args)))))
-      (pid
-        (gethash pid (pids behavior))))))
+   (let ((path (getf info :path))
+         (args (getf info :args))
+         (pid (getf info :pid)))
+     (log-for (trace watch-machine) "Hasing process: ~A" info)
+     (cond
+       ((and path args)
+        (log-for (trace watch-machine) "Using path(~A) and args(~A) to make key." path args)
+        (format nil "process-~A"
+                (crypto:byte-array-to-hex-string
+                 (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args))))))
+       (pid
+        (log-for (trace watch-machine) "Looking up by pid: ~A" pid)
+        (log-for (trace watch-machine) "Found: ~A" (gethash pid (pids behavior)))
+        (gethash pid (pids behavior)))))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item
@@ -91,6 +96,7 @@ Parameter meanings are the same as `link-key'")
                                :include (link-manager) :do :invoke-with-event) (organ event)
   ;; Message format: `:link' message:
   ;; https://github.com/vitrue/fdog/wiki/Internal-Messages
+  (log-for (trace watch-machine) "`create-links' Event: ~A" event)
   (cond
     ((getf event :saw)
      (create-links-saw behavior organ event))
@@ -127,10 +133,19 @@ of the object to be linked."
 (defmethod create-links-made ((behavior create-links) (organ standard-organ) event)
   "A handler for `:made' event of the `create-links' behavior.
 Fires messages into the `link-event' method after destructuring the event to determine the type and info of the object."
-  (let* ((made-info (getf event :made))
-         (made-what (and made-info
-                         (getf event :made))))
-    (link-event behavior made-what event)))
+  (let* ((made-what (getf event :made))
+         (made-info (and made-what
+                         (getf event made-what))))
+    (log-for (trace watch-machine) "`create-links-made': What: ~A Info: ~A" made-what made-info)
+    (link-event behavior made-what made-info)))
+
+(defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
+             (log-for (trace) "destroy behavior entered")
+  (let* ((unlink-what (getf event :unlink))
+         (unlink-info (and unlink-what
+                           (getf event unlink-what))))
+    (log-for (trace) "what: ~A event: ~A" unlink-what event)
+    (unlink behavior unlink-what event)))
 
 (defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
              (log-for (trace) "destroy behavior entered")
@@ -200,7 +215,7 @@ of an agent and transitions to the `:made' state"
 
 ;; Process specific watch machine
 (defclass process-watch-machine (standard-watch-machine)
-  ()
+  ((key :initform nil :initarg :key :accessor key))
   (:metaclass c2mop:funcallable-standard-class)
   (:documentation "A specialization of the `standard-watch-machine' that knows how to create processes"))
 
@@ -209,12 +224,16 @@ of an agent and transitions to the `:made' state"
   (log-for (trace watch-machine) "Running :initial event of ~A" machine)
   (log-for (trace watch-machine) "Thing info: ~A" (thing-info machine))
   (setf (getf (timestamps machine) :made) nil)
-  (send-message (behavior-organ (behavior machine)) :command
-                `(:command :make
-                  :make :process
-                  :process ,(concatenate 'list
-                                         (thing-info machine)
-                                         `(:transaction-id ,(format nil "~A" (uuid:make-v4-uuid))))))
+  (let ((transaction (format nil "~A" (uuid:make-v4-uuid))))
+    (setf (gethash transaction (transactions (behavior machine))) (key machine))
+    (log-for (trace watch-machine) "Trans storage: ~A" (transactions (behavior machine)))
+
+    (send-message (behavior-organ (behavior machine)) :command
+                  `(:command :make
+                             :make :process
+                             :process ,(concatenate 'list
+                                                    (thing-info machine)
+                                                    `(:transaction-id ,transaction)))))
   :made)
 
 (defstate process-watch-machine :made (info)
@@ -230,7 +249,7 @@ of an agent and transitions to the `:made' state"
         (progn
           (send-message (behavior-organ (behavior machine)) :command `(:command :watch
                                                                                 :watch (:process :pid :pid ,pid)))
-          (setf (gethash pid (pids (behavior machine))) (hash-process info (behavior machine)))
+          (setf (gethash pid (pids (behavior machine))) (key machine))
           (call-next-method)))))
 
 (defstate process-watch-machine :watch (info)
@@ -258,15 +277,26 @@ of an agent and transitions to the `:made' state"
         (log-for (trace watch-machine) "Making machine: ~A" info)
         ;; Store a state under the generated key
         (setf (gethash key (links behavior))
-              (make-instance 'process-watch-machine :behavior behavior
+              (make-instance 'process-watch-machine :behavior behavior :key key
                              :state (if (getf info :pid) :made :initial)
                              :thing-info info))))))
 
 (defmethod link-event ((behavior link-manager) (what (eql :process)) info)
   "Specialization of a watch machine event driving for an `:process' thing type."
-  (let ((key (link-key behavior what info)))
-    (multiple-value-bind (value foundp) (gethash key (links behavior))
+  (let* ((key (link-key behavior what info))
+         (transaction (getf info :transaction-id))
+         (trans-key (gethash transaction (transactions behavior))))
+
+    (log-for (watch-machine trace) "Looking for machine with key: ~A" (or key trans-key))
+    (multiple-value-bind (value foundp) (gethash (or key trans-key) (links behavior))
+      (log-for (watch-machine trace) "Found: ~A Value: ~A" foundp value)
+
+      (when trans-key
+        (log-for (trace watch-machine) "Removing transaction key: ~A=>~A" transaction trans-key)
+        (remhash transaction (transactions behavior)))
+
       (when (and foundp value)
+        (log-for (watch-machine trace) "Sending event ~A at ~A (~A)" info value (state value))
         (funcall value info)))))
 
 (defmethod unlink ((behavior link-manager) (what (eql :process)) info)

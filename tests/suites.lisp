@@ -6,7 +6,8 @@
                    runner-tests
                    basic-behavior-tests
                    supervision-tests
-                   cli-tests))
+                   cli-tests
+                   mongrel2-agent-tests))
 
 
 ;; Directly runnable
@@ -27,4 +28,7 @@
 (def-test-group supervision-tests (spawner-fixture running-hypervisor-fixture)
                 (:each-setup (with-agent-conversation (m e :timeout 20) agent-uuid
                                (zmq:send! e (prepare-message `(:reset :timeout))))))
+
+(def-test-group mongrel2-agent-tests ())
+
 

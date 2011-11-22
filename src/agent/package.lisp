@@ -6,6 +6,7 @@
            :defbehavior
            :behavior
            :send-message
+           :standard-manager-agent
            :standard-leaf-agent
            :standard-hypervisor-agent
            :find-organ
@@ -38,6 +39,7 @@
            :agent-organs
            :run-agent
            :standard-state-machine
+           :state-machine
            :state
            :machine
            :defstate

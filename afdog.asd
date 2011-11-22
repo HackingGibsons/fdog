@@ -2,18 +2,23 @@
   :version "0.0.0"
   :depends-on (#:closer-mop
                #:ip-interfaces
-               #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
                #:uuid
                #:swank
                #:unix-options
                #:log5
                #:bordeaux-threads
                #:cl-ppcre
-               #:zeromq
                #:trivial-gray-streams
+               #:external-program
 
-               ;; Somehow, if these aren't the last deps iolib fails to build :(
+               ;; Vendord
+               #:clsql
+               #:zeromq
+               #:iolib.sockets
+
+               ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria
+               #:uffi
                #:cffi)
   :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components
@@ -71,6 +76,18 @@
                                                        (:file "eye")
                                                        (:file "head")))))))
 
+                         (:module "fdog" :depends-on ("agent") :components
+                                  ((:module "mongrel2" :components
+                                                     ((:file "package")
+                                                      (:file "data")
+                                                      (:file "models" :depends-on ("package" "helpers"))
+                                                      (:file "methods" :depends-on ("models"))
+                                                      (:file "helpers" :depends-on ("package"))
+                                                      (:file "m2sh" :depends-on ("models" "methods"))))
+                                   (:module "agents" :depends-on ("mongrel2"):components
+                                           ((:file "packages")
+                                            (:file "mongrel2-agent" :depends-on ("packages"))))))
+
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")
                                    (:file "runner" :depends-on ("package"))
@@ -80,8 +97,6 @@
                (:module "utils" :depends-on ("src") :components
                         ((:file "package")
                          (:file "listener")))))
-
-
 
 ;; Test operation
 (defmethod perform ((o asdf:test-op) (c (eql (asdf:find-system :afdog))))

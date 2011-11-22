@@ -202,7 +202,9 @@
    (with-agent-conversation (m e :timeout 30) agent-uuid
      (do ((msg (parse-message (read-message m))
                (parse-message (read-message m))))
-         ((equalp (subseq msg 0 2) '(:agent :info)) t)))
+         ((equalp (subseq msg 0 2) '(:agent :info))
+          (format t "Talking to: ~A~%" msg)
+          t)))
 
    (with-agent-conversation (m e :timeout 35) agent-uuid
      (zmq:send! e (prepare-message `(:spawn :process)))

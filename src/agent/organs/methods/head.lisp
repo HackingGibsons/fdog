@@ -92,10 +92,11 @@ If it does, the younger agent will kill itself."
          (peer-timestamp (getf peer-info :timestamp))
          (peer-age (getf peer-info :age))
          (corrected-age (correct-age peer-age peer-timestamp)))
-    (log-for (trace) "uuid: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid age peer-uuid peer-timestamp peer-age corrected-age)
+    (log-for (trace) "uuid: ~A my-timestamp: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid (get-universal-time) age peer-uuid peer-timestamp peer-age corrected-age)
     (when (equalp uuid peer-uuid)
       (log-for (warn) "Agent UUID collision found")
       (when (younger-p agent corrected-age)
+        (log-for (warn) "I'm younger, dying")
         (suicide head)))))
 
 (defmethod update-peer ((head agent-head) peer-info)

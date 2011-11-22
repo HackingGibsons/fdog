@@ -118,7 +118,7 @@
     (do ((msg (parse-message (read-message m))
               (parse-message (read-message m))))
         ((and (equalp (getf msg :made) :process)
-              (equal (getf msg :transaction-id) transaction-id)) t))))
+              (equal (getf (getf msg :process) :transaction-id) transaction-id)) t))))
 
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
     (:seq :true :true)

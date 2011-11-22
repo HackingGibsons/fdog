@@ -206,10 +206,14 @@
 
    (with-agent-conversation (m e :timeout 35) agent-uuid
      (zmq:send! e (prepare-message `(:spawn :process)))
-     (do ((msg (parse-message (read-message m))
-               (parse-message (read-message m))))
-         ((equalp (getf msg :made) :process)
-          (setf pid (getf msg :pid)))))
+     (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (made (getf msg :made) (getf msg :made))
+          (made-info (getf msg made)
+                     (or made-info (getf msg made))))
+      ((and (equalp made :process)
+            (getf made-info :pid))
+       (setf pid (getf made-info :pid)))))
 
    (when pid
      (with-agent-conversation (m e :timeout 35) agent-uuid
@@ -224,11 +228,15 @@
 
    ;; Get the new pid
    (with-agent-conversation (m e :timeout 35) agent-uuid
-     (do ((msg (parse-message (read-message m))
-               (parse-message (read-message m))))
-         ((equalp (getf msg :made) :process)
-          (setf old-pid pid)
-          (setf pid (getf msg :pid)))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (made (getf msg :made) (getf msg :made))
+           (made-info (getf msg made)
+                      (or made-info (getf msg made))))
+          ((and (equalp made :process)
+                (getf made-info :pid))
+           (setf old-pid pid)
+           (setf pid (getf made-info :pid)))))
 
    (when pid
      (with-agent-conversation (m e :timeout 35) agent-uuid

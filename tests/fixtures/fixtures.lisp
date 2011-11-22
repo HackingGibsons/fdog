@@ -145,17 +145,3 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :class 'mongrel2-test-agent
                                 :root *root* ;; different root for the test agents
                                 :uuid mongrel2-uuid)))
-
-(def-fixtures running-mongrel2-fixture
-    (:documentation "Initializes and starts a mongrel2."
-     :setup (progn
-              (ensure-mongrel2-root-layout *root*)
-              (fdog-models:connect db-path)
-              (initialize-mongrel2-configuration db-root)
-              (setf server (fdog-models:servers :name "control" :refresh t :one t))
-              (fdog-models:mongrel2-server-signal/block server :start)
-              (unless (fdog-models:mongrel2-server-running-p server)
-                (error "Mongrel2 failed to start ~A" server)))
-     :cleanup (when (fdog-models:mongrel2-server-running-p server)
-                (fdog-models:mongrel2-server-signal/block server :stop)))
-  (server nil))

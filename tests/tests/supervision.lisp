@@ -180,11 +180,14 @@
 (def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)) :true
   (with-agent-conversation (m e :timeout 60) agent-uuid
     (zmq:send! e (prepare-message `(:spawn :process)))
-    (do ((msg (parse-message (read-message m))
-              (parse-message (read-message m))))
-      ((and (equalp (getf msg :made) :process)
-            (getf msg :pid))
-       (setf pid (getf msg :pid)))
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (made (getf msg :made) (getf msg :made))
+          (made-info (getf msg made)
+                     (or made-info (getf msg made))))
+      ((and (equalp made :process)
+            (getf made-info :pid))
+       (setf pid (getf made-info :pid)))
       pid)))
 
 (def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture))

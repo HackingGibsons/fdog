@@ -55,26 +55,24 @@ and drive the `standard-watch-machine'"
            (format nil "agent-~A" uuid))))
 
   (:method ((behavior link-manager) (what (eql :process)) (info list))
-   "Generates a process hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'"
-    (let ((hash (hash-process info behavior)))
-      (and hash
-           (format nil "process-~A" hash)))))
-
-(defmethod hash-process ((info list) (behavior link-manager))
-  "Converts process info into a hash to lookup the right state machine.
+   "Generates a process hash key used in `link-init' and `link-event' to insert and drive the `standard-watch-machine'
+Converts process info into a hash to lookup the right state machine.
 If a path and args exist, return a hash of the pid/args.
 If a pid exists, use the pid to look up the hash in the behavior's `pids' table."
-  (let ((path (getf info :path))
-        (args (getf info :args))
-        (pid (getf info :pid)))
-    (log-for (trace watch-machine) "Hasing process: ~A" info)
-    (cond
-      ((and path args)
-       (log-for (trace watch-machine) "Using path(~A) and args(~A) to make key." path args)
-       (crypto:byte-array-to-hex-string (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args)))))
-      (pid
-       (log-for (trace watch-machine) "Looking up by pid: ~A" pid)
-        (gethash pid (pids behavior))))))
+   (let ((path (getf info :path))
+         (args (getf info :args))
+         (pid (getf info :pid)))
+     (log-for (trace watch-machine) "Hasing process: ~A" info)
+     (cond
+       ((and path args)
+        (log-for (trace watch-machine) "Using path(~A) and args(~A) to make key." path args)
+        (format nil "process-~A"
+                (crypto:byte-array-to-hex-string
+                 (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args))))))
+       (pid
+        (log-for (trace watch-machine) "Looking up by pid: ~A" pid)
+        (log-for (trace watch-machine) "Found: ~A" (gethash pid (pids behavior)))
+        (gethash pid (pids behavior)))))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item
@@ -215,7 +213,7 @@ of an agent and transitions to the `:made' state"
         (progn
           (send-message (behavior-organ (behavior machine)) :command `(:command :watch
                                                                                 :watch (:process :pid :pid ,pid)))
-          (setf (gethash pid (pids (behavior machine))) (hash-process info (behavior machine)))
+          (setf (gethash pid (pids (behavior machine))) (key machine))
           (call-next-method)))))
 
 (defstate process-watch-machine :watch (info)
@@ -253,10 +251,14 @@ of an agent and transitions to the `:made' state"
          (transaction (getf info :transaction-id))
          (trans-key (gethash transaction (transactions behavior))))
 
+    (log-for (watch-machine trace) "Looking for machine with key: ~A" (or key trans-key))
     (multiple-value-bind (value foundp) (gethash (or key trans-key) (links behavior))
+      (log-for (watch-machine trace) "Found: ~A Value: ~A" foundp value)
+
       (when trans-key
         (log-for (trace watch-machine) "Removing transaction key: ~A=>~A" transaction trans-key)
         (remhash transaction (transactions behavior)))
 
       (when (and foundp value)
+        (log-for (watch-machine trace) "Sending event ~A at ~A (~A)" info value (state value))
         (funcall value info)))))

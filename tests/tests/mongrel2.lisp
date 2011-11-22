@@ -91,7 +91,28 @@
               :saw-new-process)))))
 
 
+(def-test (mongrel2-agent-watches-existing-mongrel :group mongrel2-agent-tests :fixtures (db-path-fixture running-mongrel2-fixture mongrel2-agent-fixture))
+    (:seq (:eql :server-is-running)
+          (:eql :server-is-watched))
+  (list
+   (if (fdog-models:mongrel2-server-running-p server)
+       (and (setf pid (fdog-models:mongrel2-server-pid server))
+            :server-is-running)
+       :server-is-not-running)
 
-
-
-
+   (when (fdog-models:mongrel2-server-running-p server)
+     (with-agent-conversation (m e :timeout 30) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (saw nil (getf msg :saw))
+             (process nil (getf msg :process))
+             (saw-pid nil (getf process :pid))
+             (server (fdog-models:servers :name "control" :refresh t :one t)
+                     (fdog-models:servers :name "control" :refresh t :one t))
+             (running-p (fdog-models:mongrel2-server-running-p server)
+                        (fdog-models:mongrel2-server-running-p server)))
+            ((and (eql saw :process)
+                  process
+                  running-p
+                  (= pid saw-pid))
+             :server-is-watched))))))

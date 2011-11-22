@@ -14,7 +14,7 @@
                ;; Vendord
                #:clsql
                #:zeromq
-               #:iolib.sockets ;; TODO: Vendor this with libfixpostfix as in fdog
+               #:iolib.sockets
 
                ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria

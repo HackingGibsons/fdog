@@ -234,12 +234,15 @@
           (has-both-uuids
            (pushnew uuid found :test #'equalp))))))
 
-(def-test (duplicate-agents-kill-themselves :group basic-behavior-tests :fixtures (running-hypervisor-fixture running-hypervisor-child)) :true
-  (let ((dupe-runner (make-runner :test :include '(:afdog-tests)
-                                  :class 'leaf-test-agent
-                                  :uuid child-uuid
-                                  :parent-uuid agent-uuid
-                                  :parent-mouth (local-ipc-addr agent-uuid :mouth))))
-    (start dupe-runner)
-    (sleep 10)
-    (not (running-p dupe-runner))))
+(def-test (duplicate-agents-kill-themselves :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (progn
+  ;; Forge an agent info message from an older agent
+  (with-agent-conversation (m e :timeout 10) agent-uuid
+    (zmq:send! e (prepare-message `(:agent :info :info (:uuid ,agent-uuid :timestamp ,(get-universal-time) :age 999999))))
+
+  ;; Younger agent should die
+  (do ((msg (parse-message (read-message m))
+            (parse-message (read-message m))))
+      ((and (equalp (getf msg :agent) :death)
+            (equalp (getf msg :death) agent-uuid)))
+      (not (running-p agent-runner))))))

@@ -70,7 +70,8 @@
                    (fdog-models:mongrel2-server-running-p server)
                    (equalp (fdog-models:mongrel2-server-pid server)
                            (getf made-info :pid)))
-              :made-new-process)))
+              :made-new-process)
+          (format t "made-new-process: msg: ~A~%" msg)))
 
       ;; And that process stuck around.
       (with-agent-conversation (m e :timeout 30) mongrel2-uuid
@@ -88,7 +89,7 @@
                    running-p
                    (not (= pid saw-pid)))
               (setf pid saw-pid)
-              (format t "Found our process!~%")
+              (format t "Found our process! ~A~%" msg)
               :saw-new-process)
           (format t "Message ~A.~%Process ~A~%Process Pid ~A~%Pid ~A~%Server ~A~%~%" msg process saw-pid pid server))))) ;; a pid we saw or made is not the pid we've had before
 

@@ -243,9 +243,9 @@
   ;; Younger agent should die
   (do ((msg (parse-message (read-message m))
             (parse-message (read-message m))))
-      ((and (equalp (getf msg :agent) :death)
-            (equalp (getf msg :death) agent-uuid)))
-      (not (running-p agent-runner))))))
+    ((and (equalp (getf msg :agent) :death)
+          (equalp (getf msg :death) agent-uuid))
+     (not (running-p agent-runner)))))))
 
 (def-test (agent-lives-if-younger-agent-announces :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   (progn

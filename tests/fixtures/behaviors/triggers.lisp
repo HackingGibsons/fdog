@@ -150,3 +150,8 @@
   (when (>= (- (get-internal-real-time) (start-time behavior)) (timeout behavior))
     (log-for (warn) "~A: Timeout reached, killing myself" organ)
     (suicide (organ-agent organ))))
+
+(defbehavior forge-agent-info (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
+  (let ((message (getf event :message)))
+    (when (equalp (getf message :agent) :info)
+      (agent::agent-send-message (organ-agent organ) message))))

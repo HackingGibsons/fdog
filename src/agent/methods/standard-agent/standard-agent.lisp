@@ -243,7 +243,8 @@ as fire any callbacks that may be pending IO when it is ready."
   nil)
 
 (defmethod agent-info ((agent standard-agent))
-  (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent))
+  (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent)
+            :timestamp ,(get-universal-time) :age ,(age agent))
           (loop for organ in (agent-organs agent)
              appending (agent-info organ))))
 
@@ -259,3 +260,18 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod local-ipc-addr ((agent-uuid string) &optional organ-tag)
   (format nil "~A.~A~@[.~A~]" *ipc-sock-prefix* agent-uuid organ-tag))
+
+(defmethod age ((agent standard-agent))
+  "Returns the age of the agent in `internal-time-units'"
+  (- (get-internal-real-time) (start-time agent)))
+
+(defmethod younger-p ((agent standard-agent) other-age)
+  "Returns true if the agent is younger than the given age."
+  (minusp (- (age agent) other-age)))
+
+(defun correct-age (age timestamp)
+  "Uses the announced timestamp to determine what the age should really be.
+If a message was sent 3 seconds ago and was just now picked up for processing, the age should have 3 seconds added to it.
+Otherwise the age will be 3 seconds too old and may get the wrong agent killed."
+  (let ((latency (- (get-universal-time) timestamp)))
+    (+ age (* internal-time-units-per-second latency))))

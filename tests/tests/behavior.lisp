@@ -233,3 +233,28 @@
           (declare (ignorable info))
           (has-both-uuids
            (pushnew uuid found :test #'equalp))))))
+
+(def-test (duplicate-agents-kill-themselves :group basic-behavior-tests :fixtures (running-agent-fixture)) (:eql :agent-dies)
+  (progn
+  ;; Forge an agent info message from an older agent
+  (with-agent-conversation (m e :timeout 30) agent-uuid
+    (zmq:send! e (prepare-message `(:agent :info :info (:uuid ,agent-uuid :timestamp ,(get-universal-time) :age 999999))))
+
+    ;; Younger agent should die
+    (do ((running (running-p agent-runner)
+                  (running-p agent-runner)))
+        ((not running)
+         :agent-dies)))))
+
+(def-test (agent-lives-if-younger-agent-announces :group basic-behavior-tests :fixtures (running-agent-fixture)) (:eql :agent-lives)
+  (progn
+    ;; Forge an agent info mesage from a younger agent
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:agent :info :info (:uuid ,agent-uuid :timestamp ,(get-universal-time) :age -999999))))
+
+      ;; The older agent should live. We can test this by looking for agent info messages
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+        ((and (equalp (getf msg :agent) :info)
+              (equalp (getf (getf msg :info) :uuid) agent-uuid))
+         (and (running-p agent-runner) :agent-lives))))))

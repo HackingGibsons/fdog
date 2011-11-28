@@ -50,4 +50,5 @@
   (make-watch-self-when-asked (find-organ agent :head))
 
   (make-announce-what-i-see (find-organ agent :head))
-  (make-kill-self-after-timeout (find-organ agent :head)))
+  (make-kill-self-after-timeout (find-organ agent :head))
+  (make-forge-agent-info (find-organ agent :head)))

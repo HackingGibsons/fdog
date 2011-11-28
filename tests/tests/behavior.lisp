@@ -241,13 +241,10 @@
     (zmq:send! e (prepare-message `(:agent :info :info (:uuid ,agent-uuid :timestamp ,(get-universal-time) :age 999999))))
 
     ;; Younger agent should die
-    (do* ((msg (parse-message (read-message m))
-               (parse-message (read-message m)))
-          (saw-agent nil
-                     (or saw-agent (and (equalp (getf msg :agent) :death)
-                                        (equalp (getf msg :death) agent-uuid)))))
-      ((not (running-p agent-runner))
-       (and (not saw-agent) :agent-dies))))))
+    (do ((running (running-p agent-runner)
+                  (running-p agent-runner)))
+        ((not running)
+         :agent-dies)))))
 
 (def-test (agent-lives-if-younger-agent-announces :group basic-behavior-tests :fixtures (running-agent-fixture)) (:eql :agent-lives)
   (progn

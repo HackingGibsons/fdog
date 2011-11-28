@@ -246,3 +246,14 @@
       ((and (equalp (getf msg :agent) :death)
             (equalp (getf msg :death) agent-uuid)))
       (not (running-p agent-runner))))))
+
+(def-test (agent-lives-if-younger-agent-announces :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
+  (progn
+    ;; Forge an agent info mesage from a younger agent
+    (with-agent-conversation (m e :timeout 20) agent-uuid
+      (zmq:send! e (prepare-message `(:agent :info :info (:uuid ,agent-uuid :timestamp ,(get-universal-time) :age -999999))))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+        ((and (equalp (getf msg :agent) :info)
+              (equalp (getf (getf msg :info) :uuid) agent-uuid))
+         (running-p agent-runner))))))

@@ -237,7 +237,7 @@
 (def-test (duplicate-agents-kill-themselves :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   (progn
   ;; Forge an agent info message from an older agent
-  (with-agent-conversation (m e :timeout 10) agent-uuid
+  (with-agent-conversation (m e :timeout 30) agent-uuid
     (zmq:send! e (prepare-message `(:agent :info :info (:uuid ,agent-uuid :timestamp ,(get-universal-time) :age 999999))))
 
   ;; Younger agent should die

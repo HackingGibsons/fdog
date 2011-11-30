@@ -121,23 +121,25 @@
               (equal (getf (getf msg :process) :transaction-id) transaction-id)) t))))
 
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
-    (:seq :true :true)
+    (:seq (:eql :dead)
+          (:eql :not-running))
   (list
    ;; Does the agent make a noise when I ask it to die?
    (with-agent-conversation (m e) agent-uuid
-     (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
      (do ((msg (parse-message (read-message m))
                (parse-message (read-message m))))
          ;; Expecting to hear: (:agent :death :death ,agent-uuid)
          ((and (>= (length msg) 4)
                (equalp (subseq msg 0 2) '(:agent :death))
                (equalp (getf msg :death) agent-uuid))
-          :dead)))
+          :dead)
+       (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))))
 
    ;; Does it actually die?
    (with-agent-conversation (m e :timeout 5) agent-uuid
      (do ((alive (running-p agent-runner) (running-p agent-runner)))
-         ((not alive) t)))))
+         ((not alive)
+          :not-running)))))
 
 (def-test (agent-notices-when-peers-die-in-silence :group basic-behavior-tests :fixtures (started-parent-and-child))
     (:seq :true         ;; Find a peer

@@ -1,7 +1,7 @@
 (in-package :afdog)
 
 (defvar *localhost-address* (sockets:make-address (sockets:address-to-vector "127.0.0.1")))
-(defparameter get-local-address (sockets:make-address (sockets:address-to-vector "127.0.0.1")))
+(defparameter get-local-address *localhost-address*)
 (defun get-local-address (&key update (as :address))
   "Get the local IP address we should tell clients about.
 If `update' is non-nil, it will be recomputed"

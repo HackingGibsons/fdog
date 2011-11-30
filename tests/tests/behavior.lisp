@@ -123,7 +123,7 @@
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
     (:eql :not-running)
   ;; Does it actually die?
-  (with-agent-conversation (m e :timeout 5) agent-uuid
+  (with-agent-conversation (m e) agent-uuid
     (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
     (do ((alive (running-p agent-runner) (running-p agent-runner)))
         ((not alive)

@@ -20,6 +20,7 @@ $(ROOT)/afdog-test.core: $(DEPS_DIR)/$(DEPS_NAME)
 		--eval "(setf *compile-verbose* nil *compile-print* nil *load-verbose* nil *load-print* nil)" \
 		--eval '(asdf:disable-output-translations)' \
 		--eval "(asdf:load-system :afdog-tests)" \
+		--load $(ROOT)/tests/make/helpers.lisp \
 		--eval '(sb-ext:save-lisp-and-die "afdog-test.core" :executable t)'
 
 run-tests-with-core: $(ROOT)/afdog-test.core

@@ -121,13 +121,24 @@
               (equal (getf (getf msg :process) :transaction-id) transaction-id)) t))))
 
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
-    (:eql :not-running)
-  ;; Does it actually die?
-  (with-agent-conversation (m e) agent-uuid
-    (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
-    (do ((alive (running-p agent-runner) (running-p agent-runner)))
-        ((not alive)
-         :not-running))))
+    (:seq (:eql :death)
+          (:eql :not-running))
+  (list
+   ;; Let's hear a death message
+   (with-agent-conversation (m e) agent-uuid
+     (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
+     (do ((msg (parse-message (read-message m :timeout 1))
+               (parse-message (read-message m :timeout 1))))
+         ((getf msg :death)
+          :death)))
+
+   ;; Does it actually die?
+   (with-agent-conversation (m e) agent-uuid
+     ;; Tell it to, just in case
+     (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
+     (do ((alive (running-p agent-runner) (running-p agent-runner)))
+         ((not alive)
+          :not-running)))))
 
 (def-test (agent-notices-when-peers-die-in-silence :group basic-behavior-tests :fixtures (started-parent-and-child))
     (:seq :true         ;; Find a peer

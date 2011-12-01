@@ -84,7 +84,8 @@
 (in-package :fdog-models)
 
 ;; Load the sqlite3 DB
-(clsql:initialize-database-type :database-type :sqlite3)
+(unless (find :sqlite3 clsql:*initialized-database-types*)
+  (clsql:initialize-database-type :database-type :sqlite3))
 
 ;; TODO: This may be better expressed in CLOS, now that I've noticed what I'm doing..
 ;;   Re: Keeping state and a pile of methods to poke it

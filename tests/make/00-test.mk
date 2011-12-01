@@ -7,30 +7,26 @@ DEPS_DIR  ?= /tmp
 
 test: clean-all init
 	@echo "=> Running tests."
-	rm -rf $(ROOT)/sbcl.core
+	rm -rf $(ROOT)/afdog-test.core
 	$(MAKE) run-tests-with-core
 	$(MAKE) clean
 
-$(ROOT)/sbcl.core: $(DEPS_DIR)/$(DEPS_NAME)
+$(ROOT)/afdog-test.core: $(DEPS_DIR)/$(DEPS_NAME)
 	echo "=> Compiling test core."
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(DEPS_DIR)/$(DEPS_NAME) \
 		--noprint \
 		--eval "(setf *compile-verbose* nil *compile-print* nil *load-verbose* nil *load-print* nil)" \
-		--eval '(defparameter *afdog-system* (asdf:find-system :afdog))' \
-		--eval '(defparameter *afdog-test-system* (asdf:find-system :afdog-tests))' \
-		--eval '(setf (ASDF::COMPONENT-LOAD-DEPENDENCIES *afdog-system*) nil)' \
-		--eval '(setf (ASDF::COMPONENT-LOAD-DEPENDENCIES *afdog-test-system*) nil)' \
 		--eval '(asdf:disable-output-translations)' \
-		--eval "(asdf:load-system *afdog-system*)" \
-		--eval "(asdf:load-system *afdog-test-system*)" \
-		--eval '(sb-ext:save-lisp-and-die "sbcl.core")'
+		--eval "(asdf:load-system :afdog-tests)" \
+		--eval '(sb-ext:save-lisp-and-die "afdog-test.core" :executable t)'
 
-run-tests-with-core: $(ROOT)/sbcl.core
+run-tests-with-core: $(ROOT)/afdog-test.core
 	@echo "=> Making sure we don't use a stale core"
-	SBCL_HOME=$(ROOT) $(MAKE) run-tests
-	rm -rf $(ROOT)/sbcl.core
+	$(ROOT)/afdog-test.core --eval '(afdog-tests:run-all)' \
+							--eval '(quit)'
+	rm -rf $(ROOT)/afdog-test.core
 
 clean-cores:
 	@echo "=> Cleaning up old cores."
@@ -56,4 +52,3 @@ run-tests:
 	$(LISP) --load $(QL_ROOT_PATH)/setup.lisp \
 		--eval '(asdf:test-system :afdog)' \
 		--eval '(quit)'
-	rm -rf $(ROOT)/sbcl.core

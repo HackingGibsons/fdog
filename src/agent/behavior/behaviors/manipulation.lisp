@@ -46,7 +46,7 @@
   (let* ((path (getf info :path))
          (args (getf info :args))
          (trans-id (getf info :transaction-id))
-         (process (sb-ext:run-program path args :wait nil))
+         (process (afdog:run-program path args :wait nil))
          (pid (and process (sb-ext:process-pid process))))
     (log-for (trace watch-machine) "made process - path: ~A args: ~A transaction-id: ~A pid: ~A" path args trans-id pid)
     (send-message (behavior-organ behavior) :made `(:made ,what ,what (:pid ,pid :transaction-id ,trans-id)))))

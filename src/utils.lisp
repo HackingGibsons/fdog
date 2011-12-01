@@ -65,3 +65,7 @@ type. Returns two values: the socket created and the address that was bound to i
                     (fetch sock))))
       (when data
         (funcall transform data)))))
+
+(defmethod run-program (program args &rest rest)
+  "Helper method to run external programs and provide hooks for testing."
+  (apply #'sb-ext:run-program program args rest))

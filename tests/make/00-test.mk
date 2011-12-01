@@ -32,8 +32,6 @@ run-tests-with-core: $(ROOT)/sbcl.core
 	rm -rf $(ROOT)/sbcl.core
 
 $(DEPS_DIR)/$(DEPS_NAME):
-	@echo "=> Cleaning up old cores."
-	rm -rf $(DEPS_DIR)/afdog-*$(DEPS_EXT)
 	@echo "=> Compiling dependince core: $(DEPS_DIR)/$(DEPS_NAME)"
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \

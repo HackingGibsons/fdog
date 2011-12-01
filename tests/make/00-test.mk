@@ -17,7 +17,7 @@ $(ROOT)/sbcl.core: $(DEPS_DIR)/$(DEPS_NAME)
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(DEPS_DIR)/$(DEPS_NAME) \
 		--noprint \
-		--eval "(setf *compile-verbose* nil *compile-print* nil)" \
+		--eval "(setf *compile-verbose* nil *compile-print* nil *load-verbose* nil *load-print* nil)" \
 		--eval '(defparameter *afdog-system* (asdf:find-system :afdog))' \
 		--eval '(defparameter *afdog-test-system* (asdf:find-system :afdog-tests))' \
 		--eval '(setf (ASDF::COMPONENT-LOAD-DEPENDENCIES *afdog-system*) nil)' \

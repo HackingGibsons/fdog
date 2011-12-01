@@ -1,6 +1,7 @@
 (in-package :afdog)
 
-(defparameter get-local-address (sockets:make-address (sockets:address-to-vector "127.0.0.1")))
+(defvar *localhost-address* (sockets:make-address (sockets:address-to-vector "127.0.0.1")))
+(defparameter get-local-address *localhost-address*)
 (defun get-local-address (&key update (as :address))
   "Get the local IP address we should tell clients about.
 If `update' is non-nil, it will be recomputed"
@@ -19,7 +20,8 @@ If `update' is non-nil, it will be recomputed"
   (let* ((interfaces (ip-interfaces:get-ip-interfaces))
          (addresses (mapcar #'ip-interfaces:ip-interface-address interfaces))
          (addresses (mapcar #'sockets:make-address addresses))
-         (address (car (remove-if-not #'sockets:inet-address-private-p addresses))))
+         (address (car (remove-if-not #'sockets:inet-address-private-p addresses)))
+         (address (or address (prog1 *localhost-address* (log-for (warn) "Could not bind to private IP address, falling back to localhost!!")))))
     (and address
          (setf get-local-address address))))
 

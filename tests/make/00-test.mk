@@ -25,6 +25,8 @@ $(ROOT)/afdog-test.core: $(DEPS_DIR)/$(DEPS_NAME)
 
 run-tests-with-core: $(ROOT)/afdog-test.core
 	@echo "=> Making sure we don't use a stale core"
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(ROOT)/afdog-test.core --eval '(afdog-tests:run-all)' \
 							--eval '(quit)'
 	rm -rf $(ROOT)/afdog-test.core

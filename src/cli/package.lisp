@@ -2,6 +2,7 @@
   (:use #:cl)
   (:use :afdog)
   (:use :agent)
+  (:use :mongrel2-agent)
   (:use :unix-options)
 
   #+sbcl
@@ -15,7 +16,7 @@
 (in-package :afdog-cli)
 
 (defvar *self* "afdog" "The name of the binary.")
-(defvar *agent-packages* '(:agent) "The packages to search for agent classes")
+(defvar *agent-packages* '(:agent :mongrel2-agent) "The packages to search for agent classes")
 (defvar *agent-spawner* :cli "The spawner to set the default to.")
 
 (defgeneric main (argv)

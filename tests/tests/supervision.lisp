@@ -190,6 +190,18 @@
        (setf pid (getf made-info :pid)))
       pid)))
 
+(def-test (agent-wont-link-twice :group supervision-tests :fixtures (pid-fixture))
+    (:eql :linked)
+  (with-agent-conversation (m e :timeout 60) agent-uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((getf msg :already-linked)
+          :linked)
+      (zmq:send! e (prepare-message `(:spawn :process)))
+
+      (when (equalp (getf msg :made) :process)
+        (setf pid (getf (getf msg :process) :pid))))))
+
 (def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture))
     (:seq :true
           (:predicate numberp)

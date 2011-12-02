@@ -84,11 +84,11 @@
 
     (labels ((find-symbol-in-agent-packages (symbol)
                "Look up a symbol and quickly test if it's a class. Else, nil"
-               (car (mapc #'(lambda (package)
-                              (let ((sym (find-symbol (symbol-name symbol) package)))
-                                (and (find-class sym nil)
-                                     sym)))
-                          *agent-packages*)))
+               (car (remove nil (mapcar #'(lambda (package)
+                                       (let ((sym (find-symbol (symbol-name symbol) package)))
+                                         (and (find-class sym nil)
+                                              sym)))
+                                   *agent-packages*) :test #'equalp)))
 
              (find-agent-or-explode (agent)
                "Find an agent by the given name or raise an error"

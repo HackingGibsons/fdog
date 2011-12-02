@@ -22,3 +22,10 @@
             :true))
   (mapcar #'symbol-name (mapcar #'car afdog-cli::*commands*)))
 
+(def-test (mongrel2-agent-spawnable :group cli-tests  :fixtures (cli-agent-uuid-fixture) :setup (eval-when (:compile-toplevel)
+                                                                                                  (sb-ext:run-program "bin/afdog-cli.sh" '("start" "mongrel2-agent" "-u" uuid) :wait nil)))
+    (:eql :read-a-message)
+  (with-agent-conversation (m e) uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+          (nil :read-a-message))))

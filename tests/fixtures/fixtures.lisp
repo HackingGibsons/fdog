@@ -150,3 +150,7 @@ Does kill -9 to ensure the process dies in cleanup.")
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
                     :cleanup (afdog:kill-everything)))
+
+(def-fixtures cli-agent-uuid-fixture
+    (:documentation "Provides a uuid for cli agents.")
+  (uuid (format nil "~A" (uuid:make-v4-uuid))))

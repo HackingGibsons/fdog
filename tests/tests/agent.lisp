@@ -28,4 +28,3 @@
 (def-test (agent-stops :group runner-tests)
     (:process (:eval (stop agent-runner))
               (:check (:not (:true-form (running-p agent-runner))))))
-

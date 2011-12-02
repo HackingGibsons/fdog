@@ -30,6 +30,7 @@
   (make-announce-what-i-see (find-organ agent :head))
   (make-announce-what-i-make (find-organ agent :head))
   (make-announce-what-i-unlink (find-organ agent :head))
+  (make-announce-when-links-collide (find-organ agent :head))
   (make-make-agent-when-asked (find-organ agent :head))
   (make-make-process-when-asked (find-organ agent :head))
   (make-unlink-when-asked (find-organ agent :head))

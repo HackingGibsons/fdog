@@ -177,7 +177,7 @@
               (equalp (getf (getf msg :process) :pid) process-pid))
          (getf (getf msg :process) :pid)))))
 
-(def-test (agent-starts-linked-process :group supervision-tests :fixtures (pid-fixture)) :true
+(def-test (agent-starts-linked-process :group supervision-tests :fixtures (two-pid-fixture)) :true
   (with-agent-conversation (m e :timeout 60) agent-uuid
     (zmq:send! e (prepare-message `(:spawn :process)))
     (do* ((msg (parse-message (read-message m))
@@ -190,7 +190,7 @@
        (setf pid (getf made-info :pid)))
       pid)))
 
-(def-test (agent-wont-link-twice :group supervision-tests :fixtures (pid-fixture))
+(def-test (agent-wont-link-twice :group supervision-tests :fixtures (two-pid-fixture))
     (:eql :linked)
   (with-agent-conversation (m e :timeout 60) agent-uuid
     (do* ((msg (parse-message (read-message m))
@@ -202,7 +202,7 @@
       (when (equalp (getf msg :made) :process)
         (setf pid (getf (getf msg :process) :pid))))))
 
-(def-test (agent-restarts-killed-process :group supervision-tests :fixtures (pid-fixture))
+(def-test (agent-restarts-killed-process :group supervision-tests :fixtures (two-pid-fixture))
     (:seq :true
           (:predicate numberp)
           :true
@@ -284,7 +284,7 @@
              ((and (eql (getf msg :unlinked) :agent) (equalp (getf msg :uuid) child-uuid))
               t))))))
 
-(def-test (agent-can-unlink-process :group supervision-tests :fixtures (pid-fixture)) :true
+(def-test (agent-can-unlink-process :group supervision-tests :fixtures (two-pid-fixture)) :true
   (progn
     (with-agent-conversation (m e :timeout 20) agent-uuid
       (zmq:send! e (prepare-message `(:spawn :process)))

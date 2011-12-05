@@ -39,6 +39,10 @@
   (send-message organ :command `(:command :speak
                                           :say ,event)))
 
+(defbehavior announce-when-links-collide (:on (:already-linked :process :from :head) :do :invoke-with-event) (organ event)
+  (send-message organ :command `(:command :speak
+                                          :say ,event)))
+
 (defbehavior announce-what-i-unlink (:or ((:on (:unlinked :agent :from :head))
                                           (:on (:unlinked :process :from :head)))
                                          :do :invoke-with-event) (organ event)

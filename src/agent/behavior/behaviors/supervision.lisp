@@ -64,15 +64,16 @@ If a pid exists, use the pid to look up the hash in the behavior's `pids' table.
          (pid (getf info :pid)))
      (log-for (trace watch-machine) "Hasing process: ~A" info)
      (cond
-       ((and path args)
-        (log-for (trace watch-machine) "Using path(~A) and args(~A) to make key." path args)
-        (format nil "process-~A"
-                (crypto:byte-array-to-hex-string
-                 (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A ~}" path args))))))
        (pid
         (log-for (trace watch-machine) "Looking up by pid: ~A" pid)
         (log-for (trace watch-machine) "Found: ~A" (gethash pid (pids behavior)))
-        (gethash pid (pids behavior)))))))
+        (gethash pid (pids behavior)))
+
+       (path
+        (log-for (trace watch-machine) "Using path(~A) and args(~A) to make key." path args)
+        (format nil "process-~A"
+                (crypto:byte-array-to-hex-string
+                 (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args))))))))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item
@@ -267,6 +268,18 @@ of an agent and transitions to the `:made' state"
                                                                  :stop-watching (:process :pid :pid ,pid))))
   (values (call-next-method)
           :fire-again))
+
+(defmethod link-init :around ((behavior link-manager) what info)
+  (let ((key (link-key behavior what info)))
+    (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (declare (ignore value))
+      (if foundp
+          (progn
+            (log-for (trace watch-machine) "Attempting to link existing item: ~A" key)
+            (send-message (behavior-organ behavior) :already-linked
+                          `(:already-linked ,what
+                            ,what ,info)))
+          (call-next-method)))))
 
 (defmethod link-init ((behavior link-manager) (what (eql :process)) info)
   "Specialization of a watch machine construction for an `:process' thing type."

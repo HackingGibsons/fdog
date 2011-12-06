@@ -90,7 +90,7 @@
   (:cleanup (progn
               (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
               (ignore-errors (iolib.syscalls:kill old-pid iolib.syscalls:sigkill)))
-   :documentation "A fixture to hold two pids for comparison")
+   :documentation "A fixture to hold two pids for comparison and kill them at the end of test.")
   (old-pid)
   (pid))
 

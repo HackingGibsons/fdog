@@ -65,9 +65,13 @@
                  (equalp (getf process :pid)
                          (fdog-models:mongrel2-server-pid server)))
 
-            (format t  "Pid match on: ~A" (getf process :pid))
+            (format t  "Pid match on: ~A~%" (getf process :pid))
             (setf pid (getf process :pid))
-            (fdog-models:mongrel2-server-signal/block server :stop)
+;;            (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
+            (handler-case
+                (fdog-models:mongrel2-server-signal/block server :stop)
+              (t (c)
+                (format t "Error: ~A~%" c)))
             (if (fdog-models:mongrel2-server-running-p server)
                 :running
                 :not-running))

@@ -93,8 +93,7 @@ Returns true of it can find a pidfile, and a process is running there."
   (let ((pidfile (merge-pathnames (mongrel2-server-pidfile server)
                                   (mongrel2-server-root server))))
     (when (probe-file pidfile)
-      (handler-case (with-open-file (pid pidfile) (read pid))
-        (end-of-file () nil)))))
+      (ignore-errors (with-open-file (pid pidfile) (read pid))))))
 
 (defmethod mongrel2-server-root ((server mongrel2-server))
   (make-pathname :directory (mongrel2-server-chroot server)))

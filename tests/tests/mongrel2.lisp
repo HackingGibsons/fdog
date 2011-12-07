@@ -4,8 +4,10 @@
   (not (equalp *root*
                (asdf:system-source-directory :afdog-tests))))
 
-(def-test (mongrel2-agent-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture)) :true
-  (progn
+(def-test (mongrel2-agent-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+    (:seq (:eql :starts)
+          (:eql :running))
+  (list
     (with-agent-conversation (m e) mongrel2-uuid
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
@@ -15,12 +17,14 @@
                      (getf process :pid))
                 (and (equalp (getf msg :made) :process)
                      (getf process :pid)))
-            (setf pid (getf process :pid)))))
-
-    (ignore-errors (fdog-models:disconnect))
-    (fdog-models:connect db-path)
+            (setf pid (getf process :pid))
+            :starts)))
 
     (with-agent-conversation (m e) mongrel2-uuid
+      (ignore-errors (fdog-models:disconnect))
+      (ignore-errors (clsql:disconnect))
+      (fdog-models:connect db-path)
+
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
             (process (getf msg :process)
@@ -48,8 +52,7 @@
                     (getf process :pid))
                (and (eql (getf msg :made) :process)
                     (getf process :pid)))
-           :first-process)
-       (format t "Proc: ~A Message: ~A~%" process msg))) ;; We have a server
+           :first-process))) ;; We have a server
 
     (with-agent-conversation (m e) mongrel2-uuid
       (ignore-errors (fdog-models:disconnect))
@@ -65,17 +68,14 @@
                  (equalp (getf process :pid)
                          (fdog-models:mongrel2-server-pid server)))
 
-            (format t  "Pid match on: ~A~%" (getf process :pid))
             (setf pid (getf process :pid))
-;;            (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
             (handler-case
                 (fdog-models:mongrel2-server-signal/block server :stop)
               (t (c)
-                (format t "Error: ~A~%" c)))
+                (format t "Error stopping mongrel2: ~A~%" c)))
             (if (fdog-models:mongrel2-server-running-p server)
                 :running
-                :not-running))
-        (format t "Message: ~A~%" msg)))
+                :not-running))))
 
       ;; A new process has been made
       (with-agent-conversation (m e :timeout 30) mongrel2-uuid

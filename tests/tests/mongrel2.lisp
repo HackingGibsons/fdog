@@ -33,13 +33,15 @@
    (with-agent-conversation (m e) mongrel2-uuid
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
-           (process nil (getf msg :process)))
+           (process (getf msg :process)
+                    (getf msg :process)))
           ;; TODO: One of these can never match, it destructures the :made message stupid
           ((or (and (eql (getf msg :saw) :process)
                     (getf process :pid))
                (and (eql (getf msg :made) :process)
-                    (getf msg :pid)))
-           :first-process))) ;; We have a server
+                    (getf process :pid)))
+           :first-process)
+       (format t "Proc: ~A Message: ~A~%" process msg))) ;; We have a server
 
    (progn
      (fdog-models:connect db-path)

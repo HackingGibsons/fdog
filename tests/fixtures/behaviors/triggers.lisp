@@ -74,7 +74,7 @@
       (send-message organ :command `(:command :link
                                      :link :process
                                      :process (:pid nil
-                                               :path ,(format nil "~A/sleep.sh" *root*) :args (,(prin1-to-string (uuid:make-v4-uuid)))))))))
+                                               :path ,(format nil "~A/sleep.sh" *root*) :args ("no")))))))
 
 (defbehavior unlink-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

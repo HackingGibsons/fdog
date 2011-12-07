@@ -77,13 +77,16 @@ type. Returns two values: the socket created and the address that was bound to i
     process))
 
 (defun write-pid (pid program args)
+  "Writes a pidfile for a given process.
+The filename takes the format (process-name)-(hashed-process-and-args).pid"
   (let* ((run-directory (asdf:system-relative-pathname :afdog "run/"))
-         (pid-file (merge-pathnames run-directory (format nil "~A.pid" (process-hash program args)))))
+         (pid-file (merge-pathnames run-directory (format nil "~A-~A.pid" program (process-hash program args)))))
     (ensure-directories-exist run-directory)
     (with-open-file (stream pid-file :direction :output :if-exists :supersede)
       (format stream "~A~%" pid))))
 
 (defun process-hash (path args)
+  "Hashes a process name and args"
   (crypto:byte-array-to-hex-string
    (crypto:digest-sequence :sha256
                            (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args)))))

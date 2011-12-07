@@ -65,7 +65,7 @@
                (getf message :pid))
       (send-message organ :command `(:command :link
                                      :link :process
-                                     :process (:pid ,(getf message :pid) :path "/usr/bin/yes" :args ("no")))))))
+                                     :process (:pid ,(getf message :pid) :path ,(format nil "~A/sleep.sh" *root*) :args (,(prin1-to-string (uuid:make-v4-uuid)))))))))
 
 (defbehavior spawn-process-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message))
@@ -74,7 +74,7 @@
       (send-message organ :command `(:command :link
                                      :link :process
                                      :process (:pid nil
-                                               :path "/usr/bin/yes"))))))
+                                               :path ,(format nil "~A/sleep.sh" *root*) :args (,(prin1-to-string (uuid:make-v4-uuid)))))))))
 
 (defbehavior unlink-when-asked (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

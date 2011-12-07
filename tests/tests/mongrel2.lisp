@@ -22,13 +22,11 @@
       (do* ((start (get-universal-time) start)
             (server (fdog-models:servers :name "control" :refresh t :one t)
                     (fdog-models:servers :name "control" :refresh t :one t))
-            (server-pid (and server (fdog-models:mongrel2-server-pid server))
-                        (and server (fdog-models:mongrel2-server-pid server)))
             (running-p (and server (fdog-models:mongrel2-server-running-p server))
                        (and server (fdog-models:mongrel2-server-running-p server))))
            ((or running-p
                 (> 5 (- (get-universal-time) start)))
-            (setf pid server-pid)
+            (setf pid (and server (fdog-models:mongrel2-server-pid server)))
             running-p)
         (format t "Waiting: ~A~%" (fdog-models:servers :refresh t))))))
 

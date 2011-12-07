@@ -86,12 +86,11 @@
                                                   (format nil "~A/" (uuid:make-v4-uuid))
                                                   :type :directory)))
 
-(def-fixtures pid-fixture
+(def-fixtures two-pid-fixture
   (:cleanup (progn
               (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
               (ignore-errors (iolib.syscalls:kill old-pid iolib.syscalls:sigkill)))
-   :documentation "A fixture to hold a pid that needs to be killed.
-Does kill -9 to ensure the process dies in cleanup.")
+   :documentation "A fixture to hold two pids for comparison and kill them at the end of test.")
   (old-pid)
   (pid))
 
@@ -101,7 +100,7 @@ Does kill -9 to ensure the process dies in cleanup.")
   :documentation "A fixture that holds a running process.
 Does kill -9 to ensure the process dies in cleanup.")
 
-  (process (sb-ext:run-program "/usr/bin/yes" `(,(prin1-to-string (uuid:make-v4-uuid))) :wait nil))
+  (process (afdog:run-program (format nil "~A/sleep.sh" *root*) `(,(prin1-to-string (uuid:make-v4-uuid))) :wait nil))
   (process-pid (sb-ext:process-pid process)))
 
 (defclass test-state-machine (standard-state-machine)

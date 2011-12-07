@@ -10,7 +10,8 @@
            :parse-message
            :*git-revision*
            :version-string
-           :*root*)
+           :*root*
+           :run-program)
   (:export :*socket-linger*))
 
 (in-package :afdog)

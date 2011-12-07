@@ -65,11 +65,13 @@
                  (equalp (getf process :pid)
                          (fdog-models:mongrel2-server-pid server)))
 
+            (format t  "Pid match on: ~A" (getf process :pid))
             (setf pid (getf process :pid))
             (fdog-models:mongrel2-server-signal/block server :stop)
             (if (fdog-models:mongrel2-server-running-p server)
                 :running
-                :not-running))))
+                :not-running))
+        (format t "Message: ~A~%" msg)))
 
       ;; A new process has been made
       (with-agent-conversation (m e :timeout 30) mongrel2-uuid

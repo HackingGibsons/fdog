@@ -51,18 +51,25 @@
            :first-process)
        (format t "Proc: ~A Message: ~A~%" process msg))) ;; We have a server
 
-   (progn
-     (fdog-models:connect db-path)
-     ;; Kill the running server.
-     (let* ((server (fdog-models:servers :name "control" :refresh t :one t))
-            (server-pid (and server (fdog-models:mongrel2-server-pid server)))
-            (running-p (fdog-models:mongrel2-server-running-p server)))
-       (when running-p
-         (setf pid server-pid)
-         (fdog-models:mongrel2-server-signal/block server :stop)
-         (if (fdog-models:mongrel2-server-running-p server)
-             :running
-             :not-running))))
+    (with-agent-conversation (m e) mongrel2-uuid
+      (ignore-errors (fdog-models:disconnect))
+      (fdog-models:connect db-path)
+
+      (do* ((msg (parse-message (read-message m))
+                 (parse-message (read-message m)))
+            (process (getf msg :process)
+                     (getf msg :process))
+            (server (fdog-models:servers :name "control" :refresh t :one t)
+                    (fdog-models:servers :name "control" :refresh t :one t)))
+           ((and server (getf process :pid)
+                 (equalp (getf process :pid)
+                         (fdog-models:mongrel2-server-pid server)))
+
+            (setf pid (getf process :pid))
+            (fdog-models:mongrel2-server-signal/block server :stop)
+            (if (fdog-models:mongrel2-server-running-p server)
+                :running
+                :not-running))))
 
       ;; A new process has been made
       (with-agent-conversation (m e :timeout 30) mongrel2-uuid

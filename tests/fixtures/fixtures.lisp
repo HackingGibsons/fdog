@@ -124,7 +124,9 @@ Does kill -9 to ensure the process dies in cleanup.")
 
 (def-fixtures db-path-fixture
     (:documentation "Provides path to an sqlite database."
-                    :cleanup (sb-ext:delete-directory db-root :recursive t))
+                    :cleanup (progn
+                               (ignore-errors (clsql:disconnect) (fdog-models:disconnect))
+                               (sb-ext:delete-directory db-root :recursive t)))
   (db-root (merge-pathnames (make-pathname :directory fdog-models:*server-dir*)
                             *root*))
   (db-path (merge-pathnames fdog-models:*config-file*

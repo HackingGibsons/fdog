@@ -69,3 +69,18 @@ type. Returns two values: the socket created and the address that was bound to i
 (defmethod run-program (program args &rest rest)
   "Helper method to run external programs and provide hooks for testing."
   (apply #'sb-ext:run-program program args rest))
+
+(defmethod run-program :around (program args &rest rest)
+  "Runs the process and writes the resulting pid to a file"
+  (let ((process (call-next-method)))
+    (write-pid (sb-ext:process-pid process) program args)
+    process))
+
+(defun write-pid (pid program args)
+  (format t "~A-" (process-hash program args))
+  (format t "~A~%" pid))
+
+(defun process-hash (path args)
+  (crypto:byte-array-to-hex-string
+   (crypto:digest-sequence :sha256
+                           (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args)))))

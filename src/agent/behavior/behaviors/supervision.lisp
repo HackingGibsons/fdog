@@ -72,8 +72,7 @@ If a pid exists, use the pid to look up the hash in the behavior's `pids' table.
        (path
         (log-for (trace watch-machine) "Using path(~A) and args(~A) to make key." path args)
         (format nil "process-~A"
-                (crypto:byte-array-to-hex-string
-                 (crypto:digest-sequence :sha256 (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args))))))))))
+                (process-hash path args)))))))
 
 (defgeneric link-init (behavior what info)
   (:documentation "Dispatch to the right method to construct an item

@@ -5,7 +5,7 @@ DEPS_EXT ?= .core
 DEPS_NAME ?= $(DEPS_PREFIX)$(DEPS_EXT)
 DEPS_DIR  ?= /tmp
 
-test: clean-all init
+test: clean-all init afdog
 	@echo "=> Running tests."
 	rm -rf $(ROOT)/afdog-test.core
 	$(MAKE) run-tests-with-core

@@ -9,11 +9,13 @@
     (with-agent-conversation (m e) mongrel2-uuid
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
-            (process nil (getf msg :process)))
-           ((or (and (eql (getf msg :saw) :process)
+            (process (getf msg :process)
+                     (getf msg :process)))
+           ((or (and (equalp (getf msg :saw) :process)
                      (getf process :pid))
-                (and (eql (getf msg :made) :process)
-                     (getf msg :pid)))))
+                (and (equalp (getf msg :made) :process)
+                     (getf process :pid))))
+        (format t "Proc: ~A Message: ~A~%" process msg))
     (fdog-models:connect db-path)
 
     (let* ((server (fdog-models:servers :name "control" :refresh t :one t))

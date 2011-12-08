@@ -90,3 +90,31 @@ The filename takes the format (process-name)-(hashed-process-and-args).pid"
   (crypto:byte-array-to-hex-string
    (crypto:digest-sequence :sha256
                            (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args)))))
+
+(defun kill-everything ()
+  "Kills all processes spawned by afdog using the pidfiles in the run/ directory.
+Performs kill, sleep, then kill -9 to catch stragglers, then deletes the pidfiles."
+  (labels ((kill-files (directory signal)
+             (dolist (file (cl-fad:list-directory directory))
+               (with-open-file (stream file)
+                 (let ((pid (read stream)))
+                   (ignore-errors (iolib.syscalls:kill pid signal))))))
+           (delete-files (directory)
+             (dolist (file (cl-fad:list-directory directory))
+               (delete-file file))))
+    (let* ((run-directory (asdf:system-relative-pathname :afdog "run/")))
+      (log-for (info) "Killing all spawned processes")
+      (format t "Killing all spawned processes~%")
+      (kill-files run-directory iolib.syscalls:sigterm)
+
+      (log-for (info) "Waiting for processes to die")
+      (format t "Waiting for processes to die~%")
+      (sleep 10)
+
+      (log-for (info) "Killing stragglers with kill -9")
+      (format t "Killing stragglers with kill -9~%")
+      (kill-files run-directory iolib.syscalls:sigkill)
+
+      (log-for (info) "Deleting pidfiles")
+      (format t "Deleting pidfiles~%")
+      (delete-files run-directory))))

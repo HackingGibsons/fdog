@@ -30,7 +30,12 @@ run-tests-with-core: $(ROOT)/afdog-test.core
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(ROOT)/afdog-test.core --eval '(afdog-tests:run-all)' \
 							--eval '(quit)'
+	$(MAKE) kill-everything-test
 	rm -rf $(ROOT)/afdog-test.core
+
+kill-everything-test: $(ROOT)/afdog-test.core
+	$(ROOT)/afdog-test.core --eval '(afdog::kill-everything)' \
+				--eval '(quit)'
 
 clean-cores:
 	@echo "=> Cleaning up old cores."

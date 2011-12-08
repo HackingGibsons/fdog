@@ -10,6 +10,7 @@
                #:cl-ppcre
                #:trivial-gray-streams
                #:external-program
+               #:cl-fad
 
                ;; Vendord
                #:clsql

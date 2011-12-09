@@ -127,7 +127,7 @@
   ((start-time :initform (get-internal-real-time)
                :accessor start-time
                :documentation "Time the agent was started")
-   (timeout :initform (* 120 internal-time-units-per-second)
+   (timeout :initform (* 600 internal-time-units-per-second)
             :accessor timeout
             :documentation "Interval in seconds before an agent kills itself. Defaults to 2 minutes")))
 

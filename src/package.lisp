@@ -12,7 +12,8 @@
            :version-string
            :*root*
            :run-program
-           :process-hash)
+           :process-hash
+           :kill-everything)
   (:export :*socket-linger*))
 
 (in-package :afdog)

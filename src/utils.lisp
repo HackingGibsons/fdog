@@ -95,10 +95,11 @@ The filename takes the format (process-name)-(hashed-process-and-args).pid"
   "Kills all processes spawned by afdog using the pidfiles in the run/ directory.
 Performs kill, sleep, then kill -9 to catch stragglers, then deletes the pidfiles."
   (labels ((kill-files (directory signal)
-             (dolist (file (cl-fad:list-directory directory))
-               (with-open-file (stream file)
-                 (let ((pid (read stream)))
-                   (ignore-errors (iolib.syscalls:kill pid signal))))))
+             (cl-fad:walk-directory directory
+                                    (lambda (file)
+                                      (with-open-file (stream file)
+                                        (let ((pid (read stream)))
+                                          (ignore-errors (iolib.syscalls:kill pid signal)))))))
            (delete-files (directory)
              (dolist (file (cl-fad:list-directory directory))
                (delete-file file))))

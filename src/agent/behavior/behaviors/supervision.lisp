@@ -147,14 +147,6 @@ Fires messages into the `link-event' method after destructuring the event to det
     (log-for (trace) "what: ~A event: ~A" unlink-what event)
     (unlink behavior unlink-what event)))
 
-(defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
-             (log-for (trace) "destroy behavior entered")
-  (let* ((unlink-what (getf event :unlink))
-         (unlink-info (and unlink-what
-                           (getf event unlink-what))))
-    (log-for (trace) "what: ~A event: ~A" unlink-what event)
-    (unlink behavior unlink-what event)))
-
 (defmethod link-init ((behavior link-manager) (what (eql :agent)) info)
   "Specialization of a watch machine construction for an `:agent' thing type."
   (let ((key (link-key behavior what info)))

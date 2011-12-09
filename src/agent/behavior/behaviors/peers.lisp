@@ -25,15 +25,15 @@
     (send-message organ :raw message :sock (speak-sock organ))
     (log-for (trace) "~A => ~A has spoken: ~A" organ (speak-addr organ) message)))
 
-(defgeneric heard-message (organ from type &rest event)
+(defgeneric heard-message (agent organ from type &rest event)
   (:documentation "A dispatch method for heard messages.")
-  (:method ((organ standard-organ) from type &rest event)
-    (declare (ignore event))
+  (:method ((agent standard-agent) (organ standard-organ) from type &rest event)
+    (declare (ignore agent event))
     (log-for (trace) "~A: Message ~A/~A unhandled." organ from type)))
 
 (defbehavior have-hearing (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
-    (apply #'heard-message `(,organ ,@message))))
+    (apply #'heard-message `(,(organ-agent organ) ,organ ,@message))))
 
 (defbehavior talk-where-told (:on (:command :speak-to :from :head) :do :invoke-with-event) (organ event)
   (let ((addr (getf event :speak-to)))

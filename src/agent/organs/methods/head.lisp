@@ -133,13 +133,13 @@ If it does, the younger agent will kill itself."
     (map-peers head #'talk-to-peer)))
 
 
-(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
+(defmethod heard-message ((agent standard-agent) (head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
   (log-for (trace) "heard info")
   (let ((info (getf info :info)))
     (update-peer head info)))
 
-(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :kill)) &rest info)
+(defmethod heard-message ((agent standard-agent) (head agent-head) (from (eql :agent)) (type (eql :kill)) &rest info)
   "Agent hearing that someone should die. Is it me? Then announce and suicide."
   (let ((target-uuid (getf info :kill)))
     (when (and target-uuid

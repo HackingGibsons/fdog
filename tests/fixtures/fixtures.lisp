@@ -148,5 +148,5 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :uuid mongrel2-uuid)))
 
 (def-fixtures kill-everything-fixture
-    (:documentation "A fixture that kills every running process"
+    (:documentation "A fixture that kills every process spawned by an agent"
                     :cleanup (afdog:kill-everything)))

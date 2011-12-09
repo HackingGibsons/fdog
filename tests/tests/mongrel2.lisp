@@ -211,3 +211,31 @@
                    (not (= pid saw-pid)))
               (setf pid saw-pid)
               :saw-new-process)))))
+
+(def-test (mongrel2-agent-announces-mongrels :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+    (:seq (:eql :find-pid)
+          (:eql :announce-servers))
+  (list
+   (with-agent-conversation (m e) mongrel2-uuid
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (process nil (getf msg :process)))
+          ;; TODO: One of these can never match, it destructures the :made message stupid
+          ((or (and (eql (getf msg :saw) :process)
+                    (getf process :pid))
+               (and (eql (getf msg :made) :process)
+                    (getf process :pid)))
+           (setf pid (getf process :pid))
+           :find-pid)))
+
+   (with-agent-conversation (m e) mongrel2-uuid
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (infop (equalp (car msg) :agent) (equalp (car msg) :agent))
+           (info (getf msg :info) (getf msg :info))
+           (provides (and infop (getf info :provides))
+                     (and infop (getf info :provides))))
+
+          ((and infop info provides
+                (getf provides :servers))
+           :announce-servers)))))

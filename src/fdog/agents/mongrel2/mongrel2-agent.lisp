@@ -52,6 +52,17 @@
               (ensure-directories-exist p :verbose t)) (list server-root logs run tmp))
     server-root))
 
+;; Hooks
+(defmethod agent-info ((agent mongrel2-agent))
+  "Produce a `mongrel2-agent' specific agent announcement."
+  (let* ((info (call-next-method))
+         (servers (fdog-models:servers :refresh t)))
+    (flet ((server-ad (server)
+             (fdog-models:mongrel2-server-name server)))
+
+      (append info `(:provides (:servers ,(mapcar #'server-ad servers)))))))
+
+
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
   (labels ((make-mongrel2-arguments (server config)

@@ -6,11 +6,11 @@
          :accessor agent-root)))
 
 ;; Agent
-(defcategory mongrel2-agent)
 (defclass mongrel2-agent (standard-hypervisor-agent rooted-agent-mixin)
   ()
   (:documentation "Mongrel2 Agent."))
 
+;; Helpers
 (defun initialize-mongrel2-configuration (server-root)
   (labels ((make-default-static-dir ()
              (fdog-models:make-dir "./public/"))

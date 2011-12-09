@@ -43,7 +43,7 @@
    (default-host :type string
                  :initform "localhost"
                  :initarg :default-host
-                 :reader mongrel2-server-default-host-name)
+                 :accessor mongrel2-server-default-host-name)
    (bind-addr :type string
               :initarg :bind
               :initform "0.0.0.0"

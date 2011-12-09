@@ -79,17 +79,20 @@
                                                        (:file "head")))))))
 
                          (:module "fdog" :depends-on ("agent") :components
-                                  ((:file "package" :depends-on ("agents"))
-                                   (:module "mongrel2" :components
+                                  ((:module "mongrel2" :components
                                                      ((:file "package")
                                                       (:file "data")
                                                       (:file "models" :depends-on ("package" "helpers"))
                                                       (:file "methods" :depends-on ("models"))
                                                       (:file "helpers" :depends-on ("package"))
                                                       (:file "m2sh" :depends-on ("models" "methods"))))
+
                                    (:module "agents" :depends-on ("mongrel2") :components
                                            ((:file "packages")
-                                            (:file "mongrel2-agent" :depends-on ("packages"))))))
+                                            (:module "mongrel2" :depends-on ("packages") :components
+                                                     ((:file "helpers")
+                                                      (:file "behaviors"  :depends-on ("mongrel2-agent"))
+                                                      (:file "mongrel2-agent" :depends-on ("helpers"))))))))
 
                          (:module "cli" :depends-on ("agent") :components
                                   ((:file "package")

@@ -101,8 +101,8 @@ Performs kill, sleep, then kill -9 to catch stragglers, then deletes the pidfile
                                         (let ((pid (read stream)))
                                           (ignore-errors (iolib.syscalls:kill pid signal)))))))
            (delete-files (directory)
-             (dolist (file (cl-fad:list-directory directory))
-               (delete-file file))))
+             (cl-fad:walk-directory directory
+                                    (lambda (file) (delete-file file)))))
     (let* ((run-directory (asdf:system-relative-pathname :afdog "run/")))
       (log-for (info) "Killing all spawned processes")
       (format t "Killing all spawned processes~%")

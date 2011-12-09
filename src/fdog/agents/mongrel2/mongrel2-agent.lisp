@@ -65,29 +65,24 @@
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
-  (labels ((make-mongrel2-arguments (server config)
-             (let ((uuid (fdog-models:mongrel2-server-uuid server)))
-               `(:path "/usr/bin/env" :args ("mongrel2" ,(namestring config) ,uuid))))
-           (link-server (organ server config)
-             (let ((arguments (make-mongrel2-arguments server config))
-                   (pid (fdog-models:mongrel2-server-pid server)))
-               (log-for (mongrel2-agent trace) "Found mongrel2 server ~A to link with make arguments of ~A." server arguments)
-               (send-message organ :command `(:command :link
-                                                       :link :process
-                                                       :process (:pid ,pid ,@arguments))))))
-    (let* ((head (find-organ agent :head))
-           (server-root (ensure-mongrel2-root-layout (agent-root agent)))
-           (config (merge-pathnames fdog-models:*config-file*
-                                    server-root))
-           tables)
-      (log-for (mongrel2-agent trace) "Root path: ~A" config)
-      (fdog-models:connect config)
-      (setf tables (clsql:list-tables))
-      (log-for (mongrel2-agent trace) "Found tables ~{~A~^ ~}" tables)
-      (unless (find "server" tables :test #'string-equal)
-        (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
-        (initialize-mongrel2-configuration server-root))
-      (mapc #'(lambda (server)
-                (log-for (trace mongrel2-agent) "Linking server ~A" server)
-                (link-server head server config))
-            (fdog-models:servers)))))
+  (let* ((head (find-organ agent :head))
+         (server-root (ensure-mongrel2-root-layout (agent-root agent)))
+         (config (merge-pathnames fdog-models:*config-file*
+                                  server-root))
+         tables)
+
+    (ignore-errors (fdog-models:disconnect))
+    (ignore-errors (clsql:disconnect))
+    (log-for (mongrel2-agent trace) "Root path: ~A" config)
+    (fdog-models:connect config)
+
+    (setf tables (clsql:list-tables))
+    (log-for (mongrel2-agent trace) "Found tables ~{~A~^ ~}" tables)
+    (unless (find "server" tables :test #'string-equal)
+      (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
+      (initialize-mongrel2-configuration server-root))
+
+    (mapc #'(lambda (server)
+              (log-for (trace mongrel2-agent) "Linking server ~A" server)
+              (link-server head server config))
+          (fdog-models:servers))))

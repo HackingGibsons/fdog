@@ -104,16 +104,7 @@ Performs kill, sleep, then kill -9 to catch stragglers, then deletes the pidfile
              (cl-fad:walk-directory directory
                                     (lambda (file) (delete-file file)))))
     (let* ((run-directory (asdf:system-relative-pathname :afdog "run/")))
-      (log-for (info) "Killing all spawned processes")
-      (format t "Killing all spawned processes~%")
-      (kill-files run-directory iolib.syscalls:sigterm)
-
-      (log-for (info) "Waiting for processes to die")
-      (format t "Waiting for processes to die~%")
-      (sleep 10)
-
-      (log-for (info) "Killing stragglers with kill -9")
-      (format t "Killing stragglers with kill -9~%")
+      (log-for (info) "Killing all spawned processes with kill -9")
       (kill-files run-directory iolib.syscalls:sigkill)
 
       (log-for (info) "Deleting pidfiles")

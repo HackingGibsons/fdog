@@ -8,3 +8,7 @@
            :rooted-agent-mixin
            :ensure-mongrel2-root-layout
            :initialize-mongrel2-configuration))
+(in-package :mongrel2-agent)
+
+(defcategory mongrel2-agent)
+(defcategory agent-needs)

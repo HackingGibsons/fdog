@@ -25,6 +25,7 @@
            :organ-incoming-sock
            :organ-outgoing-sock
            :agent-special-event
+           :agent-info
            :watching
            :organ-tag
            :running-p
@@ -45,7 +46,9 @@
            :defstate
            :standard-state-machine-event
            :next-event
-           :suicide))
+           :suicide
+           :agent-head
+           :heard-message))
 
 (in-package :agent)
 

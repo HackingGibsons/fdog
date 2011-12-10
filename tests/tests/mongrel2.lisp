@@ -175,40 +175,40 @@
            :mongrel2-dead)))
 
    ;; A new process has been made
-      (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-        (fdog-models:connect db-path)
-        (do* ((msg (parse-message (read-message m))
-                   (parse-message (read-message m)))
-              (process (getf msg :process)
-                       (getf msg :process))
-              (server (fdog-models:servers :name "control" :refresh t :one t)
-                      (fdog-models:servers :name "control" :refresh t :one t))
-              (server-pid (and server (fdog-models:mongrel2-server-pid server))
-                          (and server (fdog-models:mongrel2-server-pid server))))
-             ((and (getf process :pid) server
-                   (fdog-models:mongrel2-server-running-p server)
-                   (equalp (fdog-models:mongrel2-server-pid server)
-                           (getf process :pid)))
-              :made-new-process)))
+   (with-agent-conversation (m e :timeout 30) mongrel2-uuid
+     (fdog-models:connect db-path)
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (process (getf msg :process)
+                    (getf msg :process))
+           (server (fdog-models:servers :name "control" :refresh t :one t)
+                   (fdog-models:servers :name "control" :refresh t :one t))
+           (server-pid (and server (fdog-models:mongrel2-server-pid server))
+                       (and server (fdog-models:mongrel2-server-pid server))))
+          ((and (getf process :pid) server
+                (fdog-models:mongrel2-server-running-p server)
+                (equalp (fdog-models:mongrel2-server-pid server)
+                        (getf process :pid)))
+           :made-new-process)))
 
 
-      ;; And that process stuck around.
-      (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-        (do* ((msg (parse-message (read-message m))
-                   (parse-message (read-message m)))
-              (saw nil (getf msg :saw))
-              (process nil (getf msg :process))
-              (saw-pid nil (getf process :pid))
-              (server (fdog-models:servers :name "control" :refresh t :one t)
-                      (fdog-models:servers :name "control" :refresh t :one t))
-              (running-p (fdog-models:mongrel2-server-running-p server)
-                         (fdog-models:mongrel2-server-running-p server)))
-             ((and (eql saw :process)
-                   process
-                   running-p
-                   (not (= pid saw-pid)))
-              (setf pid saw-pid)
-              :saw-new-process)))))
+   ;; And that process stuck around.
+   (with-agent-conversation (m e :timeout 30) mongrel2-uuid
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (saw nil (getf msg :saw))
+           (process nil (getf msg :process))
+           (saw-pid nil (getf process :pid))
+           (server (fdog-models:servers :name "control" :refresh t :one t)
+                   (fdog-models:servers :name "control" :refresh t :one t))
+           (running-p (fdog-models:mongrel2-server-running-p server)
+                      (fdog-models:mongrel2-server-running-p server)))
+          ((and (eql saw :process)
+                process
+                running-p
+                (not (= pid saw-pid)))
+           (setf pid saw-pid)
+           :saw-new-process)))))
 
 (def-test (mongrel2-agent-announces-mongrels :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
     (:seq (:eql :find-pid)

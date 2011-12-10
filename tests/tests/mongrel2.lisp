@@ -179,18 +179,16 @@
         (fdog-models:connect db-path)
         (do* ((msg (parse-message (read-message m))
                    (parse-message (read-message m)))
-              (made (getf msg :made)
-                    (or made (getf msg :made)))
-              (made-info (getf msg made)
-                         (or made-info (getf msg made)))
+              (process (getf msg :process)
+                       (getf msg :process))
               (server (fdog-models:servers :name "control" :refresh t :one t)
                       (fdog-models:servers :name "control" :refresh t :one t))
               (server-pid (and server (fdog-models:mongrel2-server-pid server))
                           (and server (fdog-models:mongrel2-server-pid server))))
-             ((and made-info server
+             ((and (getf process :pid) server
                    (fdog-models:mongrel2-server-running-p server)
                    (equalp (fdog-models:mongrel2-server-pid server)
-                           (getf made-info :pid)))
+                           (getf process :pid)))
               :made-new-process)))
 
 

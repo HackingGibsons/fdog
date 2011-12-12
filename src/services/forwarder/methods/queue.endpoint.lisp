@@ -76,6 +76,9 @@
 (defmethod endpoint-queue-counter ((endpoint forwarder-queue-endpoint))
   (format nil "~A:counter" (endpoint-queue-key endpoint)))
 
+(defmethod endpoint-queue-counter ((forwarder fdog-forwarder))
+  (format nil "~A:counter" (fdog-forwarder-name forwarder)))
+
 (defmethod request-queue-length ((forwarder fdog-forwarder))
   (redis:with-named-connection (redis :host *redis-host*
                                       :port *redis-port*)

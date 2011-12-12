@@ -33,6 +33,7 @@ run-tests-with-core: $(ROOT)/afdog-test.core
 	$(MAKE) kill-everything-test
 	rm -rf $(ROOT)/afdog-test.core
 
+.PHONY: kill-everything-test
 kill-everything-test: $(ROOT)/afdog-test.core
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \

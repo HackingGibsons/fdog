@@ -93,7 +93,7 @@ The filename takes the format (process-name)-(hashed-process-and-args).pid"
 
 (defun kill-everything ()
   "Kills all processes spawned by afdog using the pidfiles in the run/ directory.
-Performs kill, sleep, then kill -9 to catch stragglers, then deletes the pidfiles."
+Does kill -9 for each pidfile in run/"
   (labels ((kill-files (directory signal)
              (cl-fad:walk-directory directory
                                     (lambda (file)

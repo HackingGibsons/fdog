@@ -79,7 +79,7 @@
 (defmethod request-queue-length ((forwarder fdog-forwarder))
   (redis:with-named-connection (redis :host *redis-host*
                                       :port *redis-port*)
-   (parse-integer (or (redis:lred-hget redis (endpoint-queue-key forwarder) :count) "0"))))
+   (parse-integer (or (redis:lred-hget redis (endpoint-queue-counter forwarder) :count) "0"))))
 
 (defun total-request-queue-length ()
   (redis:with-named-connection (redis :host *redis-host*

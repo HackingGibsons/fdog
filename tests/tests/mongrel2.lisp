@@ -56,6 +56,7 @@
 
     (with-agent-conversation (m e) mongrel2-uuid
       (ignore-errors (fdog-models:disconnect))
+      (ignore-errors (clsql:disconnect))
       (fdog-models:connect db-path)
 
       (do* ((msg (parse-message (read-message m))
@@ -270,7 +271,8 @@
            :need-filled)))
 
    (progn
-     (ignore-errors (clsql:disconnect))
+      (ignore-errors (fdog-models:disconnect))
+      (ignore-errors (clsql:disconnect))
      (fdog-models:connect db-path)
      (let* ((server (fdog-models:servers :name "control" :refresh t :one t))
             (hosts (and server (fdog-models:mongrel2-server-hosts server))))

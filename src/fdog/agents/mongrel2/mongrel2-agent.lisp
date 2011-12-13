@@ -82,7 +82,4 @@
       (log5:log-for (trace mongrel2-agent) "Setting up a default configuration.")
       (initialize-mongrel2-configuration server-root))
 
-    (mapc #'(lambda (server)
-              (log-for (trace mongrel2-agent) "Linking server ~A" server)
-              (link-server head server config))
-          (fdog-models:servers))))
+    (link-all-servers head config)))

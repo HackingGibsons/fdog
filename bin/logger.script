@@ -1,6 +1,0 @@
-#!/bin/sh
-
-sbcl --eval '(sb-ext:disable-debugger)' \
-     --eval '(ql:quickload :afdog)' \
-     --eval '(in-package :afdog)' \
-     --eval '(start-logging-collect)'

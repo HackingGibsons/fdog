@@ -11,7 +11,9 @@
            :*git-revision*
            :version-string
            :*root*
-           :run-program)
+           :run-program
+           :process-hash
+           :kill-everything)
   (:export :*socket-linger*))
 
 (in-package :afdog)

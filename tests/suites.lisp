@@ -25,7 +25,7 @@
 
 (def-test-group basic-behavior-tests ())
 
-(def-test-group supervision-tests (spawner-fixture running-hypervisor-fixture)
+(def-test-group supervision-tests (spawner-fixture running-hypervisor-fixture kill-everything-fixture)
                 (:each-setup (with-agent-conversation (m e :timeout 20) agent-uuid
                                (zmq:send! e (prepare-message `(:reset :timeout))))))
 

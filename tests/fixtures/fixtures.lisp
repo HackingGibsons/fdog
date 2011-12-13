@@ -146,3 +146,7 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :class 'mongrel2-test-agent
                                 :root *root* ;; different root for the test agents
                                 :uuid mongrel2-uuid)))
+
+(def-fixtures kill-everything-fixture
+    (:documentation "A fixture that kills every process spawned by an agent"
+                    :cleanup (afdog:kill-everything)))

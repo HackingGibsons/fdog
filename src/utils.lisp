@@ -69,3 +69,44 @@ type. Returns two values: the socket created and the address that was bound to i
 (defmethod run-program (program args &rest rest)
   "Helper method to run external programs and provide hooks for testing."
   (apply #'sb-ext:run-program program args rest))
+
+(defmethod run-program :around (program args &rest rest)
+  "Runs the process and writes the resulting pid to a file"
+  (let ((process (call-next-method)))
+    (write-pid (sb-ext:process-pid process) program args)
+    process))
+
+(defun write-pid (pid program args)
+  "Writes a pidfile for a given process.
+The filename takes the format (process-name)-(hashed-process-and-args).pid"
+  (let* ((run-directory (merge-pathnames "run/" *root*))
+         (pid-file (merge-pathnames run-directory (format nil "~A-~A.pid" program (process-hash program args)))))
+    (ensure-directories-exist run-directory)
+    (with-open-file (stream pid-file :direction :output :if-exists :supersede)
+      (format stream "~A~%" pid))))
+
+(defun process-hash (path args)
+  "Hashes a process name and args"
+  (crypto:byte-array-to-hex-string
+   (crypto:digest-sequence :sha256
+                           (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args)))))
+
+(defun kill-everything ()
+  "Kills all processes spawned by afdog using the pidfiles in the run/ directory.
+Does kill -9 for each pidfile in run/"
+  (labels ((kill-files (directory signal)
+             (cl-fad:walk-directory directory
+                                    (lambda (file)
+                                      (with-open-file (stream file)
+                                        (let ((pid (read stream)))
+                                          (ignore-errors (iolib.syscalls:kill pid signal)))))))
+           (delete-files (directory)
+             (cl-fad:walk-directory directory
+                                    (lambda (file) (delete-file file)))))
+    (let* ((run-directory (merge-pathnames "run/" *root*)))
+      (log-for (info) "Killing all spawned processes with kill -9")
+      (kill-files run-directory iolib.syscalls:sigkill)
+
+      (log-for (info) "Deleting pidfiles")
+      (format t "Deleting pidfiles~%")
+      (delete-files run-directory))))

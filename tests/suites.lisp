@@ -12,7 +12,7 @@
 
 ;; Directly runnable
 (def-test-group basic-tests ())
-(def-test-group cli-tests ())
+(def-test-group cli-tests (kill-everything-fixture))
 
 ;; Event ran
 (def-test-group booted-agent-tests ())
@@ -30,5 +30,3 @@
                                (zmq:send! e (prepare-message `(:reset :timeout))))))
 
 (def-test-group mongrel2-agent-tests ())
-
-

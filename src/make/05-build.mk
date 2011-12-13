@@ -2,7 +2,7 @@
 BINDIR ?= $(ROOT)/bin
 BIN ?= $(BINDIR)/$(TARGET)
 
-AFDOG_ASD ?= $(ROOT)/afdog.asd
+AFDOG_ASD ?= $(ROOT)/$(TARGET).asd
 DEPS_PREFIX ?= afdog-$(shell (md5sum $(AFDOG_ASD) || md5 -r $(AFDOG_ASD)) | awk '{ print $$1; }')
 DEPS_EXT ?= .core
 DEPS_NAME ?= $(DEPS_PREFIX)$(DEPS_EXT)

@@ -24,4 +24,3 @@
 (def-test (state-machine-does-not-transition-with-bogus-event :group basic-tests :fixtures (test-state-machine-fixture)) :process
   (:eval (funcall test-machine '(:event :bogus)))
   (:check (:true-form (eql :initial (state test-machine)))))
-

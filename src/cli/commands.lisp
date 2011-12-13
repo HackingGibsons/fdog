@@ -66,7 +66,7 @@
                (do-external-symbols (agent (find-package package) agents)
                  (when (and (find-class agent nil)
                             (find (find-class 'standard-agent)
-                                  (c2mop:class-direct-superclasses (find-class agent))))
+                                  (c2mop:compute-class-precedence-list (find-class agent))))
                    (push agent agents))))))
       (format t "Available agents:~%~{  ~A~%~}"
               (loop for package in *agent-packages* appending (agents-in-package package))))))
@@ -84,11 +84,11 @@
 
     (labels ((find-symbol-in-agent-packages (symbol)
                "Look up a symbol and quickly test if it's a class. Else, nil"
-               (car (mapcar #'(lambda (package)
-                                (let ((sym (find-symbol (symbol-name symbol) package)))
-                                  (and (find-class sym nil)
-                                       sym)))
-                            *agent-packages*)))
+               (car (remove nil (mapcar #'(lambda (package)
+                                       (let ((sym (find-symbol (symbol-name symbol) package)))
+                                         (and (find-class sym nil)
+                                              sym)))
+                                   *agent-packages*) :test #'equalp)))
 
              (find-agent-or-explode (agent)
                "Find an agent by the given name or raise an error"

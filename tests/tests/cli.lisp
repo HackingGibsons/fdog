@@ -22,3 +22,11 @@
             :true))
   (mapcar #'symbol-name (mapcar #'car afdog-cli::*commands*)))
 
+(def-test (mongrel2-agent-spawnable :group cli-tests  :fixtures (cli-agent-uuid-fixture mongrel2-agent-cli-fixture)
+                                    :setup (afdog:run-program afdog-bin afdog-start-args)
+                                    :cleanup (afdog:run-program afdog-bin afdog-kill-args))
+    (:eql :read-message)
+  (with-agent-conversation (m e) uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+          (t :read-message))))

@@ -2,7 +2,7 @@
   (:use #:cl
         #:afdog
         #:agent
-        #:mongrel2-agent
+        #:fdog
         #:afdog-cli)
   (:use #:nst)
 

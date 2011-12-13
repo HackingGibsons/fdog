@@ -3,12 +3,12 @@ clean: | lisp-fasl-clean asdf-clean lisp-clean externals-clean clean-build clean
 
 .PHONY: kill-everything-clean
 kill-everything-fast:
-	KILL_EVERYTHING_FAST=1 $(MAKE) kill-everything
+	NO_WAIT=1 $(MAKE) kill-everything
 
 .PHONY: kill-everything
 .IGNORE: kill-everything
 kill-everything:
-ifeq ($(KILL_EVERYTHING_FAST),1)
+ifeq ($(NO_WAIT),1)
 else
 	@echo "=> Killing all processes"
 	cat $(ROOT)/run/* | xargs kill

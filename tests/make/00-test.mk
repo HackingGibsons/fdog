@@ -1,9 +1,4 @@
 #-*- mode:makefile-gmake; -*-
-AFDOG_ASD ?= $(ROOT)/afdog.asd
-DEPS_PREFIX ?= afdog-$(shell (md5sum $(AFDOG_ASD) || md5 -r $(AFDOG_ASD)) | awk '{ print $$1; }')
-DEPS_EXT ?= .core
-DEPS_NAME ?= $(DEPS_PREFIX)$(DEPS_EXT)
-DEPS_DIR  ?= /tmp
 
 test: clean-all init afdog
 	@echo "=> Running tests."
@@ -11,7 +6,7 @@ test: clean-all init afdog
 	$(MAKE) run-tests-with-core
 	$(MAKE) clean
 
-$(ROOT)/afdog-test.core: $(DEPS_DIR)/$(DEPS_NAME)
+$(ROOT)/afdog-test.core: dep-core
 	echo "=> Compiling test core."
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
@@ -34,7 +29,7 @@ run-tests-with-core: $(ROOT)/afdog-test.core
 	rm -rf $(ROOT)/afdog-test.core
 
 .PHONY: kill-everything-test
-kill-everything-test: $(ROOT)/afdog-test.core
+kill-everything-test:
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(ROOT)/afdog-test.core --eval '(afdog:kill-everything)' \
@@ -43,20 +38,6 @@ kill-everything-test: $(ROOT)/afdog-test.core
 clean-cores:
 	@echo "=> Cleaning up old cores."
 	rm -rf $(DEPS_DIR)/afdog-*$(DEPS_EXT)
-
-$(DEPS_DIR)/$(DEPS_NAME):
-	@echo "=> Compiling dependince core: $(DEPS_DIR)/$(DEPS_NAME)"
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(LISP) --noinform --disable-ldb --lose-on-corruption --end-runtime-options \
-		--disable-debugger \
-		--noprint \
-		--load $(QL_ROOT_PATH)/setup.lisp \
-		--eval "(setf *compile-verbose* nil *compile-print* nil)" \
-		--eval '(asdf:disable-output-translations)' \
-		--eval "(mapc #'ql:quickload (cdar (asdf:component-depends-on 'asdf:compile-op (asdf:find-system :afdog))))" \
-		--eval "(mapc #'ql:quickload '(#:nst))" \
-		--eval '(sb-ext:save-lisp-and-die "$(DEPS_DIR)/$(DEPS_NAME)" :executable t)'
 
 run-tests:
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \

@@ -2,6 +2,12 @@
 BINDIR ?= $(ROOT)/bin
 BIN ?= $(BINDIR)/$(TARGET)
 
+AFDOG_ASD ?= $(ROOT)/afdog.asd
+DEPS_PREFIX ?= afdog-$(shell (md5sum $(AFDOG_ASD) || md5 -r $(AFDOG_ASD)) | awk '{ print $$1; }')
+DEPS_EXT ?= .core
+DEPS_NAME ?= $(DEPS_PREFIX)$(DEPS_EXT)
+DEPS_DIR  ?= /tmp
+
 ## Developer setup ##
 .PHONY: develop
 develop: | init asdf
@@ -24,24 +30,40 @@ clean-buildapp:
 	rm -rf $(BUILDAPP)
 
 
+## Dependency core
+.PHONY: dep-core
+dep-core: $(DEPS_DIR)/$(DEPS_NAME)
+$(DEPS_DIR)/$(DEPS_NAME):
+	@echo "=> Compiling dependince core: $(DEPS_DIR)/$(DEPS_NAME)"
+	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
+	CPATH=$(ROOT)/vendor/libfixposix/src/include \
+	$(LISP) --noinform --disable-ldb --lose-on-corruption --end-runtime-options \
+		--disable-debugger \
+		--noprint \
+		--load $(QL_ROOT_PATH)/setup.lisp \
+		--eval "(setf *compile-verbose* nil *compile-print* nil)" \
+		--eval '(asdf:disable-output-translations)' \
+		--eval "(mapc #'ql:quickload (cdar (asdf:component-depends-on 'asdf:compile-op (asdf:find-system :afdog))))" \
+		--eval "(mapc #'ql:quickload '(#:nst))" \
+		--eval '(sb-ext:save-lisp-and-die "$(DEPS_DIR)/$(DEPS_NAME)" :executable t)'
+
 ## Binary ##
 .PHONY: afdog
 afdog: $(BIN)
-$(BIN): $(BUILDAPP)
+$(BIN): $(BUILDAPP) dep-core
 	@echo "=> Building $(TARGET) => $(BIN)"
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/build/lib/ \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP_PREFIX) $(BUILDAPP) --output $(BIN) \
 				               --asdf-path $(ROOT) \
 				               --asdf-tree $(ROOT)/vendor \
-				               --eval '(sb-ext:disable-debugger)' \
                                --load $(ROOT)/src/patches/build.lisp \
 				               --require sb-aclrepl \
-				               --load $(QL_SETUP) \
-				               --eval '(ql:quickload :afdog)' \
+				               --eval '(asdf:load-system :afdog)' \
                                --eval "(setf afdog:*git-revision* \"$$(git rev-parse HEAD || echo UNKNOWN)\")" \
 				               --eval "(swank-loader:init :load-contribs t)" \
 				               --dispatched-entry '/afdog-cli:main' \
+				--sbcl $(DEPS_DIR)/$(DEPS_NAME) \
 	|| { \
 	       echo '[ERROR] Build failed!'; \
            rm -f $(BIN); \

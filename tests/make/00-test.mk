@@ -25,15 +25,8 @@ run-tests-with-core: $(ROOT)/afdog-test.core
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(ROOT)/afdog-test.core --eval '(afdog-tests:run-all)' \
 							--eval '(quit)'
-	$(MAKE) kill-everything-test
+	$(MAKE) kill-everything-fast
 	rm -rf $(ROOT)/afdog-test.core
-
-.PHONY: kill-everything-test
-kill-everything-test:
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
-	$(ROOT)/afdog-test.core --eval '(afdog:kill-everything)' \
-				--eval '(quit)'
 
 clean-cores:
 	@echo "=> Cleaning up old cores."

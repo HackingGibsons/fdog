@@ -1,7 +1,7 @@
 clean-all: | clean
 clean: | lisp-fasl-clean asdf-clean lisp-clean externals-clean clean-build clean-all-bundle
 
-.PHONY: kill-everything-clean
+.PHONY: kill-everything-fast
 kill-everything-fast:
 	NO_WAIT=1 $(MAKE) kill-everything
 

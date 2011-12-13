@@ -44,7 +44,7 @@ $(DEPS_DIR)/$(DEPS_NAME):
 		--eval "(setf *compile-verbose* nil *compile-print* nil)" \
 		--eval '(asdf:disable-output-translations)' \
 		--eval "(mapc #'ql:quickload (cdar (asdf:component-depends-on 'asdf:compile-op (asdf:find-system :afdog))))" \
-		--eval "(mapc #'ql:quickload '(#:nst))" \
+                --eval "(mapc #'ql:quickload (remove :afdog (cdar (asdf:component-depends-on 'asdf:compile-op (asdf:find-system :afdog-tests))) :test #'string-equal))" \
 		--eval '(sb-ext:save-lisp-and-die "$(DEPS_DIR)/$(DEPS_NAME)" :executable t)'
 
 ## Binary ##

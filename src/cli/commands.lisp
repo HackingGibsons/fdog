@@ -124,6 +124,11 @@
       (or (mapc #'read-eval forms)
           #+sbcl (sb-impl::toplevel-repl nil)))))
 
+(defcommand start-logging (argv)
+  "Dumps log messages to stdout."
+  (with-cli-options (argv "Usage: start-logging [options]~%~@{~A~%~}~%") nil
+    (afdog:start-logging-collect)))
+
 (defcommand help (argv &key (exit 0))
   "Show help"
   (if argv

@@ -13,7 +13,8 @@
            :*root*
            :run-program
            :process-hash
-           :kill-everything)
+           :kill-everything
+           :start-logging-collect)
   (:export :*socket-linger*))
 
 (in-package :afdog)

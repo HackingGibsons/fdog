@@ -465,11 +465,14 @@
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
            :remove-need-filled)))
 
-   (progn
+   (with-agent-conversation (m e) mongrel2-uuid
      (ignore-errors (fdog-models:disconnect))
      (ignore-errors (clsql:disconnect))
      (fdog-models:connect db-path)
-     (let* ((server (fdog-models:servers :name "control" :refresh t :one t))
-            (hosts (and server (fdog-models:mongrel2-server-hosts server))))
-       (or (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (info (getf msg :info) (getf msg :info)))
+          ((let* ((server (fdog-models:servers :name "control" :refresh t :one t))
+                  (hosts (and server (fdog-models:mongrel2-server-hosts server))))
+             (not (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)))
            :host-removed)))))

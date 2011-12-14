@@ -166,7 +166,7 @@
           :dead)))
 
     ;; Try to find an agent info with a nil peers list
-    (with-agent-conversation (m e) uuid
+    (with-agent-conversation (m e :timeout 30) uuid
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
             (info (getf msg :info) (getf msg :info)))

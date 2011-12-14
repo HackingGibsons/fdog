@@ -169,11 +169,11 @@
     (with-agent-conversation (m e) uuid
       (do* ((msg (parse-message (read-message m))
                  (parse-message (read-message m)))
-            (info nil (getf msg :info)))
-          ((and (equalp (subseq msg 0 2) '(:agent :info))
-                info
+            (info (getf msg :info) (getf msg :info)))
+          ((and info
                 (not (find kid-uuid (getf info :peers) :key #'car :test #'equalp)))
-           :gone)))))
+           :gone)
+        (format t "Kid: ~A Msg: ~A~%" kid-uuid msg)))))
 
 (def-test (agent-dies-after-timeout :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   ;; Send a message to agent's head to change the interval to 10 seconds

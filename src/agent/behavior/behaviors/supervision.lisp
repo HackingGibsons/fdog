@@ -182,7 +182,7 @@ Fires messages into the `link-event' method after destructuring the event to det
         (send-message (behavior-organ behavior) :command `(:command :stop-watching
                                                                     :stop-watching (:agent :uuid :uuid ,uuid)))
         ;; Send a callback
-        (send-message (behavior-organ behavior) :unlinked `(:unlinked :agent :uuid ,uuid))))))
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :agent :agent (:uuid ,uuid)))))))
 
 ;; Agent-specific watch machine
 (defclass agent-watch-machine (standard-watch-machine)
@@ -304,10 +304,12 @@ of an agent and transitions to the `:made' state"
         (funcall value info)))))
 
 (defmethod unlink ((behavior link-manager) (what (eql :process)) info)
-  (let ((key (link-key behavior what info))
-        (pid (getf info :pid)))
+  (let ((key (link-key behavior what (getf info what)))
+        (pid (getf (getf info what) :pid)))
     ;; Look up the process in the links table
     (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (log-for (watch-machine trace) "Unlinking Info: ~A Key: ~A Pid: ~A Found: ~A"
+               info key pid foundp)
       (when foundp
         ;; when found, remove machine from list
         (remhash key (links behavior))
@@ -315,4 +317,4 @@ of an agent and transitions to the `:made' state"
         (send-message (behavior-organ behavior) :command `(:command :stop-watching
                                                                     :stop-watching (:process :pid :pid ,pid)))
         ;; Send a callback
-        (send-message (behavior-organ behavior) :unlinked `(:unlinked :process :pid ,pid))))))
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :process :process ,(getf info what)))))))

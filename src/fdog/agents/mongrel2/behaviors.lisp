@@ -9,7 +9,12 @@
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
   "A :need for a :server gets filled when heard."
-  (flet ((from-info (thing) (getf need-info thing))
+  (flet ((server-info-cons (server)
+           "Format a server as a cons pair in the format of (name . uuid)"
+           (and server
+                (cons (fdog-models:mongrel2-server-name server)
+                      (fdog-models:mongrel2-server-uuid server))))
+         (from-info (thing) (getf need-info thing))
          (get-servers (info) (apply #'fdog-models:servers :one t :refresh t info)))
     (let* ((servers (mapcar #'get-servers need-info)))
       (log-for (agent-needs trace) "Found servers to remove: ~A" servers)
@@ -31,7 +36,7 @@
           (send-message organ :command `(:command :speak
                                           :say (:filled :need
                                                 :need ,what
-                                                ,what ,need-info))))))))
+                                                ,what ,(mapcar #'server-info-cons servers)))))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)
   "A :need for a :server gets filled when heard."

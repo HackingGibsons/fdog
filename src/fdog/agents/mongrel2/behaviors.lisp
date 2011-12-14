@@ -58,7 +58,8 @@
                                           :say (:filled :need
                                                 :need ,what
                                                 ,what ,(mapcar #'server-info-cons servers))))
-          (clsql:delete-instance-records (list server)))))))
+
+          (clsql:delete-instance-records server))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)
   "A :need for a :server gets filled when heard."

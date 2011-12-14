@@ -12,6 +12,10 @@
                        :category-spec category
                        :output-spec '(human-time log5:category log5:message)))
   (when syslog
+    (log5:start-sender 'syslog-info
+                       (log5:stream-sender :location (make-instance 'syslog-logging-stream :priority :info))
+                       :category-spec '(log5:info)
+                       :output-spec '(log5:message))
     (log5:start-sender 'syslog-warn
                        (log5:stream-sender :location (make-instance 'syslog-logging-stream :priority :warning))
                        :category-spec '(log5:warn)

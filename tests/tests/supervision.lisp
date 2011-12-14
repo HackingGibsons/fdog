@@ -291,10 +291,10 @@
       (do ((msg (parse-message (read-message m))
                 (parse-message (read-message m))))
         ((equalp (getf msg :made) :process)
-         (setf pid (getf msg :pid)))))
+         (setf pid (getf (getf msg :process) :pid)))))
 
     (with-agent-conversation (m e :timeout 20) agent-uuid
-      (zmq:send! e (prepare-message `(:unlink :process :pid ,pid)))
+      (zmq:send! e (prepare-message `(:unlink :process :process (:pid ,pid))))
       (do ((msg (parse-message (read-message m))
                 (parse-message (read-message m))))
         ((and (eql (getf msg :unlinked) :process)) (equalp (getf msg :pid) pid)

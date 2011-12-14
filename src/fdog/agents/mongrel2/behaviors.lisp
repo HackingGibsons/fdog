@@ -42,19 +42,11 @@
     (let* ((servers (mapcar #'get-servers need-info)))
       (log-for (agent-needs trace) "Found servers to remove: ~A" servers)
       (dolist (server servers)
-        (let* ((hosts (fdog-models:mongrel2-server-hosts server))
-               (routes (loop for host in hosts
-                          appending (fdog-models:mongrel2-host-routes host)))
-               (targets (loop for route in routes
-                           appending (fdog-models:mongrel2-route-target route))))
-          (log-for (agent-needs trace) "Found hosts: ~A" hosts)
-          (log-for (agent-needs trace) "Found routes: ~A" routes)
-          (log-for (agent-needs trace) "Found targets: ~A" targets)
+        (let* ((hosts (fdog-models:mongrel2-server-hosts server)))
 
           (unlink-server organ server (clsql:database-name clsql:*default-database*))
 
-          (mapc #'clsql:delete-instance-records
-                (append servers hosts routes targets))
+          (mapc #'remove-host hosts)
 
           (send-message organ :command `(:command :speak
                                           :say (:filled :need

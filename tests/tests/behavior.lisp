@@ -167,8 +167,8 @@
 
     ;; Try to find an agent info with a nil peers list
     (with-agent-conversation (m e :timeout 30) uuid
-      (do* ((msg (parse-message (read-message m))
-                 (parse-message (read-message m)))
+      (do* ((msg (parse-message (read-message m :timeout 1))
+                 (parse-message (read-message m :timeout 1)))
             (info (getf msg :info) (getf msg :info)))
           ((and info
                 (not (find kid-uuid (getf info :peers) :key #'car :test #'equalp)))

@@ -38,7 +38,6 @@
            (and server
                 (cons (fdog-models:mongrel2-server-name server)
                       (fdog-models:mongrel2-server-uuid server))))
-         (from-info (thing) (getf need-info thing))
          (get-servers (info) (apply #'fdog-models:servers :one t :refresh t info)))
     (let* ((servers (mapcar #'get-servers need-info)))
       (log-for (agent-needs trace) "Found servers to remove: ~A" servers)

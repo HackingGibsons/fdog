@@ -354,7 +354,8 @@
 (def-test (mongrel2-agent-can-remove-server :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :need-filled)
           (:eql :server-running)
-          (:eql :remove-need-filled))
+          (:eql :remove-need-filled)
+          (:eql :server-removed))
   (list
    (with-agent-conversation (m e) mongrel2-uuid
      (zmq:send! e (prepare-message
@@ -402,7 +403,17 @@
           ((and filled
                 (getf filled :remove-server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
-           :remove-need-filled)))))
+           :remove-need-filled)))
+
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (info (getf msg :info) (getf msg :info)))
+          ((not (fdog-models:servers :name "forwarder" :refresh t :one t))
+           :server-removed)))))
 
 (def-test (mongrel2-agent-can-remove-host :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :find-pid)

@@ -12,7 +12,11 @@
 
 ;; Directly runnable
 (def-test-group basic-tests ())
-(def-test-group cli-tests (kill-everything-fixture))
+(def-test-group cli-tests (afdog-bin-fixture kill-everything-fixture)
+  (:setup (unless (probe-file afdog-bin)
+            (format t "Making binary.~%")
+            (afdog:run-program "/usr/bin/make" `("-C" ,(namestring afdog:*root*) "afdog") :wait t)
+            (format t "Binary made.~%"))))
 
 ;; Event ran
 (def-test-group booted-agent-tests ())

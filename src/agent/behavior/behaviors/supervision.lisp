@@ -182,7 +182,7 @@ Fires messages into the `link-event' method after destructuring the event to det
         (send-message (behavior-organ behavior) :command `(:command :stop-watching
                                                                     :stop-watching (:agent :uuid :uuid ,uuid)))
         ;; Send a callback
-        (send-message (behavior-organ behavior) :unlinked `(:unlinked :agent :agent (:uuid ,uuid)))))))
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :agent :uuid ,uuid))))))
 
 ;; Agent-specific watch machine
 (defclass agent-watch-machine (standard-watch-machine)

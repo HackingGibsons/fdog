@@ -19,17 +19,23 @@
 
       ;; TODO:
       ;; Extract enough methods to make the bellow sane to accomplish, and do it
-      ;; * Remove any routes and targets of the given hsot
       ;; * If the server has ho other hosts, remove the server
       ;; * If the server has other hosts, make sure the default host is set
       ;; * Reload the server if we didn't delete it
 
       (and server host
-          (send-message organ :command `(:command :speak
-                                          :say (:filled :need
-                                                :need ,what
-                                                ,what (:server ,(from-info :server)
-                                                       :host ,(from-info :host)))))))))
+           (remove-host host)
+
+           (let ((server (fdog-models:servers :one t :uuid (fdog-models:mongrel2-server-uuid server) :refresh t)))
+             (and server
+                  (fdog-models:mongrel2-server-hosts server)
+                  (fdog-models:mongrel2-server-signal server :reload)))
+
+           (send-message organ :command `(:command :speak
+                                           :say (:filled :need
+                                                 :need ,what
+                                                 ,what (:server ,(from-info :server)
+                                                        :host ,(from-info :host)))))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
   "A :need for a :server gets filled when heard."

@@ -172,8 +172,7 @@
             (info (getf msg :info) (getf msg :info)))
           ((and info
                 (not (find kid-uuid (getf info :peers) :key #'car :test #'equalp)))
-           :gone)
-        (format t "Kid: ~A Msg: ~A~%" kid-uuid msg)))))
+           :gone)))))
 
 (def-test (agent-dies-after-timeout :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   ;; Send a message to agent's head to change the interval to 10 seconds

@@ -7,6 +7,32 @@
     (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
              agent organ need-what need-info)))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
+  "A :need for a :server gets filled when heard."
+  (flet ((from-info (thing) (getf need-info thing))
+         (get-servers (info) (apply #'fdog-models:servers :one t :refresh t info)))
+    (let* ((servers (mapcar #'get-servers need-info)))
+      (log-for (agent-needs trace) "Found servers to remove: ~A" servers)
+      (dolist (server servers)
+        (let* ((hosts (fdog-models:mongrel2-server-hosts server))
+               (routes (loop for host in hosts
+                          appending (fdog-models:mongrel2-host-routes host)))
+               (targets (loop for route in routes
+                           appending (fdog-models:mongrel2-route-target route))))
+          (log-for (agent-needs trace) "Found hosts: ~A" hosts)
+          (log-for (agent-needs trace) "Found routes: ~A" routes)
+          (log-for (agent-needs trace) "Found targets: ~A" targets)
+
+          (unlink-server organ server (clsql:database-name clsql:*default-database*))
+
+          (mapc #'clsql:delete-instance-records
+                (append servers hosts routes targets))
+
+          (send-message organ :command `(:command :speak
+                                          :say (:filled :need
+                                                :need ,what
+                                                ,what ,need-info))))))))
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)
   "A :need for a :server gets filled when heard."
   (flet ((from-info (thing) (getf need-info thing)))

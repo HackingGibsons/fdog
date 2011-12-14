@@ -5,12 +5,25 @@
                              (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
 
 ;;; Logging functions for zmq senders
-(defun start-logging (&key (default t) (category '(log5:dribble+)))
+(defun start-logging (&key (default t) (syslog t) (category '(log5:dribble+)))
   (when default
     (log5:start-sender 'default
                        (log5:stream-sender :location (make-instance 'zmq-logging-stream))
                        :category-spec category
-                       :output-spec '(human-time log5:category log5:message))))
+                       :output-spec '(human-time log5:category log5:message)))
+  (when syslog
+    (log5:start-sender 'syslog-warn
+                       (log5:stream-sender :location (make-instance 'syslog-logging-stream :priority :warning))
+                       :category-spec '(log5:warn)
+                       :output-spec '(log5:message))
+    (log5:start-sender 'syslog-error
+                       (log5:stream-sender :location (make-instance 'syslog-logging-stream :priority :err))
+                       :category-spec '(log5:error)
+                       :output-spec '(log5:message))
+    (log5:start-sender 'syslog-fatal
+                       (log5:stream-sender :location (make-instance 'syslog-logging-stream :priority :crit))
+                       :category-spec '(log5:error)
+                       :output-spec '(log5:message))))
 
 (defun stop-logging ()
   (log5:stop-all-senders))
@@ -54,6 +67,24 @@
 ;;; Logging functions for the zmq receiver to output to console/disk
 (defcategory output)
 
+;;; syslog stream
+(defclass syslog-logging-stream (fundamental-character-output-stream trivial-gray-stream-mixin)
+  ((priority
+     :initarg :priority
+     :initform (error "Syslog priority not specified")
+     :accessor priority)))
+
+(defmethod stream-write-char ((stream syslog-logging-stream) char)
+  (stream-write-sequence stream
+    (with-output-to-string (cheating) (format cheating "~C" char)) 0 nil))
+
+(defmethod stream-write-string ((stream syslog-logging-stream) str &optional start end)
+  (stream-write-sequence stream str start end))
+
+(defmethod stream-write-sequence ((stream syslog-logging-stream) seq start end &key)
+  (unless (string-empty seq)
+    (syslog:log "afdog" :local7 (priority stream) (trim-whitespace (subseq seq (or start 0) end)) syslog:+log-pid+)))
+
 (defun start-logging-collect (&key logfile (default t))
   (format t "Log collector started.")
   (when default
@@ -74,17 +105,17 @@
     (zmq:with-socket (socket ctx zmq:pull)
       (zmq:bind socket *socket-address*)
       (let ((msg (make-instance 'zmq:msg)))
-        (labels ((trim-whitespace (string)
-                   (string-trim '(#\Space #\Tab #\Newline) string))
-
-                 (string-empty (string)
-                   (or (= (length string) 0)
-                       (= (length (trim-whitespace string)) 0)))
-
-                 (run-once ()
+        (labels ((run-once ()
                    (zmq:recv! socket msg)
                    (let ((string (zmq:msg-data-as-string msg)))
                      (unless (string-empty string)
                        (log-for (output) (trim-whitespace string))))
                    :always-run))
           (loop while (run-once) do ':nothing))))))
+
+(defun trim-whitespace (string)
+  (string-trim '(#\Space #\Tab #\Newline) string))
+
+(defun string-empty (string)
+  (or (= (length string) 0)
+      (= (length (trim-whitespace string)) 0)))

@@ -1,12 +1,12 @@
 #-*- mode:makefile-gmake; -*-
 
-test: clean-all init afdog
+test: clean-all init
 	@echo "=> Running tests."
 	rm -rf $(ROOT)/afdog-test.core
 	$(MAKE) run-tests-with-core
 	$(MAKE) clean
 
-$(ROOT)/afdog-test.core: dep-core
+$(ROOT)/afdog-test.core: afdog
 	echo "=> Compiling test core."
 	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
 	CPATH=$(ROOT)/vendor/libfixposix/src/include \

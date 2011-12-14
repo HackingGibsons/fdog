@@ -11,6 +11,7 @@
                #:trivial-gray-streams
                #:external-program
                #:cl-fad
+               #:cl-syslog
 
                ;; Vendord
                #:clsql

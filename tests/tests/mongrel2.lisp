@@ -4,7 +4,7 @@
   (not (equalp *root*
                (asdf:system-source-directory :afdog-tests))))
 
-(def-test (mongrel2-agent-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :starts)
           (:eql :running))
   (list
@@ -36,7 +36,7 @@
                         (fdog-models:mongrel2-server-pid server)))
            :running)))))
 
-(def-test (mongrel2-agent-restarts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-restarts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :first-process)
           (:eql :not-running)
           (:eql :made-new-process)
@@ -117,7 +117,7 @@
            :saw-new-process)))))
 
 
-(def-test (mongrel2-agent-watches-and-restarts-existing-mongrel :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-watches-and-restarts-existing-mongrel :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :first-process)
           (:eql :runner-dead)
           (:eql :same-server-found)
@@ -211,7 +211,7 @@
            (setf pid saw-pid)
            :saw-new-process)))))
 
-(def-test (mongrel2-agent-announces-mongrels :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-announces-mongrels :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :find-pid)
           (:eql :announce-servers))
   (list
@@ -239,7 +239,7 @@
                 (getf provides :servers))
            :announce-servers)))))
 
-(def-test (mongrel2-agent-solves-need-of-existing-server :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-solves-need-of-existing-server :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :find-pid)
           (:eql :need-filled)
           (:eql :find-new-host))
@@ -279,7 +279,7 @@
        (and (find "api.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
             :find-new-host)))))
 
-(def-test (mongrel2-agent-creates-new-server :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-creates-new-server :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :need-filled)
           (:eql :find-new-host))
   (list
@@ -305,7 +305,7 @@
        (and (find "api.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
             :find-new-host)))))
 
-(def-test (mongrel2-agent-new-server-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture))
+(def-test (mongrel2-agent-new-server-starts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :need-filled)
           (:eql :find-new-host)
           (:eql :server-running))

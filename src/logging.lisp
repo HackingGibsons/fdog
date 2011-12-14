@@ -22,7 +22,7 @@
                        :output-spec '(log5:message))
     (log5:start-sender 'syslog-fatal
                        (log5:stream-sender :location (make-instance 'syslog-logging-stream :priority :crit))
-                       :category-spec '(log5:error)
+                       :category-spec '(log5:fatal)
                        :output-spec '(log5:message))))
 
 (defun stop-logging ()

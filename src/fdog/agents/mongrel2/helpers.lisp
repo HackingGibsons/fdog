@@ -1,5 +1,23 @@
 (in-package :mongrel2-agent)
 
+(defmethod unlink-server ((organ agent::standard-organ) (server fdog-models:mongrel2-server) config)
+  (flet ((make-mongrel2-arguments (server config)
+           (let ((uuid (fdog-models:mongrel2-server-uuid server)))
+             `(:path "/usr/bin/env" :args ("mongrel2" ,(namestring config) ,uuid)))))
+
+    (let ((arguments (make-mongrel2-arguments server config))
+          (pid (fdog-models:mongrel2-server-pid server)))
+
+      (log-for (mongrel2-agent trace) "Found mongrel2 server ~A to unlink with make arguments of ~A." server arguments)
+
+      (send-message organ :command `(:command :unlink
+                                              :unlink :process
+                                              :process (:pid ,pid ,@arguments)))
+
+      (log-for (mongrel2-agent trace) "Stopping server: ~A" server)
+      (fdog-models:mongrel2-server-signal server :stop)
+      server)))
+
 (defmethod link-server ((organ agent::standard-organ) (server fdog-models:mongrel2-server) config)
   (flet ((make-mongrel2-arguments (server config)
            (let ((uuid (fdog-models:mongrel2-server-uuid server)))

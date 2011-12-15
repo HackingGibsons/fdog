@@ -53,18 +53,13 @@
     (let* ((servers (mapcar #'get-servers need-info)))
       (log-for (agent-needs trace) "Found servers to remove: ~A" servers)
       (dolist (server servers)
-        (let* ((hosts (fdog-models:mongrel2-server-hosts server)))
+        (unlink-server organ server (clsql:database-name clsql:*default-database*))
+        (send-message organ :command `(:command :speak
+                                                :say (:filled :need
+                                                              :need ,what
+                                                              ,what ,(mapcar #'server-info-cons servers))))
+        (remove-server server)))))
 
-          (unlink-server organ server (clsql:database-name clsql:*default-database*))
-
-          (mapc #'remove-host hosts)
-
-          (send-message organ :command `(:command :speak
-                                          :say (:filled :need
-                                                :need ,what
-                                                ,what ,(mapcar #'server-info-cons servers))))
-
-          (clsql:delete-instance-records server))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)
   "A :need for a :server gets filled when heard."

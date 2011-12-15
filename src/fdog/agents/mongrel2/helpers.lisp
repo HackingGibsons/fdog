@@ -1,5 +1,13 @@
 (in-package :mongrel2-agent)
 
+(defmethod remove-server (server)
+  "Remove the given `server' from the database and anything attached to it."
+  (let* ((hosts (fdog-models:mongrel2-server-hosts server)))
+    (mapc #'remove-host hosts)
+    (clsql:delete-instance-records server)
+    server))
+
+
 (defmethod remove-host (host)
   "Remove the given `host' from the database, and anything attached to it."
   (let* ((routes (fdog-models:mongrel2-host-routes host))

@@ -19,28 +19,28 @@
 
       ;; TODO:
       ;; Extract enough methods to make the bellow clean to accomplish
-      (and server host
-           (remove-host host)
+      (when (and server host)
+        (remove-host host)
 
-           (let ((server (fdog-models:servers :one t  :refresh t
-                                              :uuid (fdog-models:mongrel2-server-uuid server))))
-             (if (and server (fdog-models:mongrel2-server-hosts server))
-                 (progn
-                   (unless (fdog-models:mongrel2-server-default-host server)
-                     (setf (fdog-models:mongrel2-server-default-host-name server)
-                           (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
-                     (clsql:update-records-from-instance server))
+        (let ((server (fdog-models:servers :one t  :refresh t
+                                           :uuid (fdog-models:mongrel2-server-uuid server))))
+          (if (and server (fdog-models:mongrel2-server-hosts server))
+              (progn
+                (unless (fdog-models:mongrel2-server-default-host server)
+                  (setf (fdog-models:mongrel2-server-default-host-name server)
+                        (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
+                  (clsql:update-records-from-instance server))
 
-                   (fdog-models:mongrel2-server-signal server :reload))
-                 (progn
-                   (unlink-server organ server (clsql:database-name clsql:*default-database*))
-                   (clsql:delete-instance-records server))))
+                (fdog-models:mongrel2-server-signal server :reload))
+              (progn
+                (unlink-server organ server (clsql:database-name clsql:*default-database*))
+                (clsql:delete-instance-records server))))
 
-           (send-message organ :command `(:command :speak
-                                           :say (:filled :need
-                                                 :need ,what
-                                                 ,what (:server ,(from-info :server)
-                                                        :host ,(from-info :host)))))))))
+        (send-message organ :command `(:command :speak
+                                                :say (:filled :need
+                                                              :need ,what
+                                                              ,what (:server ,(from-info :server)
+                                                                     :host ,(from-info :host)))))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
   "A :need for a :server gets filled when heard."

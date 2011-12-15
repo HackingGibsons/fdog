@@ -42,6 +42,25 @@
                                                               ,what (:server ,(from-info :server)
                                                                      :host ,(from-info :host)))))))))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-servers)) need-info)
+  (flet ((need-server-p (server)
+           (find (fdog-models:mongrel2-server-name server) need-info
+                 :test #'string=)))
+    (let* ((servers (fdog-models:servers :refresh t))
+           (remove (remove-if-not #'need-server-p servers)))
+
+      (dolist (server remove remove)
+        (unlink-server organ server (clsql:database-name clsql:*default-database*))
+        (remove-server server))
+
+      (send-message organ :command `(:command :speak
+                                     :say (:filled :need
+                                           :need ,what
+                                           ,what ,(mapcar #'fdog-models:mongrel2-server-name remove)))))))
+
+
+
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
   "A :need for a :server gets filled when heard."
   (flet ((server-info-cons (server)

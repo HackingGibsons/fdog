@@ -27,7 +27,7 @@ out of.")
   "Mouth specific socket inits."
   (declare (ignorable options))
 
-  (log-for (warn) "TOOD: Booting mouth: ~A from ~A" mouth agent)
+  (log-for (warn) "Booting mouth: ~A from ~A" mouth agent)
   (with-slots (speak-addr speak-sock) mouth
     (multiple-value-bind (sock addr) (make-local-sock (agent-context agent) zmq:pub)
       (zmq:bind sock (local-ipc-addr mouth))

@@ -45,7 +45,6 @@ behavior attached to predicate the invocation of the funcallabable lambda of tha
                           (type (car ',definition))
                           (message (second ',definition)))
                       (lambda (event)
-                        (log-for (warn) "TODO: Find out if ~A matches ~A" event ',definition)
                         (let ((event-from (car event))
                               (event-type (cadr event)))
                           (when (and (eql event-from from)
@@ -57,9 +56,6 @@ behavior attached to predicate the invocation of the funcallabable lambda of tha
                    `(let ((from (getf ',definition :from))
                           (nth (getf ',definition :nth)))
                       (lambda (event)
-                        (log-for (warn) "TODO: Compiled ~A checker for every ~Ath beat from ~A" behavior nth from)
-                        (log-for (warn) "Current event: ~A" event)
-                        (log-for (warn) "Typed: ~A" (type-of event))
                         (when (eql (and (consp event) (car event)) from)
                           (let ((time (getf event :time)))
                             (and time
@@ -67,12 +63,8 @@ behavior attached to predicate the invocation of the funcallabable lambda of tha
                                        (subseq (push time (recent-events behavior))
                                                0 (min nth (length (recent-events behavior))))))
 
-                            (log-for (warn) "TODO: Events in ~A to date: ~A" behavior (recent-events behavior))
-                            (log-for (warn) "Seeking: ~A" (last-invoked behavior))
-
                             (if (not (find (last-invoked behavior) (recent-events behavior)))
                                 (prog1 t
-                                  (log-for (trace) "Seems we haven't been invoked in a while. Let's")
                                   (setf (last-invoked behavior) time))
                                 nil)))))))
         ,description))))
@@ -84,7 +76,6 @@ behavior attached to predicate the invocation of the funcallabable lambda of tha
 
 (defmethod act-on-event :after ((organ behaving-organ-mixin) event)
   "Deterimine if this event should result in a behavior invocation"
-  (log-for (warn) "TODO: Call invoke-p for each behavior and invoke it if need be.")
   (let (fired)
     (dolist (behavior (behaviors organ) fired)
       (log-for (trace) "Testing ~A of ~A" behavior organ)

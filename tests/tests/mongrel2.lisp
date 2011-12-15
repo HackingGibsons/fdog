@@ -717,7 +717,7 @@
      (do* ((msg (parse-message (read-message m :timeout 1))
                 (parse-message (read-message m :timeout 1)))
            (info (getf msg :info) (getf msg :info)))
-          ((let* ((server (fdog-models:servers :name "control" :refresh t :one t))
+          ((let* ((server (fdog-models:servers :name "forwarder" :refresh t :one t))
                   (hosts (and server (fdog-models:mongrel2-server-hosts server))))
              (and (not (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name))
                   (not (find "api3.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name))

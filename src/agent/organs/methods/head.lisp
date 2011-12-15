@@ -40,15 +40,16 @@
         (prog1 t (log-for (trace) "~A/~A appears alive." uuid status)))))
 
 ;; Death
-(defmethod suicide ((agent standard-agent))
+(defmethod suicide ((agent standard-agent) &optional reason)
   "Suicide an agent rather than a head."
-  (suicide (find-organ agent :head)))
+  (suicide (find-organ agent :head) reason))
 
-(defmethod suicide ((head agent-head))
+(defmethod suicide ((head agent-head) &optional reason)
   "Send a death message down the bus, agent should terminate."
   (log-for (warn) "~A/~A I HAVE LOST THE WILL TO LIVE!" (organ-agent head) head)
   (send-message head :command `(:command :speak
-                                :say (:agent :death :death ,(agent-uuid (organ-agent head)))))
+                                :say (:agent :death :reason reason
+                                             :death ,(agent-uuid (organ-agent head)))))
   (send-message head :command `(:command :die
                                 :uuid ,(organ-uuid head)
                                 :time ,(get-internal-real-time))))
@@ -133,22 +134,20 @@ If it does, the younger agent will kill itself."
     (map-peers head #'talk-to-peer)))
 
 
-(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
+(defmethod heard-message ((agent standard-agent) (head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
   (log-for (trace) "heard info")
   (let ((info (getf info :info)))
     (update-peer head info)))
 
-(defmethod heard-message ((head agent-head) (from (eql :agent)) (type (eql :kill)) &rest info)
+(defmethod heard-message ((agent standard-agent) (head agent-head) (from (eql :agent)) (type (eql :kill)) &rest info)
   "Agent hearing that someone should die. Is it me? Then announce and suicide."
   (let ((target-uuid (getf info :kill)))
     (when (and target-uuid
                (equalp target-uuid (agent-uuid (organ-agent head))))
 
       ;; Yep, they want me dead :(
-      (send-message head :command `(:command :speak
-                                    :say (:agent :death :death ,(agent-uuid (organ-agent head)))))
-      (suicide head))))
+      (suicide head (format nil "Death message for ~A" target-uuid)))))
 
 
 (defmethod agent-info ((head agent-head))

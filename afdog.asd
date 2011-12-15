@@ -87,11 +87,15 @@
                                                       (:file "methods" :depends-on ("models"))
                                                       (:file "helpers" :depends-on ("package"))
                                                       (:file "m2sh" :depends-on ("models" "methods"))))
+
                                    (:module "agents" :depends-on ("mongrel2") :components
                                            ((:file "packages")
-                                            (:file "mongrel2-agent" :depends-on ("packages"))))))
+                                            (:module "mongrel2" :depends-on ("packages") :components
+                                                     ((:file "helpers")
+                                                      (:file "behaviors"  :depends-on ("mongrel2-agent"))
+                                                      (:file "mongrel2-agent" :depends-on ("helpers"))))))))
 
-                         (:module "cli" :depends-on ("agent") :components
+                         (:module "cli" :depends-on ("agent" "fdog") :components
                                   ((:file "package")
                                    (:file "runner" :depends-on ("package"))
                                    (:file "defcommand" :depends-on ("package"))

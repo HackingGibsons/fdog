@@ -33,4 +33,4 @@
                 (:each-setup (with-agent-conversation (m e :timeout 20) agent-uuid
                                (zmq:send! e (prepare-message `(:reset :timeout))))))
 
-(def-test-group mongrel2-agent-tests ())
+(def-test-group mongrel2-agent-tests (kill-everything-fixture))

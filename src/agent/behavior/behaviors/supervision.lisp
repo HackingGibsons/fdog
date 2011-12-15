@@ -17,7 +17,7 @@
     (when (<= (lonely-tolerance behavior)
               (- now (last-seen behavior)))
       (log-for (warn) "~A: My parent has died." organ)
-      (suicide (organ-agent organ)))))
+      (suicide (organ-agent organ) "I have no parent."))))
 
 
 ;; `:link' command handling
@@ -138,14 +138,6 @@ Fires messages into the `link-event' method after destructuring the event to det
                          (getf event made-what))))
     (log-for (trace watch-machine) "`create-links-made': What: ~A Info: ~A" made-what made-info)
     (link-event behavior made-what made-info)))
-
-(defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
-             (log-for (trace) "destroy behavior entered")
-  (let* ((unlink-what (getf event :unlink))
-         (unlink-info (and unlink-what
-                           (getf event unlink-what))))
-    (log-for (trace) "what: ~A event: ~A" unlink-what event)
-    (unlink behavior unlink-what event)))
 
 (defmethod create-links-unlink ((behavior create-links) (organ standard-organ) event)
              (log-for (trace) "destroy behavior entered")
@@ -312,10 +304,12 @@ of an agent and transitions to the `:made' state"
         (funcall value info)))))
 
 (defmethod unlink ((behavior link-manager) (what (eql :process)) info)
-  (let ((key (link-key behavior what info))
-        (pid (getf info :pid)))
+  (let ((key (link-key behavior what (getf info what)))
+        (pid (getf (getf info what) :pid)))
     ;; Look up the process in the links table
     (multiple-value-bind (value foundp) (gethash key (links behavior))
+      (log-for (watch-machine trace) "Unlinking Info: ~A Key: ~A Pid: ~A Found: ~A"
+               info key pid foundp)
       (when foundp
         ;; when found, remove machine from list
         (remhash key (links behavior))
@@ -323,4 +317,4 @@ of an agent and transitions to the `:made' state"
         (send-message (behavior-organ behavior) :command `(:command :stop-watching
                                                                     :stop-watching (:process :pid :pid ,pid)))
         ;; Send a callback
-        (send-message (behavior-organ behavior) :unlinked `(:unlinked :process :pid ,pid))))))
+        (send-message (behavior-organ behavior) :unlinked `(:unlinked :process :process ,(getf info what)))))))

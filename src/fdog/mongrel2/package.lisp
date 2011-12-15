@@ -42,6 +42,8 @@
              :mongrel2-server-port
              :mongrel2-server-hosts
              ;; More proper methods
+             :remove-mongrel2-server
+             :remove-mongrel2-host
              :mongrel2-server-pid
              :mongrel2-server-running-p
              :mongrel2-server-signal

@@ -121,15 +121,20 @@
               (equal (getf (getf msg :process) :transaction-id) transaction-id)) t))))
 
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
-    (:seq (:eql :death)
+    (:seq (:eql :running)
+          (:eql :death)
           (:eql :not-running))
   (list
+   (and (running-p agent-runner)
+        :running)
+
    ;; Let's hear a death message
    (with-agent-conversation (m e) agent-uuid
      (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
      (do ((msg (parse-message (read-message m :timeout 1))
                (parse-message (read-message m :timeout 1))))
-         ((getf msg :death)
+         ((or (getf msg :death)
+              (not (running-p agent-runner))) ;; Maybe we missed it that quickly
           :death)))
 
    ;; Does it actually die?
@@ -166,12 +171,11 @@
           :dead)))
 
     ;; Try to find an agent info with a nil peers list
-    (with-agent-conversation (m e :timeout 20) uuid
-      (do* ((msg (parse-message (read-message m))
-                 (parse-message (read-message m)))
-            (info nil (getf msg :info)))
-          ((and (equalp (subseq msg 0 2) '(:agent :info))
-                info
+    (with-agent-conversation (m e :timeout 30) uuid
+      (do* ((msg (parse-message (read-message m :timeout 1))
+                 (parse-message (read-message m :timeout 1)))
+            (info (getf msg :info) (getf msg :info)))
+          ((and info
                 (not (find kid-uuid (getf info :peers) :key #'car :test #'equalp)))
            :gone)))))
 

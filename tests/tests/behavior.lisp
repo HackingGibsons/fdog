@@ -121,15 +121,20 @@
               (equal (getf (getf msg :process) :transaction-id) transaction-id)) t))))
 
 (def-test (agent-dies-when-asked :group basic-behavior-tests :fixtures (running-agent-fixture))
-    (:seq (:eql :death)
+    (:seq (:eql :running)
+          (:eql :death)
           (:eql :not-running))
   (list
+   (and (running-p agent-runner)
+        :running)
+
    ;; Let's hear a death message
    (with-agent-conversation (m e) agent-uuid
      (zmq:send! e (prepare-message `(:agent :kill :kill ,agent-uuid)))
      (do ((msg (parse-message (read-message m :timeout 1))
                (parse-message (read-message m :timeout 1))))
-         ((getf msg :death)
+         ((or (getf msg :death)
+              (not (running-p agent-runner))) ;; Maybe we missed it that quickly
           :death)))
 
    ;; Does it actually die?

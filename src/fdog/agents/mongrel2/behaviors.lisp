@@ -7,6 +7,21 @@
     (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
              agent organ need-what need-info)))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :handler)) need-info)
+  (flet ((from-info (thing) (getf need-info thing)))
+    (let* ((server (from-info :server))
+           (server (and server (fdog-models:servers :one t :refresh t :name server))))
+      ;; TODO:
+      ;; * When we have a server, try to find the handler in the database directly
+      ;; * If we can't find it, make it, it requires to references.
+      ;; * With those in hand iterate the hosts and get-or-create a route for them
+      ;;   bound to the target you're holding on the current server.
+      ;; * `link-server' the server, which should cause a start or reload
+      ;; * Return happy
+      :TODO)
+
+
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-hosts)) need-info)
   (flet ((from-info (thing) (getf need-info thing))
          (need-host (host)

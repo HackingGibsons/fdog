@@ -47,7 +47,7 @@
            (find (fdog-models:mongrel2-server-name server) need-info
                  :test #'string=)))
     (let* ((servers (fdog-models:servers :refresh t))
-           (remove (remove-if-not #'need-server-p servers)))
+           (remove (remove-if #'need-server-p servers)))
 
       (dolist (server remove remove)
         (unlink-server organ server (clsql:database-name clsql:*default-database*))

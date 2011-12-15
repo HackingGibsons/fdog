@@ -17,7 +17,7 @@
     (when (<= (lonely-tolerance behavior)
               (- now (last-seen behavior)))
       (log-for (warn) "~A: My parent has died." organ)
-      (suicide (organ-agent organ)))))
+      (suicide (organ-agent organ) "I have no parent."))))
 
 
 ;; `:link' command handling

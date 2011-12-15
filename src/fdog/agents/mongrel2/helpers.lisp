@@ -1,5 +1,17 @@
 (in-package :mongrel2-agent)
 
+(defmethod remove-host (host)
+  "Remove the given `host' from the database, and anything attached to it."
+  (let* ((routes (fdog-models:mongrel2-host-routes host))
+         (targets (loop for route in routes
+                     appending (fdog-models:mongrel2-route-target route))))
+    (log-for (agent-needs trace) "Removing hosts: ~A" host)
+    (log-for (agent-needs trace) "Found routes: ~A" routes)
+    (log-for (agent-needs trace) "Found targets: ~A" targets)
+
+    (mapc #'clsql:delete-instance-records
+          (append (list host) routes targets))))
+
 (defmethod unlink-server ((organ agent::standard-organ) (server fdog-models:mongrel2-server) config)
   (flet ((make-mongrel2-arguments (server config)
            (let ((uuid (fdog-models:mongrel2-server-uuid server)))

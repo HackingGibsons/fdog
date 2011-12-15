@@ -7,6 +7,41 @@
     (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
              agent organ need-what need-info)))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-host)) need-info)
+  "A :need for a :server gets filled when heard."
+  (flet ((from-info (thing) (getf need-info thing)))
+    (let* ((server (fdog-models:servers :one t :name (from-info :server)))
+           (host (find (from-info :host)
+                       (and server (fdog-models:mongrel2-server-hosts server))
+                       :key #'fdog-models:mongrel2-host-name
+                       :test #'string-equal)))
+      (log-for (agent-needs trace) "Found server: ~A host: ~A" server host)
+
+      ;; TODO:
+      ;; Extract enough methods to make the bellow clean to accomplish
+      (when (and server host)
+        (remove-host host)
+
+        (let ((server (fdog-models:servers :one t  :refresh t
+                                           :uuid (fdog-models:mongrel2-server-uuid server))))
+          (if (and server (fdog-models:mongrel2-server-hosts server))
+              (progn
+                (unless (fdog-models:mongrel2-server-default-host server)
+                  (setf (fdog-models:mongrel2-server-default-host-name server)
+                        (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
+                  (clsql:update-records-from-instance server))
+
+                (fdog-models:mongrel2-server-signal server :reload))
+              (progn
+                (unlink-server organ server (clsql:database-name clsql:*default-database*))
+                (clsql:delete-instance-records server))))
+
+        (send-message organ :command `(:command :speak
+                                                :say (:filled :need
+                                                              :need ,what
+                                                              ,what (:server ,(from-info :server)
+                                                                     :host ,(from-info :host)))))))))
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
   "A :need for a :server gets filled when heard."
   (flet ((server-info-cons (server)
@@ -14,29 +49,22 @@
            (and server
                 (cons (fdog-models:mongrel2-server-name server)
                       (fdog-models:mongrel2-server-uuid server))))
-         (from-info (thing) (getf need-info thing))
          (get-servers (info) (apply #'fdog-models:servers :one t :refresh t info)))
     (let* ((servers (mapcar #'get-servers need-info)))
       (log-for (agent-needs trace) "Found servers to remove: ~A" servers)
       (dolist (server servers)
-        (let* ((hosts (fdog-models:mongrel2-server-hosts server))
-               (routes (loop for host in hosts
-                          appending (fdog-models:mongrel2-host-routes host)))
-               (targets (loop for route in routes
-                           appending (fdog-models:mongrel2-route-target route))))
-          (log-for (agent-needs trace) "Found hosts: ~A" hosts)
-          (log-for (agent-needs trace) "Found routes: ~A" routes)
-          (log-for (agent-needs trace) "Found targets: ~A" targets)
+        (let* ((hosts (fdog-models:mongrel2-server-hosts server)))
 
           (unlink-server organ server (clsql:database-name clsql:*default-database*))
 
-          (mapc #'clsql:delete-instance-records
-                (append servers hosts routes targets))
+          (mapc #'remove-host hosts)
 
           (send-message organ :command `(:command :speak
                                           :say (:filled :need
                                                 :need ,what
-                                                ,what ,(mapcar #'server-info-cons servers)))))))))
+                                                ,what ,(mapcar #'server-info-cons servers))))
+
+          (clsql:delete-instance-records server))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)
   "A :need for a :server gets filled when heard."
@@ -49,6 +77,7 @@
                           (and server (from-info :hosts)))))
 
 
+      ;; TODO: Things like this should be in an :after for update-records-from-instance or something similar
       (unless (fdog-models:mongrel2-server-default-host server)
         (setf (fdog-models:mongrel2-server-default-host-name server)
               (car (mapcar #'fdog-models:mongrel2-host-name hosts)))

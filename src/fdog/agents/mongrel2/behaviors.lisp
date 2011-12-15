@@ -7,6 +7,38 @@
     (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
              agent organ need-what need-info)))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-hosts)) need-info)
+  (flet ((from-info (thing) (getf need-info thing))
+         (need-host (host)
+           (find (fdog-models:mongrel2-host-name host) (getf need-info :hosts)
+                 :test #'string=)))
+    (let* ((server (fdog-models:servers :one t :name (getf need-info :server)))
+           (hosts (remove-if #'need-host (and server (fdog-models:mongrel2-server-hosts server)))))
+
+      (and (mapc #'fdog-models:remove-mongrel2-host hosts)
+           (clsql:update-objects-joins (list server)))
+
+      (if (and server (fdog-models:mongrel2-server-hosts server))
+              (progn
+                (unless (fdog-models:mongrel2-server-default-host server)
+                  (setf (fdog-models:mongrel2-server-default-host-name server)
+                        (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
+                  (clsql:update-records-from-instance server))
+
+                (fdog-models:mongrel2-server-signal server :reload))
+              (when server
+                (unlink-server organ server (clsql:database-name clsql:*default-database*))
+                (clsql:delete-instance-records server)))
+
+      (and server hosts (send-message organ :command
+           `(:command :speak
+                      :say (:filled :need
+                                    :need ,what
+                                    ,what (:server ,(from-info :server)
+                                           :hosts ,(mapcar #'fdog-models:mongrel2-host-name hosts)))))))))
+
+
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-host)) need-info)
   "A :need for a :server gets filled when heard."
   (flet ((from-info (thing) (getf need-info thing)))
@@ -20,7 +52,7 @@
       ;; TODO:
       ;; Extract enough methods to make the bellow clean to accomplish
       (when (and server host)
-        (remove-host host)
+        (fdog-models:remove-mongrel2-host host)
 
         (let ((server (fdog-models:servers :one t  :refresh t
                                            :uuid (fdog-models:mongrel2-server-uuid server))))
@@ -42,6 +74,25 @@
                                                               ,what (:server ,(from-info :server)
                                                                      :host ,(from-info :host)))))))))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-servers)) need-info)
+  (flet ((need-server-p (server)
+           (find (fdog-models:mongrel2-server-name server) need-info
+                 :test #'string=)))
+    (let* ((servers (fdog-models:servers :refresh t))
+           (remove (remove-if #'need-server-p servers)))
+
+      (dolist (server remove remove)
+        (unlink-server organ server (clsql:database-name clsql:*default-database*))
+        (fdog-models:remove-mongrel2-server server))
+
+      (send-message organ :command `(:command :speak
+                                     :say (:filled :need
+                                           :need ,what
+                                           ,what ,(mapcar #'fdog-models:mongrel2-server-name remove)))))))
+
+
+
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-server)) need-info)
   "A :need for a :server gets filled when heard."
   (flet ((server-info-cons (server)
@@ -53,18 +104,13 @@
     (let* ((servers (mapcar #'get-servers need-info)))
       (log-for (agent-needs trace) "Found servers to remove: ~A" servers)
       (dolist (server servers)
-        (let* ((hosts (fdog-models:mongrel2-server-hosts server)))
+        (unlink-server organ server (clsql:database-name clsql:*default-database*))
+        (send-message organ :command `(:command :speak
+                                                :say (:filled :need
+                                                              :need ,what
+                                                              ,what ,(mapcar #'server-info-cons servers))))
+        (fdog-models:remove-mongrel2-server server)))))
 
-          (unlink-server organ server (clsql:database-name clsql:*default-database*))
-
-          (mapc #'remove-host hosts)
-
-          (send-message organ :command `(:command :speak
-                                          :say (:filled :need
-                                                :need ,what
-                                                ,what ,(mapcar #'server-info-cons servers))))
-
-          (clsql:delete-instance-records server))))))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)
   "A :need for a :server gets filled when heard."

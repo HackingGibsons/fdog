@@ -20,7 +20,7 @@
       ;; TODO:
       ;; Extract enough methods to make the bellow clean to accomplish
       (when (and server host)
-        (remove-host host)
+        (fdog-models:remove-mongrel2-host host)
 
         (let ((server (fdog-models:servers :one t  :refresh t
                                            :uuid (fdog-models:mongrel2-server-uuid server))))
@@ -51,7 +51,7 @@
 
       (dolist (server remove remove)
         (unlink-server organ server (clsql:database-name clsql:*default-database*))
-        (remove-server server))
+        (fdog-models:remove-mongrel2-server server))
 
       (send-message organ :command `(:command :speak
                                      :say (:filled :need
@@ -77,7 +77,7 @@
                                                 :say (:filled :need
                                                               :need ,what
                                                               ,what ,(mapcar #'server-info-cons servers))))
-        (remove-server server)))))
+        (fdog-models:remove-mongrel2-server server)))))
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :server)) need-info)

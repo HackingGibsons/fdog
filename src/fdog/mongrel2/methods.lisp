@@ -13,9 +13,27 @@
 (defgeneric mongrel2-server-config (server &optional config)
   (:documentation "Get the path of the config for a given mongrel2 server"))
 
-;; Helper
+;; Helpers
 (defmethod model-pk (obj)
   (slot-value obj 'id))
+
+(defmethod remove-mongrel2-server (server)
+  "Remove the given `server' from the database and anything attached to it."
+  (let* ((hosts (fdog-models:mongrel2-server-hosts server)))
+    (mapc #'remove-mongrel2-host hosts)
+    (clsql:delete-instance-records server)
+    server))
+
+
+(defmethod remove-mongrel2-host (host)
+  "Remove the given `host' from the database, and anything attached to it."
+  (let* ((routes (fdog-models:mongrel2-host-routes host))
+         (targets (loop for route in routes
+                     appending (fdog-models:mongrel2-route-target route))))
+    (mapc #'clsql:delete-instance-records
+          (append (list host) routes targets))))
+
+
 
 ;;; Method specializations
 (defmethod mongrel2-server-signal/block ((server mongrel2-server) signal

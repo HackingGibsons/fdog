@@ -766,7 +766,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :handler
-                            :handler (:server "forwarder" :hosts ("api.example.com") :path "/" :name "api"))))
+                            :handler (:server "forwarder" :hosts ("api.example.com") :route "/" :name "api"))))
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)

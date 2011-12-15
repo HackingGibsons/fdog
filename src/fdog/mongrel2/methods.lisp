@@ -29,7 +29,7 @@
   "Remove the given `host' from the database, and anything attached to it."
   (let* ((routes (fdog-models:mongrel2-host-routes host))
          (targets (loop for route in routes
-                     appending (fdog-models:mongrel2-route-target route))))
+                     collecting (fdog-models:mongrel2-route-target route))))
     (mapc #'clsql:delete-instance-records
           (append (list host) routes targets))))
 

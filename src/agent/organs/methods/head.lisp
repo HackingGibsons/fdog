@@ -4,9 +4,7 @@
 (defmethod act-on-event ((head agent-head) event)
   (prog1 event
     (cond ((and (listp event) (getf (reverse event) :beat))
-           (organ-beat-event head event))
-          (:otherwise
-           (log-for (warn) "~A doesn't deal with ~A" head event)))))
+           (organ-beat-event head event)))))
 
 (defmethod organ-beat-event ((head agent-head) (event list))
   "Handle the updating of an organ's state."

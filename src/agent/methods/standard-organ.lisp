@@ -77,8 +77,7 @@ and callbacks for each socket mentioned.")
 
 ;; Event handling
 (defmethod act-on-event ((organ standard-organ) event)
-  "Default primary method for `standard-organ' so that the remainig machinery can function."
-  (log-for (warn) "Organ: ~A doesn't handle events as: ~A" organ event))
+  "Default primary method for `standard-organ' so that the remainig machinery can function.")
 
 (defmethod act-on-event :around ((organ standard-organ) event)
   "Process the event for consumption by the primary method chain by trying to read it into a cons."

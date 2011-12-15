@@ -18,11 +18,7 @@
       (log-for (agent-needs trace) "Found server: ~A host: ~A" server host)
 
       ;; TODO:
-      ;; Extract enough methods to make the bellow sane to accomplish, and do it
-      ;; * If the server has ho other hosts, remove the server
-      ;; * If the server has other hosts, make sure the default host is set
-      ;; * Reload the server if we didn't delete it
-
+      ;; Extract enough methods to make the bellow clean to accomplish
       (and server host
            (remove-host host)
 

@@ -557,6 +557,6 @@
      (ignore-errors (clsql:disconnect))
      (fdog-models:connect db-path)
      (do* ((msg (parse-message (read-message m :timeout 1))
-                (parse-message (read-message m :timeout 1)))
+                (parse-message (read-message m :timeout 1))))
            ((not (fdog-models:servers :name "forwarder" :refresh t :one t))
-            :server-gone))))))
+            :server-gone)))))

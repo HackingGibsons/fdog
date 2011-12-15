@@ -26,10 +26,15 @@
       (and server host
            (remove-host host)
 
-           (let ((server (fdog-models:servers :one t :uuid (fdog-models:mongrel2-server-uuid server) :refresh t)))
-             (and server
-                  (fdog-models:mongrel2-server-hosts server)
-                  (fdog-models:mongrel2-server-signal server :reload)))
+           (let ((server (fdog-models:servers :one t  :refresh t
+                                              :uuid (fdog-models:mongrel2-server-uuid server))))
+             (if (and server (fdog-models:mongrel2-server-hosts server))
+                 (progn
+                   (fdog-models:mongrel2-server-default-host server) ;; Called for :around side effects
+                   (fdog-models:mongrel2-server-signal server :reload))
+                 (progn
+                   (unlink-server organ server (clsql:database-name clsql:*default-database*))
+                   (clsql:delete-instance-records server))))
 
            (send-message organ :command `(:command :speak
                                            :say (:filled :need

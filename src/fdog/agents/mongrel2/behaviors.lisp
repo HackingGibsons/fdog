@@ -30,7 +30,11 @@
                                               :uuid (fdog-models:mongrel2-server-uuid server))))
              (if (and server (fdog-models:mongrel2-server-hosts server))
                  (progn
-                   (fdog-models:mongrel2-server-default-host server) ;; Called for :around side effects
+                   (unless (fdog-models:mongrel2-server-default-host server)
+                     (setf (fdog-models:mongrel2-server-default-host-name server)
+                           (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
+                     (clsql:update-records-from-instance server))
+
                    (fdog-models:mongrel2-server-signal server :reload))
                  (progn
                    (unlink-server organ server (clsql:database-name clsql:*default-database*))

@@ -35,7 +35,8 @@
                                      :setup (afdog:run-program afdog-bin afdog-start-args)
                                      :cleanup (afdog:kill-everything))
     (:eql :dir-empty)
-  (afdog:run-program afdog-bin '("kill-everything"))
-  (if (cl-fad:list-directory (merge-pathnames "run/" *root*))
-      :dir-not-empty
-      :dir-empty))
+  (progn
+    (afdog:run-program afdog-bin '("kill-everything"))
+    (if (cl-fad:list-directory (merge-pathnames "run/" *root*))
+        :dir-not-empty
+        :dir-empty)))

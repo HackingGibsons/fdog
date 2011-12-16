@@ -180,7 +180,7 @@ result into the desired type.")
            (setf (agent-handle runner) (iolib.syscalls:getpid))
            (unwind-protect (run-agent (agent-instance runner))
              (setf (agent-handle runner) nil)
-             (iolib.syscalls:exit 0)))
+             (iolib.syscalls::exit 0)))
           (t
             (start-logging :category category)
 

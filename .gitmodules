@@ -4,9 +4,6 @@
 [submodule "vendor/libfixposix"]
 	path = vendor/libfixposix
 	url = git://gitorious.org/libfixposix/libfixposix.git
-[submodule "vendor/iolib"]
-	path = vendor/iolib
-	url = git://gitorious.org/iolib/iolib.git
 [submodule "vendor/clsql"]
 	path = vendor/clsql
 	url = https://github.com/sshirokov/CLSQL.git

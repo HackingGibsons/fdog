@@ -12,11 +12,11 @@
                #:external-program
                #:cl-fad
                #:cl-syslog
+               #:iolib.sockets
 
                ;; Vendord
                #:clsql
                #:zeromq
-               #:iolib.sockets
 
                ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria

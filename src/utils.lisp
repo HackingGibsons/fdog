@@ -91,7 +91,7 @@ The filename takes the format (process-name)-(hashed-process-and-args).pid"
    (crypto:digest-sequence :sha256
                            (babel:string-to-octets (format nil "~A ~{~A~^ ~}" path args)))))
 
-(defun kill-everything ()
+(defun kill-everything (&key (root *root*))
   "Kills all processes spawned by afdog using the pidfiles in the run/ directory.
 Does kill -9 for each pidfile in run/"
   (labels ((kill-files (directory signal)
@@ -103,7 +103,7 @@ Does kill -9 for each pidfile in run/"
            (delete-files (directory)
              (cl-fad:walk-directory directory
                                     (lambda (file) (delete-file file)))))
-    (let* ((run-directory (merge-pathnames "run/" *root*)))
+    (let* ((run-directory (merge-pathnames "run/" root)))
       (log-for (info) "Killing all spawned processes with kill -9")
       (kill-files run-directory iolib.syscalls:sigkill)
 

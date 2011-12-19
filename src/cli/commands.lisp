@@ -58,6 +58,12 @@
         (format t "[ERROR] No UUIDs were supplied.~%")
         (funcall (get-command :help :function) `("kill"))))))
 
+(defcommand kill-everything (argv)
+  "Kill all running agents and spawned processes with kill -9."
+  (with-cli-options (argv "Usage: kill-everything [options]~%~@{~A~%~}~%")
+      (&parameters (root "An alternate root directory"))
+    (afdog:kill-everything :root root)))
+
 (defcommand agents (argv)
   "List the agents available for spawning."
   (with-cli-options (argv "Usage: agents [options]~%~@{~A~%~}~%") nil

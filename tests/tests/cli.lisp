@@ -30,3 +30,13 @@
     (do* ((msg (parse-message (read-message m))
                (parse-message (read-message m))))
           (t :read-message))))
+
+(def-test (kill-everything-cli-works :group cli-tests :fixtures (cli-agent-uuid-fixture mongrel2-agent-cli-fixture)
+                                     :setup (afdog:run-program afdog-bin afdog-start-args)
+                                     :cleanup (afdog:kill-everything))
+    (:eql :dir-empty)
+  (progn
+    (afdog:run-program afdog-bin '("kill-everything"))
+    (if (cl-fad:list-directory (merge-pathnames "run/" *root*))
+        :dir-not-empty
+        :dir-empty)))

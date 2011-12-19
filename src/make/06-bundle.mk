@@ -18,7 +18,6 @@ $(STAGEDIR): $(BIN)
 	echo `git rev-parse HEAD` > $(STAGEDIR)/REV
 
 	@echo "=> Copying native libs"
-	cp $(ROOT)/vendor/libfixposix/build/lib/*.* $(STAGEDIR)/lib
 
 	@echo "=> Staging select FFI build libs"
 	find $(ROOT)/vendor/clsql -name '*.dylib' -or -name '*.so' | xargs -I % cp % $(STAGEDIR)/lib

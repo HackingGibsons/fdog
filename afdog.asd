@@ -12,7 +12,7 @@
                #:external-program
                #:cl-fad
                #:cl-syslog
-               #:iolib.sockets
+               #:iolib
 
                ;; Vendord
                #:clsql

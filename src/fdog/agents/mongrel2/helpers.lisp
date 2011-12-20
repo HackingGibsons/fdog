@@ -1,5 +1,13 @@
 (in-package :mongrel2-agent)
 
+(defmethod string-to-integer (input &key width (base 0))
+  "Perform a SHA1 hash of the `input' string. If provided, perform (mod hash `width') to narrow the result.
+The result is returned added to `base' which defaults to zero."
+  (let* ((digest (crypto:octets-to-integer (crypto:digest-sequence :sha1 (babel:string-to-octets input))))
+         (digest (if width (mod digest width) digest)))
+    (+ base digest)))
+
+
 (defmethod unlink-server ((organ agent::standard-organ) (server fdog-models:mongrel2-server) config)
   (flet ((make-mongrel2-arguments (server config)
            (let ((uuid (fdog-models:mongrel2-server-uuid server)))

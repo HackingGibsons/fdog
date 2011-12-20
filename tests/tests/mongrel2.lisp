@@ -785,20 +785,9 @@
      (do* ((msg (parse-message (read-message m :timeout 1))
                 (parse-message (read-message m :timeout 1)))
            (server (fdog-models:servers :name "forwarder" :refresh t :one t)
-                   (fdog-models:servers :name "forwarder" :refresh t :one t))
-           (hosts (and server (fdog-models:mongrel2-server-hosts server))
-                  (and server (fdog-models:mongrel2-server-hosts server)))
-           (routes (and hosts (loop for host in hosts
-                                 appending (fdog-models:mongrel2-host-routes host)))
-                   (and hosts (loop for host in hosts
-                                 appending (fdog-models:mongrel2-host-routes host))))
-           (targets (mapcar #'fdog-models:mongrel2-route-target routes)
-                    (mapcar #'fdog-models:mongrel2-route-target routes)))
-          ((and targets
-                (find-if #'(lambda (target)
-                             (and (typep target 'fdog-models:mongrel2-handler)
-                                  (ppcre:scan "^api" (fdog-models:mongrel2-handler-send-ident target))))
-                         targets))
+                   (fdog-models:servers :name "forwarder" :refresh t :one t)))
+          ((and server
+                (fdog-models:find-mongrel2-handler :ident "api" :exact nil))
            :handler-found)))
 
    (let* ((server (fdog-models:servers :one t :refresh t :name "forwarder"))

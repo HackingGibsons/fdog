@@ -8,18 +8,34 @@
              agent organ need-what need-info)))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :handler)) need-info)
-  (flet ((from-info (thing) (getf need-info thing)))
+  (labels ((from-info (thing) (getf need-info thing))
+
+           (local-tcp-address (port)
+             (format nil "tcp://~A:~A" (agent::get-local-address :as :string :update :please) port))
+
+           (local-address-from-string (string &optional (base 20000))
+             (local-tcp-address (string-to-integer string :base base :width 10000))))
+
     (let* ((server (from-info :server))
-           (server (and server (fdog-models:servers :one t :refresh t :name server))))
+           (server (when server (fdog-models:servers :one t :refresh t :name server)))
+
+           (handler (when server (fdog-models:find-mongrel2-handler :ident (from-info :name) :exact nil)))
+           (handler-ident (or (and handler (fdog-models:mongrel2-handler-send-ident handler))
+                              (format nil "~A-~A" (from-info :name) (uuid:make-v4-uuid))))
+
+           (handler (when server
+                      (fdog-models:make-mongrel2-handler handler-ident
+                                                         (local-address-from-string handler-ident 40000)
+                                                         (local-address-from-string handler-ident 50000)
+                                                         :recv-ident handler-ident
+                                                         :update t))))
       ;; TODO:
-      ;; * When we have a server, try to find the handler in the database directly
-      ;; * If we can't find it, make it, it requires to references.
-      ;; * With those in hand iterate the hosts and get-or-create a route for them
+      (log-for (agent-needs trace) "Found or made handler: ~A~%" handler)
+      ;; * With the route and hosts iterate the hosts and get-or-create a route for them
       ;;   bound to the target you're holding on the current server.
       ;; * `link-server' the server, which should cause a start or reload
       ;; * Return happy
       :TODO)))
-
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-hosts)) need-info)

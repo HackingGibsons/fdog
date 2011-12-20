@@ -35,8 +35,6 @@ clean-buildapp:
 dep-core: $(DEPS_DIR)/$(DEPS_NAME)
 $(DEPS_DIR)/$(DEPS_NAME):
 	@echo "=> Compiling dependince core: $(DEPS_DIR)/$(DEPS_NAME)"
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT)/vendor/libfixposix/build/lib \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP) --noinform --disable-ldb --lose-on-corruption --end-runtime-options \
 		--disable-debugger \
 		--noprint \
@@ -52,8 +50,6 @@ $(DEPS_DIR)/$(DEPS_NAME):
 afdog: $(BIN)
 $(BIN): $(BUILDAPP) dep-core
 	@echo "=> Building $(TARGET) => $(BIN)"
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(ROOT)/vendor/libfixposix/build/lib/ \
-	CPATH=$(ROOT)/vendor/libfixposix/src/include \
 	$(LISP_PREFIX) $(BUILDAPP) --output $(BIN) \
 				               --asdf-path $(ROOT) \
 				               --asdf-tree $(ROOT)/vendor \

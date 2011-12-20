@@ -235,22 +235,26 @@ by `path'"
    :documentation
    "Mongrel2 Handler endpoint configuration: http://mongrel2.org/static/mongrel2-manual.html#x1-310003.4.6"))
 
-(defun find-mongrel2-handler (&key send-ident)
-  "Find either all handlers, or a handler with the given `send-ident'"
+(defun find-mongrel2-handler (&key ident (exact t))
+  "Find either all handlers, or a handler with the given `ident'"
   #.(clsql:locally-enable-sql-reader-syntax)
-  (cond ((not send-ident)
+  (cond ((not ident)
          (clsql:select 'mongrel2-handler :flatp t :refresh t))
-        (t
+        (exact
          (car (clsql:select 'mongrel2-handler :flatp t :refresh t
                             :where [= [slot-value 'mongrel2-handler 'send-ident]
-                                      send-ident]))))
+                                      ident])))
+        (t
+         (car (clsql:select 'mongrel2-handler :flatp t :refresh t
+                            :where [like [slot-value 'mongrel2-handler 'send-ident]
+                                         (format nil "~A-%" ident)]))))
   #.(clsql:restore-sql-reader-syntax-state))
 
 
 (defun make-mongrel2-handler (send-ident send-spec recv-spec &key (recv-ident "") (update t))
   "Makes or updates a handler with the send-ident of `send-ident'
 setting the `send-spec' and `recv-spec'"
-  (let ((handler (or (find-mongrel2-handler :send-ident send-ident)
+  (let ((handler (or (find-mongrel2-handler :ident send-ident)
                      (make-instance 'mongrel2-handler :send-ident send-ident))))
 
     (when (or (not (slot-boundp handler 'fdog-models::id))

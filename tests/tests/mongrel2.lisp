@@ -793,7 +793,7 @@
    (let* ((server (fdog-models:servers :one t :refresh t :name "forwarder"))
           (host (and server (fdog-models:find-mongrel2-host server "api.example.com")))
           (route (and host (fdog-models:find-mongrel2-route host "/")))
-          (handler (and route (fdog-models:mongrel2-route-target route))))
+          (target (and route (fdog-models:mongrel2-route-target route))))
      (and target
           (fdog-models:mongrel2-handler-send-spec target)
           (fdog-models:mongrel2-handler-recv-spec target)

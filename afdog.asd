@@ -3,7 +3,6 @@
   :depends-on (#:closer-mop
                #:ip-interfaces
                #:uuid
-               #:swank
                #:unix-options
                #:log5
                #:bordeaux-threads

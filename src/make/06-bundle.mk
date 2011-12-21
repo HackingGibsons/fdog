@@ -20,7 +20,8 @@ $(STAGEDIR): $(BIN)
 	@echo "=> Copying native libs"
 
 	@echo "=> Staging select FFI build libs"
-	find $(ROOT)/vendor/clsql -name '*.dylib' -or -name '*.so' | xargs -I % cp % $(STAGEDIR)/lib
+	find $(QL_ROOT_PATH) $(ROOT)/vendor $(HOME)/.cache/common-lisp/ \
+	     -name '*.dylib' -or -name '*.so' | xargs -I % cp -v % $(STAGEDIR)/lib
 
 	@echo "=> Building bootstrap script: $(STAGEDIR)/$(TARGET)"
 	touch $(STAGEDIR)/$(TARGET)

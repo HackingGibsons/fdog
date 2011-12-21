@@ -26,6 +26,7 @@
            :organ-outgoing-sock
            :agent-special-event
            :agent-info
+           :agent-provides
            :watching
            :organ-tag
            :running-p

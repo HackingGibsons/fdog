@@ -242,11 +242,17 @@ as fire any callbacks that may be pending IO when it is ready."
   (log-for (trace) "~A did not define additional info." organ)
   nil)
 
+(defmethod agent-provides ((agent standard-agent))
+  nil)
+
 (defmethod agent-info ((agent standard-agent))
-  (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent)
-            :timestamp ,(get-universal-time) :age ,(age agent))
-          (loop for organ in (agent-organs agent)
-             appending (agent-info organ))))
+  (let ((provides (agent-provides agent)))
+    (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent)
+              :timestamp ,(get-universal-time) :age ,(age agent)
+              ,@(when provides
+                  (list :provides provides)))
+            (loop for organ in (agent-organs agent)
+               appending (agent-info organ)))))
 
 ;; Utils
 ;; TODO: Extract these to a file

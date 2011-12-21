@@ -386,8 +386,6 @@
           ((and server (getf process :pid)
                 (equalp (getf process :pid)
                         (fdog-models:mongrel2-server-pid server)))
-           (format t "Sever ~A Running~%" server)
-           (format t "All servers: ~A~%" (fdog-models:servers :refresh t))
            :server-running)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -827,5 +825,6 @@
      (and target
           (fdog-models:mongrel2-handler-send-spec target)
           (fdog-models:mongrel2-handler-recv-spec target)
-          :handler-has-endpoint))))
+          (prog1 :handler-has-endpoint
+            (log-for (trace mongrel2-agent::agent-needs) "Target: ~A" target))))))
 

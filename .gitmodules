@@ -1,6 +1,3 @@
 [submodule "vendor/cl-zmq"]
 	path = vendor/cl-zmq
 	url = https://github.com/sshirokov/cl-zmq.git
-[submodule "vendor/clsql"]
-	path = vendor/clsql
-	url = https://github.com/sshirokov/CLSQL.git

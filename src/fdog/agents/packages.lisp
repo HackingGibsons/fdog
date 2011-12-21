@@ -4,6 +4,10 @@
   (:use #:afdog
         #:agent
         #:log5)
+  (:import-from :arnesi :it
+                :curry
+                :rcurry
+                :awhen)
   (:export :mongrel2-agent
            :rooted-agent-mixin
            :ensure-mongrel2-root-layout

@@ -728,6 +728,8 @@
     (:seq (:eql :server-need-filled)
           (:eql :server-found)
           (:eql :handler-need-filled)
+          (:eql :host-found)
+          (:eql :route-found)
           (:eql :handler-found)
           (:eql :handler-has-endpoint))
   (list
@@ -776,6 +778,34 @@
                 (getf filled :handler))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
            :handler-need-filled)))
+
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
+
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (server (fdog-models:servers :name "forwarder" :refresh t :one t)
+                   (fdog-models:servers :name "forwarder" :refresh t :one t)))
+          ((and server
+                (fdog-models:find-mongrel2-host server "api.example.com"))
+           :host-found)))
+
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
+
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (server (fdog-models:servers :name "forwarder" :refresh t :one t)
+                   (fdog-models:servers :name "forwarder" :refresh t :one t))
+           (host (when server (fdog-models:find-mongrel2-host server "api.example.com"))
+                 (when server (fdog-models:find-mongrel2-host server "api.example.com"))))
+          ((and host
+                (fdog-models:find-mongrel2-route host "/"))
+           :route-found)))
 
    (with-agent-conversation (m e) mongrel2-uuid
      (ignore-errors (fdog-models:disconnect))

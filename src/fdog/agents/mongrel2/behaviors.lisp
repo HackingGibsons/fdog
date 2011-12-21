@@ -21,9 +21,11 @@
            (handler (when server
                       (fdog-models:find-mongrel2-handler :ident (from-info :name) :exact nil)))
            (handler-ident (or (and handler (fdog-models:mongrel2-handler-send-ident handler))
-                              (format nil "~A-~A" (from-info :name) (uuid:make-v4-uuid))))
+                              (and server (format nil "~A--~A"
+                                                  (from-info :name)
+                                                  (fdog-models:mongrel2-server-uuid server)))))
 
-           (handler (when server
+           (handler (when (and server handler-ident)
                       (fdog-models:make-mongrel2-handler handler-ident
                                                          (local-address-from-string handler-ident 40000)
                                                          (local-address-from-string handler-ident 50000)

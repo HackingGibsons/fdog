@@ -12,6 +12,7 @@
                #:cl-fad
                #:cl-syslog
                #:iolib
+               #:arnesi
 
                ;; Vendord
                #:clsql

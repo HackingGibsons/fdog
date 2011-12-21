@@ -8,14 +8,7 @@
              agent organ need-what need-info)))
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :handler)) need-info)
-  (labels ((from-info (thing) (getf need-info thing))
-
-           (local-tcp-address (port)
-             (format nil "tcp://~A:~A" (agent::get-local-address :as :string :update :please) port))
-
-           (local-address-from-string (string &optional (base 20000))
-             (local-tcp-address (string-to-integer string :base base :width 10000))))
-
+  (flet ((from-info (thing) (getf need-info thing)))
     (let* ((server (awhen (from-info :server)
                      (fdog-models:servers :one t :refresh t :name it)))
            (handler (when server

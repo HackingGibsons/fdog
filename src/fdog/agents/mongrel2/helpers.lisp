@@ -7,6 +7,15 @@ The result is returned added to `base' which defaults to zero."
          (digest (if width (mod digest width) digest)))
     (+ base digest)))
 
+(defun local-tcp-address (port)
+  "Make a ZMQ endpoint compatible string from the local tcp address with the given `port'"
+  (format nil "tcp://~A:~A" (agent::get-local-address :as :string :update :please) port))
+
+(defun local-address-from-string (string &optional (base 20000) (width 10000))
+  "Make a local address using the given `string' as the seed to generate the
+port using `string-to-integer' with the given `base' defaulting to 20000.
+The `width' is defaulted to 10000"
+  (local-tcp-address (string-to-integer string :base base :width width)))
 
 (defmethod unlink-server ((organ agent::standard-organ) (server fdog-models:mongrel2-server) config)
   (flet ((make-mongrel2-arguments (server config)

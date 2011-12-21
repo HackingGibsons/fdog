@@ -16,10 +16,10 @@
            (local-address-from-string (string &optional (base 20000))
              (local-tcp-address (string-to-integer string :base base :width 10000))))
 
-    (let* ((server (from-info :server))
-           (server (when server (fdog-models:servers :one t :refresh t :name server)))
-
-           (handler (when server (fdog-models:find-mongrel2-handler :ident (from-info :name) :exact nil)))
+    (let* ((server (awhen (from-info :server)
+                     (fdog-models:servers :one t :refresh t :name it)))
+           (handler (when server
+                      (fdog-models:find-mongrel2-handler :ident (from-info :name) :exact nil)))
            (handler-ident (or (and handler (fdog-models:mongrel2-handler-send-ident handler))
                               (format nil "~A-~A" (from-info :name) (uuid:make-v4-uuid))))
 
@@ -28,14 +28,25 @@
                                                          (local-address-from-string handler-ident 40000)
                                                          (local-address-from-string handler-ident 50000)
                                                          :recv-ident handler-ident
-                                                         :update t))))
-      ;; TODO:
-      (log-for (agent-needs trace) "Found or made handler: ~A~%" handler)
-      ;; * With the route and hosts iterate the hosts and get-or-create a route for them
-      ;;   bound to the target you're holding on the current server.
-      ;; * `link-server' the server, which should cause a start or reload
-      ;; * Return happy
-      :TODO)))
+                                                         :update t)))
+           (hosts (when handler
+                    (mapcar (curry #'fdog-models:make-mongrel2-host server) (from-info :hosts)))))
+
+      (and server hosts handler (from-info :route)
+           (mapcar (rcurry #'fdog-models:make-host-route (from-info :route) handler)
+                   hosts)
+           (link-server organ server (clsql:database-name clsql:*default-database*)))
+
+      (send-message organ :command `(:command :speak
+                                     :say (:filled :need
+                                                   :need ,what
+                                                   ,what (:server ,(from-info :server)
+                                                          :hosts ,(from-info :hosts)
+                                                          :route ,(from-info :routes)
+                                                          :name ,(from-info :name)
+                                                          :endpoint (:push ,(fdog-models:mongrel2-handler-send-spec handler)
+                                                                     :sub ,(fdog-models:mongrel2-handler-recv-spec handler)))))))))
+
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-hosts)) need-info)

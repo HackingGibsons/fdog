@@ -8,6 +8,7 @@
                 :curry
                 :rcurry
                 :awhen)
+  (:import-from :alexandria :flatten)
   (:export :mongrel2-agent
            :rooted-agent-mixin
            :ensure-mongrel2-root-layout

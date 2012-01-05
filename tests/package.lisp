@@ -5,6 +5,10 @@
         #:fdog
         #:afdog-cli)
   (:use #:nst)
+  (:import-from :arnesi :it
+                :curry
+                :rcurry
+                :awhen)
 
   (:shadow :*spawner* :*root* :agent-root)
   (:shadowing-import-from :log5

@@ -59,3 +59,17 @@ The `width' is defaulted to 10000"
   "Call (link-server) on every server"
   (mapcar #'(lambda (s) (link-server organ s config))
           (fdog-models:servers :refresh t)))
+
+(defmethod mongrel2-server-handlers ((server fdog-models:mongrel2-server))
+  (labels ((remove-duplicate-models (models)
+             (remove-duplicates models :test #'equalp :key #'fdog-models:model-pk))
+
+           (server-routes (server)
+             (flatten (mapcar #'fdog-models:mongrel2-host-routes
+                              (fdog-models:mongrel2-server-hosts server))))
+
+           (server-targets (server)
+             (remove-duplicate-models
+              (mapcar #'fdog-models:mongrel2-route-target (server-routes server)))))
+    (remove-if-not (rcurry #'typep 'fdog-models:mongrel2-handler)
+                   (server-targets server))))

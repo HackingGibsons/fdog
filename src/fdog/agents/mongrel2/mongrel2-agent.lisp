@@ -54,25 +54,18 @@
 
 ;; Hooks
 (defmethod agent-provides :around ((agent mongrel2-agent))
-  (labels ((remove-duplicate-models (models)
-             (remove-duplicates models :test #'equalp :key #'fdog-models:model-pk))
-
-           (server-routes (server)
-             (flatten (mapcar #'fdog-models:mongrel2-host-routes
-                              (fdog-models:mongrel2-server-hosts server))))
-
-           (server-targets (server)
-             (remove-duplicate-models
-              (mapcar #'fdog-models:mongrel2-route-target (server-routes server))))
-
-           (server-handlers (server)
-             (remove-if-not (rcurry #'typep 'fdog-models:mongrel2-handler)
-                            (server-targets server)))
+  (labels ((handler-description (handler)
+             (destructuring-bind (name id) (ppcre:split "--" (fdog-models:mongrel2-handler-recv-ident handler) :limit 2)
+               `(,name . (:send ,(fdog-models:mongrel2-handler-send-spec handler)
+                          :recv ,(fdog-models:mongrel2-handler-recv-spec handler)))))
 
            (server-ad (server)
-             (fdog-models:mongrel2-server-name server)))
+             `(,(fdog-models:mongrel2-server-name server)
+               ,(loop for handler in (mongrel2-server-handlers server)
+                   collecting (handler-description handler)))))
+
     (append (call-next-method)
-            `(:servers ,(mapcar #'server-ad (fdog-models:servers :refresh t))))))
+            `(:servers ,(mapcan #'server-ad (fdog-models:servers :refresh t))))))
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."

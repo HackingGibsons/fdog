@@ -54,8 +54,23 @@
 
 ;; Hooks
 (defmethod agent-provides :around ((agent mongrel2-agent))
-  (flet ((server-ad (server)
-           (fdog-models:mongrel2-server-name server)))
+  (labels ((remove-duplicate-models (models)
+             (remove-duplicates models :test #'equalp :key #'fdog-models:model-pk))
+
+           (server-routes (server)
+             (flatten (mapcar #'fdog-models:mongrel2-host-routes
+                              (fdog-models:mongrel2-server-hosts server))))
+
+           (server-targets (server)
+             (remove-duplicate-models
+              (mapcar #'fdog-models:mongrel2-route-target (server-routes server))))
+
+           (server-handlers (server)
+             (remove-if-not (rcurry #'typep 'fdog-models:mongrel2-handler)
+                            (server-targets server)))
+
+           (server-ad (server)
+             (fdog-models:mongrel2-server-name server)))
     (append (call-next-method)
             `(:servers ,(mapcar #'server-ad (fdog-models:servers :refresh t))))))
 

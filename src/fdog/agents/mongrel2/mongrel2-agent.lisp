@@ -53,15 +53,20 @@
     server-root))
 
 ;; Hooks
-(defmethod agent-info ((agent mongrel2-agent))
-  "Produce a `mongrel2-agent' specific agent announcement."
-  (let* ((info (call-next-method))
-         (servers (fdog-models:servers :refresh t)))
-    (flet ((server-ad (server)
-             (fdog-models:mongrel2-server-name server)))
+(defmethod agent-provides :around ((agent mongrel2-agent))
+  (labels ((handler-description (handler)
+             (let ((name (mongrel2-handler-name handler)))
+               `(,name . (:send ,(fdog-models:mongrel2-handler-send-spec handler)
+                          :recv ,(fdog-models:mongrel2-handler-recv-spec handler)))))
 
-      (append info `(:provides (:servers ,(mapcar #'server-ad servers)))))))
+           (server-ad (server)
+             `(,(fdog-models:mongrel2-server-name server)
+                .
+               ,(loop for handler in (mongrel2-server-handlers server)
+                   collecting (handler-description handler)))))
 
+    (append (call-next-method)
+            `(:servers ,(mapcar #'server-ad (fdog-models:servers :refresh t))))))
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."

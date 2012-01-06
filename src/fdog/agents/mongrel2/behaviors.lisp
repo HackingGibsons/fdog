@@ -7,6 +7,96 @@
     (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
              agent organ need-what need-info)))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-handlers)) need-info)
+  (flet ((from-info (thing) (getf need-info thing)))
+    (let* ((server (awhen (from-info :server)
+                     (fdog-models:servers :one t :refresh t :name it)))
+           (keep-names (from-info :names))
+           (handlers (when server (mongrel2-server-handlers server))))
+
+      (when (and server keep-names handlers)
+        (flet ((maybe-remove-handler (handler)
+                 "Return the name of `handler' if it was kept, `nil' if it was removed"
+                 (let ((name (mongrel2-handler-name handler)))
+                   (if (find name keep-names :test #'string=)
+                       name
+                       (prog1 nil
+                         (clsql:delete-instance-records (fdog-models:mongrel2-target-route handler))
+                         (clsql:delete-instance-records handler))))))
+
+          (let ((kept-handlers (remove nil (mapcar #'maybe-remove-handler handlers))))
+            (link-server organ server (clsql:database-name clsql:*default-database*))
+
+            (send-message organ :command `(:command :speak
+                                           :say (:filled :need
+                                                 :need ,what
+                                                 ,what (:server ,(from-info :server) :names ,kept-handlers))))))))))
+
+
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-handler)) need-info)
+  (flet ((from-info (thing) (getf need-info thing)))
+    (let* ((server (awhen (from-info :server)
+                     (fdog-models:servers :one t :refresh t :name it)))
+           (handler (awhen (and server (from-info :name))
+                      (fdog-models:find-mongrel2-handler :ident it :exact nil)))
+           (route (and handler (fdog-models:mongrel2-target-route handler))))
+
+      (when (and server route (= (fdog-models:model-pk server)
+                                 (fdog-models:mongrel2-host-server-id
+                                  (fdog-models:mongrel2-route-host route))))
+        (clsql:delete-instance-records handler)
+        (clsql:delete-instance-records route)
+
+        (link-server organ server (clsql:database-name clsql:*default-database*))
+
+        (send-message organ :command `(:command :speak
+                                       :say (:filled :need
+                                             :need ,what
+                                             ,what (:server ,(from-info :server) :name ,(from-info :name)))))))))
+
+
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :handler)) need-info)
+  (flet ((from-info (thing) (getf need-info thing)))
+    (let* ((server (awhen (from-info :server)
+                     (fdog-models:servers :one t :refresh t :name it)))
+           (handler (when server
+                      (fdog-models:find-mongrel2-handler :ident (from-info :name) :exact nil)))
+           (handler-ident (or (and handler (fdog-models:mongrel2-handler-send-ident handler))
+                              (and server (format nil "~A--~A"
+                                                  (from-info :name)
+                                                  (fdog-models:mongrel2-server-uuid server)))))
+
+           (handler (when (and server handler-ident)
+                      (fdog-models:make-mongrel2-handler handler-ident
+                                                         (local-address-from-string handler-ident 40000)
+                                                         (local-address-from-string handler-ident 50000)
+                                                         :recv-ident handler-ident
+                                                         :update t)))
+           (hosts (when handler
+                    (mapcar (curry #'fdog-models:make-mongrel2-host server) (from-info :hosts)))))
+
+      (when (and server hosts handler (from-info :route))
+             ;; Clear out the old route if any before building new ones
+             (awhen (fdog-models:mongrel2-target-route handler)
+               (clsql:delete-instance-records it))
+
+             (mapcar (rcurry #'fdog-models:make-host-route (from-info :route) handler)
+                     hosts)
+
+             (link-server organ server (clsql:database-name clsql:*default-database*))
+
+             (send-message organ :command `(:command :speak
+                                            :say (:filled :need
+                                                  :need ,what
+                                                  ,what (:server ,(from-info :server)
+                                                         :hosts ,(from-info :hosts)
+                                                         :route ,(from-info :routes)
+                                                         :name ,(from-info :name)
+                                                         :endpoint (:push ,(fdog-models:mongrel2-handler-send-spec handler)
+                                                                    :sub ,(fdog-models:mongrel2-handler-recv-spec handler))))))))))
+
+
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-hosts)) need-info)
   (flet ((from-info (thing) (getf need-info thing))
          (need-host (host)

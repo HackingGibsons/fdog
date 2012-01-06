@@ -61,11 +61,12 @@
 
            (server-ad (server)
              `(,(fdog-models:mongrel2-server-name server)
+                .
                ,(loop for handler in (mongrel2-server-handlers server)
                    collecting (handler-description handler)))))
 
     (append (call-next-method)
-            `(:servers ,(mapcan #'server-ad (fdog-models:servers :refresh t))))))
+            `(:servers ,(mapcar #'server-ad (fdog-models:servers :refresh t))))))
 
 (defmethod agent-special-event :after ((agent mongrel2-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."

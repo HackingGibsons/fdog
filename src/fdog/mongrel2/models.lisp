@@ -247,7 +247,7 @@ by `path'"
         (t
          (car (clsql:select 'mongrel2-handler :flatp t :refresh t
                             :where [like [slot-value 'mongrel2-handler 'send-ident]
-                                         (format nil "~A-%" ident)]))))
+                                         (format nil "~A--%" ident)]))))
   #.(clsql:restore-sql-reader-syntax-state))
 
 

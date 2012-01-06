@@ -16,16 +16,22 @@
 
       (when (and server keep-names handlers)
         (flet ((maybe-remove-handler (handler)
-                 "Return the `handler' if it was kept, `nil' if it was removed"
-                 :keep-handler-if-in-names))
+                 "Return the name of `handler' if it was kept, `nil' if it was removed"
+                 (destructuring-bind (name id) (ppcre:split "--" (fdog-models:mongrel2-handler-recv-ident handler) :limit 2)
+                   (declare (ignore id))
+                   (if (find name keep-names :test #'string=)
+                       name
+                       (prog1 nil
+                         (clsql:delete-instance-records (fdog-models:mongrel2-target-route handler))
+                         (clsql:delete-instance-records handler))))))
 
-          (let ((kept-handlers (mapcar #'maybe-remove-handler handlers)))
+          (let ((kept-handlers (remove nil (mapcar #'maybe-remove-handler handlers))))
             (link-server organ server (clsql:database-name clsql:*default-database*))
 
             (send-message organ :command `(:command :speak
                                            :say (:filled :need
                                                  :need ,what
-                                                 ,what (:server ,(from-info :server) :names ,(remove nil kept-handlers)))))))))))
+                                                 ,what (:server ,(from-info :server) :names ,kept-handlers))))))))))
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-handler)) need-info)

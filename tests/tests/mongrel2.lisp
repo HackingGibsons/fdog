@@ -1046,7 +1046,7 @@
      (ignore-errors (fdog-models:disconnect))
      (ignore-errors (clsql:disconnect))
      (fdog-models:connect db-path)
-     (let* ((old-handler (fdog-models:find-mongrel2-handler :ident "api" :exact nil)))
+     (let* ((old-handler (fdog-models:find-mongrel2-handler :ident "api2" :exact nil)))
        (if old-handler
            :removed-exists
            :removed-missing)))

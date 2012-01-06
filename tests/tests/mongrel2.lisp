@@ -852,6 +852,10 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :handler
+                            :handler (:server "forwarder" :hosts ("api.example.com") :route "/admin/" :name "api-admin"))))
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :handler
                             :handler (:server "forwarder" :hosts ("api.example.com") :route "/" :name "api"))))
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))

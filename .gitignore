@@ -11,3 +11,4 @@ build/*
 .\#*
 *.core
 run/*
+server/run/*

@@ -17,8 +17,7 @@
       (when (and server keep-names handlers)
         (flet ((maybe-remove-handler (handler)
                  "Return the name of `handler' if it was kept, `nil' if it was removed"
-                 (destructuring-bind (name id) (ppcre:split "--" (fdog-models:mongrel2-handler-recv-ident handler) :limit 2)
-                   (declare (ignore id))
+                 (let ((name (mongrel2-handler-name handler)))
                    (if (find name keep-names :test #'string=)
                        name
                        (prog1 nil

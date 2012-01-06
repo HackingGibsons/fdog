@@ -55,7 +55,7 @@
 ;; Hooks
 (defmethod agent-provides :around ((agent mongrel2-agent))
   (labels ((handler-description (handler)
-             (destructuring-bind (name id) (ppcre:split "--" (fdog-models:mongrel2-handler-recv-ident handler) :limit 2)
+             (let ((name (mongrel2-handler-name handler)))
                `(,name . (:send ,(fdog-models:mongrel2-handler-send-spec handler)
                           :recv ,(fdog-models:mongrel2-handler-recv-spec handler)))))
 

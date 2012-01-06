@@ -73,3 +73,9 @@ The `width' is defaulted to 10000"
               (mapcar #'fdog-models:mongrel2-route-target (server-routes server)))))
     (remove-if-not (rcurry #'typep 'fdog-models:mongrel2-handler)
                    (server-targets server))))
+
+(defmethod mongrel2-handler-name ((handler fdog-models:mongrel2-handler))
+  "Return the name, or part before the subscription UUID and the UUID as
+a multivalue return as in (values name uuid)"
+  (destructuring-bind (name id) (ppcre:split "--" (fdog-models:mongrel2-handler-recv-ident handler) :limit 2)
+    (values name id)))

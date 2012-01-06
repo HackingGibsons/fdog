@@ -27,20 +27,25 @@
            (hosts (when handler
                     (mapcar (curry #'fdog-models:make-mongrel2-host server) (from-info :hosts)))))
 
-      (and server hosts handler (from-info :route)
-           (mapcar (rcurry #'fdog-models:make-host-route (from-info :route) handler)
-                   hosts)
-           (link-server organ server (clsql:database-name clsql:*default-database*)))
+      (when (and server hosts handler (from-info :route))
+             ;; Clear out the old route if any before building new ones
+             (awhen (fdog-models:mongrel2-target-route handler)
+               (clsql:delete-instance-records it))
 
-      (send-message organ :command `(:command :speak
-                                     :say (:filled :need
-                                                   :need ,what
-                                                   ,what (:server ,(from-info :server)
-                                                          :hosts ,(from-info :hosts)
-                                                          :route ,(from-info :routes)
-                                                          :name ,(from-info :name)
-                                                          :endpoint (:push ,(fdog-models:mongrel2-handler-send-spec handler)
-                                                                     :sub ,(fdog-models:mongrel2-handler-recv-spec handler)))))))))
+             (mapcar (rcurry #'fdog-models:make-host-route (from-info :route) handler)
+                     hosts)
+
+             (link-server organ server (clsql:database-name clsql:*default-database*))
+
+             (send-message organ :command `(:command :speak
+                                            :say (:filled :need
+                                                  :need ,what
+                                                  ,what (:server ,(from-info :server)
+                                                         :hosts ,(from-info :hosts)
+                                                         :route ,(from-info :routes)
+                                                         :name ,(from-info :name)
+                                                         :endpoint (:push ,(fdog-models:mongrel2-handler-send-spec handler)
+                                                                    :sub ,(fdog-models:mongrel2-handler-recv-spec handler))))))))))
 
 
 

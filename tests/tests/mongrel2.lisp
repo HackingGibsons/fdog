@@ -940,3 +940,52 @@
              ((and route target)
               :handler-updated))))))
 
+(def-test (mongrel2-agent-removes-handler :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
+    (:seq (:eql :handler-filled)
+          (:eql :handler-removed)
+          (:eql :handler-missing))
+  (list
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :server
+                            :server (:name "forwarder" :port 6969 :hosts ("api.example.com")))))
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :handler
+                            :handler (:server "forwarder" :hosts ("api.example.com") :route "/" :name "api"))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (and (equalp (car msg) :filled) msg)))
+          ((and filled
+                (getf filled :handler))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           :handler-filled)))
+
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :remove-handler
+                            :remove-handler (:server "forwarder" :name "api"))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :remove-handler))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           :handler-removed)))
+
+   (progn
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
+     (let* ((server (fdog-models:servers :one t :refresh t :name "forwarder"))
+            (host (and server (fdog-models:find-mongrel2-host server "api.example.com")))
+            (old-route (and host (fdog-models:find-mongrel2-route host "/")))
+            (old-handler (fdog-models:find-mongrel2-handler :ident "api" :exact nil)))
+       (and (not old-route)
+            (not old-handler)
+            :handler-missing)))))

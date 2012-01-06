@@ -5,7 +5,8 @@
         #:fdog
         #:afdog-cli)
   (:use #:nst)
-  (:import-from :arnesi :it
+  (:import-from :arnesi
+                :it
                 :curry
                 :rcurry
                 :awhen)

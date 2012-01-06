@@ -4,7 +4,8 @@
   (:use #:afdog
         #:agent
         #:log5)
-  (:import-from :arnesi :it
+  (:import-from :arnesi
+                :it
                 :curry
                 :rcurry
                 :awhen)

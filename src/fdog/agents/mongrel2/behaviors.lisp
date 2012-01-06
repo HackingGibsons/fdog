@@ -7,6 +7,28 @@
     (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
              agent organ need-what need-info)))
 
+(defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-handlers)) need-info)
+  (flet ((from-info (thing) (getf need-info thing)))
+    (let* ((server (awhen (from-info :server)
+                     (fdog-models:servers :one t :refresh t :name it)))
+           (keep-names (from-info :names))
+           (handlers (when server (mongrel2-server-handlers server))))
+
+      (when (and server keep-names handlers)
+        (flet ((maybe-remove-handler (handler)
+                 :keep-handler-if-in-names))
+
+          (mapc #'maybe-remove-handler handlers)
+
+          (let ((kept-handlers keep-names)) ;; TODO: Remove from `kept-handlers` names that don't exist
+            (link-server organ server (clsql:database-name clsql:*default-database*))
+
+            (send-message organ :command `(:command :speak
+                                           :say (:filled :need
+                                                 :need ,what
+                                                 ,what (:server ,(from-info :server) :names ,kept-handlers))))))))))
+
+
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-handler)) need-info)
   (flet ((from-info (thing) (getf need-info thing)))
     (let* ((server (awhen (from-info :server)

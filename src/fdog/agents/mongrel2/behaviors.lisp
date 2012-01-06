@@ -16,17 +16,16 @@
 
       (when (and server keep-names handlers)
         (flet ((maybe-remove-handler (handler)
+                 "Return the `handler' if it was kept, `nil' if it was removed"
                  :keep-handler-if-in-names))
 
-          (mapc #'maybe-remove-handler handlers)
-
-          (let ((kept-handlers keep-names)) ;; TODO: Remove from `kept-handlers` names that don't exist
+          (let ((kept-handlers (mapcar #'maybe-remove-handler handlers)))
             (link-server organ server (clsql:database-name clsql:*default-database*))
 
             (send-message organ :command `(:command :speak
                                            :say (:filled :need
                                                  :need ,what
-                                                 ,what (:server ,(from-info :server) :names ,kept-handlers))))))))))
+                                                 ,what (:server ,(from-info :server) :names ,(remove nil kept-handlers)))))))))))
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-handler)) need-info)

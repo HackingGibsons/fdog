@@ -134,9 +134,15 @@
   (flet ((from-info (thing) (getf need-info thing)))
     (let* ((server (fdog-models:servers :one t :name (from-info :server)))
            (host (find (from-info :host)
-                       (and server (fdog-models:mongrel2-server-hosts server))
+                       (and server
+                            (progn
+                              (clsql:update-objects-joins `(,server))
+                              (fdog-models:mongrel2-server-hosts server)))
                        :key #'fdog-models:mongrel2-host-name
                        :test #'string-equal)))
+      (log-for (agent-needs trace) "Need info: ~S" need-info)
+      (log-for (agent-needs trace) "Server host names: ~S"
+               (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server)))
       (log-for (agent-needs trace) "Found server: ~A host: ~A" server host)
 
       ;; TODO:

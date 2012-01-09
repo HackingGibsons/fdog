@@ -48,6 +48,11 @@
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 
+;; Rooted agent mixin
+(defclass rooted-agent-mixin ()
+  ((root :initarg :root :initform *root*
+         :accessor agent-root)))
+
 ;; Child agent mixin
 (defclass standard-child-mixin ()
   ((parent-uuid :initarg :parent-uuid

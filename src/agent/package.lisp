@@ -8,6 +8,7 @@
            :send-message
            :standard-manager-agent
            :standard-leaf-agent
+           :rooted-agent-mixin
            :standard-hypervisor-agent
            :find-organ
            :exec-runner

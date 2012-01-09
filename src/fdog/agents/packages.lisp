@@ -11,7 +11,6 @@
                 :awhen)
   (:import-from :alexandria :flatten)
   (:export :mongrel2-agent
-           :rooted-agent-mixin
            :ensure-mongrel2-root-layout
            :initialize-mongrel2-configuration))
 (in-package :mongrel2-agent)

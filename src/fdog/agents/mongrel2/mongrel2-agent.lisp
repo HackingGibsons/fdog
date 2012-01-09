@@ -1,10 +1,5 @@
 (in-package :mongrel2-agent)
 
-;; TODO: Fold into the agents dump
-(defclass rooted-agent-mixin ()
-  ((root :initarg :root :initform *root*
-         :accessor agent-root)))
-
 ;; Agent
 (defclass mongrel2-agent (standard-hypervisor-agent rooted-agent-mixin)
   ()

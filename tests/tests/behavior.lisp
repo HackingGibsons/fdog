@@ -146,7 +146,7 @@
           :not-running)))))
 
 (def-test (agent-notices-when-peers-die-in-silence :group basic-behavior-tests :fixtures (started-parent-and-child))
-    (:seq :true         ;; Find a peer
+    (:seq (:eql :found) ;; Find a peer
           (:eql :dead)  ;; Kill the peer
           (:eql :gone)) ;; See that the parent notices
   (list
@@ -157,7 +157,7 @@
             (info nil (getf msg :info)))
           ((and (equalp (subseq msg 0 2) '(:agent :info))
                 info
-                (getf info :peers)) t)))
+                (getf info :peers)) :found)))
 
     ;; Kill the child and make sure it dies
     (with-agent-conversation (m e) kid-uuid

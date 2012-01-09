@@ -203,19 +203,19 @@
         (setf pid (getf (getf msg :process) :pid))))))
 
 (def-test (agent-restarts-killed-process :group supervision-tests :fixtures (two-pid-fixture))
-    (:seq :true
-          (:predicate numberp)
-          :true
-          :true
-          :true
-          :true)
+    (:seq (:eql :agent-announced)
+          (:eql :process-made)
+          (:eql :process-killed)
+          (:eql :new-process-made)
+          (:eql :process-seen)
+          (:eql :new-pid-different))
 
   (list
    (with-agent-conversation (m e :timeout 30) agent-uuid
      (do ((msg (parse-message (read-message m))
                (parse-message (read-message m))))
          ((equalp (subseq msg 0 2) '(:agent :info))
-          t)))
+          :agent-announced)))
 
    (with-agent-conversation (m e :timeout 35) agent-uuid
      (zmq:send! e (prepare-message `(:spawn :process)))
@@ -226,7 +226,8 @@
                      (or made-info (getf msg made))))
       ((and (equalp made :process)
             (getf made-info :pid))
-       (setf pid (getf made-info :pid)))))
+       (setf pid (getf made-info :pid))
+       :process-made)))
 
    (when pid
      (with-agent-conversation (m e :timeout 35) agent-uuid
@@ -237,7 +238,8 @@
                  (getf (getf msg :process) :pid) pid)
             pid)))
      ;; kill -9 the process to simulate it dying
-     (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill)))
+     (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
+     :process-killed)
 
    ;; Get the new pid
    (with-agent-conversation (m e :timeout 35) agent-uuid
@@ -249,7 +251,8 @@
           ((and (equalp made :process)
                 (getf made-info :pid))
            (setf old-pid pid)
-           (setf pid (getf made-info :pid)))))
+           (setf pid (getf made-info :pid))
+           :new-process-made)))
 
    (when pid
      (with-agent-conversation (m e :timeout 35) agent-uuid
@@ -260,9 +263,10 @@
                  (equalp (getf msg :saw) :process)
                  (getf (getf msg :process) :pid)
                  pid)
-            pid))))
+            :process-seen))))
 
-   (not (equalp pid old-pid))))
+   (unless (equalp pid old-pid)
+     :new-pid-different)))
 
 (def-test (agent-can-unlink-agents :group supervision-tests) :true
   ;; Start an agent

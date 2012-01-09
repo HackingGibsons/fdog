@@ -9,6 +9,7 @@
            :standard-manager-agent
            :standard-leaf-agent
            :rooted-agent-mixin
+           :agent-root
            :standard-hypervisor-agent
            :find-organ
            :exec-runner

@@ -132,7 +132,8 @@
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :remove-host)) need-info)
   "A :need for a :server gets filled when heard."
   (flet ((from-info (thing) (getf need-info thing)))
-    (let* ((server (fdog-models:servers :refresh t :one t :name (from-info :server)))
+    (let* ((server (awhen (fdog-models:servers :refresh t :one t :name (from-info :server))
+                     (prog1 it (clsql:update-objects-joins `(,it)))))
            (host (find (from-info :host)
                        (and server
                             (fdog-models:mongrel2-server-hosts server))

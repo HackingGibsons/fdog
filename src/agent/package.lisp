@@ -14,6 +14,7 @@
            :find-organ
            :exec-runner
            :init-forms
+           :standard-organ
            :organ
            :eye
            :organ-agent

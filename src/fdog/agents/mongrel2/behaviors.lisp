@@ -1,12 +1,5 @@
 (in-package :mongrel2-agent)
 
-(defgeneric agent-needs (agent organ need-what need-info)
-  (:documentation "Called when an :agent :need message is heard by the agent for simplified dispatch.")
-  (:method (agent organ need-what need-info)
-    "Default method is a whiny no-op"
-    (log-for (trace agent-needs) "~A/~A does not know how to fill the need for ~A using ~A"
-             agent organ need-what need-info)))
-
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :keep-handlers)) need-info)
   (flet ((from-info (thing) (getf need-info thing)))
     (let* ((server (awhen (from-info :server)

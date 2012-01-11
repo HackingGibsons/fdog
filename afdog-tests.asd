@@ -16,6 +16,7 @@
                          (:module "tests" :depends-on ("suites") :components
                                   ((:file "basic")
                                    (:file "mongrel2")
+                                   (:file "afdog-hypervisor")
                                    (:file "booted")
                                    (:file "cli")
                                    (:file "behavior")

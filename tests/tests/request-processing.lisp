@@ -16,7 +16,8 @@
 (def-test (request-processing-agent-sees-mongrel2-agent :group request-processing-agent-tests :fixtures (db-path-fixture  mongrel2-agent-fixture request-processing-agent-fixture kill-everything-fixture))
     (:seq
      (:eql :informed-peers)
-     (:eql :rp-agent-has-peers))
+     (:eql :rp-agent-has-peers)
+     (:eql :m2-agent-has-peers))
   (list
    (and (tell-agent-about request-processing-uuid mongrel2-uuid)
         :informed-peers)
@@ -27,5 +28,12 @@
            (info (getf msg :info) (getf msg :info))
            (peers (getf info :peers) (getf info :peers)))
           (peers
-           :rp-agent-has-peers)))))
+           :rp-agent-has-peers)))
 
+   (with-agent-conversation (m e :timeout 35) mongrel2-uuid
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (info (getf msg :info) (getf msg :info))
+           (peers (getf info :peers) (getf info :peers)))
+          (peers
+           :m2-agent-has-peers)))))

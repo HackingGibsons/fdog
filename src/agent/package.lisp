@@ -19,6 +19,7 @@
            :organ
            :mouth-addr
            :speak-addr
+           :standard-beating-organ
            :eye
            :organ-agent
            :watch-when-told

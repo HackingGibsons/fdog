@@ -1,29 +1,35 @@
 (in-package :afdog-hypervisor-agent)
 
 (defclass afdog-hypervisor-agent (standard-hypervisor-agent rooted-agent-mixin)
-  ((agents :accessor hypervisor-agents :initarg :agents)))
+  ((agents :accessor hypervisor-agents :initarg :agents
+           :initform '(mongrel2-agent ())
+           :documentation "A plist of symbols and lists.
+The symbol should be the class name of an agent.
+The list should be a list of initargs.")))
 
-(defgeneric link-agent (agent organ root)
-  (:documentation "Link `agent' by sending the link command to `organ'."))
+(defgeneric link-agent (organ agent-name root args)
+  (:documentation "Link an agent."))
 
-(defgeneric link-agents (agent organ &key)
-  (:documentation "Link child agents `agent' is aware of by sending the link commands to `organ'."))
+(defgeneric link-all-agents (agent)
+  (:documentation "Call link-agent for agents of `agent'."))
 
-(defmethod link-agent ((agent standard-agent) root organ)
+(defmethod link-agent ((organ standard-organ) name root args)
   (let ((command `(:command :link
                             :link :agent
-                            :agent `(:uuid ,(agent-uuid agent)
-                                           :class ,(class-name (class-of agent))
-                                           :root ,root))))
+                            :agent `(:uuid ,(format nil "~A" (uuid:make-v4-uuid))
+                                     :class ,name
+                                     :root ,root
+                                     :package :afdog
+                                     ,@args))))
     (send-message organ :command command)))
 
-(defmethod link-agents ((agent afdog-hypervisor-agent) organ &key)
-  (log-for (trace afdog-hypervisor-agent) "Linking agents for agent ~A" agent)
-  (mapcar (lambda (child) 
-            (link-agent child organ (agent-root agent)))
-          (hypervisor-agents agent)))
+(defmethod link-all-agents ((agent afdog-hypervisor-agent))
+  (let ((root (agent-root agent))
+        (organ (find-organ agent :head)))
+    (loop for (name args) on (hypervisor-agents agent) by #'cddr do
+         (log-for (afdog-hypervisor-agent) "Linking agent: ~A with args ~S" name args)
+         (link-agent organ name root args))))
 
 (defmethod agent-special-event :after ((agent afdog-hypervisor-agent) (event-head (eql :boot)) event)
   "On boot the afdog-hypervisor agent will link all agents the hypervisor knows about."
-  (let ((head (find-organ agent :head)))
-    (link-agents agent head)))
+  (link-all-agents agent))

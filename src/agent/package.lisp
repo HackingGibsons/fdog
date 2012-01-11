@@ -62,6 +62,7 @@
            :next-event
            :suicide
            :agent-head
+           :make-have-hearing
            :heard-message))
 
 (in-package :agent)

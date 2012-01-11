@@ -14,12 +14,16 @@ The list should be a list of initargs.")))
   (:documentation "Call link-agent for agents of `agent'."))
 
 (defmethod link-agent ((organ standard-organ) name root args)
-  (let ((command `(:command :link
-                            :link :agent
-                            :agent `(:uuid ,(format nil "~A" (uuid:make-v4-uuid))
+  (let* ((parent-uuid (agent-uuid (organ-agent organ)))
+         (parent-mouth (mouth-addr (find-organ (organ-agent organ) :mouth)))
+         (command `(:command :link
+                             :link :agent
+                             :agent (:uuid ,(format nil "~A" (uuid:make-v4-uuid))
+                                     :parent-uuid ,parent-uuid
+                                     :parent-mouth ,parent-mouth
                                      :class ,name
                                      :root ,root
-                                     :package :afdog
+                                     :package ,(intern (package-name (symbol-package name)) :keyword)
                                      ,@args))))
     (send-message organ :command command)))
 

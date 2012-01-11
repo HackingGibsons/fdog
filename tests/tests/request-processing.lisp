@@ -48,3 +48,14 @@
           (requesticle (getf info :requesticle)
                        (getf info :requesticle)))
          (requesticle (getf requesticle :peers)))))
+
+(def-test (request-processing-agent-announces-provides :group request-processing-agent-tests :fixtures (request-processing-agent-fixture kill-everything-fixture))
+    (:equalp "api")
+  (with-agent-conversation (m e) request-processing-uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (info (getf msg :info)
+                (getf msg :info))
+          (provides (getf info :provides)
+                    (getf info :provides)))
+         (provides (getf provides :request-processing)))))

@@ -12,3 +12,8 @@ them into it's request processing operations."))
 (defmethod initialize-instance-organs :after ((agent request-processing-agent))
   "Connect the organs specific to the `request-processing-agent`"
   (agent-connect agent (make-instance 'agent-requesticle :agent agent)))
+
+(defmethod agent-provides :around ((agent request-processing-agent))
+  "Advertise the handler we're ready to process requests for."
+  (append (call-next-method)
+          `(:request-processing ,(handler-name agent))))

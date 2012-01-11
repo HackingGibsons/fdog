@@ -180,6 +180,7 @@ Does kill -9 to ensure the process dies in cleanup.")
 
   (request-processing-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (request-processing-runner (make-runner :test :include '(:afdog-tests)
+                                          :handle "api"
                                           :class 'request-processing-test-agent
                                           :uuid request-processing-uuid)))
 

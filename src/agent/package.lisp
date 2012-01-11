@@ -3,6 +3,7 @@
   (:use #:log5)
   (:use :afdog)
   (:export :standard-agent
+           :agent-uuid
            :defbehavior
            :behavior
            :send-message
@@ -16,6 +17,8 @@
            :init-forms
            :standard-organ
            :organ
+           :mouth-addr
+           :speak-addr
            :eye
            :organ-agent
            :watch-when-told

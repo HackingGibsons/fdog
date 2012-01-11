@@ -147,6 +147,20 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :root *root* ;; different root for the test agents
                                 :uuid mongrel2-uuid)))
 
+(def-fixtures afdog-hypervisor-agent-fixture
+    (:documentation "A fixture that instantiates an afdog-hypervisor test agent."
+                    :setup (progn
+                             (start afdog-hypervisor-runner))
+                    :cleanup (progn
+                               (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
+                               (stop afdog-hypervisor-runner)))
+  (pid nil)
+  (afdog-hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (afdog-hypervisor-runner (make-runner :test :include '(:afdog-tests)
+                                :class 'afdog-hypervisor-test-agent
+                                :root *root* ;; different root for the test agents
+                                :uuid afdog-hypervisor-uuid)))
+
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
                     :cleanup (afdog:kill-everything)))

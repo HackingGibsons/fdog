@@ -97,7 +97,12 @@
                                                       (:file "mongrel2-agent" :depends-on ("helpers"))))
 
                                             (:module "afdog-hypervisor" :depends-on ("packages") :components
-                                                     ((:file "afdog-hypervisor-agent")))))))
+                                                     ((:file "afdog-hypervisor-agent")))
+
+                                            (:module "request-processing" :depends-on ("packages") :components
+                                                     ((:file "package")
+                                                      (:file "requesticle-organ" :depends-on ("package"))
+                                                      (:file "agent" :depends-on ("package" "requesticle-organ"))))))))
 
                          (:module "cli" :depends-on ("agent" "fdog") :components
                                   ((:file "package")

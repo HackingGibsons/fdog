@@ -40,3 +40,12 @@
     (if (cl-fad:list-directory (merge-pathnames "run/" *root*))
         :dir-not-empty
         :dir-empty)))
+
+(def-test (afdog-hypervisor-agent-spawnable :group cli-tests  :fixtures (cli-agent-uuid-fixture afdog-hypervisor-agent-cli-fixture)
+                                            :setup (afdog:run-program afdog-bin afdog-start-args)
+                                            :cleanup (afdog:run-program afdog-bin afdog-kill-args))
+    (:eql :read-message)
+  (with-agent-conversation (m e) uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+          (t :read-message))))

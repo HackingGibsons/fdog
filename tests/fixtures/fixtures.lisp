@@ -163,3 +163,8 @@ Does kill -9 to ensure the process dies in cleanup.")
     (:documentation "Arguments for starting and stopping a mongrel2 agent")
   (afdog-start-args `("start" "mongrel2-agent" "-u" ,uuid))
   (afdog-kill-args `("kill" ,uuid)))
+
+(def-fixtures afdog-hypervisor-agent-cli-fixture
+    (:documentation "Arguments for starting and stopping a mongrel2 agent")
+  (afdog-start-args `("start" "afdog-hypervisor-agent" "-u" ,uuid))
+  (afdog-kill-args `("kill" ,uuid)))

@@ -1,7 +1,7 @@
 (in-package :mongrel2-agent)
 
 ;; Agent
-(defclass mongrel2-agent (standard-hypervisor-agent rooted-agent-mixin)
+(defclass mongrel2-agent (standard-manager-agent rooted-agent-mixin)
   ()
   (:documentation "Mongrel2 Agent."))
 

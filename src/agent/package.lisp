@@ -2,6 +2,9 @@
   (:use #:cl)
   (:use #:log5)
   (:use :afdog)
+  (:import-from :arnesi
+                :it
+                :awhen)
   (:export :standard-agent
            :agent-uuid
            :defbehavior

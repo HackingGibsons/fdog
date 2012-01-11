@@ -59,6 +59,6 @@
 
 (in-package :agent)
 
-(defvar *spawner* :thread
+(defvar *spawner* :exec
   "The type of maker to use to spawn agents. Define it in another package
 to specify how agents in that package should spawn.")

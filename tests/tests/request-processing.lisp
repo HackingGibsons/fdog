@@ -75,6 +75,10 @@
                    `(:agent :need
                             :need  :handler
                             :handler (:server "control" :hosts ("api.example.com") :route "/" :name "api"))))
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :handler
+                            :handler (:server "control" :hosts ("api.example.com") :route "/ping/" :name "ping"))))
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)

@@ -7,6 +7,8 @@
                 :awhen)
   (:export :standard-agent
            :agent-uuid
+           :agent-boot
+           :agent-disconnect
            :defbehavior
            :behavior
            :send-message

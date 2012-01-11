@@ -24,7 +24,8 @@
 
 (defclass afdog-hypervisor-test-agent (afdog-hypervisor-agent)
   ()
-  (:documentation "A `afdog-hypervisor-test-agent' for testing the control of mongrel2 servers."))
+  (:documentation "A `afdog-hypervisor-test-agent' for testing the control of mongrel2 servers.")
+  (:default-initargs . (:agents '(mongrel2-test-agent ()))))
 
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud

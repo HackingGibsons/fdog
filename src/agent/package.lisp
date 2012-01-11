@@ -16,6 +16,8 @@
            :exec-runner
            :init-forms
            :standard-organ
+           :initialize-instance-organs
+           :agent-connect
            :organ
            :mouth-addr
            :speak-addr

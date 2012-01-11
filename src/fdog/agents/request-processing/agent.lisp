@@ -9,5 +9,6 @@
   (:documentation "This agent should seek out handlers with the name `handler-name' and connect
 them into it's request processing operations."))
 
-
-
+(defmethod initialize-instance-organs :after ((agent request-processing-agent))
+  "Connect the organs specific to the `request-processing-agent`"
+  (agent-connect agent (make-instance 'agent-requesticle :agent agent)))

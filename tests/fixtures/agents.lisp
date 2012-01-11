@@ -27,6 +27,10 @@
   (:documentation "A `afdog-hypervisor-test-agent' for testing the control of mongrel2 servers.")
   (:default-initargs . (:agents '(mongrel2-test-agent ()))))
 
+(defclass request-processing-test-agent (request-processing-agent)
+  ()
+  (:documentation "A `request-processing-agent` for testing the behavior of request processing."))
+
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-spawn-dependant-when-asked (agent::find-organ agent :head))
@@ -50,6 +54,9 @@
 (defmethod agent-special-event :after ((agent afdog-hypervisor-test-agent) (event-head (eql :boot)) event)
   (make-announce-what-i-see (find-organ agent :head))
   (make-announce-what-i-make (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod agent-special-event :after ((agent request-processing-test-agent) (event-head (eql :boot)) event)
   (make-kill-self-after-timeout (find-organ agent :head)))
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)

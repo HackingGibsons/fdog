@@ -17,6 +17,7 @@
                                   ((:file "basic")
                                    (:file "mongrel2")
                                    (:file "afdog-hypervisor")
+                                   (:file "request-processing")
                                    (:file "booted")
                                    (:file "cli")
                                    (:file "behavior")

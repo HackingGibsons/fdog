@@ -171,6 +171,18 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :root *root* ;; different root for the test agents
                                 :uuid afdog-hypervisor-uuid)))
 
+(def-fixtures request-processing-agent-fixture
+    (:documentation "A fixture that instantiates a request processing agent."
+     :setup (progn
+              (start request-processing-runner))
+     :cleanup (progn
+                (stop request-processing-runner)))
+
+  (request-processing-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-processing-runner (make-runner :test :include '(:afdog-tests)
+                                          :class 'request-processing-test-agent
+                                          :uuid request-processing-uuid)))
+
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
      :cleanup (progn

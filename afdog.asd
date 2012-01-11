@@ -101,8 +101,9 @@
 
                                             (:module "request-processing" :depends-on ("packages") :components
                                                      ((:file "package")
+                                                      (:file "agent" :depends-on ("package"))
                                                       (:file "requesticle-organ" :depends-on ("package"))
-                                                      (:file "agent" :depends-on ("package" "requesticle-organ"))))))))
+                                                      (:file "behaviors" :depends-on ("requesticle-organ" "agent"))))))))
 
                          (:module "cli" :depends-on ("agent" "fdog") :components
                                   ((:file "package")

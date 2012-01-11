@@ -64,7 +64,6 @@
            :group request-processing-agent-tests
            :fixtures (db-path-fixture mongrel2-agent-fixture request-processing-agent-fixture kill-everything-fixture))
     (:seq (:eql :informed-peers)
-          (:eql :server-need-filled)
           (:eql :handler-need-filled)
           (:eql :connected-to-one))
   (list
@@ -74,23 +73,8 @@
    (with-agent-conversation (m e) mongrel2-uuid
      (zmq:send! e (prepare-message
                    `(:agent :need
-                            :need  :server
-                            :server (:name "forwarder" :port 6969 :hosts ("api.example.com")))))
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
-          ((and filled
-                (getf filled :server))
-           :server-need-filled)))
-
-
-   (with-agent-conversation (m e) mongrel2-uuid
-     (zmq:send! e (prepare-message
-                   `(:agent :need
                             :need  :handler
-                            :handler (:server "forwarder" :hosts ("api.example.com") :route "/" :name "api"))))
+                            :handler (:server "control" :hosts ("api.example.com") :route "/" :name "api"))))
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)

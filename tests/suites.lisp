@@ -8,7 +8,7 @@
                    supervision-tests
                    cli-tests
                    mongrel2-agent-tests
-                   afdog-hypervisor-tests))
+                   afdog-hypervisor-agent-tests))
 
 
 ;; Directly runnable

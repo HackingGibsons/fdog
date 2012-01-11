@@ -37,3 +37,14 @@
            (peers (getf info :peers) (getf info :peers)))
           (peers
            :m2-agent-has-peers)))))
+
+(def-test (request-processing-agent-announces-connected-count :group request-processing-agent-tests :fixtures (request-processing-agent-fixture kill-everything-fixture))
+    (:eql 0)
+  (with-agent-conversation (m e) request-processing-uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (info (getf msg :info)
+                (getf msg :info))
+          (requesticle (getf info :requesticle)
+                       (getf info :requesticle)))
+         (requesticle (getf requesticle :peers)))))

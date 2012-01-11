@@ -3,7 +3,7 @@
 (defcategory requesticle)
 (defclass agent-requesticle (standard-beating-organ)
   ((connected-to :initform (make-hash-table :test 'equalp)
-                 :accessor conneted-to)
+                 :accessor connected-to)
    (request-sock :initform nil
                  :accessor request-sock))
   (:documentation "Responsible for firing events when Mongrel2 requests arrive
@@ -29,3 +29,7 @@ at the request sock.")
 
   (zmq:close (request-sock requesticle))
   (setf (request-sock requesticle) nil))
+
+(defmethod agent-info :around ((organ agent-requesticle))
+  `(,(organ-tag organ) (:uuid ,(organ-uuid organ)
+                        :peers ,(hash-table-count (connected-to organ)))))

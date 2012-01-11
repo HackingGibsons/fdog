@@ -31,7 +31,7 @@ The list should be a list of initargs.")))
   (let ((root (agent-root agent))
         (organ (find-organ agent :head)))
     (loop for (name args) on (hypervisor-agents agent) by #'cddr do
-         (log-for (afdog-hypervisor-agent) "Linking agent: ~A with args ~S" name args)
+         (log-for (afdog-hypervisor-agent trace) "Linking agent: ~A with args ~S at root ~S" name args root)
          (link-agent organ name root args))))
 
 (defmethod agent-special-event :after ((agent afdog-hypervisor-agent) (event-head (eql :boot)) event)

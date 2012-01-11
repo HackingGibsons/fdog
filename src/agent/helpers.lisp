@@ -1,5 +1,26 @@
 (in-package :agent)
 
+(defgeneric tell-agent-about (agent about-agent)
+  (:documentation "Tells `agent' about `about-agent' by
+sending `agent' an agent-info message from `about-agent'")
+
+  ;; Methods to map the parameters to strings
+  (:method ((agent standard-agent) about-agent)
+    (tell-agent-about (agent-uuid agent) about-agent))
+  (:method (agent (about-agent standard-agent))
+    (tell-agent-about agent (agent-uuid about-agent)))
+
+  ;; Main driver
+  (:method ((agent string) (about-agent string))
+    (flet ((get-message (s &key (timeout 1))
+             (parse-message (read-message s :timeout timeout))))
+      (with-agent-conversation (am ae :linger -1) agent
+        (with-agent-conversation (aam aae) about-agent
+          (zmq:send! ae (prepare-message
+                         (do* ((msg (get-message aam) (get-message aam))
+                               (info (getf msg :info) (getf msg :info)))
+                              (info info)))))))))
+
 (defmacro with-agent-conversation ((mouth-binding ear-binding &key (timeout 25) (linger 250)) uuid-or-many &body forms)
   "Execute `forms' with `mouth-binding' and `ear-binding' bound to connected sockets
 to the ear and mouth of an agent or agents with the `uuid-or-many' UUIDs given using the local transport.

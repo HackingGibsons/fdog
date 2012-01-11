@@ -43,6 +43,7 @@
            :read-message
            :prepare-message
            :with-agent-conversation
+           :tell-agent-about
            :discover-agents-on-host
            :local-ipc-addr
            :agent-event-count

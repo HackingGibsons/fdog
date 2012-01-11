@@ -23,13 +23,14 @@
   (:import-from :arnesi
                 :it
                 :rcurry)
+  (:import-from :mongrel2-agent
+                :mongrel2-agent)
   (:export :afdog-hypervisor-agent))
 
 (in-package :mongrel2-agent)
 
 (defcategory mongrel2-agent)
 (defcategory agent-needs)
-
 
 (in-package :afdog-hypervisor-agent)
 (defcategory afdog-hypervisor-agent)

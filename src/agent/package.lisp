@@ -7,6 +7,7 @@
                 :awhen)
   (:export :standard-agent
            :agent-uuid
+           :organ-uuid
            :agent-boot
            :agent-disconnect
            :defbehavior

@@ -58,3 +58,15 @@
 
 (in-package :afdog-hypervisor-agent)
 (defcategory afdog-hypervisor-agent)
+
+(defpackage #:forwarder-agent
+  (:documentation "Fdog forwarder agent")
+  (:use #:cl)
+  (:use #:afdog
+        #:agent
+        #:log5
+        #:fdog-agent))
+
+(in-package :forwarder-agent)
+
+(defcategory forwarder-agent)

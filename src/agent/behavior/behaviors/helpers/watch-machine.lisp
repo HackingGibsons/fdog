@@ -62,7 +62,7 @@ is in a failure state."
   "The stable state of the machine after creation. `info' should contain the `:saw' message
 for the given object, which should be checked for validity"
   (log-for (trace watch-machine) "Watching: ~A => ~A" machine info)
-  (unless info
+  (unless (getf info :info)
     (log-for (warn watch-machine) "Going to die.")
     :died))
 

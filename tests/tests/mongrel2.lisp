@@ -152,6 +152,8 @@
        (zmq:send! e (prepare-message '(:reset :timeout)))))
 
    (progn
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
      (fdog-models:connect db-path)
 
      (with-agent-conversation (m e :timeout 30) mongrel2-uuid
@@ -179,6 +181,8 @@
 
    ;; A new process has been made
    (with-agent-conversation (m e :timeout 30) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
      (fdog-models:connect db-path)
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))

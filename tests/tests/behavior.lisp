@@ -101,28 +101,20 @@
 
 
 (def-test (agent-hands-can-make-agents :group basic-behavior-tests :fixtures (spawner-fixture running-hypervisor-fixture))
-    (:seq (:eql :made)
-          (:eql :heard))
+    (:eql :heard)
   (let ((child-uuid (format nil "~A" (uuid:make-v4-uuid))))
-    (list
-     (with-agent-conversation (m e :linger -1) agent-uuid
-       (progn
-         ;; Wait for the agent and ask it to make a thing
-         (do ((msg (parse-message (read-message m))
-                   (parse-message (read-message m))))
-             ((getf msg :info)
-              (zmq:send! e (prepare-message `(:make :agent :uuid ,child-uuid)))))
+    (and (with-agent-conversation (m e :linger -1) agent-uuid
+           ;; Wait for the agent and ask it to make a thing
+           (do ((msg (parse-message (read-message m))
+                     (parse-message (read-message m))))
+               ((getf msg :info)
+                (zmq:send! e (prepare-message `(:make :agent :uuid ,child-uuid))))))
 
-         (do ((msg (parse-message (read-message m))
-                   (parse-message (read-message m))))
-             ((getf msg :made)
-              :made))))
-
-     (with-agent-conversation (m e :timeout 30) child-uuid
-       (do ((msg (parse-message (read-message m))
-                 (parse-message (read-message m))))
-           ((equalp (subseq msg 0 2) '(:agent :info))
-            :heard))))))
+         (with-agent-conversation (m e :timeout 30) child-uuid
+           (do ((msg (parse-message (read-message m))
+                     (parse-message (read-message m))))
+               ((getf msg :info)
+                :heard))))))
 
 (def-test (agent-hands-can-make-processes :group basic-behavior-tests :fixtures (transaction-id-fixture spawner-fixture running-hypervisor-fixture)) :true
   (with-agent-conversation (m e :timeout 20) agent-uuid

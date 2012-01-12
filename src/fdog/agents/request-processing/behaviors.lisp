@@ -27,3 +27,22 @@ any handlers we're interested in and we should connect to them."
       (log-for (trace requesticle peer-collection) "Requesticle hears info: ~S" info)
       (log-for (trace requesticle peer-collection) "Found servers: ~S" servers)
       (mapc #'search-server servers))))
+
+(defmethod request-handler ((organ agent-requesticle) msg)
+  "Called with a message read from the `request-socket' of the `organ'
+as a `zmq:msg'"
+  (log-for (trace) "~A handle request of size: ~A" organ (zmq:msg-size msg)))
+
+(defmethod make-request-handler ((organ agent-requesticle))
+  "Construct a callback for `request-socket' in the event
+that it is ready for read for submission into the event loop."
+  (lambda (sock)
+    (let ((msg (make-instance 'zmq:msg)))
+      (zmq:recv! sock msg)
+      (request-handler organ msg))))
+
+(defmethod reader-callbacks ((organ agent-requesticle))
+  "Ask to be notified of read activity on the request socket of the `organ'"
+  (when (request-sock organ)
+      (values (list (request-sock organ))
+              (list (make-request-handler organ)))))

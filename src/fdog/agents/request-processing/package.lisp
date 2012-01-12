@@ -5,6 +5,9 @@ Mongrel2 ZeroMQ messages")
   (:use #:afdog
         #:agent
         #:log5)
+  (:import-from :arnesi
+                :it
+                :aif)
   (:export :request-processing-agent))
 
 (in-package :request-processing-agent)

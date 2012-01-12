@@ -41,8 +41,14 @@ that it is ready for read for submission into the event loop."
       (zmq:recv! sock msg)
       (request-handler organ msg))))
 
-(defmethod reader-callbacks ((organ agent-requesticle))
+(defmethod reader-callbacks :around ((organ agent-requesticle))
   "Ask to be notified of read activity on the request socket of the `organ'"
-  (when (request-sock organ)
-      (values (list (request-sock organ))
-              (list (make-request-handler organ)))))
+  (multiple-value-bind (socks callbacks) (call-next-method)
+    (let ((socks (aif (request-sock organ)
+                      (append (list it) socks)
+                      socks))
+          (callbacks (if (request-sock organ)
+                         (append (list (make-request-handler organ)) callbacks)
+                         callbacks)))
+      (values socks
+              callbacks))))

@@ -119,7 +119,7 @@
 
 (def-test (mongrel2-agent-watches-and-restarts-existing-mongrel :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
     (:seq (:eql :first-process)
-          (:eql :runner-dead)
+          (:eql :agent-dead)
           (:eql :same-server-found)
           (:eql :mongrel2-dead)
           (:eql :made-new-process)
@@ -138,19 +138,21 @@
            (setf pid (or (getf process :pid) (getf msg :pid)))
            :first-process))) ;; We have a server
 
-   (progn
-     (stop mongrel2-runner)
-     (unless (running-p mongrel2-runner)
-       :runner-dead))
+   (with-agent-conversation (m e :timeout 60) hypervisor-uuid
+     (with-agent-conversation (cm ce) mongrel2-uuid
+       (zmq:send! ce (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (saw (getf msg :saw) (getf msg :saw))
+           (info (getf msg :info) (getf msg :info))
+           (peers (getf info :peers) (getf info :peers)))
+          ((and (null saw) (null peers))
+           (zmq:send! e (prepare-message '(:reset :timeout)))
+           :agent-dead)
+       (zmq:send! e (prepare-message '(:reset :timeout)))))
 
    (progn
      (fdog-models:connect db-path)
-     (setf mongrel2-runner (make-runner :test :include '(:afdog-tests)
-                                        :class 'mongrel2-test-agent
-                                        :root *root* ;; different root for the test agents
-                                        :uuid mongrel2-uuid))
-
-     (start mongrel2-runner)
 
      (with-agent-conversation (m e :timeout 30) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))
@@ -191,7 +193,6 @@
                 (equalp (fdog-models:mongrel2-server-pid server)
                         (getf process :pid)))
            :made-new-process)))
-
 
    ;; And that process stuck around.
    (with-agent-conversation (m e :timeout 30) mongrel2-uuid

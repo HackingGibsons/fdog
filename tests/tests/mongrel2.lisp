@@ -32,8 +32,8 @@
                     (getf (getf msg :process) :pid)))
             (m2pid
              (setf pid m2pid)
-             (and (ignore-errors (iolib.syscalls:kill m2pid iolib.syscalls:sigkill))
-                  :killed))))
+             (ignore-errors (iolib.syscalls:kill m2pid iolib.syscalls:sigkill))
+             :killed)))
 
      (with-agent-conversation (m e) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))
@@ -55,208 +55,104 @@
                     (getf (getf msg :process) :pid)))
             ((and m2pid (equalp m2pid pid))
              :running))))))
-     ;; (with-agent-conversation (m e) mongrel2-uuid
-     ;;   (do* ((msg (parse-message (read-message m))
-     ;;              (parse-message (read-message m)))
-     ;;         (process (getf msg :process)
-     ;;                  (getf msg :process))
-     ;;         (m2pid (getf (equalp (getf msg :saw) :process) :pid)
-     ;;                (getf (equalp (getf msg :saw) :process) :pid)))
-     ;;        ((and m2pid
-     ;;              (not (equalp m2pid pid)))
-     ;;         (setf pid m2pid)
-     ;;         :started)))
 
-     ;; (with-agent-conversation (m e) mongrel2-uuid
-     ;;   (do* ((msg (parse-message (read-message m))
-     ;;              (parse-message (read-message m)))
-     ;;         (process (getf msg :process)
-     ;;                  (getf msg :process))
-     ;;         (m2pid (getf (getf (getf msg :saw) :process) :pid)
-     ;;                (getf (getf (getf msg :saw) :process) :pid)))
-     ;;        ((and m2pid (equalp m2pid pid))
-     ;;         :running))))))
+(def-test (mongrel2-agent-watches-and-restarts-existsting-mongrel :group mongrel2-agent-tests)
+    (:seq (:eql :have-process)
+          (:eql :killed-agent)
+          (:eql :agent-returns)
+          (:eql :watching-process)
+          (:eql :killed)
+          (:eql :started)
+          (:eql :running))
+  (let (pid agent-age)
+    (list
+     (with-agent-conversation (m e) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (process (getf msg :process)
+                      (getf msg :process))
+             (m2pid (getf (getf msg :process) :pid)
+                    (getf (getf msg :process) :pid)))
+            (m2pid
+             (setf pid m2pid)
+             :have-process)))
 
-;; (def-test (mongrel2-agent-restarts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
-;;     (:seq (:eql :first-process)
-;;           (:eql :not-running)
-;;           (:eql :made-new-process)
-;;           (:eql :saw-new-process))
-;;   (list
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (process (getf msg :process)
-;;                     (getf msg :process)))
-;;           ;; TODO: One of these can never match, it destructures the :made message stupid
-;;           ((or (and (eql (getf msg :saw) :process)
-;;                     (getf process :pid))
-;;                (and (eql (getf msg :made) :process)
-;;                     (getf process :pid)))
-;;            :first-process))) ;; We have a server
+     (and (with-agent-conversation (m e :linger -1) mongrel2-uuid
+            (do* ((msg (parse-message (read-message m))
+                       (parse-message (read-message m)))
+                  (info (getf msg :info)
+                        (getf msg :info))
+                  (age (getf info :age)
+                       (getf info :age)))
+                 (age
+                  (setf agent-age age)
+                  (zmq:send! e (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))))
+          (with-agent-conversation (m e) hypervisor-uuid
+            (do* ((msg (parse-message (read-message m))
+                       (parse-message (read-message m)))
+                  (info (getf msg :info)
+                        (getf msg :info)))
+                 ((not (getf info :peers))
+                  :killed-agent))))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
+     (with-agent-conversation (m e :timeout 60) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (info (getf msg :info)
+                   (getf msg :info))
+             (age (getf info :age)
+                  (getf info :age)))
+            (age
+             (if (< age agent-age)
+                 :agent-returns
+                 :agent-too-old))))
 
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (process (getf msg :process)
-;;                     (getf msg :process))
-;;            (server (fdog-models:servers :name "control" :refresh t :one t)
-;;                    (fdog-models:servers :name "control" :refresh t :one t)))
-;;           ((and server (getf process :pid)
-;;                 (equalp (getf process :pid)
-;;                         (fdog-models:mongrel2-server-pid server)))
+     (with-agent-conversation (m e) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (process (getf msg :process)
+                      (getf msg :process))
+             (m2pid (getf (getf msg :process) :pid)
+                    (getf (getf msg :process) :pid)))
+            (m2pid
+             (and (equalp pid m2pid)
+             :watching-process))))
 
-;;            (setf pid (getf process :pid))
-;;            (handler-case
-;;                (fdog-models:mongrel2-server-signal/block server :stop)
-;;              (t (c)
-;;                (format t "Error stopping mongrel2: ~A~%" c)))
-;;            (if (fdog-models:mongrel2-server-running-p server)
-;;                :running
-;;                :not-running))))
+     (with-agent-conversation (m e) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (process (getf msg :process)
+                      (getf msg :process))
+             (m2pid (getf (getf msg :process) :pid)
+                    (getf (getf msg :process) :pid)))
+            (m2pid
+             (ignore-errors (iolib.syscalls:kill m2pid iolib.syscalls:sigkill))
+             :killed)))
 
-;;    ;; A new process has been made
-;;    (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-;;      (fdog-models:connect db-path)
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (made (getf msg :made)
-;;                  (or made (getf msg :made)))
-;;            (made-info (getf msg made)
-;;                       (or made-info (getf msg made)))
-;;            (server (fdog-models:servers :name "control" :refresh t :one t)
-;;                    (fdog-models:servers :name "control" :refresh t :one t))
-;;            (server-pid (and server (fdog-models:mongrel2-server-pid server))
-;;                        (and server (fdog-models:mongrel2-server-pid server))))
-;;           ((and made-info server
-;;                 (fdog-models:mongrel2-server-running-p server)
-;;                 (equalp (fdog-models:mongrel2-server-pid server)
-;;                         (getf made-info :pid)))
-;;            :made-new-process)))
+     (with-agent-conversation (m e) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (process (getf msg :process)
+                      (getf msg :process))
+             (m2pid (getf (getf msg :process) :pid)
+                    (getf (getf msg :process) :pid)))
+            ((and m2pid (not (equalp m2pid pid)))
+             (setf pid m2pid)
+             :started)))
 
+     (with-agent-conversation (m e) mongrel2-uuid
+       (do* ((msg (parse-message (read-message m))
+                  (parse-message (read-message m)))
+             (process (getf msg :process)
+                      (getf msg :process))
+             (m2pid (getf (getf msg :process) :pid)
+                    (getf (getf msg :process) :pid)))
+            ((and m2pid (equalp m2pid pid))
+             :running))))))
 
-;;    ;; And that process stuck around.
-;;    (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (saw nil (getf msg :saw))
-;;            (process nil (getf msg :process))
-;;            (saw-pid nil (getf process :pid))
-;;            (server (fdog-models:servers :name "control" :refresh t :one t)
-;;                    (fdog-models:servers :name "control" :refresh t :one t))
-;;            (running-p (fdog-models:mongrel2-server-running-p server)
-;;                       (fdog-models:mongrel2-server-running-p server)))
-;;           ((and (eql saw :process)
-;;                 process
-;;                 running-p
-;;                 (not (= pid saw-pid)))
-;;            (setf pid saw-pid)
-;;            :saw-new-process)))))
-
-
-;; (def-test (mongrel2-agent-watches-and-restarts-existing-mongrel :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
-;;     (:seq (:eql :first-process)
-;;           (:eql :agent-dead)
-;;           (:eql :same-server-found)
-;;           (:eql :mongrel2-dead)
-;;           (:eql :made-new-process)
-;;           (:eql :saw-new-process))
-
-;;   (list
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (process nil (getf msg :process)))
-;;           ;; TODO: One of these can never match, it destructures the :made message stupid
-;;           ((or (and (eql (getf msg :saw) :process)
-;;                     (getf process :pid))
-;;                (and (eql (getf msg :made) :process)
-;;                     (getf msg :pid)))
-;;            (setf pid (or (getf process :pid) (getf msg :pid)))
-;;            :first-process))) ;; We have a server
-
-;;    (with-agent-conversation (m e :timeout 60) hypervisor-uuid
-;;      (with-agent-conversation (cm ce) mongrel2-uuid
-;;        (zmq:send! ce (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (saw (getf msg :saw) (getf msg :saw))
-;;            (info (getf msg :info) (getf msg :info))
-;;            (peers (getf info :peers) (getf info :peers)))
-;;           ((and (null saw) (null peers))
-;;            (zmq:send! e (prepare-message '(:reset :timeout)))
-;;            :agent-dead)
-;;        (zmq:send! e (prepare-message '(:reset :timeout)))))
-
-;;    (progn
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
-
-;;      (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-;;        (do* ((msg (parse-message (read-message m))
-;;                   (parse-message (read-message m)))
-;;              (saw nil (getf msg :saw))
-;;              (process nil (getf msg :process))
-;;              (saw-pid nil (getf process :pid))
-;;              (server (fdog-models:servers :name "control" :refresh t :one t)
-;;                      (fdog-models:servers :name "control" :refresh t :one t))
-;;              (running-p (fdog-models:mongrel2-server-running-p server)
-;;                         (fdog-models:mongrel2-server-running-p server)))
-;;             ((and (eql saw :process)
-;;                   process
-;;                   running-p
-;;                   (= pid saw-pid))
-;;              :same-server-found))))
-
-;;    (progn
-;;      (let ((server (fdog-models:servers :name "control" :refresh t :one t)))
-;;        (fdog-models:mongrel2-server-signal/block server :stop)
-;;        (if (fdog-models:mongrel2-server-running-p server)
-;;            :mongrel2-running
-;;            :mongrel2-dead)))
-
-;;    ;; A new process has been made
-;;    (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (process (getf msg :process)
-;;                     (getf msg :process))
-;;            (server (fdog-models:servers :name "control" :refresh t :one t)
-;;                    (fdog-models:servers :name "control" :refresh t :one t))
-;;            (server-pid (and server (fdog-models:mongrel2-server-pid server))
-;;                        (and server (fdog-models:mongrel2-server-pid server))))
-;;           ((and (getf process :pid) server
-;;                 (fdog-models:mongrel2-server-running-p server)
-;;                 (equalp (fdog-models:mongrel2-server-pid server)
-;;                         (getf process :pid)))
-;;            :made-new-process)))
-
-;;    ;; And that process stuck around.
-;;    (with-agent-conversation (m e :timeout 30) mongrel2-uuid
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (saw nil (getf msg :saw))
-;;            (process nil (getf msg :process))
-;;            (saw-pid nil (getf process :pid))
-;;            (server (fdog-models:servers :name "control" :refresh t :one t)
-;;                    (fdog-models:servers :name "control" :refresh t :one t))
-;;            (running-p (fdog-models:mongrel2-server-running-p server)
-;;                       (fdog-models:mongrel2-server-running-p server)))
-;;           ((and (eql saw :process)
-;;                 process
-;;                 running-p
-;;                 (not (= pid saw-pid)))
-;;            (setf pid saw-pid)
-;;            :saw-new-process)))))
-
+;; HERE BE DRAGONS
+;; TODO: The bellow tests are being ported to a supervised and persistent
+;;       mongrel2-agent They are being deleted as they are ported.
 ;; (def-test (mongrel2-agent-announces-mongrels :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
 ;;     (:seq (:eql :find-pid)
 ;;           (:eql :announce-servers))

@@ -11,10 +11,9 @@
   (flet ((from-info (thing) (getf need-info thing)))
     (let* ((server (awhen (from-info :server)
                      (fdog-models:servers :one t :refresh t :name it)))
-           (keep-names (from-info :names))
-           (handlers (when server (mongrel2-server-handlers server))))
+           (keep-names (from-info :names)))
 
-      (when (and server keep-names handlers)
+      (when (and server keep-names)
         (flet ((maybe-remove-handler (handler)
                  "Return the name of `handler' if it was kept, `nil' if it was removed"
                  (let ((name (mongrel2-handler-name handler)))
@@ -24,7 +23,8 @@
                          (clsql:delete-instance-records (fdog-models:mongrel2-target-route handler))
                          (clsql:delete-instance-records handler))))))
 
-          (let ((kept-handlers (remove nil (mapcar #'maybe-remove-handler handlers))))
+          (let ((kept-handlers (remove nil (mapcar #'maybe-remove-handler
+                                                   (mongrel2-server-handlers server)))))
             (link-server organ server (clsql:database-name clsql:*default-database*))
 
             (send-message organ :command `(:command :speak

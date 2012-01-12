@@ -205,6 +205,11 @@ of an agent and transitions to the `:made' state"
                            :agent ,(thing-info machine)))
   :made)
 
+(defstate agent-watch-machine :made (info)
+  "Parse the info message about the agent and only pass
+down the agent :info section for watch machine examination"
+  (call-next-method machine :made (getf info :info)))
+
 (defmethod link-init :around ((behavior link-manager) what info)
   (let ((key (link-key behavior what info)))
     (multiple-value-bind (value foundp) (gethash key (links behavior))

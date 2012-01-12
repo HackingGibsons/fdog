@@ -6,6 +6,22 @@
   ;;; Announce "need forwarder named foo"
   ;;; the handler gets created and announced
   ;;; check the handler exists
+  (list
+   (with-agent-conversation (m e) agent-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need :forwarder
+                            :forwarder ;; TODO
+                            )))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :forwarder))
+           (log-for (trace fdog-agent::agent-needs) "Filled: ~A" msg))))
+   )
   :pending)
 
 (def-test (forwarder-agent-update :group forwarder-agent-tests) (:eql :pending)

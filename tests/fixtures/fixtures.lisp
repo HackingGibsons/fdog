@@ -136,16 +136,25 @@ Does kill -9 to ensure the process dies in cleanup.")
 (def-fixtures mongrel2-agent-fixture
     (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn
-                             (start mongrel2-runner))
+                             (start mongrel2-runner)
+                             (unless (with-agent-conversation (m e :timeout 60) hypervisor-uuid
+                                       (do* ((msg (parse-message (read-message m))
+                                                  (parse-message (read-message m)))
+                                             (info (getf msg :info) (getf msg :info))
+                                             (peers (getf info :peers) (getf info :peers)))
+                                            (peers t)))
+                               (error "Mongrel2 didn't start.")))
                     :cleanup (progn
                                (ignore-errors (iolib.syscalls:kill pid iolib.syscalls:sigkill))
                                (stop mongrel2-runner)))
   (pid nil)
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (mongrel2-runner (make-runner :test :include '(:afdog-tests)
-                                :class 'mongrel2-test-agent
-                                :root *root* ;; different root for the test agents
-                                :uuid mongrel2-uuid)))
+                                 :class 'afdog-hypervisor-test-agent
+                                 :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)))
+                                 :root *root* ;; different root for the test agents
+                                 :uuid hypervisor-uuid)))
 
 (def-fixtures afdog-hypervisor-agent-fixture
     (:documentation "A fixture that instantiates an afdog-hypervisor test agent."

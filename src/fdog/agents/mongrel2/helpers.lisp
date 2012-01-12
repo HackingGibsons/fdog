@@ -69,8 +69,10 @@ The `width' is defaulted to 10000"
                               (fdog-models:mongrel2-server-hosts server))))
 
            (server-targets (server)
+             (clsql:update-objects-joins `(,server))
              (remove-duplicate-models
               (mapcar #'fdog-models:mongrel2-route-target (server-routes server)))))
+
     (remove-if-not (rcurry #'typep 'fdog-models:mongrel2-handler)
                    (server-targets server))))
 

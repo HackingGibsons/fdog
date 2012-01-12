@@ -45,6 +45,7 @@
            :watching
            :organ-tag
            :running-p
+           :reader-callbacks
            :parse-message
            :read-message
            :prepare-message

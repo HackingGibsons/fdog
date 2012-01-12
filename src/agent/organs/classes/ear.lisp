@@ -36,7 +36,8 @@
 
   (log-for (warn) "Disconnecting ear: ~A from ~A" ear agent)
   (with-slots (listen-addr listen-sock) ear
-    (zmq:close listen-sock)
+    (when listen-sock
+      (zmq:close listen-sock))
     (setf listen-sock nil
           listen-addr nil)))
 

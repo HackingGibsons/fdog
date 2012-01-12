@@ -27,7 +27,8 @@ at the request sock.")
   (declare (ignorable options))
   (log-for (trace requesticle) "Requesticle destroying socket.")
 
-  (zmq:close (request-sock requesticle))
+  (when (request-sock requesticle)
+    (zmq:close (request-sock requesticle)))
   (setf (request-sock requesticle) nil))
 
 (defmethod agent-info :around ((organ agent-requesticle))

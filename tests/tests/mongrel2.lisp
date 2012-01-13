@@ -69,11 +69,14 @@
      (with-agent-conversation (m e) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))
                   (parse-message (read-message m)))
-             (process (getf msg :process)
-                      (getf msg :process))
-             (m2pid (getf (getf msg :process) :pid)
-                    (getf (getf msg :process) :pid)))
-            (m2pid
+             (saw (getf msg :saw) (getf msg :saw))
+             (process (and saw (getf msg :process))
+                      (and saw (getf msg :process)))
+             (alive (get process :alive) 
+                    (getf process :saw))
+             (m2pid (getf process :pid)
+                    (getf process :pid)))
+            ((and alive m2pid)
              (setf pid m2pid)
              :have-process)))
 

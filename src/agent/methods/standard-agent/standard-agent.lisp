@@ -110,6 +110,11 @@ as fire any callbacks that may be pending IO when it is ready."
            (prog1 t
              (log-for (warn) "Suicide event: ~A" event))))))
 
+(defmethod run-agent :around ((agent standard-agent))
+  (handler-case (call-next-method)
+    (t (c)
+      (log-for (warn) "Event loop exited poorly: ~A" c))))
+
 (defmethod run-agent ((agent standard-agent))
   "Enter the agent event loop, return only when agent is dead."
   (zmq:with-context (ctx *context-threads*)

@@ -66,9 +66,14 @@ type. Returns two values: the socket created and the address that was bound to i
       (when data
         (funcall transform data)))))
 
+(defvar *create-output-logs* nil)
 (defmethod run-program (program args &rest rest)
   "Helper method to run external programs and provide hooks for testing."
-  (apply #'sb-ext:run-program program args rest))
+  (let ((output (pathname (format nil "/tmp/afdog.out.~A.~A.log"
+                                  (car (last (ppcre:split "/" (namestring program))))
+                                  (process-hash program args)))))
+    (apply #'sb-ext:run-program program args
+           :output (when *create-output-logs* output) :error :output :if-output-exists :supersede rest)))
 
 (defmethod run-program :around (program args &rest rest)
   "Runs the process and writes the resulting pid to a file"

@@ -11,6 +11,7 @@
            :*git-revision*
            :version-string
            :*root*
+           :*create-output-logs*
            :run-program
            :process-hash
            :kill-everything

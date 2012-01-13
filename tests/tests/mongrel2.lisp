@@ -17,7 +17,8 @@
           (m2pid (getf process :pid) 
                  (getf process :pid)))
          ((and alive m2pid)
-          :running))))
+          :running)
+      (format t "Looking for a mongrel2 process but found msg ~S~%" msg))))
 
 (def-test (mongrel2-agent-restarts-mongrel :group mongrel2-agent-tests)
     (:seq (:eql :killed)
@@ -38,7 +39,8 @@
             ((and alive  m2pid)
              (setf pid m2pid)
              (ignore-errors (iolib.syscalls:kill m2pid iolib.syscalls:sigkill))
-             :killed)))
+             :killed)
+         (format t "Looking for a mongrel2 process but found msg ~S~%" msg)))
 
      (with-agent-conversation (m e) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))
@@ -90,7 +92,8 @@
             ((and alive m2pid)
              (format t "Found mongrel2 process pid~A~%" m2pid)
              (setf pid m2pid)
-             :have-process)))
+             :have-process))
+       (format t "Looking for mongrel2  process but got message ~S" msg))
 
      (and (with-agent-conversation (m e :linger -1) mongrel2-uuid
             (do* ((msg (parse-message (read-message m))
@@ -133,8 +136,7 @@
              (m2pid (getf process :pid)
                     (getf process :pid)))
             ((and alive m2pid (equalp pid m2pid))
-             :watching-process)
-         (format t "Waiting for process pid ~A. Msg: ~S~%" pid msg)))
+             :watching-process)))
 
      (with-agent-conversation (m e) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))

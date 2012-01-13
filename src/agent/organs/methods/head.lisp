@@ -44,9 +44,9 @@
 
 (defmethod suicide ((head agent-head) &optional reason)
   "Send a death message down the bus, agent should terminate."
-  (log-for (warn) "~A/~A I HAVE LOST THE WILL TO LIVE!" (organ-agent head) head)
+  (log-for (warn) "~A/~A I HAVE LOST THE WILL TO LIVE BECAUSE OF ~A!" (organ-agent head) head reason)
   (send-message head :command `(:command :speak
-                                :say (:agent :death :reason reason
+                                :say (:agent :death :reason ,reason
                                              :death ,(agent-uuid (organ-agent head)))))
   (send-message head :command `(:command :die
                                 :uuid ,(organ-uuid head)

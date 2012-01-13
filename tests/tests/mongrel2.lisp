@@ -114,9 +114,8 @@
                       (getf msg :process))
              (m2pid (getf (getf msg :process) :pid)
                     (getf (getf msg :process) :pid)))
-            (m2pid
-             (and (equalp pid m2pid)
-             :watching-process))
+            ((and m2pid (equalp pid m2pid))
+             :watching-process)
          (format t "Waiting for process. Msg: ~S~%" msg)))
 
      (with-agent-conversation (m e) mongrel2-uuid

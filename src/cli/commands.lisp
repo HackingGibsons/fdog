@@ -152,7 +152,7 @@
         (format t "Afdog ~A~%" (afdog:version-string))
         (format t "Usage: ~A <command> [command-options]~%" *self*)
         (list-commands)))
-  (when exit (quit :unix-status 0)))
+  (when exit (sb-ext:quit :unix-status 0)))
 
 (defun list-commands ()
   (format t "Available commands:~%")

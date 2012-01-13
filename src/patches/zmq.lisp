@@ -1,5 +1,17 @@
 (in-package :zmq)
 
+;; New socktypes
+(export '(router dealer))
+(defconstant router xrep)
+(defconstant dealer xreq)
+
+;; New constants
+(export '(fd events reconnect-ivl reconnect-ivl-max))
+(defconstant fd 14)
+(defconstant events 15)
+(defconstant reconnect-ivl 18)
+(defconstant reconnect-ivl-max 21)
+
 (export 'send!)
 (defun send! (sock msg &optional flags (count 0))
   "Keep trying to `zmq:send' while it keeps returning -1 with an errno

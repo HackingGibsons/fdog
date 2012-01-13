@@ -8,3 +8,7 @@
 
 (defmethod update-instance-for-different-class :after ((old exec-runner) (new test-runner) &key)
   (setf (init-forms new) nil))
+
+(in-package :afdog)
+;; Enable output traces of running programs
+(setf *create-output-logs* t)

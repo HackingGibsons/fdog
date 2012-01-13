@@ -12,6 +12,24 @@
 (defconstant reconnect-ivl 18)
 (defconstant reconnect-ivl-max 21)
 
+;; TODO: Import this back into the ZMQ module
+;; Changes (so far):
+;;  * Included reconnect-ivl* to the integer options
+;;    Couldn't factor it out because the constant is defined here
+(defun setsockopt (socket option value)
+  (etypecase value
+    (string (with-foreign-string (string value)
+              (%setsockopt socket option string (length value))))
+    (integer (cond
+               ((member option (list linger reconnect-ivl-max reconnect-ivl) :test #'=)
+                (with-foreign-object (int :int)
+                  (setf (mem-aref int :int) value)
+                  (%setsockopt socket option int (foreign-type-size :int))))
+               (t
+                (with-foreign-object (int :int64)
+                  (setf (mem-aref int :int64) value)
+                  (%setsockopt socket option int (foreign-type-size :int64))))))))
+
 (export 'send!)
 (defun send! (sock msg &optional flags (count 0))
   "Keep trying to `zmq:send' while it keeps returning -1 with an errno

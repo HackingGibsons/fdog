@@ -107,7 +107,7 @@
                  :agent-returns
                  :agent-too-old))))
 
-     (with-agent-conversation (m e :timeout 35) mongrel2-uuid
+     (with-agent-conversation (m e :timeout 60) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))
                   (parse-message (read-message m)))
              (process (getf msg :process)
@@ -116,7 +116,8 @@
                     (getf (getf msg :process) :pid)))
             (m2pid
              (and (equalp pid m2pid)
-             :watching-process))))
+             :watching-process))
+         (format t "Waiting for process. Msg: ~S~%" msg)))
 
      (with-agent-conversation (m e) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))

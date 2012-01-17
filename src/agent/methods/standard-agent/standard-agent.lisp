@@ -98,6 +98,7 @@ as fire any callbacks that may be pending IO when it is ready."
   (log-for (trace) "Testing event fatalaty of ~A[~A] for ~A" event (type-of event) agent)
   (let ((parsed (and (typep event 'string) (handler-case (read-from-string event) (end-of-file () nil)))))
     (cond ((not event)
+           (log-for (warn) "Not an event! Considering fatal.")
            t)
 
           ((and (event-timeout-p event)
@@ -144,8 +145,7 @@ as fire any callbacks that may be pending IO when it is ready."
         (log-for (trace) "Entering agent event loop.")
         (unwind-protect
              (do ((event (next-event agent) (next-event agent)))
-                 ((or (not event)
-                      (event-fatal-p agent event))
+                 ((event-fatal-p agent event)
                   event)
                (log-for (trace) "Agent[~A] Event: ~A" agent event)
 

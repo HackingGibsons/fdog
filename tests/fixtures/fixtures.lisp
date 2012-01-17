@@ -173,7 +173,9 @@ Does kill -9 to ensure the process dies in cleanup.")
 
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
-                    :cleanup (afdog:kill-everything)))
+     :cleanup (progn
+                (afdog:run-program "/usr/bin/env" `("killall" "mongrel2") :wait t)
+                (afdog:kill-everything))))
 
 (def-fixtures afdog-bin-fixture
     (:documentation "Pathname to afdog binary")

@@ -47,7 +47,7 @@ tar xf sbcl-1.0.54-x64-linux-binary.tar.bz2
 tar xf sbcl-1.0.55-source.tar.bz2
 # Install the 54 first to build 55
 pushd sbcl-1.0.54-x86-64-linux
-sudp sh install.sh
+sudo sh install.sh
 popd
 # Build and install 55
 pushd sbcl-1.0.55/

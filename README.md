@@ -27,8 +27,8 @@ git clone git://github.com/sshirokov/mongrel2.git -b deploy
 # Fetch the sbcl-1.0.54 linux binary and the 1.0.55 source
 # The pre-build x64 1.0.55 binary is not compatibile with the
 # glibc version in Ubuntu 10.04 x64
-wget -O sbcl-1.0.54-x64-linux-binary.tar.bz2 http://downloads.sourceforge.net/project/sbcl/sbcl/1.0.54/sbcl-1.0.54-x86-64-linux-binary.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fsbcl%2Ffiles%2Fsbcl%2F1.0.54%2F&ts=1326852816&use_mirror=superb-sea2
-wget -O sbcl-1.0.55-source.tar.bz2 http://downloads.sourceforge.net/project/sbcl/sbcl/1.0.55/sbcl-1.0.55-source.tar.bz2?r=http%3A%2F%2Fsbcl.sourceforge.net%2Fplatform-table.html&ts=1326850919&use_mirror=iweb
+wget -O sbcl-1.0.54-x64-linux-binary.tar.bz2 http://bit.ly/sbcl-1-0-54-x64-linux-binary
+wget -O sbcl-1.0.55-source.tar.bz2 http://bit.ly/sbcl-1-0-55-src
 `
 
 

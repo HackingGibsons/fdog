@@ -7,7 +7,7 @@ was failing on the Jenkins machine and passing **everywhere else**.
 The base machine is `Ubuntu 10.04 x64` the tests were performed on
 ami `ami-35de095c` **WARNING: This is an instance store AMI**
 
-`bash
+```bash
 # Everything we need from apt to build everything below
 sudo aptitude install build-essential sqlite3 libsqlite3-dev uuid-dev \
                       git-core autoconf
@@ -29,6 +29,6 @@ git clone git://github.com/sshirokov/mongrel2.git -b deploy
 # glibc version in Ubuntu 10.04 x64
 wget -O sbcl-1.0.54-x64-linux-binary.tar.bz2 http://bit.ly/sbcl-1-0-54-x64-linux-binary
 wget -O sbcl-1.0.55-source.tar.bz2 http://bit.ly/sbcl-1-0-55-src
-`
+```
 
 

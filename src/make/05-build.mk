@@ -21,6 +21,7 @@ buildapp: $(BUILDAPP)
 $(BUILDAPP): | init
 	@echo "=> Building buildapp to $(BUILDAPP)"
 	$(LISP) --eval '(sb-ext:disable-debugger)' \
+			--load $(QL_ROOT_PATH)/setup.lisp \
 	        --eval '(ql:quickload :buildapp)' \
 	        --eval '(buildapp:build-buildapp "$(BUILDAPP)")' \
 	        --eval '(quit)'

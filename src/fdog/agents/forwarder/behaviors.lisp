@@ -39,3 +39,9 @@
   "Removes all forwarders except those named."
   ;; TODO persistence
   )
+
+(defmethod heard-message ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :need)) &rest request)
+  (log-for (trace forwarder-agent) "Heard an :agent :need message: ~A" request)
+  (let* ((need-what (getf request :need))
+         (need-info (getf request need-what)))
+    (agent-needs agent organ need-what need-info)))

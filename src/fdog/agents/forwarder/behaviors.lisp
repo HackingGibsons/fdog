@@ -33,10 +33,12 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."
+  ;; TODO announce handler removal
   ;; TODO persistence
   )
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
+  ;; TODO announce handler cull
   ;; TODO persistence
   )
 

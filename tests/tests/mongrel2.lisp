@@ -890,15 +890,15 @@
    (with-agent-conversation (m e) mongrel2-uuid
      (zmq:send! e (prepare-message
                    `(:agent :need
-                            :need  :remove-handler
-                            :remove-handler (:server "forwarder" :name "api"))))
+                            :need  :remove-handlers
+                            :remove-handlers (:server "forwarder" :names ("api")))))
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
                    (or filled
                        (and (equalp (car msg) :filled) msg))))
           ((and filled
-                (getf filled :remove-handler))
+                (getf filled :remove-handlers))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
            :handler-removed)))
 

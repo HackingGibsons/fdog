@@ -1,4 +1,5 @@
 (in-package :afdog-tests)
+(defcategory m2-tests)
 
 (def-test (mongrel2-root-is-not-system-source-directory :group mongrel2-agent-tests)
     (:not (:equalp (asdf:system-source-directory :afdog-tests)))
@@ -18,7 +19,7 @@
                  (getf process :pid)))
          ((and alive m2pid)
           :running)
-      (format t "Looking for a mongrel2 process but found msg ~S~%" msg))))
+      (log-for (m2-tests trace) "Looking for a mongrel2 process but found msg ~S" msg))))
 
 (def-test (mongrel2-agent-restarts-mongrel :group mongrel2-agent-tests)
     (:seq (:eql :killed)
@@ -40,7 +41,7 @@
              (setf pid m2pid)
              (ignore-errors (iolib.syscalls:kill m2pid iolib.syscalls:sigkill))
              :killed)
-         (format t "Looking for a mongrel2 process but found msg ~S~%" msg)))
+         (log-for (m2-tests trace) "Looking for a mongrel2 process but found msg ~S" msg)))
 
      (with-agent-conversation (m e) mongrel2-uuid
        (do* ((msg (parse-message (read-message m))
@@ -90,10 +91,10 @@
              (m2pid (getf process :pid)
                     (getf process :pid)))
             ((and alive m2pid)
-             (format t "Found mongrel2 process pid~A~%" m2pid)
+             (log-for (m2-tests trace) "Found mongrel2 process pid~A" m2pid)
              (setf pid m2pid)
              :have-process)
-         (format t "Looking for mongrel2  process but got message ~S~%" msg)))
+         (log-for (m2-tests trace) "Looking for mongrel2  process but got message ~S" msg)))
 
      (and (with-agent-conversation (m e :linger -1) mongrel2-uuid
             (do* ((msg (parse-message (read-message m))

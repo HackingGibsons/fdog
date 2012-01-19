@@ -1,7 +1,7 @@
 (in-package :forwarder-agent)
 
 ;; Agent
-(defclass forwarder-agent (rooted-agent-mixin)
+(defclass forwarder-agent (standard-leaf-agent rooted-agent-mixin)
   ((forwarders
     :accessor forwarders
     :documentation "A list of forwarders this agent provides. Elements take the form (name . (list-of-metadata))"))

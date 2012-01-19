@@ -3,8 +3,10 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :forwarder)) need-info)
   "Creates or updates a forwarder (\"forwarder server\" + named mongrel2 handler) in response to a need request."
-  (labels ((from-info (thing) (getf need-info thing)))
-    (let ((name (from-forwarder name)))
+  (labels ((from-info (thing) (getf need-info thing))
+           (handler-name (name) (format nil "forwarder-~A" name)))
+    (let ((name (from-info name))
+          (hostpaths (from-info hostpaths)))
       ;; Announce "need forwarder server"
       (send-message organ :command
                     `(:command :speak
@@ -12,21 +14,23 @@
                                             :need :server
                                             :server (:name "forwarder" :port *forwarder-server-port* :hosts ("????")))))
       ;; Announce "need handler" for hostpath
+      ;; TODO currently only makes handler for first hostpath
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need
                                             :need :handler
-                                            :handler (:server "forwarder" :hosts ("????") :route "????" :name "????"))))
-          ;; TODO: What if multiple hostpaths?
-          ;; Then announce "need filled for forwarder"
-          (send-message organ :command
-                        `(:command :speak
-                                   :say (:filled :need
-                                                 :need ,what
-                                                 ,what ,need-info)))
-          ;; Add forwarder to agent list
-          (add-forwarder agent name)
-          ;; TODO persistence
+                                            :handler (:server "forwarder" :hosts (caar hostpaths) :route (cdar hostpaths) :name (handler-name name)))))
+
+      ;; TODO: What if multiple hostpaths?
+      ;; Then announce "need filled for forwarder"
+      (send-message organ :command
+                    `(:command :speak
+                               :say (:filled :need
+                                             :need ,what
+                                             ,what ,need-info)))
+      ;; Add forwarder to agent list
+      (add-forwarder agent name)
+      ;; TODO persistence
   )))
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)

@@ -22,15 +22,16 @@
                                             :handler (:server "forwarder" :hosts (caar hostpaths) :route (cdar hostpaths) :name (handler-name name)))))
 
       ;; TODO: What if multiple hostpaths?
+      ;; Add forwarder to agent list
+      (add-forwarder agent name)
+      ;; TODO persistence
+
       ;; Then announce "need filled for forwarder"
       (send-message organ :command
                     `(:command :speak
                                :say (:filled :need
                                              :need ,what
                                              ,what ,need-info)))
-      ;; Add forwarder to agent list
-      (add-forwarder agent name)
-      ;; TODO persistence
   )))
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)

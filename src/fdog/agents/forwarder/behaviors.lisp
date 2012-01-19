@@ -12,7 +12,7 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :server
-                                            :server (:name "forwarder" :port *forwarder-server-port* :hosts ("????")))))
+                                            :server (:name "forwarder" :port *forwarder-server-port* :hosts ("localhost")))))
       ;; Announce "need handler" for hostpath
       ;; TODO currently only makes handler for first hostpath
       (send-message organ :command

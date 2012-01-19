@@ -16,7 +16,7 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :handler
-                                            :handler (:server "forwarder" :port ???? :hosts ("????")))))
+                                            :handler (:server "forwarder" :hosts ("????") :route "????" :name "????"))))
           ;; TODO: What if multiple hostpaths?
           ;; Then announce "need filled for forwarder"
           (send-message organ :command

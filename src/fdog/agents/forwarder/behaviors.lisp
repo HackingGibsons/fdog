@@ -10,7 +10,7 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :server
-                                            :server (:name "forwarder" :port ???? :hosts ("????")))))
+                                            :server (:name "forwarder" :port *forwarder-server-port* :hosts ("????")))))
       ;; Announce "need handler" for hostpath
       (send-message organ :command
                     `(:command :speak

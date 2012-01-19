@@ -70,3 +70,4 @@
 (in-package :forwarder-agent)
 
 (defcategory forwarder-agent)
+(defvar *forwarder-server-port* 13374)

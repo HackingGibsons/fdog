@@ -534,9 +534,6 @@
                 (parse-message (read-message m :timeout 1))))
            ((not (fdog-models:servers :name "forwarder" :refresh t :one t))
             :server-gone)))))
-;; HERE BE DRAGONS
-;; TODO: The bellow tests are being ported to a supervised and persistent
-;;       mongrel2-agent They are being deleted as they are ported.
 (def-test (mongrel2-agent-culls-all-servers :group mongrel2-agent-tests)
     (:seq (:eql :need-filled)
           (:eql :find-new-host)
@@ -589,171 +586,174 @@
            ((not (fdog-models:servers :refresh t))
             :servers-gone)))))
 
-;; (def-test (mongrel2-agent-culls-hosts :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
-;;     (:seq (:eql :need-filled)
-;;           (:eql :find-new-host)
-;;           (:eql :removal-filled)
-;;           (:eql :hosts-gone))
-;;   (list
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (zmq:send! e (prepare-message
-;;                    `(:agent :need
-;;                             :need  :server
-;;                             :server (:name "forwarder" :port 6969 :hosts ("api.example.com"
-;;                                                                           "api2.example.com"
-;;                                                                           "api3.example.com")))))
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (filled (and (equalp (car msg) :filled) msg)
-;;                    (or filled
-;;                        (and (equalp (car msg) :filled) msg))))
-;;           ((and filled
-;;                 (getf filled :server))
-;;            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
-;;            :need-filled)))
+(def-test (mongrel2-agent-culls-hosts :group mongrel2-agent-tests)
+    (:seq (:eql :need-filled)
+          (:eql :find-new-host)
+          (:eql :removal-filled)
+          (:eql :hosts-gone))
+  (list
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :server
+                            :server (:name "forwarder" :port 6969 :hosts ("api.example.com"
+                                                                          "api2.example.com"
+                                                                          "api3.example.com")))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :server))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           :need-filled)))
 
-;;    (progn
-;;      (fdog-models:connect db-path)
-;;      (let* ((server (fdog-models:servers :name "forwarder" :refresh t :one t))
-;;             (hosts (and server (fdog-models:mongrel2-server-hosts server))))
-;;        (and (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
-;;             (find "api3.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
-;;             :find-new-host)))
+   (progn
+     (fdog-models:connect db-path)
+     (let* ((server (fdog-models:servers :name "forwarder" :refresh t :one t))
+            (hosts (and server (fdog-models:mongrel2-server-hosts server))))
+       (and (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
+            (find "api3.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)
+            :find-new-host)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (zmq:send! e (prepare-message
-;;                    `(:agent :need
-;;                             :need  :keep-hosts
-;;                             :keep-hosts (:server "forwarder" :hosts ("api.example.com")))))
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (filled (and (equalp (car msg) :filled) msg)
-;;                    (or filled
-;;                        (and (equalp (car msg) :filled) msg))))
-;;           ((and filled
-;;                 (getf filled :keep-hosts))
-;;            (log-for (trace mongrel2-agent::agent-needs) "Filled hosts: ~A" msg)
-;;            :removal-filled)))
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :keep-hosts
+                            :keep-hosts (:server "forwarder" :hosts ("api.example.com")))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :keep-hosts))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled hosts: ~A" msg)
+           :removal-filled)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
-;;      (do* ((msg (parse-message (read-message m :timeout 1))
-;;                 (parse-message (read-message m :timeout 1)))
-;;            (info (getf msg :info) (getf msg :info)))
-;;           ((let* ((server (fdog-models:servers :name "forwarder" :refresh t :one t))
-;;                   (hosts (and server (fdog-models:mongrel2-server-hosts server))))
-;;              (and (not (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name))
-;;                   (not (find "api3.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name))
-;;                   (find "api.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)))
-;;            :hosts-gone)))))
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (info (getf msg :info) (getf msg :info)))
+          ((let* ((server (fdog-models:servers :name "forwarder" :refresh t :one t))
+                  (hosts (and server (fdog-models:mongrel2-server-hosts server))))
+             (and (not (find "api2.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name))
+                  (not (find "api3.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name))
+                  (find "api.example.com" hosts :test #'equalp :key #'fdog-models:mongrel2-host-name)))
+           :hosts-gone)))))
 
-;; (def-test (mongrel2-agent-can-make-handler :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
-;;     (:seq (:eql :server-need-filled)
-;;           (:eql :server-found)
-;;           (:eql :handler-need-filled)
-;;           (:eql :host-found)
-;;           (:eql :route-found)
-;;           (:eql :handler-found)
-;;           (:eql :handler-has-endpoint))
-;;   (list
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (zmq:send! e (prepare-message
-;;                    `(:agent :need
-;;                             :need  :server
-;;                             :server (:name "forwarder" :port 6969 :hosts ("api.example.com")))))
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (filled (and (equalp (car msg) :filled) msg)
-;;                    (or filled
-;;                        (and (equalp (car msg) :filled) msg))))
-;;           ((and filled
-;;                 (getf filled :server))
-;;            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
-;;            :server-need-filled)))
+;; HERE BE DRAGONS
+;; TODO: The bellow tests are being ported to a supervised and persistent
+;;       mongrel2-agent They are being deleted as they are ported.
+(def-test (mongrel2-agent-can-make-handler :group mongrel2-agent-tests)
+    (:seq (:eql :server-need-filled)
+          (:eql :server-found)
+          (:eql :handler-need-filled)
+          (:eql :host-found)
+          (:eql :route-found)
+          (:eql :handler-found)
+          (:eql :handler-has-endpoint))
+  (list
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :server
+                            :server (:name "forwarder" :port 6969 :hosts ("api.example.com")))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :server))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           :server-need-filled)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
 
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (process (getf msg :process)
-;;                     (getf msg :process))
-;;            (server (fdog-models:servers :name "forwarder" :refresh t :one t)
-;;                    (fdog-models:servers :name "forwarder" :refresh t :one t)))
-;;           ((and server (getf process :pid)
-;;                 (equalp (getf process :pid)
-;;                         (fdog-models:mongrel2-server-pid server)))
-;;            :server-found)))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (process (getf msg :process)
+                    (getf msg :process))
+           (server (fdog-models:servers :name "forwarder" :refresh t :one t)
+                   (fdog-models:servers :name "forwarder" :refresh t :one t)))
+          ((and server (getf process :pid)
+                (equalp (getf process :pid)
+                        (fdog-models:mongrel2-server-pid server)))
+           :server-found)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (zmq:send! e (prepare-message
-;;                    `(:agent :need
-;;                             :need  :handler
-;;                             :handler (:server "forwarder" :hosts ("api.example.com") :route "/" :name "api"))))
-;;      (do* ((msg (parse-message (read-message m))
-;;                 (parse-message (read-message m)))
-;;            (filled (and (equalp (car msg) :filled) msg)
-;;                    (or filled
-;;                        (and (equalp (car msg) :filled) msg))))
-;;           ((and filled
-;;                 (getf filled :handler))
-;;            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
-;;            :handler-need-filled)))
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :handler
+                            :handler (:server "forwarder" :hosts ("api.example.com") :route "/" :name "api"))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :handler))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           :handler-need-filled)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
 
-;;      (do* ((msg (parse-message (read-message m :timeout 1))
-;;                 (parse-message (read-message m :timeout 1)))
-;;            (server (fdog-models:servers :name "forwarder" :refresh t :one t)
-;;                    (fdog-models:servers :name "forwarder" :refresh t :one t)))
-;;           ((and server
-;;                 (fdog-models:find-mongrel2-host server "api.example.com"))
-;;            :host-found)))
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (server (fdog-models:servers :name "forwarder" :refresh t :one t)
+                   (fdog-models:servers :name "forwarder" :refresh t :one t)))
+          ((and server
+                (fdog-models:find-mongrel2-host server "api.example.com"))
+           :host-found)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
 
-;;      (do* ((msg (parse-message (read-message m :timeout 1))
-;;                 (parse-message (read-message m :timeout 1)))
-;;            (server (fdog-models:servers :name "forwarder" :refresh t :one t)
-;;                    (fdog-models:servers :name "forwarder" :refresh t :one t))
-;;            (host (when server (fdog-models:find-mongrel2-host server "api.example.com"))
-;;                  (when server (fdog-models:find-mongrel2-host server "api.example.com"))))
-;;           ((and host
-;;                 (fdog-models:find-mongrel2-route host "/"))
-;;            :route-found)))
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (server (fdog-models:servers :name "forwarder" :refresh t :one t)
+                   (fdog-models:servers :name "forwarder" :refresh t :one t))
+           (host (when server (fdog-models:find-mongrel2-host server "api.example.com"))
+                 (when server (fdog-models:find-mongrel2-host server "api.example.com"))))
+          ((and host
+                (fdog-models:find-mongrel2-route host "/"))
+           :route-found)))
 
-;;    (with-agent-conversation (m e) mongrel2-uuid
-;;      (ignore-errors (fdog-models:disconnect))
-;;      (ignore-errors (clsql:disconnect))
-;;      (fdog-models:connect db-path)
+   (with-agent-conversation (m e) mongrel2-uuid
+     (ignore-errors (fdog-models:disconnect))
+     (ignore-errors (clsql:disconnect))
+     (fdog-models:connect db-path)
 
-;;      (do* ((msg (parse-message (read-message m :timeout 1))
-;;                 (parse-message (read-message m :timeout 1)))
-;;            (server (fdog-models:servers :name "forwarder" :refresh t :one t)
-;;                    (fdog-models:servers :name "forwarder" :refresh t :one t)))
-;;           ((and server
-;;                 (fdog-models:find-mongrel2-handler :ident "api" :exact nil))
-;;            :handler-found)))
+     (do* ((msg (parse-message (read-message m :timeout 1))
+                (parse-message (read-message m :timeout 1)))
+           (server (fdog-models:servers :name "forwarder" :refresh t :one t)
+                   (fdog-models:servers :name "forwarder" :refresh t :one t)))
+          ((and server
+                (fdog-models:find-mongrel2-handler :ident "api" :exact nil))
+           :handler-found)))
 
-;;    (let* ((server (fdog-models:servers :one t :refresh t :name "forwarder"))
-;;           (host (and server (fdog-models:find-mongrel2-host server "api.example.com")))
-;;           (route (and host (fdog-models:find-mongrel2-route host "/")))
-;;           (target (and route (fdog-models:mongrel2-route-target route))))
-;;      (and target
-;;           (fdog-models:mongrel2-handler-send-spec target)
-;;           (fdog-models:mongrel2-handler-recv-spec target)
-;;           (prog1 :handler-has-endpoint
-;;             (log-for (trace mongrel2-agent::agent-needs) "Target: ~A" target))))))
+   (let* ((server (fdog-models:servers :one t :refresh t :name "forwarder"))
+          (host (and server (fdog-models:find-mongrel2-host server "api.example.com")))
+          (route (and host (fdog-models:find-mongrel2-route host "/")))
+          (target (and route (fdog-models:mongrel2-route-target route))))
+     (and target
+          (fdog-models:mongrel2-handler-send-spec target)
+          (fdog-models:mongrel2-handler-recv-spec target)
+          (prog1 :handler-has-endpoint
+            (log-for (trace mongrel2-agent::agent-needs) "Target: ~A" target))))))
 
 ;; (def-test (mongrel2-agent-announces-handler :group mongrel2-agent-tests :fixtures (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
 ;;     (:seq (:eql :server-need-filled)

@@ -31,7 +31,7 @@
           ;; TODO persistence
   )))))
 
-(defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarder)) need-info)
+(defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."
   ;; TODO persistence
   )

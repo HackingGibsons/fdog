@@ -6,14 +6,30 @@
   (labels ((from-info (thing) (getf need-info thing)))
     (let (forwarder-info (from-info forwarder))
       (labels ((from-forwarder (thing) (getf forwarder-info thing)))
-  ;; Announce "need forwarder server" - with whatever that needs
-  ;; Announce "need handler" for hostpath
-  ;; What if multiple hostpaths?
-  ;; Then announce "need filled for forwarder"
-  ;; Add it to ??? for how the :provides works
-  ;; (see mongrel2 agent
-  ;; TODO persistence
-  ))))
+        (let ((name (from-forwarder name)))
+          ;; Announce "need forwarder server"
+          (send-message organ :command
+                        `(:command :speak
+                          :say (:agent :need
+                                       :need :server
+                                       :server (:name "forwarder" :port ???? :hosts ("????")))))
+          ;; Announce "need handler" for hostpath
+          (send-message organ :command
+                        `(:command :speak
+                          :say (:agent :need
+                                       :need :handler
+                                       :handler (:server "forwarder" :port ???? :hosts ("????")))))
+          ;; TODO: What if multiple hostpaths?
+          ;; Then announce "need filled for forwarder"
+          (send-message organ :command
+                        `(:command :speak
+                          :say (:filled :need
+                                        :need ,what
+                                        ,what ,need-info)))
+          ;; Add forwarder to agent list
+          (add-forwarder agent name)
+          ;; TODO persistence
+  )))))
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarder)) need-info)
   "Removes the named forwarders."

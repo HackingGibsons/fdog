@@ -7,4 +7,9 @@
   (change-class (apply #'make-runner :exec keys) 'test-runner))
 
 (defmethod update-instance-for-different-class :after ((old exec-runner) (new test-runner) &key)
-  (setf (init-forms new) nil))
+  (setf (init-forms new) `((setf *random-state* (make-random-state t))
+                           (setf uuid::*uuid-random-state* (make-random-state t)))))
+
+(in-package :afdog)
+;; Enable output traces of running programs
+(setf *create-output-logs* t)

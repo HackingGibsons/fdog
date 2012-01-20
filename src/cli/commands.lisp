@@ -62,7 +62,7 @@
   "Kill all running agents and spawned processes with kill -9."
   (with-cli-options (argv "Usage: kill-everything [options]~%~@{~A~%~}~%")
       (&parameters (root "An alternate root directory"))
-    (afdog:kill-everything :root root)))
+    (afdog:kill-everything :root (or root (iolib.syscalls:getcwd)))))
 
 (defcommand agents (argv)
   "List the agents available for spawning."
@@ -152,7 +152,7 @@
         (format t "Afdog ~A~%" (afdog:version-string))
         (format t "Usage: ~A <command> [command-options]~%" *self*)
         (list-commands)))
-  (when exit (quit :unix-status 0)))
+  (when exit (sb-ext:quit :unix-status 0)))
 
 (defun list-commands ()
   (format t "Available commands:~%")

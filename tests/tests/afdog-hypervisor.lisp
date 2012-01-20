@@ -1,8 +1,8 @@
 (in-package :afdog-tests)
 
-(def-test (afh-can-spawn-mongrel2-agent :group afdog-hypervisor-agent-tests :fixtures (db-path-fixture afdog-hypervisor-agent-fixture))
+(def-test (afh-can-spawn-mongrel2-agent :group afdog-hypervisor-agent-tests :fixtures (db-path-fixture afdog-hypervisor-agent-fixture kill-everything-fixture))
     (:eql :mongrel2-running)
-  (with-agent-conversation (m e :timeout 60) afdog-hypervisor-uuid
+  (with-agent-conversation (m e :timeout 120) afdog-hypervisor-uuid
     (do* ((connected (awhen (make-hash-table :test 'equalp)
                        (setf (gethash afdog-hypervisor-uuid it) :connected) 
                        it)
@@ -10,8 +10,17 @@
           (msg (parse-message (read-message m)) 
               (parse-message  (read-message m)))
           (info (getf msg :info) (getf msg :info))
-          (peers (getf info :peers) (getf info :peers)))          
-         ((string-equal "mongrel2-test-agent" (symbol-name (getf info :type)))
+          (peers (getf info :peers) (getf info :peers))
+          (mongrel2-agent-found (string-equal "mongrel2-test-agent" (symbol-name (getf info :type))) 
+                                (or mongrel2-agent-found (string-equal "mongrel2-test-agent" (symbol-name (getf info :type)))))
+          (saw (getf msg :saw) (getf msg :saw))
+          (process (and saw (getf msg :process)) 
+                   (and saw (getf msg :process)))
+          (alive (getf process :alive)
+                 (getf process :alive))
+          (m2pid (getf process :pid)
+                 (getf process :pid)))
+         ((and m2pid alive)
           :mongrel2-running)
       (mapc #'(lambda (peer)
                 (destructuring-bind (uuid &rest comm-info) peer

@@ -32,7 +32,7 @@
         :dir-not-empty
         :dir-empty)))
 
-(def-test (afdog-hypervisor-agent-spawnable :group cli-tests  :fixtures (cli-agent-uuid-fixture afdog-hypervisor-agent-cli-fixture)
+(def-test (afdog-hypervisor-agent-spawnable :group cli-tests  :fixtures (cli-agent-uuid-fixture afdog-hypervisor-agent-cli-fixture kill-everything-fixture)
                                             :setup (afdog:run-program afdog-bin afdog-start-args)
                                             :cleanup (afdog:run-program afdog-bin afdog-kill-args))
     (:eql :read-message)

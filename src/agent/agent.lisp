@@ -100,8 +100,6 @@ result into the desired type.")
                           (list (exec-form-prefix runner)
                                 (with-output-to-string (s) (prin1 form s)))))))
 
-      (start-logging :category category)
-
       (setf (agent-handle runner)
             (afdog:run-program (runner-lisp runner)
                                `(,@(runner-lisp-options runner)

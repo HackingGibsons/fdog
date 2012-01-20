@@ -10,7 +10,7 @@
                :accessor timestamps
                :documentation "A plist of timestamps that some events might need to use.
 Like the created-at date of a thing.")
-   (fail-after :initform (* internal-time-units-per-second 15)
+   (fail-after :initform (* internal-time-units-per-second 30)
                :reader fail-after
                :documentation "The interval of time in internal time units to wait for the construction of a thing.")
    (thing-info :initform nil :initarg :thing-info

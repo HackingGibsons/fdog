@@ -36,7 +36,7 @@
            (sb-sys:enable-interrupt sb-posix:sigint
                                     #'(lambda (&rest args)
                                         (format t "~&Interrupted!~%")
-                                        (quit :unix-status sb-posix:sigint)))
+                                        (sb-ext:quit :unix-status sb-posix:sigint)))
            (let ((*spawner* *agent-spawner*))
              (call-next-method))
 

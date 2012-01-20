@@ -114,7 +114,7 @@ as fire any callbacks that may be pending IO when it is ready."
 (defmethod run-agent :around ((agent standard-agent))
   (handler-case (call-next-method)
     (t (c)
-      (log-for (warn) "Event loop exited poorly: ~A" c))))
+      (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c))))
 
 (defmethod run-agent ((agent standard-agent))
   "Enter the agent event loop, return only when agent is dead."

@@ -39,6 +39,8 @@
                      (fdog-models:servers :one t :refresh t :name it)))
            (names (from-info :names)))
 
+      ;; For each handler named in :names, remove it from the handler
+      ;; model
       (dolist (name names)
         (let* ((handler (awhen (and server name)
                           (fdog-models:find-mongrel2-handler :ident it :exact nil)))
@@ -47,15 +49,17 @@
           (when (and server route (= (fdog-models:model-pk server)
                                      (fdog-models:mongrel2-host-server-id
                                       (fdog-models:mongrel2-route-host route))))
+
             (clsql:delete-instance-records handler)
-            (clsql:delete-instance-records route)
+            (clsql:delete-instance-records route))))
 
-            (link-server organ server (clsql:database-name clsql:*default-database*))))))
+      ;; Reload the server
+      (link-server organ server (clsql:database-name clsql:*default-database*)))
 
-        (send-message organ :command `(:command :speak
-                                       :say (:filled :need
-                                             :need ,what
-                                             ,what (:server ,(from-info :server) :name ,(from-info :names)))))))
+    (send-message organ :command `(:command :speak
+                                   :say (:filled :need
+                                         :need ,what
+                                         ,what (:server ,(from-info :server) :names ,(from-info :names)))))))
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :handler)) need-info)

@@ -7,7 +7,8 @@
                    basic-behavior-tests
                    supervision-tests
                    cli-tests
-                   mongrel2-agent-tests))
+                   mongrel2-agent-tests
+                   afdog-hypervisor-agent-tests))
 
 
 ;; Directly runnable
@@ -33,4 +34,6 @@
                 (:each-setup (with-agent-conversation (m e :timeout 20) agent-uuid
                                (zmq:send! e (prepare-message `(:reset :timeout))))))
 
-(def-test-group mongrel2-agent-tests (kill-everything-fixture))
+;; Agent specific
+(def-test-group mongrel2-agent-tests (db-path-fixture mongrel2-agent-fixture kill-everything-fixture))
+(def-test-group afdog-hypervisor-agent-tests (kill-everything-fixture))

@@ -60,17 +60,25 @@ result into the desired type.")
                     :documentation "Forms to cause the death of this process after execution."))
   (:documentation "Load up a new interpreter, and follow some steps to load an agent as requested."))
 
+(defcategory exec-runner)
+
 (defmethod initialize-instance :after ((runner exec-runner) &rest initargs)
+  (log-for (exec-runner trace) "Starting runner ~A" runner)
   (dolist (system (getf (getf initargs :initargs) :include))
+    (log-for (exec-runner trace) "system ~A" system)
     (setf (init-forms runner)
           (append (init-forms runner)
                   `((ql:quickload ,system)))))
+
+  (log-for (exec-runner trace) "Runner agent initforms ~S" (init-forms runner))
+  (log-for (exec-runner trace) "Runner agent Initargs ~S" (runner-agent-initargs runner))
 
   (setf (exec-forms runner)
         (append (exec-forms runner)
                 `((in-package ,(package-name (symbol-package (agent-instance runner))))
                   (start (make-runner :blocked :class (quote ,(agent-instance runner))
-                                      ,@(runner-agent-initargs runner)))))))
+                                      ,@(runner-agent-initargs runner))))))
+    (log-for (exec-runner trace) "Runner agent execforms ~S" (exec-forms runner)))
 
 (defmethod make-runner ((style (eql :exec)) &rest initargs &key (class 'standard-agent) &allow-other-keys)
   (log-for (warn) "Exec runner initargs: ~A" initargs)
@@ -91,8 +99,6 @@ result into the desired type.")
                   (remove nil
                           (list (exec-form-prefix runner)
                                 (with-output-to-string (s) (prin1 form s)))))))
-
-      (start-logging :category category)
 
       (setf (agent-handle runner)
             (afdog:run-program (runner-lisp runner)

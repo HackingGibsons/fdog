@@ -10,7 +10,7 @@
                :accessor timestamps
                :documentation "A plist of timestamps that some events might need to use.
 Like the created-at date of a thing.")
-   (fail-after :initform (* internal-time-units-per-second 15)
+   (fail-after :initform (* internal-time-units-per-second 30)
                :reader fail-after
                :documentation "The interval of time in internal time units to wait for the construction of a thing.")
    (thing-info :initform nil :initarg :thing-info
@@ -62,7 +62,7 @@ is in a failure state."
   "The stable state of the machine after creation. `info' should contain the `:saw' message
 for the given object, which should be checked for validity"
   (log-for (trace watch-machine) "Watching: ~A => ~A" machine info)
-  (unless info
+  (unless (getf info :info)
     (log-for (warn watch-machine) "Going to die.")
     :died))
 

@@ -3,6 +3,7 @@
   (:use #:log5)
   (:use :afdog)
   (:export :standard-agent
+           :agent-uuid
            :defbehavior
            :behavior
            :send-message
@@ -14,7 +15,10 @@
            :find-organ
            :exec-runner
            :init-forms
+           :standard-organ
            :organ
+           :mouth-addr
+           :speak-addr
            :eye
            :organ-agent
            :watch-when-told
@@ -55,6 +59,6 @@
 
 (in-package :agent)
 
-(defvar *spawner* :thread
+(defvar *spawner* :exec
   "The type of maker to use to spawn agents. Define it in another package
 to specify how agents in that package should spawn.")

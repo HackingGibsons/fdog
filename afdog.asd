@@ -57,7 +57,8 @@
                                              (:module "behaviors" :depends-on ("defbehavior") :components
                                                       ((:module "helpers" :components
                                                                 ((:file "state-machine")
-                                                                 (:file "watch-machine" :depends-on ("state-machine"))))
+                                                                 (:file "watch-machine" :depends-on ("state-machine"))
+                                                                 (:file "process-watch-machine" :depends-on ("watch-machine"))))
                                                        (:file "peers")
                                                        (:file "manipulation")
                                                        (:file "supervision" :depends-on ("helpers"))
@@ -93,7 +94,10 @@
                                             (:module "mongrel2" :depends-on ("packages") :components
                                                      ((:file "helpers")
                                                       (:file "behaviors"  :depends-on ("mongrel2-agent"))
-                                                      (:file "mongrel2-agent" :depends-on ("helpers"))))))))
+                                                      (:file "mongrel2-agent" :depends-on ("helpers"))))
+
+                                            (:module "afdog-hypervisor" :depends-on ("packages") :components
+                                                     ((:file "afdog-hypervisor-agent")))))))
 
                          (:module "cli" :depends-on ("agent" "fdog") :components
                                   ((:file "package")

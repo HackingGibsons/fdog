@@ -14,15 +14,15 @@
     ;; TODO persistence
     ))
 
-(defmethod remove-forwarders ((agent forwarder-agent) forwarders)
+(defmethod remove-forwarders ((agent forwarder-agent) names)
   (with-slots (forwarders) agent
-    (setf forwarders (remove-if #'(lambda (x) (find (car x) forwarder :test #'string=)) forwarders))
+    (setf forwarders (remove-if #'(lambda (x) (find (car x) names :test #'string=)) forwarders))
     ;; TODO persistence
     ))
 
-(defmethod cull-forwarders ((agent forwarder-agent) forwarders-to-keep)
+(defmethod cull-forwarders ((agent forwarder-agent) names-to-keep)
   (with-slots (forwarders) agent
-    (setf forwarders (remove-if-not #'(lambda (x) (find (car x) forwarder :test #'string=)) forwarders))
+    (setf forwarders (remove-if-not #'(lambda (x) (find (car x) names-to-keep :test #'string=)) forwarders))
     ;; TODO persistence
     ))
 

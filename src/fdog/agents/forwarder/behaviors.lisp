@@ -12,14 +12,14 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :server
-                                            :server (:name "forwarder" :port *forwarder-server-port* :hosts ("localhost")))))
+                                            :server (:name "forwarder" :port ,*forwarder-server-port* :hosts ("localhost")))))
       ;; Announce "need handler" for hostpath
       ;; TODO currently only makes handler for first hostpath
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need
                                             :need :handler
-                                            :handler (:server "forwarder" :hosts (caar hostpaths) :route (cdar hostpaths) :name (handler-name name)))))
+                                            :handler (:server "forwarder" :hosts ,(caar hostpaths) :route ,(cdar hostpaths) :name ,(handler-name name)))))
 
       ;; TODO: What if multiple hostpaths?
       ;; Add forwarder to agent list

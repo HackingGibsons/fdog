@@ -55,9 +55,23 @@
   ))
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
-  ;; TODO announce handler cull
-  ;; TODO persistence
-  )
+  (labels ((from-info (thing) (getf need-info thing)))
+    (let ((names (from-info names)))
+      (send-message organ :command
+                    `(:command :speak
+                               :say (:agent :need
+                                            :need :keep-handlers
+                                            :keep-handlers (:server "forwarder" :name ,names))))
+      (cull-forwarders agent names))
+
+    ;; announce handler removal
+    (send-message organ :command
+                  `(:command :speak
+                             :say (:filled :need
+                                           :need ,what
+                                           ,what ,need-info)))
+    ;; TODO persistence
+  ))
 
 (defmethod heard-message ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :need)) &rest request)
   (log-for (trace forwarder-agent) "Heard an :agent :need message: ~A" request)

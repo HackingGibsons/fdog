@@ -95,6 +95,7 @@
                                                      ((:file "helpers")
                                                       (:file "behaviors"  :depends-on ("mongrel2-agent"))
                                                       (:file "mongrel2-agent" :depends-on ("helpers"))))
+
                                             (:module "afdog-hypervisor" :depends-on ("packages") :components
                                                      ((:file "afdog-hypervisor-agent")))))))
 

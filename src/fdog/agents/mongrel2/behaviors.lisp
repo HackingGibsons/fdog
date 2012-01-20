@@ -55,7 +55,7 @@
         (send-message organ :command `(:command :speak
                                        :say (:filled :need
                                              :need ,what
-                                             ,what (:server ,(from-info :server) :name ,(from-info :name)))))))
+                                             ,what (:server ,(from-info :server) :name ,(from-info :names)))))))
 
 
 (defmethod agent-needs ((agent mongrel2-agent) (organ agent-head) (what (eql :handler)) need-info)

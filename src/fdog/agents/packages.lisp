@@ -65,7 +65,8 @@
   (:use #:afdog
         #:agent
         #:log5
-        #:fdog-agent))
+        #:fdog-agent)
+  (:export :forwarder-agent))
 
 (in-package :forwarder-agent)
 

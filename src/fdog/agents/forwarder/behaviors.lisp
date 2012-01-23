@@ -31,8 +31,7 @@
                     `(:command :speak
                                :say (:filled :need
                                              :need ,what
-                                             ,what ,need-info)))
-  )))
+                                             ,what ,need-info))))))
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."

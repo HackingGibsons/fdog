@@ -1,7 +1,5 @@
 (in-package :afdog-tests)
 
-;;; Fixtures needed: mongrel2-agent, forwarder-agent
-
 (def-test (can-create-forwarder :group forwarder-agent-tests)
     (:seq (:eql :need-filled)
           (:eql :saw-forwarder)
@@ -16,8 +14,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "test" :hostpaths (("api2.example.com" . "/")))
-                            )))
+                            :forwarder (:name "test" :hostpaths (("api2.example.com" . "/"))))))
      (log-for (trace) "after need")
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))

@@ -16,7 +16,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "test" :hostpaths (("api.example.com" . "/")))
+                            :forwarder (:name "test" :hostpaths (("api2.example.com" . "/")))
                             )))
      (log-for (trace) "after need")
      (do* ((msg (parse-message (read-message m))

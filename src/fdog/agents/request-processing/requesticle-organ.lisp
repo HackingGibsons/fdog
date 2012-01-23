@@ -5,7 +5,9 @@
   ((connected-to :initform (make-hash-table :test 'equalp)
                  :accessor connected-to)
    (request-sock :initform nil
-                 :accessor request-sock))
+                 :accessor request-sock)
+   (response-sock :initform nil
+                 :accessor response-sock))
   (:documentation "Responsible for firing events when Mongrel2 requests arrive
 at the request sock.")
   (:default-initargs . (:tag :requesticle)))
@@ -20,7 +22,10 @@ at the request sock.")
   (log-for (trace requesticle) "Requesticle constructing socket.")
 
   (setf (request-sock requesticle)
-        (zmq:socket (agent-context agent) zmq:pull)))
+        (zmq:socket (agent-context agent) zmq:pull)
+
+        (response-sock requesticle)
+        (zmq:socket (agent-context agent) zmq:pub))
 
 (defmethod agent-disconnect :after ((agent standard-agent) (requesticle agent-requesticle) &rest options)
   "Disconnect the requesticle sock"
@@ -29,7 +34,12 @@ at the request sock.")
 
   (when (request-sock requesticle)
     (zmq:close (request-sock requesticle)))
-  (setf (request-sock requesticle) nil))
+
+  (when (response-sock requesticle)
+    (zmq:close (response-sock requesticle)))
+
+  (setf (request-sock requesticle) nil
+        (response-sock requesticle) nil))
 
 (defmethod agent-info :around ((organ agent-requesticle))
   `(,(organ-tag organ) (:uuid ,(organ-uuid organ)

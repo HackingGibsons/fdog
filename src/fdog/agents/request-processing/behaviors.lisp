@@ -12,8 +12,9 @@ any handlers we're interested in and we should connect to them."
                (log-for (trace requesticle peer-collection) "Maybe connect to: ~S (~A ~A)" name send recv)
                (when (and (string= name (handler-name agent))
                           (not (gethash send (connected-to organ))))
-                 (log-for (trace requesticle peer-collection) "Connecting to: ~A => ~A[~A]" (getf info :uuid) name send)
+                 (log-for (trace requesticle peer-collection) "Connecting to: ~A => ~A[>~A <~A]" (getf info :uuid) name send recv)
                  (zmq:connect (request-sock organ) send)
+                 (zmq:connect (response-sock organ) recv)
                  (setf (gethash send (connected-to organ)) (getf info :uuid))))
 
              (search-server (server-handlers)

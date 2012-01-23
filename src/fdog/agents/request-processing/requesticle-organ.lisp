@@ -25,7 +25,7 @@ at the request sock.")
         (zmq:socket (agent-context agent) zmq:pull)
 
         (response-sock requesticle)
-        (zmq:socket (agent-context agent) zmq:pub))
+        (zmq:socket (agent-context agent) zmq:pub)))
 
 (defmethod agent-disconnect :after ((agent standard-agent) (requesticle agent-requesticle) &rest options)
   "Disconnect the requesticle sock"

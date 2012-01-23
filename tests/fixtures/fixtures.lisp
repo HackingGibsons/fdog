@@ -221,6 +221,18 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :root *root* ;; different root for the test agents
                                  :uuid hypervisor-uuid)))
 
+(def-fixtures forwarder-agent-fixture
+    (:documentation "A fixture that instantiates a forwarder agent."
+                    :setup (progn
+                             (start forwarder-runner))
+                    :cleanup (progn
+                               (stop forwarder-runner)))
+  (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-runner (make-runner :test :include '(:afdog-tests)
+                                 :class 'forwarder-test-agent
+                                 :root *root*
+                                 :uuid forwarder-agent-uuid)))
+
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
      :cleanup (progn

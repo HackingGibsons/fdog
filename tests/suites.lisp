@@ -50,3 +50,4 @@
      kill-everything-fixture))
 (def-test-group forwarder-agent-tests (kill-everything-fixture))
 (def-test-group forwarder-agent-tests (db-path-fixture mongrel2-agent-fixture forwarder-agent-fixture kill-everything-fixture))
+(def-test-group forwarder-agent-tests (db-path-fixture forwarder-agent-fixture kill-everything-fixture))

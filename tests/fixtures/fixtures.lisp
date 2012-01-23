@@ -222,16 +222,31 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :uuid hypervisor-uuid)))
 
 (def-fixtures forwarder-agent-fixture
-    (:documentation "A fixture that instantiates a forwarder agent."
+    (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn
-                             (start forwarder-runner))
+                             (start forwarder-runner)
+                             (unless (with-agent-conversation (m e :timeout 60) hypervisor-uuid
+                                       (do* ((msg (parse-message (read-message m))
+                                                  (parse-message (read-message m)))
+                                             (info (getf msg :info) (getf msg :info))
+                                             (peers (getf info :peers) (getf info :peers)))
+                                            (peers t)))
+                               (error "Forwarder didn't start.")))
                     :cleanup (progn
-                               (stop forwarder-runner)))
+                               (stop forwarder-runner)
+                               (with-agent-conversation (m e :timeout 5 :linger -1) mongrel2-uuid
+                                   (zmq:send e (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))
+                               (with-agent-conversation (m e :timeout 5 :linger -1) forwarder-agent-uuid
+                                   (zmq:send e (prepare-message `(:agent :kill :kill ,forwarder-agent-uuid))))))
+
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (forwarder-runner (make-runner :test :include '(:afdog-tests)
-                                 :class 'forwarder-test-agent
-                                 :root *root*
-                                 :uuid forwarder-agent-uuid)))
+                                 :class 'afdog-hypervisor-test-agent
+                                 :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid) forwarder-test-agent (:uuid ,forwarder-agent-uuid)))
+                                 :root *root* ;; different root for the test agents
+                                 :uuid hypervisor-uuid)))
 
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"

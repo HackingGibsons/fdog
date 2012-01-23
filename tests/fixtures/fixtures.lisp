@@ -174,7 +174,15 @@ Does kill -9 to ensure the process dies in cleanup.")
 (def-fixtures request-processing-agent-fixture
     (:documentation "A fixture that instantiates a request processing agent."
      :setup (progn
-              (start request-processing-runner))
+              (start request-processing-runner)
+              (when (and (boundp 'mongrel2-uuid) mongrel2-uuid)
+                (tell-agent-about request-processing-uuid mongrel2-uuid)
+                (with-agent-conversation (m e) request-processing-uuid
+                  (do* ((msg (parse-message (read-message m))
+                             (parse-message (read-message m)))
+                        (info (getf msg :info) (getf msg :info))
+                        (peers (getf info :peers) (getf info :peers)))
+                       (peers t)))))
      :cleanup (progn
                 (stop request-processing-runner)))
 

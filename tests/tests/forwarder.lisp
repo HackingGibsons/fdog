@@ -32,7 +32,7 @@
                 (parse-message (read-message m)))
            (forwarders (getf (getf (getf msg :info) :provides) :forwarders)))
           ((and forwarders
-                (find "test" (loop for i in hostpaths collect (car i)) :test #'string=))
+                (find "test" (loop for i in forwarders collect (car i)) :test #'string=))
            :saw-forwarder)))
    :server-exists
    :handler-exists))
@@ -45,7 +45,8 @@
   ;;; handler deleted, announced
   :pending)
 
-(def-test (can-remove-multiple-forwarders :group forwarder-agent-tests) (:eql :pending))
+(def-test (can-remove-multiple-forwarders :group forwarder-agent-tests) (:eql :pending)
+  :pending)
 
 (def-test (forwarder-agent-cull :group forwarder-agent-tests) (:eql :pending)
   ;;; Announce "need forwarder culling, save foo and bar"

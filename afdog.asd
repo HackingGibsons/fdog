@@ -12,6 +12,7 @@
                #:cl-fad
                #:cl-syslog
                #:iolib
+               #:usocket
                #:arnesi
 
                ;; Vendord

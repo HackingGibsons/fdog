@@ -1,7 +1,6 @@
 (defsystem #:afdog-tests
   :depends-on (#:afdog
-               #:nst
-               #:usocket)
+               #:nst)
   :components ((:module "tests" :components
                         ((:file "package")
 

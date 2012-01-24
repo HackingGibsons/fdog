@@ -19,7 +19,7 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :handler
-                                            :handler (:server "forwarder" :hosts ,(caar hostpaths) :route ,(cdar hostpaths) :name ,(handler-name name)))))
+                                            :handler (:server "forwarder" :hosts (,(caar hostpaths)) :route ,(cdar hostpaths) :name ,(handler-name name)))))
 
       ;; TODO: What if multiple hostpaths?
       ;; Add forwarder to agent list

@@ -9,7 +9,7 @@ Mongrel2 ZeroMQ messages")
                 :it
                 :aif)
   (:export :request-processing-agent
-           :requesticle-organ
+           :agent-requesticle
            :request-handler))
 
 (in-package :request-processing-agent)

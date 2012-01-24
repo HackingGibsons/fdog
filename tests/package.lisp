@@ -13,7 +13,7 @@
 
   (:import-from :request-processing-agent
                 :request-handler
-                :requesticle-organ)
+                :agent-requesticle)
 
   (:shadow :*spawner* :*root* :agent-root)
   (:shadowing-import-from :log5

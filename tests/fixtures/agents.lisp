@@ -59,6 +59,10 @@
 (defmethod agent-special-event :after ((agent request-processing-test-agent) (event-head (eql :boot)) event)
   (make-kill-self-after-timeout (find-organ agent :head)))
 
+(defmethod request-handler :after ((agent request-processing-test-agent) (organ agent-requesticle) msg)
+  (log-for (trace request-processing-agent::request-handler) "Announcing request: ~A" (zmq:msg-size msg))
+  :TODO)
+
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
   (make-speak-test-message (find-organ agent :head))
 

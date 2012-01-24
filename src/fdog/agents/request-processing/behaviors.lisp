@@ -29,11 +29,12 @@ any handlers we're interested in and we should connect to them."
       (log-for (trace requesticle peer-collection) "Found servers: ~S" servers)
       (mapc #'search-server servers))))
 
+(defcategory request-handler)
 (defmethod request-handler ((agent standard-agent) (organ agent-requesticle) msg)
   "Called with a message read from the `request-socket' of the `organ'
 as a `zmq:msg'. `agent' is in the arglist for easier specialization."
   (declare (ignorable agent))
-  (log-for (trace) "~A handle request of size: ~A" organ (zmq:msg-size msg)))
+  (log-for (trace request-handler) "~A handle request of size: ~A" organ (zmq:msg-size msg)))
 
 (defmethod make-request-handler ((organ agent-requesticle))
   "Construct a callback for `request-socket' in the event

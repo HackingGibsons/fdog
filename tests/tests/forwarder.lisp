@@ -1,8 +1,7 @@
 (in-package :afdog-tests)
 
 (def-test (can-create-forwarder :group forwarder-agent-tests)
-    (:seq (:eql :peers-exist)
-          (:eql :need-filled)
+    (:seq (:eql :need-filled)
           (:eql :saw-forwarder)
           (:eql :server-exists)
           (:eql :handler-exists))
@@ -10,14 +9,6 @@
   ;;; the handler gets created and announced
   ;;; check the handler exists
   (list
-   (with-agent-conversation (m e) forwarder-agent-uuid
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (peers (getf (getf msg :info) :peers)
-                  (getf (getf msg :info) :peers)))
-          (peers
-           :peers-exist)))
-
    (with-agent-conversation (m e) forwarder-agent-uuid
      (log-for (trace) "before need")
      (zmq:send! e (prepare-message

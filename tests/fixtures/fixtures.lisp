@@ -225,13 +225,15 @@ Does kill -9 to ensure the process dies in cleanup.")
     (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn
                              (start forwarder-runner)
-                             (unless (with-agent-conversation (m e :timeout 60) hypervisor-uuid
-                                       (do* ((msg (parse-message (read-message m))
-                                                  (parse-message (read-message m)))
-                                             (info (getf msg :info) (getf msg :info))
-                                             (peers (getf info :peers) (getf info :peers)))
-                                            (peers t)))
-                               (error "Forwarder didn't start.")))
+                             (log-for (trace) "Waiting for hypervisor to boot")
+                             (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                               (awhen (getf msg :info)
+                                 (getf it :peers)))
+
+                             (log-for (trace) "Waiting for forwarder-agent to discover peers")
+                             (wait-for-agent-message (forwarder-agent-uuid :timeout 60) (msg)
+                               (awhen (getf msg :info)
+                                 (getf it :peers))))
                     :cleanup (progn
                                (stop forwarder-runner)
                                (with-agent-conversation (m e :timeout 5 :linger -1) mongrel2-uuid

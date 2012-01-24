@@ -11,6 +11,10 @@
                 :rcurry
                 :awhen)
 
+  (:import-from :request-processing-agent
+                :request-handler
+                :requesticle-organ)
+
   (:shadow :*spawner* :*root* :agent-root)
   (:shadowing-import-from :log5
                           :defcategory

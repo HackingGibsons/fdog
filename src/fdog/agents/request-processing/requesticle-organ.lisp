@@ -3,7 +3,10 @@
 (defcategory requesticle)
 (defclass agent-requesticle (standard-beating-organ)
   ((connected-to :initform (make-hash-table :test 'equalp)
-                 :accessor connected-to)
+                 :accessor connected-to
+                 :documentation "Stores a mapping of strings representing connected-to peers
+The table stores connections in the form send-addr->host-agent-uuid as strings.
+Just the send address is used as a key but connections are made to both send and recv socks")
    (request-sock :initform nil
                  :accessor request-sock)
    (response-sock :initform nil

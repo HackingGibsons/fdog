@@ -8,6 +8,7 @@ Mongrel2 ZeroMQ messages")
   (:import-from :arnesi
                 :it
                 :aif)
-  (:export :request-processing-agent))
+  (:export :request-processing-agent
+           :request-handler))
 
 (in-package :request-processing-agent)

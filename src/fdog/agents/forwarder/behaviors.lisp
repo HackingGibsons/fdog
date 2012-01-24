@@ -5,8 +5,8 @@
   "Creates or updates a forwarder (\"forwarder server\" + named mongrel2 handler) in response to a need request."
   (labels ((from-info (thing) (getf need-info thing))
            (handler-name (name) (format nil "forwarder-~A" name)))
-    (let ((name (from-info name))
-          (hostpaths (from-info hostpaths)))
+    (let ((name (from-info :name))
+          (hostpaths (from-info :hostpaths)))
       ;; Announce "need forwarder server"
       (send-message organ :command
                     `(:command :speak
@@ -36,7 +36,7 @@
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."
   (labels ((from-info (thing) (getf need-info thing)))
-    (let ((names (from-info names)))
+    (let ((names (from-info :names)))
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need
@@ -55,7 +55,7 @@
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
   (labels ((from-info (thing) (getf need-info thing)))
-    (let ((names (from-info names)))
+    (let ((names (from-info :names)))
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need

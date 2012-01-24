@@ -130,8 +130,12 @@
            :connected-to-one)))
 
    (progn
-     :fire-http-request-at-mongrel2
-     :make-sure-it-sends-but-times-out
+     (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" 6767))
+       (format (usocket:socket-stream sock) "~@{~A~%~}~%"
+               "GET / HTTP/1.1"
+               "Host: api.example.com"
+               "Accept: */*"
+               "User-Agent: Quick Hack Time"))
      :have-the-agent-announce-raw-requests
      :listen-for-request
      :TODO-undone)))

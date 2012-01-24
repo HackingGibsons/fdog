@@ -88,3 +88,44 @@
                         (getf info :requesticle)))
           ((equalp (getf requesticle :peers) 1)
            :connected-to-one)))))
+
+(def-test (request-processing-agent-fires-request-handler :group request-processing-agent-tests)
+    (:seq (:eql :handler-need-filled)
+          (:eql :connected-to-one)
+          (:eql :raw-request-handler-fired))
+  (list
+   (with-agent-conversation (m e) mongrel2-uuid
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :handler
+                            :handler (:server "control" :hosts ("api.example.com") :route "/" :name "api"))))
+     (zmq:send! e (prepare-message
+                   `(:agent :need
+                            :need  :handler
+                            :handler (:server "control" :hosts ("api.example.com") :route "/ping/" :name "ping"))))
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (filled (and (equalp (car msg) :filled) msg)
+                   (or filled
+                       (and (equalp (car msg) :filled) msg))))
+          ((and filled
+                (getf filled :handler))
+           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           :handler-need-filled)))
+
+   (with-agent-conversation (m e) request-processing-uuid
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m)))
+           (info (getf msg :info)
+                 (getf msg :info))
+           (requesticle (getf info :requesticle)
+                        (getf info :requesticle)))
+          ((equalp (getf requesticle :peers) 1)
+           :connected-to-one)))
+
+   (progn
+     :fire-http-request-at-mongrel2
+     :make-sure-it-sends-but-times-out
+     :have-the-agent-announce-raw-requests
+     :listen-for-request
+     :TODO-undone)))

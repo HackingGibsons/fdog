@@ -365,8 +365,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -391,8 +390,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :remove-host))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -426,8 +424,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -467,8 +464,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :remove-host))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -497,8 +493,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -519,8 +514,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :keep-servers))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -548,8 +542,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -570,8 +563,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :keep-servers))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -602,8 +594,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -625,8 +616,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :keep-hosts))
            (log-for (trace mongrel2-agent::agent-needs) "Filled hosts: ~A" msg)
@@ -663,8 +653,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -694,8 +683,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :handler))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -765,8 +753,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :server))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -784,8 +771,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :handler))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -842,8 +828,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :handler))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -895,8 +880,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg))
           ((and filled
                 (getf filled :remove-handlers))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)

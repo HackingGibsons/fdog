@@ -63,6 +63,10 @@
    (with-agent-conversation (m e) mongrel2-uuid
      (zmq:send! e (prepare-message
                    `(:agent :need
+                            :need  :server
+                            :server (:name "control" :port 6767 :hosts ("api.example.com")))))
+     (zmq:send! e (prepare-message
+                   `(:agent :need
                             :need  :handler
                             :handler (:server "control" :hosts ("api.example.com") :route "/" :name "api"))))
      (zmq:send! e (prepare-message
@@ -72,7 +76,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (and (equalp (car msg) :filled) msg))
+                   (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
@@ -96,6 +100,10 @@
    (with-agent-conversation (m e) mongrel2-uuid
      (zmq:send! e (prepare-message
                    `(:agent :need
+                            :need  :server
+                            :server (:name "control" :port 6767 :hosts ("api.example.com")))))
+     (zmq:send! e (prepare-message
+                   `(:agent :need
                             :need  :handler
                             :handler (:server "control" :hosts ("api.example.com") :route "/" :name "api"))))
      (zmq:send! e (prepare-message
@@ -105,8 +113,7 @@
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
-                   (or filled
-                       (and (equalp (car msg) :filled) msg))))
+                   (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
            (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)

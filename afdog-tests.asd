@@ -3,6 +3,7 @@
                #:nst)
   :components ((:module "tests" :components
                         ((:file "package")
+                         (:file "helpers" :depends-on ("package"))
 
                          (:module "fixtures" :depends-on ("package") :components
                                   ((:module "behaviors" :components
@@ -14,7 +15,7 @@
 
                          (:file "suites"   :depends-on ("fixtures"))
 
-                         (:module "tests" :depends-on ("suites") :components
+                         (:module "tests" :depends-on ("suites" "helpers") :components
                                   ((:file "basic")
                                    (:file "mongrel2")
                                    (:file "afdog-hypervisor")

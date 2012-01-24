@@ -92,18 +92,6 @@
           ((equalp (getf requesticle :peers) 1)
            :connected-to-one)))))
 
-(defun http-request-string (resource &key (host "localhost"))
-  (flet ((crlf (stream)
-              (write-char #\return stream)
-              (write-char #\linefeed stream)))
-    (with-output-to-string (s)
-      (format s "GET ~A HTTP/1.1" resource) (crlf s)
-      (format s "Host: ~A" host) (crlf s)
-      (format s "Accept: */*") (crlf s)
-      (format s "User-Agent: Cheap Hack Time") (crlf s)
-      (crlf s))))
-
-
 (def-test (request-processing-agent-fires-request-handler :group request-processing-agent-tests)
     (:seq (:eql :handler-need-filled)
           (:eql :connected-to-one)

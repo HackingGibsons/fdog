@@ -65,6 +65,7 @@
   (:use #:afdog
         #:agent
         #:log5
+        #:alexandria
         #:fdog-agent)
   (:export :forwarder-agent))
 

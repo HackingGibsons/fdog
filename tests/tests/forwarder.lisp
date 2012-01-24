@@ -72,7 +72,14 @@
   :pending)
 
 (def-test (forwarder-agent-stores-forwarders :group forwarder-agent-tests) (:eql :pending)
+  ;;; Add a forwarder
+  ;;; Forwarder gets stored in the file
+  ;;; Remove the forwarder
+  ;;; It's removed from the file
   :pending)
 
 (def-test (forwarder-agent-restores-forwarders-after-restart :group forwarder-agent-tests) (:eql :pending)
+  ;;; Add a forwarder
+  ;;; Restart the agent
+  ;;; That forwarder exists
   :pending)

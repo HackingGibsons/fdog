@@ -171,18 +171,30 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :root *root* ;; different root for the test agents
                                 :uuid afdog-hypervisor-uuid)))
 
+(defcategory request-processing-tests)
 (def-fixtures request-processing-agent-fixture
     (:documentation "A fixture that instantiates a request processing agent."
      :setup (progn
               (start request-processing-runner)
+
               (when (and (boundp 'mongrel2-uuid) mongrel2-uuid)
-                (tell-agent-about request-processing-uuid mongrel2-uuid)
-                (with-agent-conversation (m e) request-processing-uuid
+                ;; Wait until we boot then tell the m2 agent about us
+                (log-for (request-processing-tests trace) "Waiting for req-proc agent to boot to inform m2 about it.")
+                (with-agent-conversation (m e :timeout 60) request-processing-uuid
+                  (and (read-message m)
+                       (tell-agent-about mongrel2-uuid request-processing-uuid)))
+
+                ;; Wait until we score some peers from talking to mongrel2
+                (log-for (request-processing-tests trace) "Waiting for req-proc agent to get peers")
+                (with-agent-conversation (m e :timeout 60) request-processing-uuid
                   (do* ((msg (parse-message (read-message m))
                              (parse-message (read-message m)))
                         (info (getf msg :info) (getf msg :info))
                         (peers (getf info :peers) (getf info :peers)))
-                       (peers t)))))
+                       (peers t))))
+
+              (log-for (request-processing-tests trace) "request-processing-agent-fixture :setup finished."))
+
      :cleanup (progn
                 (stop request-processing-runner)))
 

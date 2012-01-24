@@ -4,13 +4,14 @@
 (defclass forwarder-agent (standard-leaf-agent rooted-agent-mixin)
   ((forwarders
     :accessor forwarders
+    :initform nil
     :documentation "A list of forwarders this agent provides. Elements take the form (name . (list-of-metadata))"))
   (:documentation "Fdog forwarder Agent."))
 
 ;; Helpers
 (defmethod add-forwarder ((agent forwarder-agent) forwarder &optional metadata)
   (with-slots (forwarders) agent
-    (push forwarders (cons forwarder metadata))
+    (setf forwarders (append forwarders (list (cons forwarder metadata))))
     ;; TODO persistence
     ))
 

@@ -92,6 +92,18 @@
           ((equalp (getf requesticle :peers) 1)
            :connected-to-one)))))
 
+(defun http-request-string (resource &key (host "localhost"))
+  (flet ((crlf (stream)
+              (write-char #\return stream)
+              (write-char #\linefeed stream)))
+    (with-output-to-string (s)
+      (format s "GET ~A HTTP/1.1" resource) (crlf s)
+      (format s "Host: ~A" host) (crlf s)
+      (format s "Accept: */*") (crlf s)
+      (format s "User-Agent: Cheap Hack Time") (crlf s)
+      (crlf s))))
+
+
 (def-test (request-processing-agent-fires-request-handler :group request-processing-agent-tests)
     (:seq (:eql :handler-need-filled)
           (:eql :connected-to-one)
@@ -129,13 +141,15 @@
           ((equalp (getf requesticle :peers) 1)
            :connected-to-one)))
 
-   (progn
+   (with-agent-conversation (m e) request-processing-uuid
      (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" 6767))
-       (format (usocket:socket-stream sock) "~@{~A~%~}~%"
-               "GET / HTTP/1.1"
-               "Host: api.example.com"
-               "Accept: */*"
-               "User-Agent: Quick Hack Time"))
-     :have-the-agent-announce-raw-requests
-     :listen-for-request
-     :TODO-undone)))
+       (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+       (force-output (usocket:socket-stream sock)))
+
+     (do* ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+          ((and (getf msg :request-handler)
+                (getf msg :raw)
+                (> (length (getf msg :raw)) 0))
+           :raw-request-handler-fired)
+       (log-for (request-processing-tests trace) "After-req message: ~S" msg)))))

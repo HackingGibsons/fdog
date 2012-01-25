@@ -14,6 +14,7 @@
                #:iolib
                #:usocket
                #:arnesi
+               #:trivial-backtrace
 
                ;; Vendord
                #:clsql

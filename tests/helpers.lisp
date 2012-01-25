@@ -22,11 +22,11 @@ When any message is first received, `forms' are evaluated and the result
 is returned. If `forms' is omitted the result of hearing a message will be
 `:found'. If the timeout is reached `nil' is returned."
   (alexandria:with-gensyms (msg)
-    `(wait-for-agent-message (,uuid :timeout ,timeout) (,msg)
-       (declare (ignore ,msg))
-       (if ',forms
-           (progn ,@forms)
-           :found))))
+    `(and (wait-for-agent-message (,uuid :timeout ,timeout) (,msg)
+            ,msg)
+          (if ',forms
+              (progn ,@forms)
+              :found))))
 
 
 (defun http-request-string (resource &key (method :GET) (host "localhost"))

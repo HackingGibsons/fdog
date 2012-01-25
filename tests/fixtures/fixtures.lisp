@@ -137,12 +137,9 @@ Does kill -9 to ensure the process dies in cleanup.")
     (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn
                              (start mongrel2-runner)
-                             (unless (with-agent-conversation (m e :timeout 60) hypervisor-uuid
-                                       (do* ((msg (parse-message (read-message m))
-                                                  (parse-message (read-message m)))
-                                             (info (getf msg :info) (getf msg :info))
-                                             (peers (getf info :peers) (getf info :peers)))
-                                            (peers t)))
+                             (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                                       (awhen (getf msg :info)
+                                         (getf it :peers)))
                                (error "Mongrel2 didn't start.")))
                     :cleanup (progn
                                (stop mongrel2-runner)

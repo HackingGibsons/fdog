@@ -253,6 +253,7 @@ as fire any callbacks that may be pending IO when it is ready."
 (defmethod agent-info ((agent standard-agent))
   (let ((provides (agent-provides agent)))
     (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent)
+              :container (:pid ,(iolib.syscalls:getpid) :thread ,(princ-to-string (bt:current-thread)))
               :timestamp ,(get-universal-time) :age ,(age agent)
               ,@(when provides
                   (list :provides provides)))

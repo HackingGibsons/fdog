@@ -5,7 +5,7 @@
                         ((:file "package")
                          (:file "helpers" :depends-on ("package"))
 
-                         (:module "fixtures" :depends-on ("package") :components
+                         (:module "fixtures" :depends-on ("package" "helpers") :components
                                   ((:module "behaviors" :components
                                             ((:file "triggers")))
 

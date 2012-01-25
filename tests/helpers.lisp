@@ -1,16 +1,33 @@
 (in-package :afdog-tests)
 
-(defmacro wait-for-agent ((uuid &key (timeout 25)) &body body)
-  "Start a conversation with `uuid' and wait to hear a message
-timing out in `timeout' and evaluate `body' in a progn as the result.
-If `body' is not provided, success is indicated with the value `:found'"
-  (alexandria:with-gensyms (m e)
-    `(with-agent-conversation (,m ,e :timeout ,timeout) ,uuid
-       (declare (ignorable e))
-       (and (read-message ,m)
-            (if ',body
-                (progn ,@body)
-                :found)))))
+(defmacro wait-for-agent-message ((uuid &key (timeout 25)) arglist &body forms)
+  "Start a conversation with agen at `uuid' with a timeout of `timeout' (25 by default)
+and read and parse messages. For each message a lambda constructed as
+(lambda `arglist' `forms') will be applied as in (apply #'lambda parsed-message)
+If the result of applying the message to the lambda yields a non-`nil' value,
+that value is returned. The form blocks for at most `timeout' seconds, when the timeout
+is exceeded the return is `nil'"
+  (alexandria:with-gensyms (m e msg msg-p result)
+    `(flet ((,msg-p ,arglist
+              ,@forms))
+       (with-agent-conversation (,m ,e :timeout ,timeout) ,uuid
+         (do* ((,msg (parse-message (read-message ,m))
+                     (parse-message (read-message ,m)))
+               (,result (,msg-p ,msg) (,msg-p ,msg)))
+              (,result ,result))))))
+
+(defmacro wait-for-agent ((uuid &key (timeout 25)) &body forms)
+  "Wait for agent at `uuid' for `timeout' seconds, defaulting to 25.
+When any message is first received, `forms' are evaluated and the result
+is returned. If `forms' is omitted the result of hearing a message will be
+`:found'. If the timeout is reached `nil' is returned."
+  (alexandria:with-gensyms (msg)
+    `(wait-for-agent-message (,uuid :timeout ,timeout) (,msg)
+       (declare (ignore ,msg))
+       (if ',forms
+           (progn ,@forms)
+           :found))))
+
 
 (defun http-request-string (resource &key (method :GET) (host "localhost"))
   "Return a string representing an HTTP request for `resource' with `method'

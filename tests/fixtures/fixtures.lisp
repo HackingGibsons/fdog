@@ -185,12 +185,9 @@ Does kill -9 to ensure the process dies in cleanup.")
 
                 ;; Wait until we score some peers from talking to mongrel2
                 (log-for (request-processing-tests trace) "Waiting for req-proc agent to get peers")
-                (with-agent-conversation (m e :timeout 60) request-processing-uuid
-                  (do* ((msg (parse-message (read-message m))
-                             (parse-message (read-message m)))
-                        (info (getf msg :info) (getf msg :info))
-                        (peers (getf info :peers) (getf info :peers)))
-                       (peers t))))
+                (wait-for-agent-message (request-processing-uuid :timeout 60) (msg)
+                  (awhen (getf msg :info)
+                    (getf it :peers))))
 
               (log-for (request-processing-tests trace) "request-processing-agent-fixture :setup finished."))
 

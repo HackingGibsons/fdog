@@ -84,7 +84,6 @@ and callbacks for each socket mentioned.")
 
   (let ((parsed (typecase event
                   (string (handler-case (read-from-string event) (end-of-file () nil)))
-                  (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
                   (otherwise event))))
     (call-next-method organ parsed)))
 

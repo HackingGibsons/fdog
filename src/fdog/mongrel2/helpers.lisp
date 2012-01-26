@@ -1,5 +1,18 @@
 (in-package :fdog-models)
 
+(defmacro with-clsql-retry ((&key (max 10)) &body forms)
+  "Keep trying to execute `forms' while they keep
+signaling an `clsql:sql-condition' with a random retry of [0, 99ms]
+up to `max' times (Default: 10)"
+  (alexandria:with-gensyms (tries upper condition)
+    `(let ((,upper ,max))
+       (dotimes (,tries ,upper)
+         (handler-case
+             (return (progn ,@forms))
+           (clsql:sql-condition (,condition)
+             (unless (< (1+ ,tries) ,upper)
+               (error ,condition))))))))
+
 ;;; Virtual metaclass
 (defclass db-with-virtual-slots-class (clsql-sys::standard-db-class) nil)
 

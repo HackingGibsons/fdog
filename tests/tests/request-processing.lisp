@@ -131,9 +131,11 @@
 
    (with-agent-conversation (m e) request-processing-uuid
      (flet ((ping ()
+              (log-for (request-processing-tests trace) "Writing request.")
               (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" 6767))
                 (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
-                (force-output (usocket:socket-stream sock)))))
+                (force-output (usocket:socket-stream sock)))
+              (log-for (request-processing-tests trace) "Written request.")))
        (do* ((msg (progn (ping) (parse-message (read-message m)))
                   (progn (ping) (parse-message (read-message m)))))
             ((and (getf msg :request-handler)

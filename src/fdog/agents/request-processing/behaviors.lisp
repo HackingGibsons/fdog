@@ -31,18 +31,17 @@ any handlers we're interested in and we should connect to them."
 
 (defcategory request-handler)
 (defmethod request-handler ((agent standard-agent) (organ agent-requesticle) msg)
-  "Called with a message read from the `request-socket' of the `organ'
-as a `zmq:msg'. `agent' is in the arglist for easier specialization."
+  "Called with a message read from the `request-socket' of the `organ'.
+`agent' is in the arglist for easier specialization."
   (declare (ignorable agent))
-  (log-for (trace request-handler) "~A handle request of size: ~A" organ (zmq:msg-size msg)))
+  (log-for (trace request-handler) "~A handle request: ~A" organ msg))
 
 (defmethod make-request-handler ((organ agent-requesticle))
   "Construct a callback for `request-socket' in the event
 that it is ready for read for submission into the event loop."
   (lambda (sock)
-    (let ((msg (make-instance 'zmq:msg)))
-      (zmq:recv! sock msg)
-      (request-handler (organ-agent organ) organ msg))))
+    (request-handler (organ-agent organ) organ
+                     (read-message sock :transform #'identity))))
 
 (defmethod reader-callbacks :around ((organ agent-requesticle))
   "Ask to be notified of read activity on the request socket of the `organ'"

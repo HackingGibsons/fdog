@@ -43,8 +43,7 @@ type. Returns two values: the socket created and the address that was bound to i
 (defmethod parse-message (msg)
   (etypecase msg
     (null nil)
-    (string (handler-case (read-from-string msg) (end-of-file () nil)))
-    (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string msg)) (end-of-file () nil)))))
+    (string (handler-case (read-from-string msg) (end-of-file () nil)))))
 
 (defmethod read-message (sock &key (transform #'zmq:msg-data-as-string) timeout)
   (labels ((s2us (s)

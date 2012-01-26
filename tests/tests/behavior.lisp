@@ -5,36 +5,20 @@
   (wait-for-agent (agent-uuid)))
 
 (def-test (agent-hears :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
-  (let ((msg (make-instance 'zmq:msg :data "(:TEST :PING)"))
-        (ponged-p nil))
     (with-agent-conversation (m e) agent-uuid
-      (zmq:send! e msg)
-      (do ((msg
-            (parse-message (read-message m))
-            (parse-message (read-message m))))
-          (ponged-p t)
-        (when (equalp (getf msg :test) :pong)
-          (setf ponged-p t))))
-    ponged-p))
+      (zmq:send! e (prepare-message `(:test :ping)))
+      (do ((msg (parse-message (read-message m))
+                (parse-message (read-message m))))
+          ((equalp (getf msg :test) :pong)
+           :ponged))))
 
 (def-test (agent-sees :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
-  (let ((seen-self-p nil))
-    (zmq:with-context (c 1)
-      (zmq:with-socket (read-sock c zmq:sub)
-        (zmq:with-socket (write-sock c zmq:pub)
-          (zmq:connect write-sock (local-ipc-addr agent-uuid :ear))
-          (zmq:connect read-sock (local-ipc-addr agent-uuid :mouth))
-          (zmq:setsockopt read-sock zmq:subscribe "")
-          (zmq:send! write-sock (make-instance 'zmq:msg :data "(:look :self)"))
-          (handler-case
-              (bt:with-timeout (30)
-                (do* ((msg
-                       (parse-message (read-message read-sock))
-                       (parse-message (read-message read-sock))))
-                     (seen-self-p t)
-                  (when (getf (getf msg :process) :alive)
-                    (setf seen-self-p t))))
-            (bt:timeout () seen-self-p)))))))
+  (with-agent-conversation (m e :timeout 30) agent-uuid
+    (zmq:send! e (prepare-message '(:look :self)))
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m))))
+         ((getf (getf msg :process) :alive)
+          :saw-living-proc))))
 
 (def-test (agent-watches :group basic-behavior-tests :fixtures (running-agent-fixture))
     (:process (:check

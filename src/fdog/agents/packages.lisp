@@ -4,6 +4,8 @@
   (:use #:afdog
         #:agent
         #:log5)
+  (:import-from :fdog-models
+                :with-clsql-retry)
   (:import-from :arnesi
                 :it
                 :curry

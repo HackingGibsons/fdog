@@ -114,7 +114,27 @@ as fire any callbacks that may be pending IO when it is ready."
 (defmethod run-agent :around ((agent standard-agent))
   (handler-case (call-next-method)
     (t (c)
-      (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c))))
+      (let ((output (make-pathname :directory `(:absolute "tmp") :type "error"
+                                   :name (format nil "~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
+
+        (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c)
+        (handler-case
+            (with-open-file (s output :if-does-not-exist :create :if-exists :append :direction :output)
+              (format s "~&=Crash report for ~A/~A=~%" (type-of agent) (agent-uuid agent))
+              (format s "~&==Condition==~%")
+              (format s "~&Type: ~A~%" (type-of c))
+              (trivial-backtrace:print-condition c s)
+              (format s "~&==Condition End==~%")
+              (format s "~&==Backtrace==~%")
+              (trivial-backtrace:print-backtrace-to-stream s)
+              (format s "~&==Backtrace End==~%")
+              (format s "~&=Crash report end=~%")
+              (log-for (warn) "Crash report written to: ~A" (namestring output)))
+
+          (t (write-error)
+            (log-for (warn) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))))))
+
+
 
 (defmethod run-agent ((agent standard-agent))
   "Enter the agent event loop, return only when agent is dead."
@@ -253,6 +273,7 @@ as fire any callbacks that may be pending IO when it is ready."
 (defmethod agent-info ((agent standard-agent))
   (let ((provides (agent-provides agent)))
     (append `(:uuid ,(agent-uuid agent) :type ,(type-of agent)
+              :container (:pid ,(iolib.syscalls:getpid) :thread ,(princ-to-string (bt:current-thread)))
               :timestamp ,(get-universal-time) :age ,(age agent)
               ,@(when provides
                   (list :provides provides)))

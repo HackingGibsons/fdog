@@ -2,8 +2,14 @@
   (:use #:cl)
   (:use #:log5)
   (:use :afdog)
+  (:import-from :arnesi
+                :it
+                :awhen)
   (:export :standard-agent
            :agent-uuid
+           :organ-uuid
+           :agent-boot
+           :agent-disconnect
            :defbehavior
            :behavior
            :send-message
@@ -16,9 +22,12 @@
            :exec-runner
            :init-forms
            :standard-organ
+           :initialize-instance-organs
+           :agent-connect
            :organ
            :mouth-addr
            :speak-addr
+           :standard-beating-organ
            :eye
            :organ-agent
            :watch-when-told
@@ -36,10 +45,12 @@
            :watching
            :organ-tag
            :running-p
+           :reader-callbacks
            :parse-message
            :read-message
            :prepare-message
            :with-agent-conversation
+           :tell-agent-about
            :discover-agents-on-host
            :local-ipc-addr
            :agent-event-count
@@ -55,6 +66,7 @@
            :next-event
            :suicide
            :agent-head
+           :make-have-hearing
            :heard-message))
 
 (in-package :agent)

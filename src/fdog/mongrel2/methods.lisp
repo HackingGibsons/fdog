@@ -227,5 +227,6 @@ If any other routes are found they are returned as the second value."
                    (make-instance 'mongrel2-route :host-id (model-pk host)
                                   :path path))))
     (setf (mongrel2-route-target route) target)
-    (clsql:update-records-from-instance route)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance route))
     route))

@@ -93,3 +93,28 @@ If the timeout is reached nil is returned."
 
          (handler-case (bt:with-timeout (,timeout) (,g!discover-agents))
            (bt:timeout () nil))))))
+
+
+;; Helpers
+(defgeneric tell-agent-about (agent about-agent)
+  (:documentation "Tells `agent' about `about-agent' by
+sending `agent' an agent-info message from `about-agent'")
+
+  ;; Methods to map the parameters to strings
+  (:method ((agent standard-agent) about-agent)
+    (tell-agent-about (agent-uuid agent) about-agent))
+  (:method (agent (about-agent standard-agent))
+    (tell-agent-about agent (agent-uuid about-agent)))
+
+  ;; Main driver
+  (:method ((agent string) (about-agent string))
+    (flet ((agent-info-msg-from (uuid)
+             (with-agent-conversation (aam aae) uuid
+               (do* ((msg (parse-message (read-message aam))
+                          (parse-message (read-message aam)))
+                     (info (getf msg :info) (getf msg :info)))
+                    (info msg)))))
+      (awhen (agent-info-msg-from about-agent)
+        (with-agent-conversation (m e :linger -1) agent
+          (zmq:send! e (prepare-message it)))))))
+

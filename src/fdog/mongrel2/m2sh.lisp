@@ -15,25 +15,29 @@
                     (chroot (merge-pathnames #P"server/" afdog:*root*))
                     &allow-other-keys)
   (let ((server (apply 'make-instance `(mongrel2-server :name ,name ,@args))))
-    (clsql:update-records-from-instance server)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance server))
     server))
 
 (defun make-host (name &optional matching)
   (let ((host (make-instance 'mongrel2-host :name name)))
     (when matching
       (setf (fdog-models:mongrel2-host-matching host) matching))
-    (clsql:update-records-from-instance host)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance host))
     host))
 
 (defun make-route (path target)
   (let ((route (make-instance 'mongrel2-route :path path)))
     (setf (fdog-models:mongrel2-route-target route) target)
-    (clsql:update-records-from-instance route)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance route))
     route))
 
 (defun make-dir (base &optional (index "index.html"))
   (let ((dir (make-instance 'mongrel2-directory :base base :index index)))
-    (clsql:update-records-from-instance dir)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance dir))
     dir))
 
 

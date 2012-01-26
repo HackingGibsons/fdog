@@ -12,6 +12,7 @@
            :*server-database*
            :*server-dir*
            :*config-file*
+           :with-clsql-retry
 
            ;; Helpers
            :model-pk

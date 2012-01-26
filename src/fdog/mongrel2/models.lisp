@@ -120,7 +120,8 @@
   (let ((host (or (find-mongrel2-host server name)
                   (make-instance 'mongrel2-host :server-id (model-pk server)
                                  :name name))))
-    (clsql:update-records-from-instance host)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance host))
     host))
 
 (defmethod print-object ((host mongrel2-host) stream)
@@ -263,7 +264,8 @@ setting the `send-spec' and `recv-spec'"
             (mongrel2-handler-send-spec handler) send-spec
             (mongrel2-handler-recv-spec handler) recv-spec))
 
-    (clsql:update-records-from-instance handler)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance handler))
     handler))
 
 
@@ -334,7 +336,8 @@ setting the `send-spec' and `recv-spec'"
                      (make-instance 'mongrel2-setting
                                     :key key))))
     (setf (mongrel2-setting-value setting) value)
-    (clsql:update-records-from-instance setting)
+    (with-clsql-retry ()
+      (clsql:update-records-from-instance setting))
     setting))
 
 (defmethod find-mongrel2-setting ((key symbol))

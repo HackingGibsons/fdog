@@ -43,7 +43,8 @@ out of.")
   (log-for (warn) "Disconnecting mouth: ~A from ~A" mouth agent)
   (with-slots (speak-addr speak-sock) mouth
     (zmq:setsockopt speak-sock zmq:linger 3000)
-    (zmq:close speak-sock)
+    (when speak-sock
+      (zmq:close speak-sock))
     (setf speak-addr nil
           speak-sock nil)))
 

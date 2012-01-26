@@ -1,9 +1,11 @@
 (defsystem #:afdog-tests
-  :depends-on (#:afdog #:nst)
+  :depends-on (#:afdog
+               #:nst)
   :components ((:module "tests" :components
                         ((:file "package")
+                         (:file "helpers" :depends-on ("package"))
 
-                         (:module "fixtures" :depends-on ("package") :components
+                         (:module "fixtures" :depends-on ("package" "helpers") :components
                                   ((:module "behaviors" :components
                                             ((:file "triggers")))
 
@@ -13,10 +15,11 @@
 
                          (:file "suites"   :depends-on ("fixtures"))
 
-                         (:module "tests" :depends-on ("suites") :components
+                         (:module "tests" :depends-on ("suites" "helpers") :components
                                   ((:file "basic")
                                    (:file "mongrel2")
                                    (:file "afdog-hypervisor")
+                                   (:file "request-processing")
                                    (:file "booted")
                                    (:file "cli")
                                    (:file "behavior")

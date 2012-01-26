@@ -137,12 +137,9 @@ Does kill -9 to ensure the process dies in cleanup.")
     (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn
                              (start mongrel2-runner)
-                             (unless (with-agent-conversation (m e :timeout 60) hypervisor-uuid
-                                       (do* ((msg (parse-message (read-message m))
-                                                  (parse-message (read-message m)))
-                                             (info (getf msg :info) (getf msg :info))
-                                             (peers (getf info :peers) (getf info :peers)))
-                                            (peers t)))
+                             (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                                       (awhen (getf msg :info)
+                                         (getf it :peers)))
                                (error "Mongrel2 didn't start.")))
                     :cleanup (progn
                                (stop mongrel2-runner)
@@ -170,6 +167,35 @@ Does kill -9 to ensure the process dies in cleanup.")
                                 :class 'afdog-hypervisor-test-agent
                                 :root *root* ;; different root for the test agents
                                 :uuid afdog-hypervisor-uuid)))
+
+(defcategory request-processing-tests)
+(def-fixtures request-processing-agent-fixture
+    (:documentation "A fixture that instantiates a request processing agent."
+     :setup (progn
+              (start request-processing-runner)
+
+              (when (and (boundp 'mongrel2-uuid) mongrel2-uuid)
+                ;; Wait until we boot then tell the m2 agent about us
+                (log-for (request-processing-tests trace) "Waiting for req-proc agent to boot to inform m2 about it.")
+                (wait-for-agent (request-processing-uuid :timeout 60)
+                  (tell-agent-about mongrel2-uuid request-processing-uuid))
+
+                ;; Wait until we score some peers from talking to mongrel2
+                (log-for (request-processing-tests trace) "Waiting for req-proc agent to get peers")
+                (wait-for-agent-message (request-processing-uuid :timeout 60) (msg)
+                  (awhen (getf msg :info)
+                    (getf it :peers))))
+
+              (log-for (request-processing-tests trace) "request-processing-agent-fixture :setup finished."))
+
+     :cleanup (progn
+                (stop request-processing-runner)))
+
+  (request-processing-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-processing-runner (make-runner :test :include '(:afdog-tests)
+                                          :handle "api"
+                                          :class 'request-processing-test-agent
+                                          :uuid request-processing-uuid)))
 
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"

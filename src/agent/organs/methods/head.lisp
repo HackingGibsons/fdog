@@ -108,7 +108,7 @@ If it does, the younger agent will kill itself."
       (log-for (warn) "Info did not contain a UUID mouth or ear.")
       (return-from update-peer))
 
-    (log-for (warn) "Storing info on ~A => ~A/~A" uuid ear mouth)
+    (log-for (trace) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 

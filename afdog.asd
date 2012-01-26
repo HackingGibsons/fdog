@@ -12,7 +12,9 @@
                #:cl-fad
                #:cl-syslog
                #:iolib
+               #:usocket
                #:arnesi
+               #:trivial-backtrace
 
                ;; Vendord
                #:clsql
@@ -85,9 +87,9 @@
                                                      ((:file "package")
                                                       (:file "data")
                                                       (:file "models" :depends-on ("package" "helpers"))
-                                                      (:file "methods" :depends-on ("models"))
+                                                      (:file "methods" :depends-on ("models" "helpers"))
                                                       (:file "helpers" :depends-on ("package"))
-                                                      (:file "m2sh" :depends-on ("models" "methods"))))
+                                                      (:file "m2sh" :depends-on ("models" "methods" "helpers"))))
 
                                    (:module "agents" :depends-on ("mongrel2") :components
                                            ((:file "packages")
@@ -97,7 +99,13 @@
                                                       (:file "mongrel2-agent" :depends-on ("helpers"))))
 
                                             (:module "afdog-hypervisor" :depends-on ("packages") :components
-                                                     ((:file "afdog-hypervisor-agent")))))))
+                                                     ((:file "afdog-hypervisor-agent")))
+
+                                            (:module "request-processing" :depends-on ("packages") :components
+                                                     ((:file "package")
+                                                      (:file "agent" :depends-on ("package"))
+                                                      (:file "requesticle-organ" :depends-on ("package"))
+                                                      (:file "behaviors" :depends-on ("requesticle-organ" "agent"))))))))
 
                          (:module "cli" :depends-on ("agent" "fdog") :components
                                   ((:file "package")

@@ -1,6 +1,10 @@
 (in-package :afdog-tests)
 
 ;; Agent test driving behaviors
+(defbehavior speak-request-processing-messages (:on (:request-handler :raw :from :requesticle) :do :invoke-with-event) (organ event)
+  (send-message organ :command `(:command :speak
+                                 :say ,event)))
+
 (defbehavior speak-test-message (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))
     (when (equalp message '(:test :ping))

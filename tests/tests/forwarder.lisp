@@ -9,48 +9,31 @@
   ;;; the handler gets created and announced
   ;;; check the handler exists
   (list
-   (with-agent-conversation (m e) forwarder-agent-uuid
-     (zmq:send! e (prepare-message
+   (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "test" :hostpaths (("api2.example.com" . "/"))))))
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (filled (and (equalp (car msg) :filled) msg)
-                   (and (equalp (car msg) :filled) msg)))
-          ((and filled
-                (getf filled :forwarder))
-           :need-filled)))
+                            :forwarder (:name "test" :hostpaths (("api2.example.com" . "/"))))) (msg)
+       (awhen (getf msg :filled)
+         (when (getf msg :forwarder)
+              :need-filled)))
 
-   (with-agent-conversation (m e) forwarder-agent-uuid
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (forwarders (getf (getf (getf msg :info) :provides) :forwarders)
-                       (getf (getf (getf msg :info) :provides) :forwarders)))
-          ((and forwarders
-                (find "test" (loop for i in forwarders collect (car i)) :test #'string=))
-           :saw-forwarder)))
+   (wait-for-agent-message (forwarder-agent-uuid) (msg)
+     (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
+       (when (find "test" (loop for i in forwarders collect (car i)) :test #'string=)
+            :saw-forwarder)))
 
-   (with-agent-conversation (m e) mongrel2-uuid
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (servers (getf (getf (getf msg :info) :provides) :servers)
-                    (getf (getf (getf msg :info) :provides) :servers)))
-          ((and servers
-                (find "forwarder" (loop for i in servers collect (car i)) :test #'string=))
-           :server-exists)))
+   (wait-for-agent-message (mongrel2-uuid) (msg)
+     (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
+       (when (find "forwarder" (loop for i in servers collect (car i)) :test #'string=)
+            :server-exists)))
 
-   (with-agent-conversation (m e) mongrel2-uuid
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (servers (getf (getf (getf msg :info) :provides) :servers)
-                    (getf (getf (getf msg :info) :provides) :servers))
-           (forwarder-server (assoc "forwarder" servers :test #'string=)
-                             (assoc "forwarder" servers :test #'string=))
-           (handler (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)
-                    (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)))
-          (handler
-               :handler-exists)))))
+   (wait-for-agent-message (mongrel2-uuid) (msg)
+     (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
+            (forwarder-server (assoc "forwarder" servers :test #'string=))
+            (handler (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)))
+       (when handler
+         :handler-exists)))))
+
 
 (def-test (can-create-forwarder-with-multiple-hostpaths :group forwarder-agent-tests) (:eql :pending)
   :pending)

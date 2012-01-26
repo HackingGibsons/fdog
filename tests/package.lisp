@@ -10,7 +10,8 @@
                 :curry
                 :rcurry
                 :awhen
-                :aand)
+                :aand
+                :when-bind)
 
   (:import-from :request-processing-agent
                 :request-handler

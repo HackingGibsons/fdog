@@ -20,8 +20,10 @@
                    (if (find name keep-names :test #'string=)
                        name
                        (prog1 nil
-                         (clsql:delete-instance-records (fdog-models:mongrel2-target-route handler))
-                         (clsql:delete-instance-records handler))))))
+                         (with-clsql-retry ()
+                           (clsql:delete-instance-records (fdog-models:mongrel2-target-route handler)))
+                         (with-clsql-retry ()
+                           (clsql:delete-instance-records handler)))))))
 
           (let ((kept-handlers (remove nil (mapcar #'maybe-remove-handler
                                                    (mongrel2-server-handlers server)))))
@@ -50,9 +52,10 @@
                                      (fdog-models:mongrel2-host-server-id
                                       (fdog-models:mongrel2-route-host route))))
 
-            (clsql:delete-instance-records handler)
-            (clsql:delete-instance-records route))))
-
+            (with-clsql-retry ()
+              (clsql:delete-instance-records handler))
+            (with-clsql-retry ()
+              (clsql:delete-instance-records route)))))
       ;; Reload the server
       (link-server organ server (clsql:database-name clsql:*default-database*)))
 
@@ -85,7 +88,8 @@
       (when (and server hosts handler (from-info :route))
              ;; Clear out the old route if any before building new ones
              (awhen (fdog-models:mongrel2-target-route handler)
-               (clsql:delete-instance-records it))
+               (with-clsql-retry ()
+                 (clsql:delete-instance-records it)))
 
              (mapcar (rcurry #'fdog-models:make-host-route (from-info :route) handler)
                      hosts)
@@ -120,12 +124,14 @@
                 (unless (fdog-models:mongrel2-server-default-host server)
                   (setf (fdog-models:mongrel2-server-default-host-name server)
                         (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
-                  (clsql:update-records-from-instance server))
+                  (with-clsql-retry ()
+                    (clsql:update-records-from-instance server)))
 
                 (fdog-models:mongrel2-server-signal server :reload))
               (when server
                 (unlink-server organ server (clsql:database-name clsql:*default-database*))
-                (clsql:delete-instance-records server)))
+                (with-clsql-retry ()
+                  (clsql:delete-instance-records server))))
 
       (and server hosts (send-message organ :command
            `(:command :speak
@@ -163,12 +169,14 @@
                 (unless (fdog-models:mongrel2-server-default-host server)
                   (setf (fdog-models:mongrel2-server-default-host-name server)
                         (car (mapcar #'fdog-models:mongrel2-host-name (fdog-models:mongrel2-server-hosts server))))
-                  (clsql:update-records-from-instance server))
+                  (with-clsql-retry ()
+                    (clsql:update-records-from-instance server)))
 
                 (fdog-models:mongrel2-server-signal server :reload))
               (progn
                 (unlink-server organ server (clsql:database-name clsql:*default-database*))
-                (clsql:delete-instance-records server))))
+                (with-clsql-retry ()
+                  (clsql:delete-instance-records server)))))
 
         (send-message organ :command `(:command :speak
                                                 :say (:filled :need
@@ -234,7 +242,8 @@
       (setf (fdog-models:mongrel2-server-chroot server)
             (namestring (ensure-mongrel2-root-layout (agent-root agent))))
 
-      (clsql:update-records-from-instance server)
+      (with-clsql-retry ()
+        (clsql:update-records-from-instance server))
 
       (and server hosts
            (link-server organ server (clsql:database-name clsql:*default-database*))

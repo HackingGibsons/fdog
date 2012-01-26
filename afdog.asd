@@ -87,9 +87,9 @@
                                                      ((:file "package")
                                                       (:file "data")
                                                       (:file "models" :depends-on ("package" "helpers"))
-                                                      (:file "methods" :depends-on ("models"))
+                                                      (:file "methods" :depends-on ("models" "helpers"))
                                                       (:file "helpers" :depends-on ("package"))
-                                                      (:file "m2sh" :depends-on ("models" "methods"))))
+                                                      (:file "m2sh" :depends-on ("models" "methods" "helpers"))))
 
                                    (:module "agents" :depends-on ("mongrel2") :components
                                            ((:file "packages")

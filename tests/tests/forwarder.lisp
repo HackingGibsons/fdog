@@ -80,7 +80,7 @@
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :remove-forwarders
-                            :remove-forwarders ("remove1" "remove2"))) (msg)
+                            :remove-forwarders (:names ("remove1" "remove2")))) (msg)
      (awhen (getf msg :filled)
        (when (getf msg :remove-forwarders)
          :forwarders-removed)))

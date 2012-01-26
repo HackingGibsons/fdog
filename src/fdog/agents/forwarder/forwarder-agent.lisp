@@ -11,7 +11,7 @@
 ;; Helpers
 (defmethod add-forwarder ((agent forwarder-agent) forwarder &optional metadata)
   (with-slots (forwarders) agent
-    (appendf forwarders forwarders (list (cons forwarder metadata)))
+    (appendf forwarders (list (cons forwarder metadata)))
     ;; TODO persistence
     ))
 

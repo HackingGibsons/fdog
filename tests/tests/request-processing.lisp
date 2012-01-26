@@ -26,13 +26,11 @@
           (peers
            :rp-agent-has-peers)))
 
-   (with-agent-conversation (m e :timeout 35) mongrel2-uuid
-     (do* ((msg (parse-message (read-message m))
-                (parse-message (read-message m)))
-           (info (getf msg :info) (getf msg :info))
-           (peers (getf info :peers) (getf info :peers)))
-          (peers
-           :m2-agent-has-peers)))))
+   (wait-for-agent-message (mongrel2-uuid :timeout 35) (msg)
+     (let* ((info (getf msg :info))
+            (peers (getf info :peers)))
+       (when (assoc request-processing-uuid peers :test #'string-equal)
+         :m2-agent-has-peers)))))
 
 (def-test (request-processing-agent-announces-connected-count :group request-processing-agent-tests)
     (:predicate numberp)

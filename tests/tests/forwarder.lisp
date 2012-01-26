@@ -99,9 +99,6 @@
        (when (and (null handler1) (null handler2))
          :handlers-removed)))))
 
-(def-test (can-remove-multiple-forwarders :group forwarder-agent-tests) (:eql :pending)
-  :pending)
-
 (def-test (forwarder-agent-cull :group forwarder-agent-tests) (:eql :pending)
   ;;; Announce "need forwarder culling, save foo and bar"
   ;;; Other handlers deleted

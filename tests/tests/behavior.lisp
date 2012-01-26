@@ -2,16 +2,7 @@
 
 ;; Behavior tests
 (def-test (agent-speaks :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
-  (let ((msg (make-instance 'zmq:msg)))
-    (zmq:with-context (c 1)
-      (zmq:with-socket (s c zmq:sub)
-        (zmq:setsockopt s zmq:subscribe "")
-        (zmq:connect s (local-ipc-addr agent-uuid :mouth))
-        (setf msg
-              (handler-case (bt:with-timeout (15)
-                              (parse-message (read-message s)))
-                (bt:timeout () nil)))))
-    msg))
+  (wait-for-agent (agent-uuid)))
 
 (def-test (agent-hears :group basic-behavior-tests :fixtures (running-agent-fixture)) :true
   (let ((msg (make-instance 'zmq:msg :data "(:TEST :PING)"))

@@ -221,7 +221,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
   (let ((event (typecase event
                  (string (handler-case (read-from-string event) (end-of-file () nil)))
-                 (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
                  (otherwise event))))
     (unless event
       (log-for (warn) "Not an event to act on!")

@@ -10,12 +10,10 @@
   ;;; check the handler exists
   (list
    (with-agent-conversation (m e) forwarder-agent-uuid
-     (log-for (trace) "before need")
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need :forwarder
                             :forwarder (:name "test" :hostpaths (("api2.example.com" . "/"))))))
-     (log-for (trace) "after need")
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)

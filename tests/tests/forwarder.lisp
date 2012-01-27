@@ -99,11 +99,92 @@
        (when (and (null handler1) (null handler2))
          :handlers-removed)))))
 
-(def-test (forwarder-agent-cull :group forwarder-agent-tests) (:eql :pending)
-  ;;; Announce "need forwarder culling, save foo and bar"
-  ;;; Other handlers deleted
-  ;;; check foo and bar exist, but not baz
-  :pending)
+(def-test (forwarder-agent-keep :group forwarder-agent-tests)
+    (:seq (:eql :forwarder-1-added)
+          (:eql :forwarder-2-added)
+          (:eql :forwarder-3-added)
+          (:eql :forwarder-4-added)
+          (:eql :forwarders-announced)
+          (:eql :handlers-announced)
+          (:eql :forwarders-culled)
+          (:eql :saved-forwarders-kept-and-other-forwarders-gone)
+          (:eql :saved-handlers-kept-and-other-handlers-gone))
+  (list
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :need
+                            :need :forwarder
+                            :forwarder (:name "cull1" :hostpaths (("api2.example.com" . "/c1/"))))) (msg)
+       (awhen (getf msg :filled)
+         (when (getf msg :forwarder)
+           :forwarder-1-added)))
+
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :need
+                            :need :forwarder
+                            :forwarder (:name "cull2" :hostpaths (("api2.example.com" . "/c2/"))))) (msg)
+       (awhen (getf msg :filled)
+         (when (getf msg :forwarder)
+           :forwarder-2-added)))
+
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :need
+                            :need :forwarder
+                            :forwarder (:name "cull3" :hostpaths (("api2.example.com" . "/c3/"))))) (msg)
+       (awhen (getf msg :filled)
+         (when (getf msg :forwarder)
+           :forwarder-3-added)))
+
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :need
+                            :need :forwarder
+                            :forwarder (:name "cull4" :hostpaths (("api2.example.com" . "/c4/"))))) (msg)
+       (awhen (getf msg :filled)
+         (when (getf msg :forwarder)
+           :forwarder-4-added)))
+
+   (wait-for-agent-message (forwarder-agent-uuid) (msg)
+     (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
+       (when (and (find "cull1" (loop for i in forwarders collect (car i)) :test #'string=)
+                  (find "cull2" (loop for i in forwarders collect (car i)) :test #'string=)
+                  (find "cull3" (loop for i in forwarders collect (car i)) :test #'string=)
+                  (find "cull4" (loop for i in forwarders collect (car i)) :test #'string=))
+         :forwarders-announced)))
+
+   (wait-for-agent-message (mongrel2-uuid) (msg)
+     (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
+            (forwarder-server (assoc "forwarder" servers :test #'string=))
+            (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
+            (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
+            (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
+            (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
+       (when (and handler1 handler2 handler3 handler4)
+         :handlers-announced)))
+
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :need
+                            :need :keep-forwarders
+                            :keep-forwarders (:names ("cull1" "cull2")))) (msg)
+     (awhen (getf msg :filled)
+       (when (getf msg :keep-forwarders)
+         :forwarders-culled)))
+
+   (wait-for-agent-message (forwarder-agent-uuid) (msg)
+     (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
+       (when (and (find "cull1" (loop for i in forwarders collect (car i)) :test #'string=)
+                  (find "cull2" (loop for i in forwarders collect (car i)) :test #'string=)
+                  (null (find "cull3" (loop for i in forwarders collect (car i)) :test #'string=))
+                  (null (find "cull4" (loop for i in forwarders collect (car i)) :test #'string=)))
+         :saved-forwarders-kept-and-other-forwarders-gone)))
+
+   (wait-for-agent-message (mongrel2-uuid) (msg)
+     (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
+            (forwarder-server (assoc "forwarder" servers :test #'string=))
+            (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
+            (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
+            (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
+            (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
+       (when (and handler1 handler2 (null handler3) (null handler4))
+         :saved-handlers-kept-and-other-handlers-gone)))))
 
 (def-test (forwarder-agent-stores-forwarders :group forwarder-agent-tests) (:eql :pending)
   ;;; Add a forwarder

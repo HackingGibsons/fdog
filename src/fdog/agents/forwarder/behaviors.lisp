@@ -54,13 +54,15 @@
   ))
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
-  (labels ((from-info (thing) (getf need-info thing)))
-    (let ((names (from-info :names)))
+  (labels ((from-info (thing) (getf need-info thing))
+           (handler-name (name) (format nil "forwarder-~A" name)))
+    (let* ((names (from-info :names))
+           (handler-names (loop for i in names collect (handler-name i))))
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need
                                             :need :keep-handlers
-                                            :keep-handlers (:server "forwarder" :name ,names))))
+                                            :keep-handlers (:server "forwarder" :names ,handler-names))))
       (cull-forwarders agent names))
 
     ;; announce handler removal

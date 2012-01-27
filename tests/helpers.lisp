@@ -1,8 +1,9 @@
 (in-package :afdog-tests)
 
-(defmacro wait-for-agent-message ((uuid &key (timeout 25)) arglist &body forms)
-  "Start a conversation with agen at `uuid' with a timeout of `timeout' (25 by default)
-and read and parse messages. For each message a lambda constructed as
+(defmacro wait-for-agent-message ((uuid &key (timeout 25) request) arglist &body forms)
+  "Start a conversation with agent at `uuid' with a timeout of `timeout' (25 by default).
+Optionally sends a `request' at the start of the conversation, then
+will read and parse messages. For each message a lambda constructed as
 (lambda `arglist' `forms') will be applied as in (apply #'lambda parsed-message)
 If the result of applying the message to the lambda yields a non-`nil' value,
 that value is returned. The form blocks for at most `timeout' seconds, when the timeout
@@ -11,6 +12,7 @@ is exceeded the return is `nil'"
     `(flet ((,msg-p ,arglist
               ,@forms))
        (with-agent-conversation (,m ,e :timeout ,timeout) ,uuid
+         ,(when (quote request) `(zmq:send! ,e (prepare-message ,request)))
          (do* ((,msg (parse-message (read-message ,m))
                      (parse-message (read-message ,m)))
                (,result (,msg-p ,msg) (,msg-p ,msg)))

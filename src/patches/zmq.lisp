@@ -1,4 +1,10 @@
 (in-package :zmq)
+(export 'poll-item-sock)
+
+(defun poll-item-sock (poll-item)
+  "Return the `socket' of the given `poll-item'"
+  (foreign-slot-value poll-item 'pollitem 'socket))
+
 (export 'send!)
 (export 'recv!)
 

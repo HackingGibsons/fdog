@@ -15,6 +15,13 @@ supporting wrapping native types in ephemeral messages for transport."))
   (zmq:with-msg-init-data (msg seq)
     (send! sock msg flags count)))
 
+(defmethod recv! (sock (msg (eql :string)) &optional flags count)
+  "Receive a message from `sock' and return the contents as a string."
+  (zmq:with-msg-init (msg)
+    (multiple-value-bind (r c) (recv! sock msg flags count)
+      (declare (ignore r))
+      (values (zmq:msg-data-string msg) c))))
+
 ;; Actual low-level interfacing methods.
 (defmethod send! (sock msg &optional flags (count 0))
   (let* ((res (handler-case (zmq:send sock msg flags) (zmq:zmq-error () -1)))

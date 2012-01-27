@@ -31,12 +31,12 @@ type. Returns two values: the socket created and the address that was bound to i
   (flet ((make-addr-string () (format nil "tcp://~A:~A" (get-local-address :update t :as :string) (+ 50000 (random 10000)))))
     (let ((sock (zmq:socket context type))
           addr)
-      (zmq:setsockopt sock zmq:linger linger)
+      (zmq:setsockopt sock :linger linger)
 
       (do ((try-addr (make-addr-string) (make-addr-string)))
           (addr addr)
         (setf addr (handler-case (prog1 try-addr (zmq:bind sock try-addr))
-                     (simple-error () nil))))
+                     (zmq:zmq-error () nil))))
 
         (values sock addr))))
 

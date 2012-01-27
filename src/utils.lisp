@@ -45,25 +45,28 @@ type. Returns two values: the socket created and the address that was bound to i
     (null nil)
     (string (handler-case (read-from-string msg) (end-of-file () nil)))))
 
-(defmethod read-message (sock &key (transform #'zmq:msg-data-as-string) timeout)
-  (labels ((s2us (s)
-             "Seconds to uSeconds"
-             (round (* s 1000000)))
-
+(defmethod read-message (sock &key (transform #'zmq:msg-data-string) timeout)
+  (labels ((s2us (s) (round (* s 1000000)))
            (fetch (s)
-             (let ((msg (make-instance 'zmq:msg)))
-               (zmq:recv! s msg)
-               msg))
+             (zmq:recv! s :msg))
            (wait (s seconds)
-             (zmq:with-polls ((poller . ((s . zmq:pollin))))
-               (when (zmq:poll poller :timeout (s2us seconds) :retry t)
+             (zmq:with-poll-items (items count) ((s :pollin))
+               (when (and (> (zmq:poll items count (s2us seconds)) 0)
+                          (zmq:poll-item-events-signaled-p
+                           (zmq:poll-items-aref items 0) :pollin))
                  (fetch s)))))
-
-    (let ((data (if timeout
-                    (wait sock timeout)
-                    (fetch sock))))
-      (when data
-        (funcall transform data)))))
+    (awhen (if timeout (wait sock timeout) (fetch sock))
+      (handler-case (let ((result (funcall transform data)))
+                      (unless (eq result it)
+                        ;; If the message was transformed,
+                        ;; discard the original container
+                        (zmq:msg-close it))
+                      result)
+        (t (c)
+          ;; If the transformation errors, we still
+          ;; need to clean up the message structure
+          (zmq:msg-close it)
+          (error c))))))
 
 (defvar *create-output-logs* nil)
 (defmethod run-program (program args &rest rest)

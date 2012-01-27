@@ -56,7 +56,7 @@ type. Returns two values: the socket created and the address that was bound to i
                            (zmq:poll-items-aref items 0) :pollin))
                  (fetch s)))))
     (awhen (if timeout (wait sock timeout) (fetch sock))
-      (handler-case (let ((result (funcall transform data)))
+      (handler-case (let ((result (funcall transform it)))
                       (unless (eq result it)
                         ;; If the message was transformed,
                         ;; discard the original container

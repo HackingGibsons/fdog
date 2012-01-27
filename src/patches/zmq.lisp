@@ -22,6 +22,19 @@ supporting wrapping native types in ephemeral messages for transport."))
       (declare (ignore r))
       (values (zmq:msg-data-string msg) c))))
 
+(defmethod recv! (sock (what (eql :msg)) &optional flags count)
+  "Receive and return the raw message object.
+
+!!WARNING!!: The returned value needs to be released with `zmq:msg-close'
+when finished with to avoid leaking in foreign code."
+  (declare (ignore what))
+  (let ((msg (zmq:msg-init)))
+    (handler-case (prog1 msg (recv! sock msg flags count))
+      (t (c)
+        ;; In case of fire, clean up and keep panicing up the stack
+        (zmq:msg-close msg)
+        (error c)))))
+
 ;; Actual low-level interfacing methods.
 (defmethod send! (sock msg &optional flags (count 0))
   (let* ((res (handler-case (zmq:send sock msg flags) (zmq:zmq-error () -1)))

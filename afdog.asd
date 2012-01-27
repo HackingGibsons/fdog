@@ -18,7 +18,7 @@
 
                ;; Vendord
                #:clsql
-               #:zeromq
+               #:zmq
 
                ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria

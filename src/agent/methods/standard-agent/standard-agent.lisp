@@ -50,6 +50,36 @@ for `agent'"
     (log-for (trace) "Using poll timeout of: ~Fs" timeout)
     timeout))
 
+(defmethod next-event% ((agent standard-agent))
+  "Returns the next event pending for `agent' on the internal bus
+or `:timeout' otherwise after a scheduled pause. Will also poll
+all of the organs and deliver any internal messages from the bus as well
+as fire any callbacks that may be pending IO when it is ready."
+  (let ((callbacks (make-hash-table))
+        (agent-event :timeout))
+    (labels ((s2us (s)
+               "Seconds to uSeconds"
+               (round (* s 1000000)))
+
+             (read-agent-event (s)
+               "Read and store the agent event. Used as the `agent-event-sock' callback"
+               (setf agent-event
+                     (afdog:read-message s)))
+
+             (organ-readers+store-callbacks ()
+               "Return a list of organ reader sockets and fill in the callbacks in the HT"
+               (alexandria:flatten
+                (mapcar #'(lambda (organ)
+                            (multiple-value-bind (socks funs) (reader-callbacks organ)
+                              (prog1 socks
+                                (mapc #'(lambda (sock fun) (setf (gethash sock callbacks) fun))
+                                      socks funs))))
+                        (agent-organs agent)))))
+
+      ;; TODO: Magic happens
+
+      agent-event)))
+
 (defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
 or `:timeout' otherwise after a scheduled pause. Will also poll

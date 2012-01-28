@@ -79,14 +79,14 @@ as fire any callbacks that may be pending IO when it is ready."
             #'read-agent-event)
 
       (let ((readers (append (list (agent-event-sock agent))
-                             (organ-readers+store-callbacks)))))
+                             (organ-readers+store-callbacks))))
         (zmq:with-poll-sockets (items nb-items :in readers)
           (let ((signalled (zmq:poll items nb-items (s2us (agent-poll-timeout agent)))))
             (when (> signalled 0)
               (zmq:do-poll-items (item items nb-items)
                 (when (zmq:poll-item-events-signaled-p item :pollin :pollout)
                   (funcall (gethash (zmq:poll-item-sock item) callbacks)
-                           (zmq:poll-item-sock item))))))))
+                           (zmq:poll-item-sock item)))))))))
     agent-event))
 
 (defmethod event-fatal-p ((agent standard-agent) event)

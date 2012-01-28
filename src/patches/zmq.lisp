@@ -58,9 +58,26 @@ when finished with to avoid leaking in foreign code."
 
 ;; TODO: These patches should make it into a fork and be destined for
 ;;       upstream pulls
+;; BUGFIX: This had an infinite iteration
+(defmacro do-poll-items ((var items nb-items) &body body)
+  "For each poll item in ITEMS, evaluate BODY in an environment where VAR is
+  bound to the poll item."
+  (let ((i (gensym)))
+    `(do ((,i 0 (1+ ,i)))
+         ((= ,i ,nb-items))
+       (let ((,var (poll-items-aref ,items ,i)))
+         ,@body))))
+
 (export 'with-poll-sockets)
 (export 'describe-socket-polls)
 (export 'poll-item-sock)
+(export 'socket-id)
+
+(defun socket-id (sock)
+  "Return a unique identifier for the given `sock'
+that can be used for standard equality tests, as in hash
+tables."
+  (cffi:pointer-address sock))
 
 (defun poll-item-sock (poll-item)
   "Return the `socket' of the given `poll-item'"

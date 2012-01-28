@@ -50,7 +50,7 @@ for `agent'"
     (log-for (trace) "Using poll timeout of: ~Fs" timeout)
     timeout))
 
-(defmethod next-event% ((agent standard-agent))
+(defmethod next-event ((agent standard-agent))
   "Returns the next event pending for `agent' on the internal bus
 or `:timeout' otherwise after a scheduled pause. Will also poll
 all of the organs and deliver any internal messages from the bus as well
@@ -75,53 +75,19 @@ as fire any callbacks that may be pending IO when it is ready."
                                 (mapc #'(lambda (sock fun) (setf (gethash sock callbacks) fun))
                                       socks funs))))
                         (agent-organs agent)))))
+      (setf (gethash (agent-event-sock agent) callbacks)
+            #'read-agent-event)
 
-      ;; TODO: Magic happens
-
-      agent-event)))
-
-(defmethod next-event ((agent standard-agent))
-  "Returns the next event pending for `agent' on the internal bus
-or `:timeout' otherwise after a scheduled pause. Will also poll
-all of the organs and deliver any internal messages from the bus as well
-as fire any callbacks that may be pending IO when it is ready."
-  (labels ((s2us (s)
-             "Seconds to uSeconds"
-             (round (* s 1000000)))
-
-           (make-reader (sock)
-             "Wrap `sock' in a `zmq:pollitem' instance for `zmq:pollin' event"
-             (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
-
-           (organ-readers-and-callbacks ()
-             "Returns two lists. A list of pollitems for read events and the callbacks for each."
-             (do* ((organs (agent-organs agent) (rest organs))
-                   (organ (car organs) (car organs))
-                   readers callbacks)
-                  ((not organ) (values (mapcar #'make-reader readers)
-                                       callbacks))
-               (multiple-value-bind (socks funs) (reader-callbacks organ)
-                 (setf readers `(,@readers ,@socks)
-                       callbacks `(,@callbacks ,@funs)))))
-
-           (maybe-fire-callback (result poller callback)
-             "Fires the given `callback' with the socket from the `poller' if `result' is 1"
-             (when (equal result 1)
-               (funcall callback (zmq:pollitem-socket poller)))))
-
-    (multiple-value-bind (callback-readers callbacks) (organ-readers-and-callbacks)
-      (let* ((readers `(,(make-reader (agent-event-sock agent)) ;; Agent event socket
-                         ,@callback-readers))
-             (poll (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
-
-
-        (mapc #'maybe-fire-callback
-              (rest poll) (rest readers) callbacks)
-
-        (if (equal (first poll) 1)
-            (afdog:read-message (agent-event-sock agent))
-            :timeout)))))
-
+      (let ((readers (append (list (agent-event-sock agent))
+                             (organ-readers+store-callbacks)))))
+        (zmq:with-poll-sockets (items nb-items :in readers)
+          (let ((signalled (zmq:poll items nb-items (s2us (agent-poll-timeout agent)))))
+            (when (> signalled 0)
+              (zmq:do-poll-items (item items nb-items)
+                (when (zmq:poll-item-events-signaled-p item :pollin :pollout)
+                  (funcall (gethash (zmq:poll-item-sock item) callbacks)
+                           (zmq:poll-item-sock item))))))))
+    agent-event))
 
 (defmethod event-fatal-p ((agent standard-agent) event)
   "Predicate to determine if this event should end the agent."

@@ -63,7 +63,7 @@
 (defmethod request-handler :after ((agent request-processing-test-agent) (organ agent-requesticle) msg)
   (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (zmq:msg-size msg))
   (send-message organ :request-handler `(:request-handler :raw
-                                         :raw ,(zmq:msg-data-as-string msg))))
+                                         :raw ,(zmq:msg-data-string msg))))
 
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
   (make-speak-test-message (find-organ agent :head))

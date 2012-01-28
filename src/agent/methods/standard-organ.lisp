@@ -17,17 +17,17 @@
 
   (log-for (trace) "Building and connecting sockets.")
   (setf (organ-incoming-sock organ)
-        (zmq:socket (agent-context agent) zmq:sub)
+        (zmq:socket (agent-context agent) :sub)
 
         (organ-outgoing-sock organ)
-        (zmq:socket (agent-context agent) zmq:pub))
-  (zmq:setsockopt (organ-incoming-sock organ) zmq:linger *socket-linger*)
-  (zmq:setsockopt (organ-outgoing-sock organ) zmq:linger *socket-linger*)
+        (zmq:socket (agent-context agent) :pub))
+  (zmq:setsockopt (organ-incoming-sock organ) :linger *socket-linger*)
+  (zmq:setsockopt (organ-outgoing-sock organ) :linger *socket-linger*)
 
   (log-for (trace) "Connecting the incoming socket: ~A" (agent-message-addr agent))
   (zmq:connect (organ-incoming-sock organ) (agent-message-addr agent))
   (log-for (warn) "Subscribing incoming socket to everything.")
-  (zmq:setsockopt (organ-incoming-sock organ) zmq:subscribe "")
+  (zmq:setsockopt (organ-incoming-sock organ) :subscribe "")
 
   (log-for (trace) "Connecting the outgoing socket: ~A" (agent-event-addr agent))
   (zmq:connect (organ-outgoing-sock organ) (agent-event-addr agent))

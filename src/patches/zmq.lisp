@@ -1,9 +1,4 @@
 (in-package :zmq)
-(export 'poll-item-sock)
-
-(defun poll-item-sock (poll-item)
-  "Return the `socket' of the given `poll-item'"
-  (foreign-slot-value poll-item 'pollitem 'socket))
 
 (export 'send!)
 (export 'recv!)
@@ -60,3 +55,60 @@ when finished with to avoid leaking in foreign code."
 
                     (:otherwise res))))
     (values res count)))
+
+;; TODO: These patches should make it into a fork and be destined for
+;;       upstream pulls
+(export 'with-poll-sockets)
+(export 'describe-socket-polls)
+(export 'poll-item-sock)
+
+(defun poll-item-sock (poll-item)
+  "Return the `socket' of the given `poll-item'"
+  (foreign-slot-value poll-item 'pollitem 'socket))
+
+(defun describe-socket-polls (&key in out err)
+  "Return two values, a description of pollitems in the form:
+ ((sock :pollin) (sock2 :pollin :pollout)) from the
+sockets passed in as `in' `out' `err' and the number of
+items returned in the list"
+  (flet ((make-pollitem (sock in out err)
+           (remove nil (list sock
+                             (when (member sock in) :pollin)
+                             (when (member sock out) :pollout)
+                             (when (member sock err) :pollerr)))))
+    (let* ((pollitems (mapcar #'(lambda (sock) (make-pollitem sock in out err))
+                              (remove-duplicates (append in out err)))))
+      (values pollitems (length pollitems)))))
+
+(defmacro with-poll-sockets ((items-var size-var &key in out err) &body forms)
+  "Evaluate FORMS in an environment where ITEMS-VAR is bound to a foreign
+  array of poll items, and SIZE-VAR is bound to the number of polled
+  items. Poll items are filled according to IN OUT and ERR. Each is a list where each
+  element describes a socket. Depending on a sockets presence in one or multiple
+  of these lists a combination of the :POLLIN, :POLLOUT and :POLLERR events will
+  be watched for the given socket."
+  (let ((g!pollitems (gensym "pollitems"))
+        (g!count (gensym "count"))
+        (g!i (gensym "i"))
+        (pollitem-size (foreign-type-size 'pollitem)))
+    `(multiple-value-bind (,g!pollitems ,g!count) (describe-socket-polls :in ,in :out ,out :err ,err)
+       (with-foreign-object (,items-var 'pollitem ,g!count)
+         (let ((,g!i 0))
+           (dolist (item ,g!pollitems)
+             (with-foreign-slots ((socket fd events revents)
+                                  (inc-pointer ,items-var
+                                               (* ,g!i ,pollitem-size))
+                                  pollitem)
+               (destructuring-bind (handle &rest event-list) item
+                 (cond
+                   ((pointerp handle)
+                    (setf socket handle))
+                   (t
+                    (setf socket (null-pointer))
+                    (setf fd handle)))
+                 (setf events (foreign-bitfield-value
+                               'event-types event-list)
+                       revents 0)))
+             (incf ,g!i)))
+         (let ((,size-var ,g!count))
+           ,@forms)))))

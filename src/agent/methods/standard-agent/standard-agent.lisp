@@ -111,7 +111,7 @@ as fire any callbacks that may be pending IO when it is ready."
   (handler-case (call-next-method)
     (t (c)
       (let ((output (make-pathname :directory `(:absolute "tmp") :type "error"
-                                   :name (format nil "~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
+                                   :name (format nil "afdog.~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
 
         (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c)
         (handler-case

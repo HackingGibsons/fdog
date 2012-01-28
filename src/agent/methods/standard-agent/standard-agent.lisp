@@ -118,28 +118,36 @@ as fire any callbacks that may be pending IO when it is ready."
            (prog1 t
              (log-for (warn) "Suicide event: ~A" event))))))
 
+(defmethod report-error ((agent standard-agent) c)
+  (let ((output (make-pathname :directory `(:absolute "tmp") :type "log"
+                               :name (format nil "afdog.crash.~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
+
+    (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c)
+    (handler-case
+        (with-open-file (s output :if-does-not-exist :create :if-exists :append :direction :output)
+          (format s "~&=Crash report for ~A/~A@~A=~%" (type-of agent) (agent-uuid agent)
+                  (multiple-value-bind (second minute hour date month year)
+                      (decode-universal-time (get-universal-time))
+                    (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
+          (format s "~&==Condition==~%")
+          (format s "~&Type: ~A~%" (type-of c))
+          (trivial-backtrace:print-condition c s)
+          (format s "~&==Condition End==~%")
+          (format s "~&==Backtrace==~%")
+          (trivial-backtrace:print-backtrace-to-stream s)
+          (format s "~&==Backtrace End==~%")
+          (format s "~&=Crash report end=~%")
+          (log-for (warn) "Crash report written to: ~A" (namestring output)))
+
+      (t (write-error)
+        (log-for (warn) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))))
+
 (defmethod run-agent :around ((agent standard-agent))
-  (handler-case (call-next-method)
+  (handler-case
+      (handler-bind ((error (arnesi:curry #'report-error agent)))
+        (call-next-method))
     (t (c)
-      (let ((output (make-pathname :directory `(:absolute "tmp") :type "log"
-                                   :name (format nil "afdog.crash.~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
-
-        (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c)
-        (handler-case
-            (with-open-file (s output :if-does-not-exist :create :if-exists :append :direction :output)
-              (format s "~&=Crash report for ~A/~A=~%" (type-of agent) (agent-uuid agent))
-              (format s "~&==Condition==~%")
-              (format s "~&Type: ~A~%" (type-of c))
-              (trivial-backtrace:print-condition c s)
-              (format s "~&==Condition End==~%")
-              (format s "~&==Backtrace==~%")
-              (trivial-backtrace:print-backtrace-to-stream s)
-              (format s "~&==Backtrace End==~%")
-              (format s "~&=Crash report end=~%")
-              (log-for (warn) "Crash report written to: ~A" (namestring output)))
-
-          (t (write-error)
-            (log-for (warn) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))))))
+      (log-for (warn) "Agent: [~A/~A] Terminating because of: ~A" (type-of agent) (agent-uuid agent) c))))
 
 
 

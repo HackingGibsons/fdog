@@ -1,0 +1,22 @@
+Common Lisp interface to Syslog via foreign-function calls.  Perhaps
+one should add support for talking to it via UDP.
+
+Example:
+
+  * (require :cl-syslog)
+
+  * (syslog:log "myprog" :local7 :info "this is the message")
+  "this is the message"
+
+  * (syslog:log "myprog" :local7 :info "this is the message" syslog:+log-pid+)
+  "this is the message"
+
+  * (syslog:log "myprog" :local7 :info "this is the message" (+ syslog:+log-pid+ 
+                                                                syslog:+log-cons+))
+  "this is the message"
+ 
+Then look in your /var/log/messages or other location if you have
+tweaked your /etc/syslog.conf.
+
+Erik.
+

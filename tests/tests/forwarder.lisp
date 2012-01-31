@@ -229,8 +229,8 @@
          :forwarder-removed)))
 
    (wait-for-agent-message (forwarder-agent-uuid) (msg)
-     (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
-       (unless (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=)
+     (let ((forwarders (getf (getf (getf msg :info) :provides) :forwarders)))
+       (when (null (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=))
          :forwarder-gone)))
 
    ;; TODO file-empty

@@ -66,6 +66,7 @@
         #:agent
         #:log5
         #:alexandria
+        #:json
         #:fdog-agent)
   (:export :forwarder-agent))
 
@@ -73,3 +74,6 @@
 
 (defcategory forwarder-agent)
 (defvar *forwarder-server-port* 13374)
+(defvar *forwarder-filename* "forwarders.json")
+(defun forwarder-file-path (agent)
+  (merge-pathnames *forwarder-filename* (merge-pathnames "server/" (agent-root agent))))

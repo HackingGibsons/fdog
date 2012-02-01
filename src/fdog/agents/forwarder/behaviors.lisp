@@ -22,9 +22,9 @@
                                             :handler (:server "forwarder" :hosts (,(caar hostpaths)) :route ,(cdar hostpaths) :name ,(handler-name name)))))
 
       ;; TODO: What if multiple hostpaths?
+      ;; TODO: metadata?
       ;; Add forwarder to agent list
       (add-forwarder agent name)
-      ;; TODO persistence
 
       ;; Then announce "need filled for forwarder"
       (send-message organ :command
@@ -49,9 +49,8 @@
                   `(:command :speak
                              :say (:filled :need
                                            :need ,what
-                                           ,what ,need-info)))
-    ;; TODO persistence
-  ))
+                                           ,what ,need-info)))))
+
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
   (labels ((from-info (thing) (getf need-info thing))
@@ -70,9 +69,7 @@
                   `(:command :speak
                              :say (:filled :need
                                            :need ,what
-                                           ,what ,need-info)))
-    ;; TODO persistence
-  ))
+                                           ,what ,need-info)))))
 
 (defmethod heard-message ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :need)) &rest request)
   (log-for (trace forwarder-agent) "Heard an :agent :need message: ~A" request)

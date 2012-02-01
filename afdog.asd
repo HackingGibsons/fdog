@@ -16,6 +16,7 @@
                #:arnesi
                #:trivial-backtrace
                #:drakma
+               #:cl-json
 
                ;; Vendord
                #:clsql

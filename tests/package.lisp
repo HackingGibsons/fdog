@@ -3,6 +3,7 @@
         #:afdog
         #:agent
         #:fdog
+        #:json
         #:afdog-cli)
   (:use #:nst)
   (:import-from :arnesi

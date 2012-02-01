@@ -12,20 +12,22 @@
 (defmethod add-forwarder ((agent forwarder-agent) forwarder &optional metadata)
   (with-slots (forwarders) agent
     (appendf forwarders (list (cons forwarder metadata)))
-    ;; TODO persistence
-    ))
+    (save-forwarders agent)))
 
 (defmethod remove-forwarders ((agent forwarder-agent) names)
   (with-slots (forwarders) agent
     (setf forwarders (remove-if #'(lambda (x) (find (car x) names :test #'string=)) forwarders))
-    ;; TODO persistence
-    ))
+    (save-forwarders agent)))
 
 (defmethod cull-forwarders ((agent forwarder-agent) names-to-keep)
   (with-slots (forwarders) agent
     (setf forwarders (remove-if-not #'(lambda (x) (find (car x) names-to-keep :test #'string=)) forwarders))
-    ;; TODO persistence
-    ))
+    (save-forwarders agent)))
+
+(defmethod save-forwarders ((agent forwarder-agent))
+  (let ((forwarder-file (forwarder-file-path agent)))
+    (with-open-file (out forwarder-file :direction :output :if-exists :supersede :if-does-not-exist :create)
+      (json:encode-json-alist (forwarders agent) out))))
 
 ;; Hooks
 (defmethod agent-provides :around ((agent forwarder-agent))
@@ -34,4 +36,6 @@
 (defmethod agent-special-event :after ((agent forwarder-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
   ;; TODO persistence load
+  ;; alist-to-json
+  ;; foreach forwarder, agent-needs it
   )

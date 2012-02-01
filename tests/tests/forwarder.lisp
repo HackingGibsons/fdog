@@ -202,7 +202,10 @@
           (:eql :file-empty))
   (list
    ;; TODO file-empty
-   :file-empty
+   (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+     (with-open-file (in file)
+       (unless (json:decode-json in)
+         :file-empty)))
 
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
@@ -218,7 +221,15 @@
          :forwarder-announced)))
 
    ;; TODO forwarder-exists-in-file
-   :forwarder-exists-in-file
+   ;; decode keys to strings, not keywords
+   ;; that might be the reason it's putting it in all caps
+   (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+     (with-open-file (in file)
+       (when-bind forwarders (json:decode-json in)
+         (log-for (trace) "forwarders value: ~A" forwarders)
+         (when (equalp forwarders '(("saveme")))
+           :forwarder-exists-in-file))))
+
 
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
@@ -233,8 +244,10 @@
        (when (null (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=))
          :forwarder-gone)))
 
-   ;; TODO file-empty
-   :file-empty))
+   (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+     (with-open-file (in file)
+       (unless (json:decode-json in)
+         :file-empty)))))
 
 (def-test (forwarder-agent-restores-forwarders-after-restart :group forwarder-agent-tests)
     (:seq (:eql :announcing-zero-forwarders)
@@ -244,7 +257,8 @@
           (:eql :agent-restarted)
           (:eql :forwarder-announced))
   ;;; Add a forwarder
-  ;;; Restart the agent
+  ;;; Restart the agent - does killing the agent make the hypervisor
+  ;;; restart it?
   ;;; That forwarder exists
   (list
    :announcing-zero-forwarders

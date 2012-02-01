@@ -2,6 +2,9 @@
   (:use #:cl)
   (:use #:log5)
   (:use :trivial-gray-streams)
+  (:import-from :arnesi
+                :it
+                :awhen)
   (:export :start-logging
            :stop-logging
            :make-local-sock

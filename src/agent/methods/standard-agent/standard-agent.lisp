@@ -55,43 +55,54 @@ for `agent'"
 or `:timeout' otherwise after a scheduled pause. Will also poll
 all of the organs and deliver any internal messages from the bus as well
 as fire any callbacks that may be pending IO when it is ready."
-  (labels ((s2us (s)
-             "Seconds to uSeconds"
-             (round (* s 1000000)))
+  (let ((callbacks (make-hash-table))
+        (agent-event :timeout))
+    (labels ((s2us (s)
+               "Seconds to uSeconds"
+               (round (* s 1000000)))
 
-           (make-reader (sock)
-             "Wrap `sock' in a `zmq:pollitem' instance for `zmq:pollin' event"
-             (make-instance 'zmq:pollitem :socket sock :events zmq:pollin))
+             (sock-id (sock)
+               "Return the pointer address of the sock so we can use it in `make-hash-table'"
+               (cffi:pointer-address sock))
 
-           (organ-readers-and-callbacks ()
-             "Returns two lists. A list of pollitems for read events and the callbacks for each."
-             (do* ((organs (agent-organs agent) (rest organs))
-                   (organ (car organs) (car organs))
-                   readers callbacks)
-                  ((not organ) (values (mapcar #'make-reader readers)
-                                       callbacks))
-               (multiple-value-bind (socks funs) (reader-callbacks organ)
-                 (setf readers `(,@readers ,@socks)
-                       callbacks `(,@callbacks ,@funs)))))
+             (read-agent-event (s)
+               "Read and store the agent event. Used as the `agent-event-sock' callback"
+               (setf agent-event
+                     (afdog:read-message s)))
 
-           (maybe-fire-callback (result poller callback)
-             "Fires the given `callback' with the socket from the `poller' if `result' is 1"
-             (when (equal result 1)
-               (funcall callback (zmq:pollitem-socket poller)))))
+             (organ-readers+store-callbacks ()
+               "Return a list of organ reader sockets and fill in the callbacks in the HT"
+               (alexandria:flatten
+                (mapcar #'(lambda (organ)
+                            (multiple-value-bind (socks funs) (reader-callbacks organ)
+                              (prog1 socks
+                                (mapc #'(lambda (sock fun)
+                                          (setf (gethash (sock-id sock) callbacks) fun))
+                                      socks funs))))
+                        (agent-organs agent)))))
+      (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
+            #'read-agent-event)
 
-    (multiple-value-bind (callback-readers callbacks) (organ-readers-and-callbacks)
-      (let* ((readers `(,(make-reader (agent-event-sock agent)) ;; Agent event socket
-                         ,@callback-readers))
-             (poll (zmq:poll readers :timeout (s2us (agent-poll-timeout agent)) :retry t)))
-
-
-        (mapc #'maybe-fire-callback
-              (rest poll) (rest readers) callbacks)
-
-        (if (equal (first poll) 1)
-            (afdog:read-message (agent-event-sock agent))
-            :timeout)))))
-
+      (let ((readers (append (list (agent-event-sock agent))
+                             (organ-readers+store-callbacks))))
+        (zmq:with-poll-sockets (items nb-items :in readers)
+          (let ((signalled (zmq:poll items nb-items (s2us (agent-poll-timeout agent)))))
+            (when (> signalled 0)
+              (log-for (trace) "Doing poll ~S items" nb-items)
+              (log-for (trace) "Socks: ~S" readers)
+              (log-for (trace) "Ids: ~S" (mapcar #'sock-id readers))
+              (zmq:do-poll-items (item items nb-items)
+                (awhen (zmq:poll-item-events-signaled-p item :pollin)
+                  (log-for (trace) "PI: ~S Sock: ~S ID: ~S Events: ~S"
+                           item (zmq:poll-item-socket item) (sock-id (zmq:poll-item-socket item)) it)
+                  (log-for (trace) "Callbacks: ~S" (arnesi:hash-to-alist callbacks))
+                  (multiple-value-bind (cb found?) (gethash (sock-id (zmq:poll-item-socket item)) callbacks)
+                    (log-for (trace) "CB: ~S Found: ~S" cb found?)
+                    (funcall cb (zmq:poll-item-socket item))
+                    (log-for (trace) "Moving on."))))
+              (log-for (trace) "Poll finished"))))))
+    (log-for (trace) "Agent event: ~S" agent-event)
+    agent-event))
 
 (defmethod event-fatal-p ((agent standard-agent) event)
   "Predicate to determine if this event should end the agent."
@@ -111,42 +122,50 @@ as fire any callbacks that may be pending IO when it is ready."
            (prog1 t
              (log-for (warn) "Suicide event: ~A" event))))))
 
+(defmethod report-error ((agent standard-agent) c)
+  (let ((output (make-pathname :directory `(:absolute "tmp") :type "log"
+                               :name (format nil "afdog.crash.~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
+
+    (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c)
+    (handler-case
+        (with-open-file (s output :if-does-not-exist :create :if-exists :append :direction :output)
+          (format s "~&=Crash report for ~A/~A@~A=~%" (type-of agent) (agent-uuid agent)
+                  (multiple-value-bind (second minute hour date month year)
+                      (decode-universal-time (get-universal-time))
+                    (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
+          (format s "~&==Condition==~%")
+          (format s "~&Type: ~A~%" (type-of c))
+          (trivial-backtrace:print-condition c s)
+          (format s "~&==Condition End==~%")
+          (format s "~&==Backtrace==~%")
+          (trivial-backtrace:print-backtrace-to-stream s)
+          (format s "~&==Backtrace End==~%")
+          (format s "~&=Crash report end=~%")
+          (log-for (warn) "Crash report written to: ~A" (namestring output)))
+
+      (t (write-error)
+        (log-for (warn) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))))
+
 (defmethod run-agent :around ((agent standard-agent))
-  (handler-case (call-next-method)
+  (handler-case
+      (handler-bind ((error (arnesi:curry #'report-error agent)))
+        (call-next-method))
     (t (c)
-      (let ((output (make-pathname :directory `(:absolute "tmp") :type "error"
-                                   :name (format nil "~A-~A.~A" (type-of agent) (agent-uuid agent) (iolib.syscalls:getpid)))))
-
-        (log-for (warn) "Agent: [~A/~A] Event loop exited poorly: ~A" (type-of agent) (agent-uuid agent) c)
-        (handler-case
-            (with-open-file (s output :if-does-not-exist :create :if-exists :append :direction :output)
-              (format s "~&=Crash report for ~A/~A=~%" (type-of agent) (agent-uuid agent))
-              (format s "~&==Condition==~%")
-              (format s "~&Type: ~A~%" (type-of c))
-              (trivial-backtrace:print-condition c s)
-              (format s "~&==Condition End==~%")
-              (format s "~&==Backtrace==~%")
-              (trivial-backtrace:print-backtrace-to-stream s)
-              (format s "~&==Backtrace End==~%")
-              (format s "~&=Crash report end=~%")
-              (log-for (warn) "Crash report written to: ~A" (namestring output)))
-
-          (t (write-error)
-            (log-for (warn) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))))))
+      (log-for (warn) "Agent: [~A/~A] Terminating because of: ~A" (type-of agent) (agent-uuid agent) c))))
 
 
 
 (defmethod run-agent ((agent standard-agent))
   "Enter the agent event loop, return only when agent is dead."
   (zmq:with-context (ctx *context-threads*)
-    (zmq:with-socket (event-sock ctx zmq:sub)
-      (zmq:setsockopt event-sock zmq:linger *socket-linger*)
-      (zmq:with-socket (message-sock ctx zmq:pub)
-        (zmq:setsockopt message-sock zmq:linger *socket-linger*)
+    (zmq:with-socket (event-sock ctx :sub)
+      (zmq:setsockopt event-sock :linger *socket-linger*)
+      (zmq:with-socket (message-sock ctx :pub)
+        (zmq:setsockopt message-sock :linger *socket-linger*)
         (log-for (trace) "Binding event sock to: ~A" (agent-event-addr agent))
         (zmq:bind event-sock (agent-event-addr agent))
         (log-for (warn) "Subscribing event sock to everyting")
-        (zmq:setsockopt event-sock zmq:subscribe "")
+        (zmq:setsockopt event-sock :subscribe "")
 
         (log-for (trace) "Binding message sock to: ~A" (agent-message-addr agent))
         (zmq:bind message-sock (agent-message-addr agent))
@@ -189,13 +208,13 @@ as fire any callbacks that may be pending IO when it is ready."
   (:method (message)
     (prepare-message (with-output-to-string (s) (prin1 message s))))
   (:method ((message string))
-    (make-instance 'zmq:msg :data message)))
+    message))
 
 (defgeneric agent-publish-event (agent event)
   (:method ((agent standard-agent) event)
     (log-for (trace) "Publishing event: [~A]" (with-output-to-string (s) (prin1 event s)))
-    (zmq:with-socket (esock (agent-context agent) zmq:pub)
-      (zmq:setsockopt esock zmq:linger *socket-linger*)
+    (zmq:with-socket (esock (agent-context agent) :pub)
+      (zmq:setsockopt esock :linger *socket-linger*)
       (zmq:connect esock (agent-event-addr agent))
       (zmq:send! esock (prepare-message event)))))
 
@@ -221,7 +240,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
   (let ((event (typecase event
                  (string (handler-case (read-from-string event) (end-of-file () nil)))
-                 (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
                  (otherwise event))))
     (unless event
       (log-for (warn) "Not an event to act on!")

@@ -25,10 +25,10 @@ at the request sock.")
   (log-for (trace requesticle) "Requesticle constructing socket.")
 
   (setf (request-sock requesticle)
-        (zmq:socket (agent-context agent) zmq:pull)
+        (zmq:socket (agent-context agent) :pull)
 
         (response-sock requesticle)
-        (zmq:socket (agent-context agent) zmq:pub)))
+        (zmq:socket (agent-context agent) :pub)))
 
 (defmethod agent-disconnect :after ((agent standard-agent) (requesticle agent-requesticle) &rest options)
   "Disconnect the requesticle sock"

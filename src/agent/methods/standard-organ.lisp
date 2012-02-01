@@ -17,17 +17,17 @@
 
   (log-for (trace) "Building and connecting sockets.")
   (setf (organ-incoming-sock organ)
-        (zmq:socket (agent-context agent) zmq:sub)
+        (zmq:socket (agent-context agent) :sub)
 
         (organ-outgoing-sock organ)
-        (zmq:socket (agent-context agent) zmq:pub))
-  (zmq:setsockopt (organ-incoming-sock organ) zmq:linger *socket-linger*)
-  (zmq:setsockopt (organ-outgoing-sock organ) zmq:linger *socket-linger*)
+        (zmq:socket (agent-context agent) :pub))
+  (zmq:setsockopt (organ-incoming-sock organ) :linger *socket-linger*)
+  (zmq:setsockopt (organ-outgoing-sock organ) :linger *socket-linger*)
 
   (log-for (trace) "Connecting the incoming socket: ~A" (agent-message-addr agent))
   (zmq:connect (organ-incoming-sock organ) (agent-message-addr agent))
   (log-for (warn) "Subscribing incoming socket to everything.")
-  (zmq:setsockopt (organ-incoming-sock organ) zmq:subscribe "")
+  (zmq:setsockopt (organ-incoming-sock organ) :subscribe "")
 
   (log-for (trace) "Connecting the outgoing socket: ~A" (agent-event-addr agent))
   (zmq:connect (organ-outgoing-sock organ) (agent-event-addr agent))
@@ -63,9 +63,7 @@ and callbacks for each socket mentioned.")
     (values nil nil))
   (:method :around ((organ standard-organ))
            (flet ((incoming-callback (sock)
-                    (let ((msg (make-instance 'zmq:msg)))
-                      (zmq:recv! sock msg)
-                      (act-on-event organ (zmq:msg-data-as-string msg)))))
+                    (act-on-event organ (read-message sock))))
 
            (multiple-value-bind (socks callbacks) (call-next-method)
              (let ((socks `(,(organ-incoming-sock organ) ,@socks))
@@ -86,7 +84,6 @@ and callbacks for each socket mentioned.")
 
   (let ((parsed (typecase event
                   (string (handler-case (read-from-string event) (end-of-file () nil)))
-                  (zmq:msg (handler-case (read-from-string (zmq:msg-data-as-string event)) (end-of-file () nil)))
                   (otherwise event))))
     (call-next-method organ parsed)))
 

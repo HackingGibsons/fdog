@@ -1,5 +1,5 @@
 (in-package :afdog-utils)
-
+#| Dead code
 (defun zmq-connect-and-dump (socktype addr &rest keys &key (use-log t) &allow-other-keys)
   (zmq:with-context (ctx 1)
     (zmq:with-socket (sock ctx socktype)
@@ -17,7 +17,4 @@
              (if use-log
                  (log-for (trace) "Message(~A): [~A]" (zmq:msg-size msg) (zmq:msg-data-as-string msg))
                  (format t "Message(~A): [~A]~%" (zmq:msg-size msg) (zmq:msg-data-as-string msg))))))))
-
-
-
-
+|#

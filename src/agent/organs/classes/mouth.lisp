@@ -29,7 +29,7 @@ out of.")
 
   (log-for (warn) "Booting mouth: ~A from ~A" mouth agent)
   (with-slots (speak-addr speak-sock) mouth
-    (multiple-value-bind (sock addr) (make-local-sock (agent-context agent) zmq:pub)
+    (multiple-value-bind (sock addr) (make-local-sock (agent-context agent) :pub)
       (zmq:bind sock (local-ipc-addr mouth))
       (log-for (trace) "Setting sock/addr: ~A/~A" sock addr)
       (setf speak-addr addr
@@ -42,8 +42,8 @@ out of.")
 
   (log-for (warn) "Disconnecting mouth: ~A from ~A" mouth agent)
   (with-slots (speak-addr speak-sock) mouth
-    (zmq:setsockopt speak-sock zmq:linger 3000)
     (when speak-sock
+      (zmq:setsockopt speak-sock :linger 3000)
       (zmq:close speak-sock))
     (setf speak-addr nil
           speak-sock nil)))

@@ -18,11 +18,11 @@
 
                ;; Vendord
                #:clsql
-               #:zeromq
+               #:zmq
 
                ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria
-               #:uffi
+               #:cffi-uffi-compat
                #:cffi)
   :in-order-to ((test-op (load-op afdog-tests)))
   :components ((:module "src" :components

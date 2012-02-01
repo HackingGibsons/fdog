@@ -55,8 +55,8 @@ Keys:
   "Opens the appropriate zeromq socket."
   (with-slots (ctx socket address) stream
     (setf ctx (zmq:init 1))
-    (setf socket (zmq:socket ctx zmq:push))
-    (zmq:setsockopt socket zmq:linger *socket-linger*)
+    (setf socket (zmq:socket ctx :push))
+    (zmq:setsockopt socket :linger *socket-linger*)
     (zmq:connect socket address)))
 
 (defmethod close ((stream zmq-logging-stream) &key abort)
@@ -74,8 +74,7 @@ Keys:
 
 (defmethod stream-write-sequence ((stream zmq-logging-stream) seq start end &key)
   (with-slots (socket) stream
-    (let ((msg (make-instance 'zmq:msg :data (subseq seq (or start 0) end))))
-      (zmq:send! socket msg))))
+    (zmq:send! socket (subseq seq (or start 0) end))))
 
 ;;; Logging functions for the zmq receiver to output to console/disk
 (defcategory output)
@@ -120,16 +119,14 @@ Keys:
                        :category-spec '(output)
                        :output-spec '(log5:message)))
   (zmq:with-context (ctx 1)
-    (zmq:with-socket (socket ctx zmq:pull)
+    (zmq:with-socket (socket ctx :pull)
       (zmq:bind socket *socket-address*)
-      (let ((msg (make-instance 'zmq:msg)))
-        (labels ((run-once ()
-                   (zmq:recv! socket msg)
-                   (let ((string (zmq:msg-data-as-string msg)))
-                     (unless (string-empty string)
-                       (log-for (output) (trim-whitespace string))))
-                   :always-run))
-          (loop while (run-once) do ':nothing))))))
+      (labels ((run-once ()
+                 (let ((string (zmq:recv! socket :string)))
+                   (unless (string-empty string)
+                     (log-for (output) (trim-whitespace string))))
+                 :always-run))
+        (loop while (run-once) do ':nothing)))))
 
 (defun trim-whitespace (string)
   "Trims leading and trailing whitespace from a string."

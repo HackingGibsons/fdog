@@ -34,7 +34,8 @@ any handlers we're interested in and we should connect to them."
   "Called with a message read from the `request-socket' of the `organ'.
 `agent' is in the arglist for easier specialization."
   (declare (ignorable agent))
-  (log-for (trace request-handler) "~A handle request: ~A" organ msg))
+  (log-for (trace request-handler) "~A un-ig-handle request, freeing: ~Ab msg" organ (zmq:msg-size msg))
+  (zmq:msg-close msg))
 
 (defmethod make-request-handler ((organ agent-requesticle))
   "Construct a callback for `request-socket' in the event

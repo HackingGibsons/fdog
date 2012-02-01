@@ -62,7 +62,8 @@ as fire any callbacks that may be pending IO when it is ready."
                (round (* s 1000000)))
 
              (sock-id (sock)
-               (zmq:getsockopt sock :fd))
+               "Return the pointer address of the sock so we can use it in `make-hash-table'"
+               (cffi:pointer-address sock))
 
              (read-agent-event (s)
                "Read and store the agent event. Used as the `agent-event-sock' callback"

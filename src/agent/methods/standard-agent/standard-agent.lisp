@@ -61,6 +61,9 @@ as fire any callbacks that may be pending IO when it is ready."
                "Seconds to uSeconds"
                (round (* s 1000000)))
 
+             (sock-id (sock)
+               (zmq:getsockopt sock :fd))
+
              (read-agent-event (s)
                "Read and store the agent event. Used as the `agent-event-sock' callback"
                (setf agent-event
@@ -73,10 +76,10 @@ as fire any callbacks that may be pending IO when it is ready."
                             (multiple-value-bind (socks funs) (reader-callbacks organ)
                               (prog1 socks
                                 (mapc #'(lambda (sock fun)
-                                          (setf (gethash (zmq:socket-id sock) callbacks) fun))
+                                          (setf (gethash (sock-id sock) callbacks) fun))
                                       socks funs))))
                         (agent-organs agent)))))
-      (setf (gethash (zmq:socket-id (agent-event-sock agent)) callbacks)
+      (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
             #'read-agent-event)
 
       (let ((readers (append (list (agent-event-sock agent))
@@ -86,13 +89,13 @@ as fire any callbacks that may be pending IO when it is ready."
             (when (> signalled 0)
               (log-for (trace) "Doing poll ~S items" nb-items)
               (log-for (trace) "Socks: ~S" readers)
-              (log-for (trace) "Ids: ~S" (mapcar #'zmq:socket-id readers))
+              (log-for (trace) "Ids: ~S" (mapcar #'sock-id readers))
               (zmq:do-poll-items (item items nb-items)
                 (awhen (zmq:poll-item-events-signaled-p item :pollin)
                   (log-for (trace) "PI: ~S Sock: ~S ID: ~S Events: ~S"
-                           item (zmq:poll-item-sock item) (zmq:socket-id (zmq:poll-item-sock item)) it)
+                           item (zmq:poll-item-sock item) (sock-id (zmq:poll-item-sock item)) it)
                   (log-for (trace) "Callbacks: ~S" (arnesi:hash-to-alist callbacks))
-                  (multiple-value-bind (cb found?) (gethash (zmq:socket-id (zmq:poll-item-sock item)) callbacks)
+                  (multiple-value-bind (cb found?) (gethash (sock-id (zmq:poll-item-sock item)) callbacks)
                     (log-for (trace) "CB: ~S Found: ~S" cb found?)
                     (funcall cb (zmq:poll-item-sock item))
                     (log-for (trace) "Moving on."))))

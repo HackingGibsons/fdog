@@ -60,9 +60,9 @@ when finished with to avoid leaking in foreign code."
 ;;       upstream pulls
 (export 'with-poll-sockets)
 (export 'describe-socket-polls)
-(export 'poll-item-sock)
+(export 'poll-item-socket)
 
-(defun poll-item-sock (poll-item)
+(defun poll-item-socket (poll-item)
   "Return the `socket' of the given `poll-item'"
   (foreign-slot-value poll-item 'pollitem 'socket))
 

@@ -204,7 +204,7 @@
    ;; TODO file-empty
    (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
-       (unless (json:decode-json in)
+       (unless (forwarder-agent::load-forwarder-json in)
          :file-empty)))
 
    (wait-for-agent-message (forwarder-agent-uuid :request
@@ -220,12 +220,9 @@
        (when (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=)
          :forwarder-announced)))
 
-   ;; TODO forwarder-exists-in-file
-   ;; decode keys to strings, not keywords
-   ;; that might be the reason it's putting it in all caps
    (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
-       (when-bind forwarders (json:decode-json in)
+       (when-bind forwarders (forwarder-agent::load-forwarder-json in)
          (log-for (trace) "forwarders value: ~A" forwarders)
          (when (equalp forwarders '(("saveme")))
            :forwarder-exists-in-file))))
@@ -246,7 +243,7 @@
 
    (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
-       (unless (json:decode-json in)
+       (unless (forwarder-agent::load-forwarder-json in)
          :file-empty)))))
 
 (def-test (forwarder-agent-restores-forwarders-after-restart :group forwarder-agent-tests)

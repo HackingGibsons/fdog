@@ -39,3 +39,9 @@
   ;; alist-to-json
   ;; foreach forwarder, agent-needs it
   )
+
+;; Helpers
+(defun load-forwarder-json (stream)
+  (let ((json:*json-identifier-name-to-lisp* #'identity)
+        (json:*identifier-name-to-key* #'identity))
+    (json:decode-json stream)))

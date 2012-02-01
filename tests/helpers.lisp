@@ -8,15 +8,16 @@ will read and parse messages. For each message a lambda constructed as
 If the result of applying the message to the lambda yields a non-`nil' value,
 that value is returned. The form blocks for at most `timeout' seconds, when the timeout
 is exceeded the return is `nil'"
-  (alexandria:with-gensyms (m e msg msg-p result)
+  (alexandria:with-gensyms (m e msg msg-p result g!req)
     `(flet ((,msg-p ,arglist
               ,@forms))
        (with-agent-conversation (,m ,e :timeout ,timeout) ,uuid
-         ,(when (quote request) `(zmq:send! ,e (prepare-message ,request)))
-         (do* ((,msg (parse-message (read-message ,m))
-                     (parse-message (read-message ,m)))
-               (,result (,msg-p ,msg) (,msg-p ,msg)))
-              (,result ,result))))))
+         (let ((,g!req ,request))
+           (when ,g!req (zmq:send! ,e (prepare-message ,g!req))))
+           (do* ((,msg (parse-message (read-message ,m))
+                       (parse-message (read-message ,m)))
+                 (,result (,msg-p ,msg) (,msg-p ,msg)))
+                (,result ,result))))))
 
 (defmacro wait-for-agent ((uuid &key (timeout 25)) &body forms)
   "Wait for agent at `uuid' for `timeout' seconds, defaulting to 25.

@@ -42,8 +42,12 @@ and `data' will be an array of the original data."
 that it is ready for read for submission into the event loop."
   (lambda (sock)
     (declare (ignore sock))
-    (apply #'request-handler (organ-agent organ) organ
-           (multiple-value-list (m2cl:handler-read-request (handler organ))))))
+    (handler-case
+        (apply #'request-handler (organ-agent organ) organ
+               (multiple-value-list (m2cl:handler-read-request (handler organ))))
+      (t (c)
+        (log-for (warn request-handler) "Request failed to apply: ~S" c)
+        nil))))
 
 (defmethod reader-callbacks :around ((organ agent-requesticle))
   "Ask to be notified of read activity on the request socket of the `organ'"

@@ -242,3 +242,25 @@
         ((and (equalp (getf msg :agent) :info)
               (equalp (getf (getf msg :info) :uuid) agent-uuid))
          (and (running-p agent-runner) :agent-lives))))))
+
+(def-test (agent-writes-crash-report :group basic-behavior-tests :fixtures (running-agent-fixture))
+    (:values (:eql :running)
+             (:eql :seems-to-crash)
+             (:eql :report-written)
+             (:eql :report-cleaned))
+  (wait-for-agent (agent-uuid) :running)
+
+  (and (with-agent-conversation (m e :linger -1) agent-uuid
+         (zmq:send! e (prepare-message `(:agent :crash :crash :agent :agent ,agent-uuid))))
+       (not (wait-for-agent (agent-uuid :timeout 3) :still-running))
+       :seems-to-crash)
+
+  (and (find-if (arnesi:curry #'ppcre:scan (format nil "crash.+~A\." agent-uuid))
+                (mapcar #'namestring (directory (make-pathname :directory `(:absolute "tmp")
+                                                               :type "log" :name :wild))))
+       :report-written)
+
+  (and (mapcar #'delete-file
+               (mapcar #'namestring (directory (make-pathname :directory `(:absolute "tmp")
+                                                               :type "log" :name :wild))))
+       :report-cleaned))

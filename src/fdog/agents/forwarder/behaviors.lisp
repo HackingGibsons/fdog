@@ -22,9 +22,8 @@
                                             :handler (:server "forwarder" :hosts (,(caar hostpaths)) :route ,(cdar hostpaths) :name ,(handler-name name)))))
 
       ;; TODO: What if multiple hostpaths?
-      ;; TODO: metadata?
       ;; Add forwarder to agent list
-      (add-forwarder agent name)
+      (add-forwarder agent name need-info)
 
       ;; Then announce "need filled for forwarder"
       (send-message organ :command

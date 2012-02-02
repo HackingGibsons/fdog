@@ -25,9 +25,10 @@
     (save-forwarders agent)))
 
 (defmethod save-forwarders ((agent forwarder-agent))
-  (let ((forwarder-file (forwarder-file-path agent)))
+  (let ((forwarder-file (forwarder-file-path agent))
+        (forwarder-list (mapcar #'(lambda (x) `(,(car x) ,(alexandria:plist-alist (cdr x)))) (forwarders agent))))
     (with-open-file (out forwarder-file :direction :output :if-exists :supersede :if-does-not-exist :create)
-      (json:encode-json-alist (forwarders agent) out))))
+      (json:encode-json-alist forwarder-list out))))
 
 ;; Hooks
 (defmethod agent-provides :around ((agent forwarder-agent))
@@ -35,13 +36,15 @@
 
 (defmethod agent-special-event :after ((agent forwarder-agent) (event-head (eql :boot)) event)
   "Boot event for a child agent."
-  ;; TODO persistence load
-  ;; alist-to-json
-  ;; foreach forwarder, agent-needs it
-  )
+  (with-open-file (in (forwarder-file-path agent) :if-does-not-exist nil)
+    (when in
+      (dolist (forwarder (load-forwarder-json in))
+        (let ((forwarder-plist (alexandria:alist-plist (cadr forwarder))))
+          (setf (getf forwarder-plist :hostpaths) (mapcar #'(lambda (x) `(,(string-downcase (symbol-name (car x))) . ,(cdr x))) (getf forwarder-plist :hostpaths)))
+          (agent-needs agent (find-organ agent :head) :forwarder forwarder-plist))))))
 
 ;; Helpers
 (defun load-forwarder-json (stream)
-  (let ((json:*json-identifier-name-to-lisp* #'identity)
-        (json:*identifier-name-to-key* #'identity))
+  "Only decodes JSON if the file exists and is not empty."
+  (unless (zerop (file-length stream))
     (json:decode-json stream)))

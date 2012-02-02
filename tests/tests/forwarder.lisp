@@ -201,7 +201,6 @@
           (:eql :forwarder-gone)
           (:eql :file-empty))
   (list
-   ;; TODO file-empty
    (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
        (unless (forwarder-agent::load-forwarder-json in)
@@ -223,7 +222,6 @@
    (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
        (when-bind forwarders (forwarder-agent::load-forwarder-json in)
-         (log-for (trace) "forwarders value: ~A" forwarders)
          (when (equalp forwarders '(("saveme")))
            :forwarder-exists-in-file))))
 
@@ -246,22 +244,54 @@
        (unless (forwarder-agent::load-forwarder-json in)
          :file-empty)))))
 
-(def-test (forwarder-agent-restores-forwarders-after-restart :group forwarder-agent-tests)
-    (:seq (:eql :announcing-zero-forwarders)
-          (:eql :file-empty)
-          (:eql :forwarder-added)
-          (:eql :forwarder-announced)
-          (:eql :agent-restarted)
+(def-test (forwarder-agent-restores-forwarders-after-restart :group forwarder-agent-tests
+  :setup (progn
+           (wait-for-agent-message (forwarder-agent-uuid :request
+                           `(:agent :need
+                                    :need :keep-forwarders
+                                    :keep-forwarders (:names nil))) (msg)
+             (awhen (getf msg :filled)
+               (when (getf msg :keep-forwarders)
+                 :all-forwarders-culled)))
+
+           (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+             (with-open-file (in file :if-does-not-exist nil)
+               (unless (and in (forwarder-agent::load-forwarder-json in))
+                 :file-empty)))
+
+           (wait-for-agent-message (forwarder-agent-uuid :request
+                           `(:agent :need
+                                    :need :forwarder
+                                    :forwarder (:name "restore" :hostpaths (("api2.example.com" . "/rs/"))))) (msg)
+             (awhen (getf msg :filled)
+               (when (getf msg :forwarder)
+                 :need-filled)))))
+    (:seq (:eql :agent-killed)
+          (:eql :agent-dead)
+          (:eql :handler-requested)
           (:eql :forwarder-announced))
-  ;;; Add a forwarder
-  ;;; Restart the agent - does killing the agent make the hypervisor
-  ;;; restart it?
-  ;;; That forwarder exists
   (list
-   :announcing-zero-forwarders
-   :file-empty
-   :forwarder-added
-   :forwarder-announced
-   ;; TODO everything above this line move to setup
-   :agent-restarted
-   :forwarder-announced))
+
+   ;; send kill request to the hypervisor, listen for forwarder agent
+   ;; announce
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :kill :kill ,forwarder-agent-uuid)) (msg)
+     :agent-killed)
+
+   (wait-for-agent-message (hypervisor-uuid) (msg)
+     (when-bind peers (getf (getf msg :info) :peers)
+       (unless (find forwarder-agent-uuid (mapcar #'(lambda (x) (car x)) peers) :test #'string=)
+         :agent-dead)))
+
+   ;; ZMQ can wait on a socket that isn't open on the other side
+   ;; So when the agent restarts we receive messages immediately
+   (wait-for-agent-message (forwarder-agent-uuid :timeout 30) (msg)
+     (awhen (and (getf msg :need)
+                 (getf msg :handler))
+       (when (string= "forwarder-restore" (getf it :name))
+         :handler-requested)))
+
+   (wait-for-agent-message (forwarder-agent-uuid) (msg)
+     (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
+       (when (find "restore" (loop for i in forwarders collect (car i)) :test #'string=)
+         :forwarder-announced)))))

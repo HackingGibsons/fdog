@@ -251,7 +251,7 @@
   (wait-for-agent (agent-uuid) :running)
 
   (and (with-agent-conversation (m e :linger -1) agent-uuid
-         (zmq:send! m (prepare-message `(:crash :agent :agent ,agent-uuid))))
+         (zmq:send! m (prepare-message `(:agent :crash :crash :agent :agent ,agent-uuid))))
        (not (wait-for-agent (agent-uuid :timeout 3) :still-running))
        :seems-to-crash)
 

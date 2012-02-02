@@ -30,19 +30,20 @@ any handlers we're interested in and we should connect to them."
       (mapc #'search-server servers))))
 
 (defcategory request-handler)
-(defmethod request-handler ((agent standard-agent) (organ agent-requesticle) msg)
+(defmethod request-handler ((agent standard-agent) (organ agent-requesticle) request data)
   "Called with a message read from the `request-socket' of the `organ'.
-`agent' is in the arglist for easier specialization."
+`agent' is in the arglist for easier specialization. `request' will be a `m2cl:request' object
+and `data' will be an array of the original data."
   (declare (ignorable agent))
-  (log-for (trace request-handler) "~A un-ig-handle request, freeing: ~Ab msg" organ (zmq:msg-size msg))
-  (zmq:msg-close msg))
+  (log-for (trace request-handler) "~A un-ig-handle request: ~S, freeing: ~Ab msg" organ request (length data)))
 
 (defmethod make-request-handler ((organ agent-requesticle))
   "Construct a callback for `request-socket' in the event
 that it is ready for read for submission into the event loop."
   (lambda (sock)
-    (request-handler (organ-agent organ) organ
-                     (read-message sock :transform #'identity))))
+    (declare (ignore sock))
+    (apply #'request-handler (organ-agent organ) organ
+           (multiple-value-list (m2cl:handler-read-request (handler organ))))))
 
 (defmethod reader-callbacks :around ((organ agent-requesticle))
   "Ask to be notified of read activity on the request socket of the `organ'"

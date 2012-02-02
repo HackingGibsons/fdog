@@ -60,10 +60,10 @@
   (make-speak-request-processing-messages (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
 
-(defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) msg)
-  (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (zmq:msg-size msg))
+(defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) req raw)
+  (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (length raw))
   (send-message organ :request-handler `(:request-handler :raw
-                                         :raw ,(zmq:msg-data-string msg))))
+                                         :raw ,raw)))
 
 (defmethod heard-message ((agent runner-agent) (organ agent::agent-head)
                           (from (eql :agent)) (type (eql :crash)) &rest request)

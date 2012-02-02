@@ -65,6 +65,12 @@
   (send-message organ :request-handler `(:request-handler :raw
                                          :raw ,(zmq:msg-data-string msg))))
 
+(defmethod heard-message ((agent runner-agent) (organ agent::agent-head)
+                          (from (eql :agent)) (type (eql :crash)) &rest request)
+  (let ((who (getf request :agent)))
+    (when (string-equal who (agent-uuid agent))
+      (error "Asked to crash: Message: [~S]" request))))
+
 (defmethod agent-special-event :after ((agent runner-agent) (head (eql :boot)) event)
   (make-speak-test-message (find-organ agent :head))
 

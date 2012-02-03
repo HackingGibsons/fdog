@@ -6,6 +6,8 @@ for Afdog.")
         :agent
         :log5
         :request-processing-agent)
-  (:export :api-agent))
+  (:export :api-agent
+           :*control-server*
+           :*api-handler*))
 
 (in-package :api-agent)

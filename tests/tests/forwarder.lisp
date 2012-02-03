@@ -222,7 +222,7 @@
    (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
        (when-bind forwarders (forwarder-agent::load-forwarder-json in)
-         (when (equalp forwarders '(("saveme")))
+         (when (find "saveme" (loop for i in forwarders collect (getf i :name)) :test #'string=)
            :forwarder-exists-in-file))))
 
 
@@ -275,7 +275,7 @@
    ;; send kill request to the hypervisor, listen for forwarder agent
    ;; announce
    (wait-for-agent-message (forwarder-agent-uuid :request
-                   `(:agent :kill :kill ,forwarder-agent-uuid)) (msg)
+                   `(:agent :kill :kill ,forwarder-agent-uuid) :timeout 5) (msg)
      :agent-killed)
 
    (wait-for-agent-message (hypervisor-uuid) (msg)

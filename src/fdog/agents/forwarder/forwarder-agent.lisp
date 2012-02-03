@@ -39,12 +39,16 @@
   (with-open-file (in (forwarder-file-path agent) :if-does-not-exist nil)
     (when in
       (dolist (forwarder (load-forwarder-json in))
-        (let ((forwarder-plist (alexandria:alist-plist (cadr forwarder))))
-          (setf (getf forwarder-plist :hostpaths) (mapcar #'(lambda (x) `(,(string-downcase (symbol-name (car x))) . ,(cdr x))) (getf forwarder-plist :hostpaths)))
-          (agent-needs agent (find-organ agent :head) :forwarder forwarder-plist))))))
+        (agent-needs agent (find-organ agent :head) :forwarder forwarder)))))
 
 ;; Helpers
 (defun load-forwarder-json (stream)
-  "Only decodes JSON if the file exists and is not empty."
+  "Deserializes forwarder.json stream into a format expected by the `forwarder-agent''s `forwarders' slot. For each forwarder key in the JSON, converts the metadata from an alist (as presented by CL-JSON) to a plist, then converts the hostpaths from (:API.EXAMPLE.COM . \"/path/\") to (\"api.example.com\" . \"/path/\").
+Only decodes JSON if the file exists and is not empty."
   (unless (zerop (file-length stream))
-    (json:decode-json stream)))
+    (let ((forwarders nil))
+      (dolist (forwarder (json:decode-json stream))
+        (let ((forwarder-plist (alexandria:alist-plist (cadr forwarder))))
+          (setf (getf forwarder-plist :hostpaths) (mapcar #'(lambda (x) `(,(string-downcase (symbol-name (car x))) . ,(cdr x))) (getf forwarder-plist :hostpaths)))
+          (alexandria:appendf forwarders (list forwarder-plist))))
+      forwarders)))

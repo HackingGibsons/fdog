@@ -23,3 +23,15 @@
           (provides (getf info :provides)
                     (getf info :provides)))
          (provides (getf provides :request-processing)))))
+
+(def-test (api-agent-builds-api-forwarder :group api-agent-tests)
+    (:all (:apply car (:equalp "api"))
+          (:apply cdr (:permute (:seq (:equalp :send)
+                                      (:predicate stringp)
+                                      (:equalp :recv)
+                                      (:predicate stringp)))))
+  (wait-for-agent-message (mongrel2-uuid) (msg)
+    (let* ((control (cdr (assoc "control"
+                               (getf (getf (getf msg :info) :provides) :servers)
+                               :test #'string=))))
+      (assoc "api" control :test #'string=))))

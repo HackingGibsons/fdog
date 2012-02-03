@@ -65,7 +65,13 @@
   (make-kill-self-after-timeout (find-organ agent :head)))
 
 (defmethod agent-special-event :after ((agent api-test-agent) (event-head (eql :boot)) event)
+  (make-speak-request-processing-messages (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod request-handler :before ((agent api-test-agent) organ req raw)
+  (log-for (trace api-agent) "Announcing request: ~Ab" (length raw))
+  (send-message organ :request-handler `(:request-handler :raw
+                                         :raw ,raw)))
 
 (defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) req raw)
   (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (length raw))

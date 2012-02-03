@@ -14,6 +14,11 @@ Just the send address is used as a key but connections are made to both send and
 at the request sock.")
   (:default-initargs . (:tag :requesticle)))
 
+(defmethod handler ((agent standard-agent))
+  "Access wrapper to fetch a handler from an agent that has one"
+  (awhen (find-organ agent :requesticle)
+    (handler it)))
+
 (defmethod request-sock ((organ agent-requesticle))
   "Pass through read access to the request socket"
   (m2cl:handler-pull-socket (handler organ)))

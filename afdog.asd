@@ -110,7 +110,11 @@
                                                                 (:file "router" :depends-on ("package"))
                                                                 (:file "streams" :depends-on ("utils"))))
 
-                                                      (:file "agent" :depends-on ("package"))))
+                                                      (:module "app" :depends-on ("package") :components
+                                                               ((:file "package")
+                                                                (:file "app" :depends-on ("package"))))
+
+                                                      (:file "agent" :depends-on ("package" "app"))))
 
                                             (:module "request-processing" :depends-on ("packages") :components
                                                      ((:file "package")

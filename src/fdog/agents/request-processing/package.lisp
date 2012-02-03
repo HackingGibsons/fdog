@@ -7,10 +7,12 @@ Mongrel2 ZeroMQ messages")
         #:log5)
   (:import-from :arnesi
                 :it
+                :awhen
                 :aif)
   (:export :request-processing-agent
            :agent-requesticle
            :request-handler
-           :handler-name))
+           :handler-name
+           :handler))
 
 (in-package :request-processing-agent)

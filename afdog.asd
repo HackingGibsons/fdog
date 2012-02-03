@@ -102,6 +102,10 @@
                                             (:module "afdog-hypervisor" :depends-on ("packages") :components
                                                      ((:file "afdog-hypervisor-agent")))
 
+                                            (:module "api-agent" :depends-on ("request-processing") :components
+                                                     ((:file "package")
+                                                      (:file "agent" :depends-on ("package"))))
+
                                             (:module "request-processing" :depends-on ("packages") :components
                                                      ((:file "package")
                                                       (:file "agent" :depends-on ("package"))

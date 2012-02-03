@@ -9,7 +9,8 @@
                    cli-tests
                    mongrel2-agent-tests
                    afdog-hypervisor-agent-tests
-                   request-processing-agent-tests))
+                   request-processing-agent-tests
+                   api-agent-tests))
 
 ;; Directly runnable
 (def-test-group basic-tests ())
@@ -41,4 +42,9 @@
     (db-path-fixture
      mongrel2-agent-fixture
      request-processing-agent-fixture
+     kill-everything-fixture))
+(def-test-group api-agent-tests
+    (db-path-fixture
+     mongrel2-agent-fixture
+     api-agent-fixture
      kill-everything-fixture))

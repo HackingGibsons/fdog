@@ -31,6 +31,10 @@
   ()
   (:documentation "A `request-processing-agent` for testing the behavior of request processing."))
 
+(defclass api-test-agent (api-agent)
+  ()
+  (:documentation "An `api-agent' for testing. Isn't that freaking clever?"))
+
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-spawn-dependant-when-asked (agent::find-organ agent :head))
@@ -58,6 +62,9 @@
 
 (defmethod agent-special-event :after ((agent request-processing-test-agent) (event-head (eql :boot)) event)
   (make-speak-request-processing-messages (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod agent-special-event :after ((agent api-test-agent) (event-head (eql :boot)) event)
   (make-kill-self-after-timeout (find-organ agent :head)))
 
 (defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) req raw)

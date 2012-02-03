@@ -104,6 +104,12 @@
 
                                             (:module "api-agent" :depends-on ("request-processing") :components
                                                      ((:file "package")
+                                                      (:module "http" :depends-on ("package") :components
+                                                               ((:file "package")
+                                                                (:file "utils" :depends-on ("package"))
+                                                                (:file "router" :depends-on ("package"))
+                                                                (:file "streams" :depends-on ("utils"))))
+
                                                       (:file "agent" :depends-on ("package"))))
 
                                             (:module "request-processing" :depends-on ("packages") :components

@@ -5,6 +5,8 @@
   "The name of the control server that we should ask for an API handler on")
 (defvar *api-handler* "api"
   "The name of the handler that hosts the API")
+(defvar *api-host* "localhost"
+  "The host to use for the API agent.")
 
 ;; Agent
 (defcategory api-agent)
@@ -22,4 +24,11 @@ and contains the implementation of the afdog API."))
     (multiple-value-bind (name handlers) (values (car control) (cdr control))
       (let ((handler (cdr (assoc (handler-name agent) handlers :test #'string=))))
         (when (and name (not handler))
-          (log-for (trace api-agent) "Server: ~S doesn't have handler ~S" name (handler-name agent)))))))
+          (send-message head :command `(:command :speak
+                                        :say (:agent :need
+                                              :need  :handler
+                                              :handler (:server ,*control-server*
+                                                        :hosts (,*api-host*)
+                                                        :route "/"
+                                                        :name ,(handler-name agent)))))
+          (log-for (trace api-agent) "Server: ~S doesn't have handler ~S, adding." name (handler-name agent)))))))

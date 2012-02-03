@@ -274,8 +274,9 @@
 
    ;; send kill request to the hypervisor, listen for forwarder agent
    ;; announce
-   (wait-for-agent-message (forwarder-agent-uuid :request
-                   `(:agent :kill :kill ,forwarder-agent-uuid) :timeout 5) (msg)
+   (progn
+     (send-message-blindly (forwarder-agent-uuid :request
+                   `(:agent :kill :kill ,forwarder-agent-uuid)))
      :agent-killed)
 
    (wait-for-agent-message (hypervisor-uuid) (msg)

@@ -31,6 +31,13 @@ is returned. If `forms' is omitted the result of hearing a message will be
               (progn ,@forms)
               :found))))
 
+(defmacro send-message-blindly ((uuid &key (timeout 25) request))
+  "Macro to send a message to an agent without waiting on a callback"
+  (alexandria:with-gensyms (m e g!req)
+    `(with-agent-conversation (,m ,e :timeout ,timeout) ,uuid
+         (let ((,g!req ,request))
+           (when ,g!req (zmq:send! ,e (prepare-message ,g!req)))))))
+
 
 (defun http-request-string (resource &key (method :GET) (host "localhost"))
   "Return a string representing an HTTP request for `resource' with `method'

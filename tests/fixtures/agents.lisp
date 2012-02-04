@@ -69,7 +69,7 @@
   (make-kill-self-after-timeout (find-organ agent :head)))
 
 (defmethod request-handler :before ((agent api-test-agent) organ req raw)
-  (log-for (trace api-agent) "Announcing request: ~Ab" (length raw))
+  (log-for (trace api-agent) "Announcing request: ~Ab ~S" (length raw) (babel:octets-to-string raw))
   (send-message organ :request-handler `(:request-handler :raw
                                          :raw ,raw)))
 

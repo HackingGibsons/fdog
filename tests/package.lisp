@@ -9,7 +9,8 @@
                 :it
                 :curry
                 :rcurry
-                :awhen)
+                :awhen
+                :aand)
 
   (:import-from :request-processing-agent
                 :request-handler

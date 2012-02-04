@@ -29,7 +29,7 @@ at the request sock.")
 
 (defmethod response-sock ((organ agent-requesticle))
   "Pass through read access to the response socket"
-  (m2cl:handler-pull-socket (handler organ)))
+  (m2cl:handler-pub-socket (handler organ)))
 (defmethod set-response-sock ((organ agent-requesticle) v)
   "Pass through write access to the response socket"
   (setf (m2cl:handler-pub-socket (handler organ)) v))

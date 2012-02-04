@@ -37,14 +37,20 @@ and `data' will be an array of the original data."
   (declare (ignorable agent))
   (log-for (trace request-handler) "~A un-ig-handle request: ~S, freeing: ~Ab msg" organ request (length data)))
 
+(defmethod disconnect-handler ((agent standard-agent) (organ agent-requesticle) req data)
+  "Called when a request arrives that is a disconnect message."
+  (log-for (trace request-handler) "Disconnect message: ~S ~S" req data))
+
 (defmethod make-request-handler ((organ agent-requesticle))
   "Construct a callback for `request-socket' in the event
 that it is ready for read for submission into the event loop."
   (lambda (sock)
     (declare (ignore sock))
     (handler-case
-        (apply #'request-handler (organ-agent organ) organ
-               (multiple-value-list (m2cl:handler-read-request (handler organ))))
+        (multiple-value-bind (req raw) (m2cl:handler-read-request (handler organ))
+          (if (m2cl:request-disconnect-p req)
+              (disconnect-handler (organ-agent organ) organ req raw)
+              (request-handler (organ-agent organ) organ req raw)))
       (t (c)
         (log-for (warn request-handler) "Request failed to apply: ~S" c)
         nil))))

@@ -62,3 +62,21 @@
                   (getf msg :raw)
                   (> (length (getf msg :raw)) 0))
              :raw-request-handler-fired)))))
+
+(def-test (api-agent-sends-404 :group api-agent-tests)
+    (:values (:eql :connected-to-one)
+             (:equalp 404))
+
+  (wait-for-agent-message (api-uuid) (msg)
+    (aand (getf (getf (getf msg :info) :requesticle) :peers)
+          (and (numberp it) (>= it 1))
+          :connected-to-one))
+
+  (bt:with-timeout (5)
+    (handler-case
+        (multiple-value-bind (body-or-stream status-code headers uri stream must-close reason-phrase)
+            (drakma:http-request "http://localhost:6767/not-found/" :want-stream t)
+          (when must-close
+            (close body-or-stream))
+          status-code)
+      (bt:timeout () :timeout))))

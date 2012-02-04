@@ -4,6 +4,7 @@
   (:documentation "The HTTP application")
 
   (:use :http-dog)
-  (:export :api))
+  (:export :*name* :*description* :*version*
+           :api))
 
 (in-package :api-app)

@@ -81,3 +81,22 @@
             (close body-or-stream))
           status-code)
       (bt:timeout () :timeout))))
+
+(def-test (api-responds-with-version :group api-agent-tests)
+    (:values (:eql :connected-to-one)
+             (:seq (:equalp 200)
+                   (:predicate stringp)))
+
+  (wait-for-agent-message (api-uuid) (msg)
+    (aand (getf (getf (getf msg :info) :requesticle) :peers)
+          (and (numberp it) (>= it 1))
+          :connected-to-one))
+
+  (bt:with-timeout (5)
+    (handler-case
+        (multiple-value-bind (body status-code headers uri stream must-close reason-phrase)
+            (drakma:http-request "http://localhost:6767/")
+          (declare (ignorable headers uri stream must-close reason-phrase))
+          (let ((data (and body (json:decode-json-from-string (babel:octets-to-string body)))))
+            (list status-code (cdr (assoc :version data)))))
+      (bt:timeout () :timeout))))

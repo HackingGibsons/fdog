@@ -2,7 +2,8 @@
 
 (defclass afdog-hypervisor-agent (standard-hypervisor-agent rooted-agent-mixin)
   ((agents :accessor hypervisor-agents :initarg :agents
-           :initform '(mongrel2-agent ())
+           :initform '(mongrel2-agent ()
+                       api-agent ())
            :documentation "A plist of symbols and lists.
 The symbol should be the class name of an agent.
 The list should be a list of initargs.")))

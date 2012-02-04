@@ -18,7 +18,7 @@ and contains the implementation of the afdog API."))
 
 (defmethod request-handler ((agent api-agent) organ req raw)
   "Request handler."
-  (api-app:api (handler agent) req raw))
+  (api-app:api agent organ (handler agent) req raw))
 
 (defmethod heard-message :after ((agent api-agent) (head agent-head) (from (eql :agent)) (info (eql :info)) &rest event)
   (let* ((info (getf event :info))

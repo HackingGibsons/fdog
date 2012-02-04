@@ -45,6 +45,5 @@
      kill-everything-fixture))
 (def-test-group api-agent-tests
     (db-path-fixture
-     mongrel2-agent-fixture
      api-agent-fixture
      kill-everything-fixture))

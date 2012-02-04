@@ -199,32 +199,27 @@ Does kill -9 to ensure the process dies in cleanup.")
 
 (defcategory api-tests)
 (def-fixtures api-agent-fixture
-    (:documentation "A fixture that instantiates a request processing agent."
+    (:documentation "A fixture that instantiates an api agent."
      :setup (progn
               (start api-runner)
-
-              (when (and (boundp 'mongrel2-uuid) mongrel2-uuid)
-                ;; Wait until we boot then tell the m2 agent about us
-                (log-for (api-tests trace) "Waiting for req-proc agent to boot to inform m2 about it.")
-                (wait-for-agent (api-uuid :timeout 60)
-                  (tell-agent-about mongrel2-uuid api-uuid))
-
-                ;; Wait until we score some peers from talking to mongrel2
-                (log-for (api-tests trace) "Waiting for req-proc agent to get peers")
-                (wait-for-agent-message (api-uuid :timeout 60) (msg)
-                  (awhen (getf msg :info)
-                    (getf it :peers))))
-
+              (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                        (awhen (getf msg :info)
+                          (assoc api-uuid (getf it :peers) :test #'string=)))
+                (error "API Agent didn't peer up."))
               (log-for (api-tests trace) "api-agent-fixture :setup finished."))
 
      :cleanup (progn
                 (stop api-runner)))
 
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (api-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (api-runner (make-runner :test :include '(:afdog-tests)
-                                          :handle "api"
-                                          :class 'api-test-agent
-                                          :uuid api-uuid)))
+                                 :class 'afdog-hypervisor-test-agent
+                                 :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)
+                                                   api-test-agent  (:uuid ,api-uuid)))
+                                 :root *root* ;; different root for the test agents
+                                 :uuid hypervisor-uuid)))
 
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"

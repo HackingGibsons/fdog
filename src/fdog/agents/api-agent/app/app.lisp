@@ -4,11 +4,13 @@
 (defgeneric api (handler request raw)
   (:documentation "The root of the API App.")
   (:method (handler request raw)
+    "Route the request somewhere else in the application"
     (with-dispatch-on (m2cl:request-path request) &route
         (funcall &route handler request raw)
 
       (:404 :responder 'api/404))))
 
+;; Generic handlers
 (defun api/404 (handler req raw)
   (declare (ignorable raw))
   (log-for (trace api-app) "404 on request: ~S" req)

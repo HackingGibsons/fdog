@@ -94,7 +94,7 @@
                                                       (:file "m2sh" :depends-on ("models" "methods" "helpers"))))
 
                                    (:module "agents" :depends-on ("mongrel2") :components
-                                           ((:file "packages")
+                                           ((:file "packages" :depends-on ("api-agent"))
                                             (:module "mongrel2" :depends-on ("packages") :components
                                                      ((:file "helpers")
                                                       (:file "behaviors"  :depends-on ("mongrel2-agent"))
@@ -117,7 +117,7 @@
 
                                                       (:file "agent" :depends-on ("package" "app"))))
 
-                                            (:module "request-processing" :depends-on ("packages") :components
+                                            (:module "request-processing" :components
                                                      ((:file "package")
                                                       (:file "agent" :depends-on ("package"))
                                                       (:file "requesticle-organ" :depends-on ("package"))

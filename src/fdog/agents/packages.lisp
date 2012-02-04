@@ -27,6 +27,8 @@
                 :rcurry)
   (:import-from :mongrel2-agent
                 :mongrel2-agent)
+  (:import-from :api-agent
+                :api-agent)
   (:export :afdog-hypervisor-agent))
 
 (in-package :mongrel2-agent)

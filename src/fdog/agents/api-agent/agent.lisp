@@ -10,7 +10,7 @@
 
 ;; Agent
 (defcategory api-agent)
-(defclass api-agent (request-processing-agent)
+(defclass api-agent (request-processing-agent standard-leaf-agent)
   ()
   (:default-initargs . (:handle *api-handler*))
   (:documentation "This agent establishes a handler for the API endpoint

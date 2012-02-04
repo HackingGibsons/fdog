@@ -72,7 +72,7 @@
           (and (numberp it) (>= it 1))
           :connected-to-one))
 
-  (bt:with-timeout (5)
+  (bt:with-timeout (1)
     (handler-case
         (multiple-value-bind (body-or-stream status-code headers uri stream must-close reason-phrase)
             (drakma:http-request "http://localhost:6767/not-found/" :want-stream t)

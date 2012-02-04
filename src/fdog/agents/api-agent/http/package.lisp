@@ -6,6 +6,7 @@
   (:export :chunked-http-output-stream
            :with-dispatch-on
            :with-chunked-stream-reply
+           :header-json-type
            :merge-headers))
 
 (in-package :http-dog)

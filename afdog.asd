@@ -15,6 +15,7 @@
                #:usocket
                #:arnesi
                #:trivial-backtrace
+               #:drakma
 
                ;; Vendord
                #:clsql
@@ -110,7 +111,7 @@
                                                                 (:file "router" :depends-on ("package"))
                                                                 (:file "streams" :depends-on ("utils"))))
 
-                                                      (:module "app" :depends-on ("package") :components
+                                                      (:module "app" :depends-on ("http") :components
                                                                ((:file "package")
                                                                 (:file "app" :depends-on ("package"))))
 

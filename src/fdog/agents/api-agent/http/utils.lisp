@@ -1,5 +1,8 @@
 (in-package :http-dog)
 
+(defun header-json-type ()
+  '("Content-Type" . "application/json"))
+
 (defun merge-headers (headers)
   (let ((default '((:code . 200) (:status . "OK")
                    ("Content-Type" . "text/html")

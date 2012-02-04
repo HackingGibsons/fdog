@@ -33,7 +33,7 @@
         (g!m2-handler (gensym "m2-handler"))
         (g!headers (gensym "headers")))
     `(let* ((,g!handler ,handler) (,g!request ,request)
-            (,g!m2-handler (request-handler-m2cl ,g!handler))
+            (,g!m2-handler ,g!handler)
             (,g!headers (merge-headers (list '(:code . ,code) '(:status . ,status)
                                              ,@headers))))
        (with-open-stream (,stream (make-instance 'chunked-http-output-stream

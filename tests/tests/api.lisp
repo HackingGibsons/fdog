@@ -24,7 +24,7 @@
                     (getf info :provides)))
          (provides (getf provides :request-processing)))))
 
-(def-test (api-agent-builds-api-forwarder :group api-agent-tests)
+(def-test (api-agent-builds-api-handler :group api-agent-tests)
     (:all (:apply car (:equalp "api"))
           (:apply cdr (:permute (:seq (:equalp :send)
                                       (:predicate stringp)

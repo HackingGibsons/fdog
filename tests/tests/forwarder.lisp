@@ -28,11 +28,11 @@
             :server-exists)))
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
-     (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-            (forwarder-server (assoc *forwarder-server* servers :test #'string=))
-            (handler (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)))
-       (when handler
-         :handler-exists)))))
+     (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
+       (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
+              (handler (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)))
+         (when handler
+           :handler-exists))))))
 
 
 (def-test (forwarder-agent-remove :group forwarder-agent-tests
@@ -60,12 +60,12 @@
                  :forwarders-announced)))
 
            (wait-for-agent-message (mongrel2-uuid) (msg)
-             (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-                    (forwarder-server (assoc *forwarder-server* servers :test #'string=))
-                    (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
-                    (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
-               (when (and handler1 handler2)
-                 :handlers-announced)))))
+             (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
+               (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
+                      (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
+                      (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
+                 (when (and handler1 handler2)
+                   :handlers-announced))))))
 
     (:seq (:eql :forwarders-removed)
           (:eql :forwarders-gone)
@@ -86,12 +86,12 @@
          :forwarders-gone)))
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
-     (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-            (forwarder-server (assoc *forwarder-server* servers :test #'string=))
-            (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
-            (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
-       (when (and (null handler1) (null handler2))
-         :handlers-removed)))))
+     (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
+       (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
+              (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
+              (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
+         (when (and (null handler1) (null handler2))
+           :handlers-removed))))))
 
 (def-test (forwarder-agent-keep :group forwarder-agent-tests
   :setup (progn
@@ -136,14 +136,14 @@
                  :forwarders-announced)))
 
            (wait-for-agent-message (mongrel2-uuid) (msg)
-             (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-                    (forwarder-server (assoc *forwarder-server* servers :test #'string=))
-                    (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
-                    (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
-                    (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
-                    (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
-               (when (and handler1 handler2 handler3 handler4)
-                 :handlers-announced)))))
+             (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
+               (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
+                      (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
+                      (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
+                      (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
+                      (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
+                 (when (and handler1 handler2 handler3 handler4)
+                   :handlers-announced))))))
 
     (:seq (:eql :forwarders-culled)
           (:eql :saved-forwarders-kept-and-other-forwarders-gone)
@@ -166,14 +166,14 @@
          :saved-forwarders-kept-and-other-forwarders-gone)))
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
-     (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-            (forwarder-server (assoc *forwarder-server* servers :test #'string=))
-            (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
-            (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
-            (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
-            (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
-       (when (and handler1 handler2 (null handler3) (null handler4))
-         :saved-handlers-kept-and-other-handlers-gone)))))
+     (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
+       (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
+              (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
+              (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
+              (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
+              (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
+         (when (and handler1 handler2 (null handler3) (null handler4))
+           :saved-handlers-kept-and-other-handlers-gone))))))
 
 (def-test (forwarder-agent-stores-forwarders :group forwarder-agent-tests
   :setup (progn

@@ -278,7 +278,7 @@
 
    (wait-for-agent-message (hypervisor-uuid) (msg)
      (when-bind peers (getf (getf msg :info) :peers)
-       (unless (find forwarder-agent-uuid (mapcar #'(lambda (x) (car x)) peers) :test #'string=)
+       (unless (assoc forwarder-agent-uuid peers :test #'string=)
          :agent-dead)))
 
    ;; ZMQ can wait on a socket that isn't open on the other side

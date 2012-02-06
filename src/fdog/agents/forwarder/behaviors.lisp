@@ -57,7 +57,7 @@
   (labels ((from-info (thing) (getf need-info thing))
            (handler-name (name) (format nil "forwarder-~A" name)))
     (let* ((names (from-info :names))
-           (handler-names (loop for i in names collect (handler-name i))))
+           (handler-names (mapcar #'handler-name names)))
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need

@@ -80,10 +80,11 @@
          :forwarders-removed)))
 
    (wait-for-agent-message (forwarder-agent-uuid) (msg)
-     (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
-       (when (and (null (find "remove1" (loop for i in forwarders collect (car i)) :test #'string=))
-                  (null (find "remove2" (loop for i in forwarders collect (car i)) :test #'string=)))
-         :forwarders-gone)))
+     (when-bind provides (getf (getf msg :info) :provides)
+       (let ((forwarders (getf provides :forwarders)))
+         (when (and (null (find "remove1" (loop for i in forwarders collect (car i)) :test #'string=))
+                    (null (find "remove2" (loop for i in forwarders collect (car i)) :test #'string=)))
+           :forwarders-gone))))
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (when-bind servers (getf (getf (getf msg :info) :provides) :servers)

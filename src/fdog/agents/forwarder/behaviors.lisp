@@ -34,13 +34,15 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."
-  (labels ((from-info (thing) (getf need-info thing)))
-    (let ((names (from-info :names)))
+  (labels ((from-info (thing) (getf need-info thing))
+           (handler-name (name) (format nil "forwarder-~A" name)))
+    (let* ((names (from-info :names))
+           (handler-names (mapcar #'handler-name names)))
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need
                                             :need :remove-handlers
-                                            :remove-handlers (:server ,*forwarder-server* :name ,names))))
+                                            :remove-handlers (:server ,*forwarder-server* :names ,handler-names))))
       (remove-forwarders agent names))
 
     ;; announce handler removal

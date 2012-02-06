@@ -62,7 +62,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :server
-                            :server (:name "control" :port 1337 :hosts ("api.example.com")))))
+                            :server (:name "control" :port *control-port* :hosts ("api.example.com")))))
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :handler
@@ -99,7 +99,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :server
-                            :server (:name "control" :port 1337 :hosts ("api.example.com")))))
+                            :server (:name "control" :port *control-port* :hosts ("api.example.com")))))
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :handler
@@ -130,7 +130,7 @@
    (with-agent-conversation (m e) request-processing-uuid
      (flet ((ping ()
               (log-for (request-processing-tests trace) "Writing request.")
-              (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" 1337))
+              (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" *control-port*))
                 (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
                 (force-output (usocket:socket-stream sock)))
               (log-for (request-processing-tests trace) "Written request.")))

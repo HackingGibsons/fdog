@@ -13,6 +13,7 @@
                 :awhen)
   (:import-from :alexandria :flatten)
   (:export :mongrel2-agent
+           :*control-port*
            :ensure-mongrel2-root-layout
            :initialize-mongrel2-configuration))
 

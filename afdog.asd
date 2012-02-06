@@ -123,6 +123,7 @@
                                                       (:file "agent" :depends-on ("package"))
                                                       (:file "requesticle-organ" :depends-on ("package"))
                                                       (:file "behaviors" :depends-on ("requesticle-organ" "agent"))))
+
                                             (:module "forwarder" :depends-on ("packages" "mongrel2") :components
                                                      ((:file "behaviors" :depends-on ("forwarder-agent"))
                                                       (:file "forwarder-agent")))))))

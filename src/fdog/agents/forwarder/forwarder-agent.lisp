@@ -43,7 +43,11 @@
 
 ;; Helpers
 (defun load-forwarder-json (stream)
-  "Deserializes forwarder.json stream into a format expected by the `forwarder-agent''s `forwarders' slot. For each forwarder key in the JSON, converts the metadata from an alist (as presented by CL-JSON) to a plist, then converts the hostpaths from (:API.EXAMPLE.COM . \"/path/\") to (\"api.example.com\" . \"/path/\").
+  "Deserializes forwarder.json stream into a format expected by the `forwarder-agent''s
+`forwarders' slot. For each forwarder key in the JSON, converts the metadata from an alist
+(as presented by CL-JSON) to a plist, then converts the hostpaths from
+(:API.EXAMPLE.COM . \"/path/\") to (\"api.example.com\" . \"/path/\").
+
 Only decodes JSON if the file exists and is not empty."
   (unless (zerop (file-length stream))
     (let ((forwarders nil))

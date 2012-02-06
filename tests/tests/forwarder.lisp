@@ -24,12 +24,12 @@
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
-       (when (find "forwarder" (loop for i in servers collect (car i)) :test #'string=)
+       (when (find *forwarder-server* (loop for i in servers collect (car i)) :test #'string=)
             :server-exists)))
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-            (forwarder-server (assoc "forwarder" servers :test #'string=))
+            (forwarder-server (assoc *forwarder-server* servers :test #'string=))
             (handler (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)))
        (when handler
          :handler-exists)))))
@@ -61,7 +61,7 @@
 
            (wait-for-agent-message (mongrel2-uuid) (msg)
              (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-                    (forwarder-server (assoc "forwarder" servers :test #'string=))
+                    (forwarder-server (assoc *forwarder-server* servers :test #'string=))
                     (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
                     (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
                (when (and handler1 handler2)
@@ -87,7 +87,7 @@
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-            (forwarder-server (assoc "forwarder" servers :test #'string=))
+            (forwarder-server (assoc *forwarder-server* servers :test #'string=))
             (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
             (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
        (when (and (null handler1) (null handler2))
@@ -137,7 +137,7 @@
 
            (wait-for-agent-message (mongrel2-uuid) (msg)
              (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-                    (forwarder-server (assoc "forwarder" servers :test #'string=))
+                    (forwarder-server (assoc *forwarder-server* servers :test #'string=))
                     (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
                     (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
                     (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
@@ -167,7 +167,7 @@
 
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (let* ((servers (getf (getf (getf msg :info) :provides) :servers))
-            (forwarder-server (assoc "forwarder" servers :test #'string=))
+            (forwarder-server (assoc *forwarder-server* servers :test #'string=))
             (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
             (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
             (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))

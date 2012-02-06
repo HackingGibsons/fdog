@@ -68,13 +68,19 @@
         #:alexandria
         #:json
         #:fdog-agent)
-  (:export :forwarder-agent))
+  (:export :forwarder-agent
+           :*forwarder-server*
+           :*forwarder-server-port*))
 
 (in-package :forwarder-agent)
 
 (defcategory forwarder-agent)
-(defvar *forwarder-server-port* 13374)
-(defvar *forwarder-filename* "forwarders.json")
+
+;; Knobs
+(defvar *forwarder-server* "forwarder"
+  "The name of the forwarder server")
+(defvar *forwarder-server-port* 13374
+  "Port the forwarder server runs on")
 (defvar *forwarder-filename* "forwarders.json"
   "Filename to save forwarder state to")
 (defvar *forwarder-filename-tmp* ".forwarders.json.tmp"

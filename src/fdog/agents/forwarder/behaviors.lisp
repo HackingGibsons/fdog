@@ -12,14 +12,14 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :server
-                                            :server (:name "forwarder" :port ,*forwarder-server-port* :hosts ("localhost")))))
+                                            :server (:name ,*forwarder-server* :port ,*forwarder-server-port* :hosts ("localhost")))))
       ;; Announce "need handler" for hostpath
       ;; TODO currently only makes handler for first hostpath
       (send-message organ :command
                     `(:command :speak
                                :say (:agent :need
                                             :need :handler
-                                            :handler (:server "forwarder" :hosts (,(caar hostpaths)) :route ,(cdar hostpaths) :name ,(handler-name name)))))
+                                            :handler (:server ,*forwarder-server* :hosts (,(caar hostpaths)) :route ,(cdar hostpaths) :name ,(handler-name name)))))
 
       ;; TODO: What if multiple hostpaths?
       ;; Add forwarder to agent list
@@ -40,7 +40,7 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :remove-handlers
-                                            :remove-handlers (:server "forwarder" :name ,names))))
+                                            :remove-handlers (:server ,*forwarder-server* :name ,names))))
       (remove-forwarders agent names))
 
     ;; announce handler removal
@@ -60,7 +60,7 @@
                     `(:command :speak
                                :say (:agent :need
                                             :need :keep-handlers
-                                            :keep-handlers (:server "forwarder" :names ,handler-names))))
+                                            :keep-handlers (:server ,*forwarder-server* :names ,handler-names))))
       (cull-forwarders agent names))
 
     ;; announce handler removal

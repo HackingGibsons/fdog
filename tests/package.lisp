@@ -14,6 +14,9 @@
                 :aand
                 :when-bind)
 
+  (:import-from :forwarder-agent
+                :*forwarder-server*)
+
   (:import-from :request-processing-agent
                 :request-handler
                 :agent-requesticle)

@@ -75,5 +75,16 @@
 (defcategory forwarder-agent)
 (defvar *forwarder-server-port* 13374)
 (defvar *forwarder-filename* "forwarders.json")
+(defvar *forwarder-filename* "forwarders.json"
+  "Filename to save forwarder state to")
+(defvar *forwarder-filename-tmp* ".forwarders.json.tmp"
+  "Temp file for writing state atomically")
+
+;; Filename helpers
 (defun forwarder-file-path (agent)
-  (merge-pathnames *forwarder-filename* (merge-pathnames "server/" (agent-root agent))))
+  (file-path agent *forwarder-filename*))
+(defun forwarder-file-path-tmp (agent)
+  (file-path agent *forwarder-filename-tmp*))
+
+(defun file-path (agent filename)
+  (merge-pathnames filename (merge-pathnames "server/" (agent-root agent))))

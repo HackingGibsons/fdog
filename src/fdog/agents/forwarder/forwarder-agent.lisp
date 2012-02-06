@@ -26,9 +26,11 @@
 
 (defmethod save-forwarders ((agent forwarder-agent))
   (let ((forwarder-file (forwarder-file-path agent))
+        (tmp-file (forwarder-file-path-tmp agent))
         (forwarder-list (mapcar #'(lambda (x) `(,(car x) ,(alexandria:plist-alist (cdr x)))) (forwarders agent))))
-    (with-open-file (out forwarder-file :direction :output :if-exists :supersede :if-does-not-exist :create)
-      (json:encode-json-alist forwarder-list out))))
+    (with-open-file (out tmp-file :direction :output :if-exists :supersede :if-does-not-exist :create)
+      (json:encode-json-alist forwarder-list out))
+    (rename-file tmp-file forwarder-file)))
 
 ;; Hooks
 (defmethod agent-provides :around ((agent forwarder-agent))

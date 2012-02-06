@@ -15,7 +15,8 @@
                 :when-bind)
 
   (:import-from :forwarder-agent
-                :*forwarder-server*)
+                :*forwarder-server*
+                :*forwarder-filename*)
 
   (:import-from :request-processing-agent
                 :request-handler

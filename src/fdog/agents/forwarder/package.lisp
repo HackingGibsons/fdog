@@ -8,6 +8,7 @@
         #:json
         #:fdog-agent)
   (:export :forwarder-agent
+           :load-forwarder-json
            :*forwarder-server*
            :*forwarder-server-port*))
 

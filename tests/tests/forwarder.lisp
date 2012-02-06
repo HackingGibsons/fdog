@@ -198,9 +198,9 @@
           (:eql :forwarder-gone)
           (:eql :file-empty))
   (list
-   (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+   (let ((file (merge-pathnames *forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
-       (unless (forwarder-agent::load-forwarder-json in)
+       (unless (forwarder-agent:load-forwarder-json in)
          :file-empty)))
 
    (wait-for-agent-message (forwarder-agent-uuid :request
@@ -216,9 +216,9 @@
        (when (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=)
          :forwarder-announced)))
 
-   (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+   (let ((file (merge-pathnames *forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
-       (when-bind forwarders (forwarder-agent::load-forwarder-json in)
+       (when-bind forwarders (forwarder-agent:load-forwarder-json in)
          (when (find "saveme" (loop for i in forwarders collect (getf i :name)) :test #'string=)
            :forwarder-exists-in-file))))
 
@@ -236,9 +236,9 @@
        (when (null (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=))
          :forwarder-gone)))
 
-   (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+   (let ((file (merge-pathnames *forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
-       (unless (forwarder-agent::load-forwarder-json in)
+       (unless (forwarder-agent:load-forwarder-json in)
          :file-empty)))))
 
 (def-test (forwarder-agent-restores-forwarders-after-restart :group forwarder-agent-tests
@@ -251,9 +251,9 @@
                (when (getf msg :keep-forwarders)
                  :all-forwarders-culled)))
 
-           (let ((file (merge-pathnames forwarder-agent::*forwarder-filename* (merge-pathnames "server/" *root*))))
+           (let ((file (merge-pathnames *forwarder-filename* (merge-pathnames "server/" *root*))))
              (with-open-file (in file :if-does-not-exist nil)
-               (unless (and in (forwarder-agent::load-forwarder-json in))
+               (unless (and in (forwarder-agent:load-forwarder-json in))
                  :file-empty)))
 
            (wait-for-agent-message (forwarder-agent-uuid :request

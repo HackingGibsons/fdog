@@ -35,9 +35,6 @@
          :handler-exists)))))
 
 
-(def-test (can-create-forwarder-with-multiple-hostpaths :group forwarder-agent-tests) (:eql :pending)
-  :pending)
-
 (def-test (forwarder-agent-remove :group forwarder-agent-tests
   :setup (progn
            (wait-for-agent-message (forwarder-agent-uuid :request

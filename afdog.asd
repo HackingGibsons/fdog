@@ -95,14 +95,16 @@
                                                       (:file "m2sh" :depends-on ("models" "methods" "helpers"))))
 
                                    (:module "agents" :depends-on ("mongrel2") :components
-                                           ((:file "packages" :depends-on ("api-agent"))
-                                            (:module "mongrel2" :depends-on ("packages") :components
-                                                     ((:file "helpers")
+                                           ((:file "package")
+                                            (:module "mongrel2" :depends-on ("package") :components
+                                                     ((:file "package")
+                                                      (:file "helpers" :depends-on ("package"))
                                                       (:file "behaviors"  :depends-on ("mongrel2-agent"))
-                                                      (:file "mongrel2-agent" :depends-on ("helpers"))))
+                                                      (:file "mongrel2-agent" :depends-on ("package" "helpers"))))
 
-                                            (:module "afdog-hypervisor" :depends-on ("packages") :components
-                                                     ((:file "afdog-hypervisor-agent")))
+                                            (:module "afdog-hypervisor" :depends-on ("package" "api-agent" "mongrel2") :components
+                                                     ((:file "package")
+                                                      (:file "afdog-hypervisor-agent" :depends-on ("package"))))
 
                                             (:module "api-agent" :depends-on ("request-processing") :components
                                                      ((:file "package")
@@ -118,15 +120,16 @@
 
                                                       (:file "agent" :depends-on ("package" "app"))))
 
-                                            (:module "request-processing" :components
+                                            (:module "request-processing" :depends-on ("package") :components
                                                      ((:file "package")
                                                       (:file "agent" :depends-on ("package"))
                                                       (:file "requesticle-organ" :depends-on ("package"))
                                                       (:file "behaviors" :depends-on ("requesticle-organ" "agent"))))
 
-                                            (:module "forwarder" :depends-on ("packages" "mongrel2") :components
-                                                     ((:file "behaviors" :depends-on ("forwarder-agent"))
-                                                      (:file "forwarder-agent")))))))
+                                            (:module "forwarder" :depends-on ("package") :components
+                                                     ((:file "package")
+                                                      (:file "behaviors" :depends-on ("forwarder-agent"))
+                                                      (:file "forwarder-agent" :depends-on ("package"))))))))
 
                          (:module "cli" :depends-on ("agent" "fdog") :components
                                   ((:file "package")

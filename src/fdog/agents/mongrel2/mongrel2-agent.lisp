@@ -1,5 +1,8 @@
 (in-package :mongrel2-agent)
 
+(defvar *control-port* 1337
+  "The HTTP Port for the control server.")
+
 ;; Agent
 (defclass mongrel2-agent (standard-manager-agent rooted-agent-mixin)
   ()
@@ -23,7 +26,7 @@
                  (clsql:update-records-from-instance host))
                host))
            (make-default-server ()
-             (fdog-models:make-server "control" :chroot (namestring server-root)))
+             (fdog-models:make-server "control" :port *control-port* :chroot (namestring server-root)))
            (make-default-configuration ()
              (let* ((server (make-default-server))
                     (host (make-default-host server))

@@ -202,7 +202,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :server
-                            :server (:name "control" :port 6767 :hosts ("api.example.com")))))
+                            :server (:name "control" :port 1337 :hosts ("api.example.com")))))
      (do* ((msg (parse-message (read-message m))
                 (parse-message (read-message m)))
            (filled (and (equalp (car msg) :filled) msg)
@@ -359,7 +359,7 @@
      (zmq:send! e (prepare-message
                    `(:agent :need
                             :need  :server
-                            :server (:name "control" :port 6767 :hosts ("api.example.com"
+                            :server (:name "control" :port 1337 :hosts ("api.example.com"
                                                                         "api2.example.com"
                                                                         "api3.example.com")))))
      (do* ((msg (parse-message (read-message m))

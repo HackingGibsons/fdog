@@ -52,7 +52,7 @@
 
   (with-agent-conversation (m e) api-uuid
      (flet ((ping ()
-              (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" 6767))
+              (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" 1337))
                 (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
                 (force-output (usocket:socket-stream sock)))))
 
@@ -75,7 +75,7 @@
   (bt:with-timeout (5)
     (handler-case
         (multiple-value-bind (body-or-stream status-code headers uri stream must-close reason-phrase)
-            (drakma:http-request "http://localhost:6767/not-found/" :want-stream t)
+            (drakma:http-request "http://localhost:1337/not-found/" :want-stream t)
           (declare (ignorable headers uri stream reason-phrase))
           (when must-close
             (close body-or-stream))
@@ -95,7 +95,7 @@
   (bt:with-timeout (5)
     (handler-case
         (multiple-value-bind (body status-code headers uri stream must-close reason-phrase)
-            (drakma:http-request "http://localhost:6767/")
+            (drakma:http-request "http://localhost:1337/")
           (declare (ignorable headers uri stream must-close reason-phrase))
           (let ((data (and body (json:decode-json-from-string (babel:octets-to-string body)))))
             (list status-code (cdr (assoc :version data)))))

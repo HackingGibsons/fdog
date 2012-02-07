@@ -24,6 +24,13 @@
     (setf forwarders (remove-if-not #'(lambda (x) (find (car x) names-to-keep :test #'string=)) forwarders))
     (save-forwarders agent)))
 
+(defmethod find-forwarder-by-name ((agent forwarder-agent) name)
+  (assoc name (forwarders agent) :test #'string=))
+
+(defmethod routes-for-forwarder ((agent forwarder-agent) name)
+  (awhen (cdr (find-forwarder-by-name agent name))
+    (getf it :routes)))
+
 (defmethod save-forwarders ((agent forwarder-agent))
   (let ((forwarder-file (forwarder-file-path agent))
         (tmp-file (forwarder-file-path-tmp agent))
@@ -47,14 +54,14 @@
 (defun load-forwarder-json (stream)
   "Deserializes forwarder.json stream into a format expected by the `forwarder-agent''s
 `forwarders' slot. For each forwarder key in the JSON, converts the metadata from an alist
-(as presented by CL-JSON) to a plist, then converts the hostpaths from
-(:API.EXAMPLE.COM . \"/path/\") to (\"api.example.com\" . \"/path/\").
+(as presented by CL-JSON) to a plist, then converts the routes from
+(:DEFAULT . \"/path/\") to (\"default\" . \"/path/\").
 
 Only decodes JSON if the file exists and is not empty."
   (unless (zerop (file-length stream))
     (let ((forwarders nil))
       (dolist (forwarder (json:decode-json stream))
         (let ((forwarder-plist (alexandria:alist-plist (cadr forwarder))))
-          (setf (getf forwarder-plist :hostpaths) (mapcar #'(lambda (x) `(,(string-downcase (symbol-name (car x))) . ,(cdr x))) (getf forwarder-plist :hostpaths)))
+          (setf (getf forwarder-plist :routes) (mapcar #'(lambda (x) `(,(string-downcase (symbol-name (car x))) . ,(cdr x))) (getf forwarder-plist :routes)))
           (alexandria:appendf forwarders (list forwarder-plist))))
       forwarders)))

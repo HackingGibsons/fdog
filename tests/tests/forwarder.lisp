@@ -4,7 +4,7 @@
     (:seq (:eql :need-filled)
           (:eql :saw-forwarder)
           (:eql :server-exists)
-          (:eql :handler-exists))
+          (:eql :handlers-exist))
   ;;; Announce "need forwarder named foo"
   ;;; the handler gets created and announced
   ;;; check the handler exists
@@ -12,7 +12,7 @@
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "test" :hostpaths (("api2.example.com" . "/"))))) (msg)
+                            :forwarder (:name "test" :hosts ("api.example.com" "api2.example.com") :routes (("root" . "/") ("one" . "/1/"))))) (msg)
        (awhen (getf msg :filled)
          (when (getf msg :forwarder)
               :need-filled)))
@@ -30,17 +30,17 @@
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
        (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
-              (handler (assoc "forwarder-test" (cdr forwarder-server) :test #'string=)))
-         (when handler
-           :handler-exists))))))
-
+              (handler-root (assoc "forwarder-test-root" (cdr forwarder-server) :test #'string=))
+              (handler-one (assoc "forwarder-test-one" (cdr forwarder-server) :test #'string=)))
+         (when (and handler-root handler-one)
+           :handlers-exist))))))
 
 (def-test (forwarder-agent-remove :group forwarder-agent-tests
   :setup (progn
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "remove1" :hostpaths (("api2.example.com" . "/r1/"))))) (msg)
+                                    :forwarder (:name "remove1" :hosts ("api2.example.com") :routes (("default" . "/r1/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-1-added)))
@@ -48,7 +48,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "remove2" :hostpaths (("api2.example.com" . "/r2/"))))) (msg)
+                            :forwarder (:name "remove2" :hosts ("api2.example.com") :routes (("default" . "/r2/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-2-added)))
@@ -62,8 +62,8 @@
            (wait-for-agent-message (mongrel2-uuid) (msg)
              (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
                (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
-                      (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
-                      (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
+                      (handler1 (assoc "forwarder-remove1-default" (cdr forwarder-server) :test #'string=))
+                      (handler2 (assoc "forwarder-remove2-default" (cdr forwarder-server) :test #'string=)))
                  (when (and handler1 handler2)
                    :handlers-announced))))))
 
@@ -89,8 +89,8 @@
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
        (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
-              (handler1 (assoc "forwarder-remove1" (cdr forwarder-server) :test #'string=))
-              (handler2 (assoc "forwarder-remove2" (cdr forwarder-server) :test #'string=)))
+              (handler1 (assoc "forwarder-remove1-default" (cdr forwarder-server) :test #'string=))
+              (handler2 (assoc "forwarder-remove2-default" (cdr forwarder-server) :test #'string=)))
          (when (and (null handler1) (null handler2))
            :handlers-removed))))))
 
@@ -99,7 +99,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull1" :hostpaths (("api2.example.com" . "/c1/"))))) (msg)
+                                    :forwarder (:name "cull1" :hosts ("api2.example.com") :routes (("default" . "/c1/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-1-added)))
@@ -107,7 +107,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull2" :hostpaths (("api2.example.com" . "/c2/"))))) (msg)
+                                    :forwarder (:name "cull2" :hosts ("api2.example.com") :routes (("default" . "/c2/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-2-added)))
@@ -115,7 +115,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull3" :hostpaths (("api2.example.com" . "/c3/"))))) (msg)
+                                    :forwarder (:name "cull3" :hosts ("api2.example.com") :routes (("default" . "/c3/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-3-added)))
@@ -123,7 +123,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull4" :hostpaths (("api2.example.com" . "/c4/"))))) (msg)
+                                    :forwarder (:name "cull4" :hosts ("api2.example.com") :routes (("default" . "/c4/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-4-added)))
@@ -139,10 +139,10 @@
            (wait-for-agent-message (mongrel2-uuid) (msg)
              (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
                (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
-                      (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
-                      (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
-                      (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
-                      (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
+                      (handler1 (assoc "forwarder-cull1-default" (cdr forwarder-server) :test #'string=))
+                      (handler2 (assoc "forwarder-cull2-default" (cdr forwarder-server) :test #'string=))
+                      (handler3 (assoc "forwarder-cull3-default" (cdr forwarder-server) :test #'string=))
+                      (handler4 (assoc "forwarder-cull4-default" (cdr forwarder-server) :test #'string=)))
                  (when (and handler1 handler2 handler3 handler4)
                    :handlers-announced))))))
 
@@ -169,10 +169,10 @@
    (wait-for-agent-message (mongrel2-uuid) (msg)
      (when-bind servers (getf (getf (getf msg :info) :provides) :servers)
        (let* ((forwarder-server (assoc *forwarder-server* servers :test #'string=))
-              (handler1 (assoc "forwarder-cull1" (cdr forwarder-server) :test #'string=))
-              (handler2 (assoc "forwarder-cull2" (cdr forwarder-server) :test #'string=))
-              (handler3 (assoc "forwarder-cull3" (cdr forwarder-server) :test #'string=))
-              (handler4 (assoc "forwarder-cull4" (cdr forwarder-server) :test #'string=)))
+              (handler1 (assoc "forwarder-cull1-default" (cdr forwarder-server) :test #'string=))
+              (handler2 (assoc "forwarder-cull2-default" (cdr forwarder-server) :test #'string=))
+              (handler3 (assoc "forwarder-cull3-default" (cdr forwarder-server) :test #'string=))
+              (handler4 (assoc "forwarder-cull4-default" (cdr forwarder-server) :test #'string=)))
          (when (and handler1 handler2 (null handler3) (null handler4))
            :saved-handlers-kept-and-other-handlers-gone))))))
 
@@ -207,7 +207,7 @@
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "saveme" :hostpaths (("api2.example.com" . "/s/"))))) (msg)
+                            :forwarder (:name "saveme" :hosts ("api2.example.com") :routes (("default" . "/s/"))))) (msg)
      (awhen (getf msg :filled)
        (when (getf msg :forwarder)
          :forwarder-added)))
@@ -260,10 +260,11 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "restore" :hostpaths (("api2.example.com" . "/rs/"))))) (msg)
+                                    :forwarder (:name "restore" :hosts ("api2-example.com") :routes (("default" . "/rs/"))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :need-filled)))))
+    
     (:seq (:eql :agent-killed)
           (:eql :agent-dead)
           (:eql :handler-requested)
@@ -287,7 +288,7 @@
    (wait-for-agent-message (forwarder-agent-uuid :timeout 30) (msg)
      (awhen (and (getf msg :need)
                  (getf msg :handler))
-       (when (string= "forwarder-restore" (getf it :name))
+       (when (string= "forwarder-restore-default" (getf it :name))
          :handler-requested)))
 
    (wait-for-agent-message (forwarder-agent-uuid) (msg)

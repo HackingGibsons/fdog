@@ -3,8 +3,7 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :forwarder)) need-info)
   "Creates or updates a forwarder (\"forwarder server\" + named mongrel2 handler) in response to a need request."
-  (labels ((from-info (thing) (getf need-info thing))
-           (handler-name (name route) (format nil "forwarder-~A-~A" name route)))
+  (labels ((from-info (thing) (getf need-info thing)))
     (let ((name (from-info :name))
           (hosts (from-info :hosts))
           (routes (from-info :routes)))
@@ -34,8 +33,7 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."
-  (labels ((from-info (thing) (getf need-info thing))
-           (handler-name (name route) (format nil "forwarder-~A-~A" name route)))
+  (labels ((from-info (thing) (getf need-info thing)))
     (let* ((names (from-info :names))
            (handlers-to-remove nil))
       (dolist (name names)
@@ -57,8 +55,7 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
-  (labels ((from-info (thing) (getf need-info thing))
-           (handler-name (name route) (format nil "forwarder-~A-~A" name route)))
+  (labels ((from-info (thing) (getf need-info thing)))
     (let* ((names (from-info :names))
            (handlers-to-keep nil))
       (dolist (name names)

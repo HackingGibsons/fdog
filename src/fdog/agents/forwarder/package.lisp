@@ -37,3 +37,6 @@
 
 (defun file-path (agent filename)
   (merge-pathnames filename (merge-pathnames "server/" (agent-root agent))))
+
+(defun handler-name (name route)
+  (format nil "forwarder-~A-~A" name route))

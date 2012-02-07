@@ -20,6 +20,7 @@
                                    (:file "mongrel2")
                                    (:file "afdog-hypervisor")
                                    (:file "request-processing")
+                                   (:file "api")
                                    (:file "booted")
                                    (:file "cli")
                                    (:file "behavior")

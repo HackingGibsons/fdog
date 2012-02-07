@@ -4,3 +4,6 @@
 [submodule "vendor/lisp-zmq"]
 	path = vendor/lisp-zmq
 	url = git://github.com/galdor/lisp-zmq.git
+[submodule "vendor/m2cl"]
+	path = vendor/m2cl
+	url = git://github.com/sshirokov/m2cl.git

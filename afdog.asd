@@ -15,10 +15,12 @@
                #:usocket
                #:arnesi
                #:trivial-backtrace
+               #:drakma
 
                ;; Vendord
                #:clsql
                #:zmq
+               #:m2cl
 
                ;; Somehow, if these aren't the last deps iolib or clsql fails to build :(
                #:alexandria
@@ -92,7 +94,7 @@
                                                       (:file "m2sh" :depends-on ("models" "methods" "helpers"))))
 
                                    (:module "agents" :depends-on ("mongrel2") :components
-                                           ((:file "packages")
+                                           ((:file "packages" :depends-on ("api-agent"))
                                             (:module "mongrel2" :depends-on ("packages") :components
                                                      ((:file "helpers")
                                                       (:file "behaviors"  :depends-on ("mongrel2-agent"))
@@ -101,7 +103,21 @@
                                             (:module "afdog-hypervisor" :depends-on ("packages") :components
                                                      ((:file "afdog-hypervisor-agent")))
 
-                                            (:module "request-processing" :depends-on ("packages") :components
+                                            (:module "api-agent" :depends-on ("request-processing") :components
+                                                     ((:file "package")
+                                                      (:module "http" :depends-on ("package") :components
+                                                               ((:file "package")
+                                                                (:file "utils" :depends-on ("package"))
+                                                                (:file "router" :depends-on ("package"))
+                                                                (:file "streams" :depends-on ("utils"))))
+
+                                                      (:module "app" :depends-on ("http") :components
+                                                               ((:file "package")
+                                                                (:file "app" :depends-on ("package"))))
+
+                                                      (:file "agent" :depends-on ("package" "app"))))
+
+                                            (:module "request-processing" :components
                                                      ((:file "package")
                                                       (:file "agent" :depends-on ("package"))
                                                       (:file "requesticle-organ" :depends-on ("package"))

@@ -13,6 +13,7 @@
                 :awhen)
   (:import-from :alexandria :flatten)
   (:export :mongrel2-agent
+           :*control-port*
            :ensure-mongrel2-root-layout
            :initialize-mongrel2-configuration))
 
@@ -27,6 +28,8 @@
                 :rcurry)
   (:import-from :mongrel2-agent
                 :mongrel2-agent)
+  (:import-from :api-agent
+                :api-agent)
   (:export :afdog-hypervisor-agent))
 
 (in-package :mongrel2-agent)

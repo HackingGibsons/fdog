@@ -9,11 +9,15 @@
                 :it
                 :curry
                 :rcurry
-                :awhen)
+                :awhen
+                :aand)
 
   (:import-from :request-processing-agent
                 :request-handler
                 :agent-requesticle)
+
+  (:import-from :api-agent
+                :api-agent)
 
   (:shadow :*spawner* :*root* :agent-root)
   (:shadowing-import-from :log5

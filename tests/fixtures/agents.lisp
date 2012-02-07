@@ -31,6 +31,10 @@
   ()
   (:documentation "A `request-processing-agent` for testing the behavior of request processing."))
 
+(defclass api-test-agent (api-agent)
+  ()
+  (:documentation "An `api-agent' for testing. Isn't that freaking clever?"))
+
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-spawn-dependant-when-asked (agent::find-organ agent :head))
@@ -60,10 +64,19 @@
   (make-speak-request-processing-messages (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
 
-(defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) msg)
-  (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (zmq:msg-size msg))
+(defmethod agent-special-event :after ((agent api-test-agent) (event-head (eql :boot)) event)
+  (make-speak-request-processing-messages (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod request-handler :before ((agent api-test-agent) organ req raw)
+  (log-for (trace api-agent) "Announcing request: ~Ab ~S" (length raw) (babel:octets-to-string raw))
   (send-message organ :request-handler `(:request-handler :raw
-                                         :raw ,(zmq:msg-data-string msg))))
+                                         :raw ,raw)))
+
+(defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) req raw)
+  (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (length raw))
+  (send-message organ :request-handler `(:request-handler :raw
+                                         :raw ,raw)))
 
 (defmethod heard-message ((agent runner-agent) (organ agent::agent-head)
                           (from (eql :agent)) (type (eql :crash)) &rest request)

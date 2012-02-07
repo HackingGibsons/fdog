@@ -30,19 +30,30 @@ any handlers we're interested in and we should connect to them."
       (mapc #'search-server servers))))
 
 (defcategory request-handler)
-(defmethod request-handler ((agent standard-agent) (organ agent-requesticle) msg)
+(defmethod request-handler ((agent standard-agent) (organ agent-requesticle) request data)
   "Called with a message read from the `request-socket' of the `organ'.
-`agent' is in the arglist for easier specialization."
+`agent' is in the arglist for easier specialization. `request' will be a `m2cl:request' object
+and `data' will be an array of the original data."
   (declare (ignorable agent))
-  (log-for (trace request-handler) "~A un-ig-handle request, freeing: ~Ab msg" organ (zmq:msg-size msg))
-  (zmq:msg-close msg))
+  (log-for (trace request-handler) "~A un-ig-handle request: ~S, freeing: ~Ab msg" organ request (length data)))
+
+(defmethod disconnect-handler ((agent standard-agent) (organ agent-requesticle) req data)
+  "Called when a request arrives that is a disconnect message."
+  (log-for (trace request-handler) "Disconnect message: ~S ~S" req data))
 
 (defmethod make-request-handler ((organ agent-requesticle))
   "Construct a callback for `request-socket' in the event
 that it is ready for read for submission into the event loop."
   (lambda (sock)
-    (request-handler (organ-agent organ) organ
-                     (read-message sock :transform #'identity))))
+    (declare (ignore sock))
+    (handler-case
+        (multiple-value-bind (req raw) (m2cl:handler-read-request (handler organ))
+          (if (m2cl:request-disconnect-p req)
+              (disconnect-handler (organ-agent organ) organ req raw)
+              (request-handler (organ-agent organ) organ req raw)))
+      (t (c)
+        (log-for (warn request-handler) "Request failed to apply: ~S" c)
+        nil))))
 
 (defmethod reader-callbacks :around ((organ agent-requesticle))
   "Ask to be notified of read activity on the request socket of the `organ'"

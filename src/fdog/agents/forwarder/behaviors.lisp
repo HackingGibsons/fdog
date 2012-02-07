@@ -14,7 +14,7 @@
                                :say (:agent :need
                                             :need :server
                                             :server (:name ,*forwarder-server* :port ,*forwarder-server-port* :hosts ("localhost")))))
-      ;; Announce "need handler" for hostpath
+      ;; Announce "need handler" for each route
       (dolist (route routes)
         (send-message organ :command
                       `(:command :speak

@@ -2,7 +2,7 @@
 
 ;; Agent
 (defcategory request-forwarder-agent)
-(defclass request-forwarder-agent (request-processing-agent standard-agent)
+(defclass request-forwarder-agent (request-processing-agent standard-leaf-agent)
   ()
   (:default-initargs . (:handle "forwarder-x-undefined"))
   (:documentation "This agent attempts to forward requests from

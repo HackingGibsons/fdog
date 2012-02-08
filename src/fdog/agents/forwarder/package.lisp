@@ -9,7 +9,8 @@
         #:fdog-agent)
   (:import-from :arnesi
                 :it
-                :awhen)
+                :awhen
+                :when-bind)
   (:export :forwarder-agent
            :load-forwarder-json
            :*forwarder-server*

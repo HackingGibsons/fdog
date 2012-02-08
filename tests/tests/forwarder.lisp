@@ -295,3 +295,28 @@
      (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
        (when (find "restore" (loop for i in forwarders collect (car i)) :test #'string=)
          :forwarder-announced)))))
+
+(def-test (missing-handlers-restored :group forwarder-agent-tests
+  :setup (progn
+   (wait-for-agent-message (forwarder-agent-uuid :request
+                   `(:agent :need
+                            :need :forwarder
+                            :forwarder (:name "missing" :hosts ("api2.example.com") :routes (("default" . "/m/"))))) (msg)
+     (awhen (getf msg :filled)
+       (when (getf msg :forwarder)
+         :forwarder-added)))))
+    (:seq (:eql :handler-removed)
+          (:eql :handler-restored))
+  (list
+   (wait-for-agent-message (mongrel2-uuid :request
+                   `(:agent :need
+                            :need :remove-handlers
+                            :remove-handlers (:server ,*forwarder-server* :names ("forwarder-missing-default")))) (msg)
+     (awhen (getf msg :filled)
+       (when (getf msg :remove-handlers)
+         :handler-removed)))
+
+   (wait-for-agent-message (mongrel2-uuid) (msg)
+     (awhen (getf msg :handler)
+       (when (string= "forwarder-missing-default" (getf it :name))
+         :handler-restored)))))

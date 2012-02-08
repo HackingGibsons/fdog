@@ -80,3 +80,39 @@
   (let* ((need-what (getf request :need))
          (need-info (getf request need-what)))
     (agent-needs agent organ need-what need-info)))
+
+(defmethod heard-message :after ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
+  "When hearing an announcement from an agent that provides mongrel2 servers, if the `forwarder' server is missing handlers the agent expects, request the handlers."
+  (log-for (trace forwarder-agent) "Heard an agent info message, info: ~A" info)
+  (when-bind forwarder-server (assoc *forwarder-server* (getf (getf (getf info :info) :provides) :servers) :test #'string=)
+    (log-for (trace forwarder-agent) "Heard an agent info message, forwarder server: ~A" forwarder-server)
+    (labels ((handler-names-for-forwarder (forwarder)
+               (let ((name (getf (cdr forwarder) :name))
+                     (routes (getf (cdr forwarder) :routes)))
+                 (mapcar #'(lambda (x) (handler-name name x)) (mapcar #'car routes))))
+
+             (handler-list (forwarders)
+               (let ((handler-list nil))
+                 (dolist (forwarder forwarders)
+                   (appendf handler-list (handler-names-for-forwarder forwarder)))
+                 handler-list)))
+
+      (let* ((handlers (mapcar #'car (cdr forwarder-server)))
+             (agent-forwarders (forwarders agent))
+             (expected-handlers (handler-list agent-forwarders))
+             (missing-handlers (set-difference expected-handlers handlers :test #'string=)))
+        (when missing-handlers
+          ;; Request all handlers, requesting a handler that already
+          ;; exists is harmless
+          (dolist (forwarder agent-forwarders)
+            (labels ((from-info (thing) (getf (cdr forwarder) thing)))
+              (let ((name (from-info :name))
+                    (hosts (from-info :hosts))
+                    (routes (from-info :routes)))
+                ;; Announce "need handler" for each route
+                (dolist (route routes)
+                  (send-message organ :command
+                                `(:command :speak
+                                           :say (:agent :need
+                                                        :need :handler
+                                                        :handler (:server ,*forwarder-server* :hosts ,hosts :route ,(cdr route) :name ,(handler-name name (car route)))))))))))))))

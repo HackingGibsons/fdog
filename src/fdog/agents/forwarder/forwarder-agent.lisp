@@ -1,7 +1,7 @@
 (in-package :forwarder-agent)
 
 ;; Agent
-(defclass forwarder-agent (standard-leaf-agent rooted-agent-mixin)
+(defclass forwarder-agent (standard-manager-agent rooted-agent-mixin)
   ((forwarders
     :accessor forwarders
     :initform nil

@@ -30,7 +30,18 @@ that has a client endpoint named `name'."))
 
 (defmethod dispose ((endpoint forwarder-endpoint))
   "Tear down the sockets and nil out all the socket related slots."
-  :TODO-do-docstring)
+  (macrolet ((sock-of (x) `(aref ,x 0))
+             (addr-of (x) `(aref ,x 1)))
+    ;; Close
+    (when (sock-of (push-sock endpoint))
+      (zmq:close (push-sock endpoint)))
+    (when (sock-of (sub-sock endpoint))
+      (zmq:close (sub-sock endpoint)))
+
+    ;; Nil out the slots
+    (setf (push-sock endpoint) #(nil nil)
+          (sub-sock endpoint) #(nil nil)
+          (name endpoint) nil)))
 
 ;; Organ
 (defcategory agent-sock-pocket)
@@ -50,5 +61,7 @@ to. The default destination is to be called `:default'. Objects stored
 
 (defmethod agent-disconnect :after ((agent standard-agent) (organ agent-sock-pocket) &rest options)
   "Disconnect all the connected client endpoints."
-  :TODO-walk-hash-table-and-dispose-all-endpoints
-  :TODO-clear-hash-table)
+  (flet ((dispose-endpoint (key endpoint)
+           (dispose endpoint)
+           (remhash key (client-socks organ))))
+    (maphash #'dispose-endpoint (client-socks organ))))

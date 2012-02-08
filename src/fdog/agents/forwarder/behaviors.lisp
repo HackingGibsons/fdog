@@ -82,7 +82,8 @@
     (agent-needs agent organ need-what need-info)))
 
 (defmethod heard-message :after ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
-  "When hearing an announcement from an agent that provides mongrel2 servers, if the `forwarder' server is missing handlers the agent expects, request the handlers."
+  "When hearing an announcement from an agent that provides mongrel2 servers,
+if the `forwarder' server is missing handlers the agent expects, request the handlers."
   (log-for (trace forwarder-agent) "Heard an agent info message, info: ~A" info)
   (when-bind forwarder-server (assoc *forwarder-server* (getf (getf (getf info :info) :provides) :servers) :test #'string=)
     (log-for (trace forwarder-agent) "Heard an agent info message, forwarder server: ~A" forwarder-server)

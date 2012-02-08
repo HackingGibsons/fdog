@@ -305,6 +305,7 @@
      (awhen (getf msg :filled)
        (when (getf msg :forwarder)
          :forwarder-added)))))
+
     (:seq (:eql :handler-removed)
           (:eql :handler-restored))
   (list

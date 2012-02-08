@@ -21,6 +21,7 @@
                                    (:file "afdog-hypervisor")
                                    (:file "request-processing")
                                    (:file "api")
+                                   (:file "forwarder")
                                    (:file "booted")
                                    (:file "cli")
                                    (:file "behavior")

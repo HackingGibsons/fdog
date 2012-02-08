@@ -3,6 +3,7 @@
         #:afdog
         #:agent
         #:fdog
+        #:json
         #:afdog-cli)
   (:use #:nst)
   (:import-from :arnesi
@@ -10,7 +11,12 @@
                 :curry
                 :rcurry
                 :awhen
-                :aand)
+                :aand
+                :when-bind)
+
+  (:import-from :forwarder-agent
+                :*forwarder-server*
+                :*forwarder-filename*)
 
   (:import-from :request-processing-agent
                 :request-handler

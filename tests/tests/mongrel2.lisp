@@ -209,7 +209,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -236,7 +236,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -262,7 +262,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -307,7 +307,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -337,7 +337,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :remove-server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :remove-need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -368,7 +368,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -393,7 +393,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :remove-host))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :remove-need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -427,7 +427,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -467,7 +467,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :remove-host))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :removed-host)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -496,7 +496,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -517,7 +517,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :keep-servers))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :removal-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -545,7 +545,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -566,7 +566,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :keep-servers))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :removal-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -597,7 +597,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :need-filled)))
 
    (progn
@@ -619,7 +619,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :keep-hosts))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled hosts: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled hosts: ~A" msg)
            :removal-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -656,7 +656,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :server-need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -686,7 +686,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -738,7 +738,7 @@
           (fdog-models:mongrel2-handler-send-spec target)
           (fdog-models:mongrel2-handler-recv-spec target)
           (prog1 :handler-has-endpoint
-            (log-for (trace mongrel2-agent::agent-needs) "Target: ~A" target))))))
+            (log-for (trace fdog-agent:agent-needs) "Target: ~A" target))))))
 
 (def-test (mongrel2-agent-announces-handler :group mongrel2-agent-tests)
     (:seq (:eql :server-need-filled)
@@ -756,7 +756,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :server))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :server-need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -774,7 +774,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-need-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -817,7 +817,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -831,7 +831,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-refilled)))
 
    (progn
@@ -869,7 +869,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :handler))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -883,7 +883,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :remove-handlers))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-removed)))
 
    (progn
@@ -929,7 +929,7 @@
           ((and filled
                 (getf filled :handler)
                 (equalp (getf (getf filled :handler) :name) "api3"))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            :handler-filled)))
 
    (with-agent-conversation (m e) mongrel2-uuid
@@ -944,7 +944,7 @@
                    (and (equalp (car msg) :filled) msg)))
           ((and filled
                 (getf filled :keep-handlers))
-           (log-for (trace mongrel2-agent::agent-needs) "Filled: ~A" msg)
+           (log-for (trace fdog-agent:agent-needs) "Filled: ~A" msg)
            (if (find "api4" (getf (getf filled :keep-handlers) :names) :test #'string=)
                :included-fake-name
                :handler-removed))))

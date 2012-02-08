@@ -35,6 +35,10 @@
   ()
   (:documentation "An `api-agent' for testing. Isn't that freaking clever?"))
 
+(defclass forwarder-test-agent (forwarder-agent)
+  ()
+  (:documentation "A `forwarder-test-agent' for testing the control of fdog forwarders."))
+
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-spawn-dependant-when-asked (agent::find-organ agent :head))
@@ -95,3 +99,8 @@
   (make-announce-what-i-see (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head))
   (make-forge-agent-info (find-organ agent :head)))
+
+(defmethod agent-special-event :after ((agent forwarder-test-agent) (event-head (eql :boot)) event)
+  (make-announce-what-i-see (find-organ agent :head))
+  (make-announce-what-i-make (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))

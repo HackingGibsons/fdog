@@ -62,7 +62,7 @@ The `width' is defaulted to 10000"
 
 (defmethod mongrel2-server-handlers ((server fdog-models:mongrel2-server))
   (labels ((remove-duplicate-models (models)
-             (remove-duplicates models :test #'equalp :key #'fdog-models:model-pk))
+             (remove-duplicates (remove nil models) :test #'equalp :key #'fdog-models:model-pk))
 
            (server-routes (server)
              (flatten (mapcar #'fdog-models:mongrel2-host-routes

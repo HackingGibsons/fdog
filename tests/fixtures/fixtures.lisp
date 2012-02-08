@@ -221,6 +221,35 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :root *root* ;; different root for the test agents
                                  :uuid hypervisor-uuid)))
 
+(def-fixtures forwarder-agent-fixture
+    (:documentation "A fixture that instantiates a mongrel2 test agent."
+                    :setup (progn
+                             (start forwarder-runner)
+                             (log-for (trace) "Waiting for hypervisor to boot")
+                             (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                               (awhen (getf msg :info)
+                                 (getf it :peers)))
+
+                             (log-for (trace) "Waiting for forwarder-agent to discover peers")
+                             (wait-for-agent-message (forwarder-agent-uuid :timeout 60) (msg)
+                               (awhen (getf msg :info)
+                                 (getf it :peers))))
+                    :cleanup (progn
+                               (stop forwarder-runner)
+                               (with-agent-conversation (m e :timeout 5 :linger -1) mongrel2-uuid
+                                   (zmq:send! e (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))
+                               (with-agent-conversation (m e :timeout 5 :linger -1) forwarder-agent-uuid
+                                   (zmq:send! e (prepare-message `(:agent :kill :kill ,forwarder-agent-uuid))))))
+
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-runner (make-runner :test :include '(:afdog-tests)
+                                 :class 'afdog-hypervisor-test-agent
+                                 :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid) forwarder-test-agent (:uuid ,forwarder-agent-uuid)))
+                                 :root *root* ;; different root for the test agents
+                                 :uuid hypervisor-uuid)))
+
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
      :cleanup (progn

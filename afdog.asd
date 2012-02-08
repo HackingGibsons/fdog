@@ -109,7 +109,8 @@
 
                                             (:module "request-forwarder" :depends-on ("request-processing") :components
                                                      ((:file "package")
-                                                      (:file "agent" :depends-on ("package"))))
+                                                      (:file "sock-pocket-organ" :depends-on ("package"))
+                                                      (:file "agent" :depends-on ("package" "sock-pocket-organ"))))
 
                                             (:module "api-agent" :depends-on ("request-processing") :components
                                                      ((:file "package")

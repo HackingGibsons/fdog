@@ -80,6 +80,7 @@
 (defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) req raw)
   (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (length raw))
   (send-message organ :request-handler `(:request-handler :raw
+                                         :serial ,(m2cl:request-serialize req)
                                          :raw ,raw)))
 
 (defmethod heard-message ((agent runner-agent) (organ agent::agent-head)

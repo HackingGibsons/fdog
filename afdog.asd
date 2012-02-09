@@ -36,7 +36,8 @@
 
                          ;; Code loaded into dependencies
                          (:module "patches" :components
-                                  ((:file "zmq")))
+                                  ((:file "zmq")
+                                   (:file "m2cl")))
 
                          ;; Agent components and standard library
                          (:module "agent" :depends-on ("logging" "utils") :components

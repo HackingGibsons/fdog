@@ -25,6 +25,9 @@
   (:import-from :api-agent
                 :api-agent)
 
+  (:import-from :request-forwarder-agent
+                :request-forwarder-agent)
+
   (:shadow :*spawner* :*root* :agent-root)
   (:shadowing-import-from :log5
                           :defcategory

@@ -221,6 +221,31 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :root *root* ;; different root for the test agents
                                  :uuid hypervisor-uuid)))
 
+(def-fixtures request-forwarder-agent-fixture
+    (:documentation "A fixture that instantiates an api agent."
+     :setup (progn
+              (start request-forwarder-runner)
+              (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                        (awhen (getf msg :info)
+                          (assoc request-forwarder-uuid (getf it :peers) :test #'string=)))
+                (error "Request forwarder Agent didn't peer up.")))
+
+     :cleanup (progn
+                (stop request-forwarder-runner)))
+
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-forwarder-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-handler "forwarder-test-default")
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-forwarder-runner (make-runner :test :include '(:afdog-tests)
+                                         :class 'afdog-hypervisor-test-agent
+                                         :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)
+                                                           forwarder-test-agent (:uuid ,forwarder-agent-uuid)
+                                                           request-forwarder-test-agent  (:handle ,forwarder-handler :uuid ,request-forwarder-uuid)))
+                                         :root *root* ;; different root for the test agents
+                                         :uuid hypervisor-uuid)))
+
 (def-fixtures forwarder-agent-fixture
     (:documentation "A fixture that instantiates a mongrel2 test agent."
                     :setup (progn

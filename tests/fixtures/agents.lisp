@@ -39,6 +39,10 @@
   ()
   (:documentation "A `forwarder-test-agent' for testing the control of fdog forwarders."))
 
+(defclass request-forwarder-test-agent (request-forwarder-agent)
+  ()
+  (:documentation "A `request-forwarder-agent' for testing request forwarding and tranformations."))
+
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-spawn-dependant-when-asked (agent::find-organ agent :head))
@@ -70,6 +74,9 @@
 
 (defmethod agent-special-event :after ((agent api-test-agent) (event-head (eql :boot)) event)
   (make-speak-request-processing-messages (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod agent-special-event :after ((agent request-forwarder-test-agent) (event-head (eql :boot)) event)
   (make-kill-self-after-timeout (find-organ agent :head)))
 
 (defmethod request-handler :before ((agent api-test-agent) organ req raw)

@@ -4,6 +4,7 @@
   (:use :request-processing-agent)
   (:use :api-agent)
   (:use :forwarder-agent)
+  (:use :request-forwarder-agent)
   (:export :afdog-hypervisor-agent
            :mongrel2-agent
            :*control-port*

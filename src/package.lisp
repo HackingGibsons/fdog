@@ -18,6 +18,9 @@
            :run-program
            :process-hash
            :kill-everything
+           :string-to-integer
+           :local-tcp-address
+           :local-address-from-string
            :start-logging-collect)
   (:export :*socket-linger*))
 

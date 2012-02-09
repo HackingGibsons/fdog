@@ -227,8 +227,22 @@ Does kill -9 to ensure the process dies in cleanup.")
               (start request-forwarder-runner)
               (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
                         (awhen (getf msg :info)
-                          (assoc request-forwarder-uuid (getf it :peers) :test #'string=)))
-                (error "Request forwarder Agent didn't peer up.")))
+                          (and (assoc request-forwarder-uuid (getf it :peers) :test #'string=)
+                               (assoc forwarder-agent-uuid (getf it :peers) :test #'string=))))
+                (error "Request forwarder and forwarder config Agents didn't peer up."))
+
+              (unless (wait-for-agent-message (forwarder-agent-uuid
+                                               :request
+                                               `(:agent :need
+                                                        :need :forwarder
+                                                        :forwarder (:name "test"
+                                                                    :hosts ("api.example.com" "localhost")
+                                                                    :routes (("default" . "/") ("one" . "/1/")))))
+                          (msg)
+                        (awhen (getf msg :filled)
+                          (when (getf msg :forwarder)
+                            :need-filled)))
+                (error "Could not create forwarder.")))
 
      :cleanup (progn
                 (stop request-forwarder-runner)))

@@ -256,7 +256,9 @@ Does kill -9 to ensure the process dies in cleanup.")
                                          :class 'afdog-hypervisor-test-agent
                                          :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)
                                                            forwarder-test-agent (:uuid ,forwarder-agent-uuid)
-                                                           request-forwarder-test-agent  (:handle ,forwarder-handler :uuid ,request-forwarder-uuid)))
+                                                           request-forwarder-test-agent  (:uuid ,request-forwarder-uuid
+                                                                                          :forwarder "test"
+                                                                                          :route "default")))
                                          :root *root* ;; different root for the test agents
                                          :uuid hypervisor-uuid)))
 

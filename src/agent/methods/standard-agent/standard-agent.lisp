@@ -71,7 +71,15 @@ as fire any callbacks that may be pending IO when it is ready."
                      (afdog:read-message s)))
 
              (organ-writers+store-callbacks ()
-               nil)
+               "Returns a list of writer sockets and fills in the callbacks for them in the HT"
+               (alexandria:flatten
+                (mapcar #'(lambda (organ)
+                            (multiple-value-bind (socks funs) (writer-callbacks organ)
+                              (prog1 socks
+                                (mapc #'(lambda (sock fun)
+                                          (setf (gethash (sock-id sock :out) callbacks) fun))
+                                      socks funs))))
+                        (agent-organs agent))))
 
              (organ-readers+store-callbacks ()
                "Return a list of organ reader sockets and fill in the callbacks in the HT"

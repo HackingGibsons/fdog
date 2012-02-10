@@ -71,8 +71,8 @@
 
            (handler (when (and server handler-ident)
                       (fdog-models:make-mongrel2-handler handler-ident
-                                                         (local-address-from-string handler-ident 40000)
-                                                         (local-address-from-string handler-ident 50000)
+                                                         (local-address-from-string handler-ident 10000)
+                                                         (local-address-from-string handler-ident 20000)
                                                          :recv-ident handler-ident
                                                          :update t)))
            (hosts (when handler

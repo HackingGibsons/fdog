@@ -43,7 +43,7 @@ at the request sock.")
 (defmethod enable ((requesticle agent-requesticle))
   "Enable the requesticle and clears connection table or NOP if already running."
   (unless (or (request-sock requesticle) (response-sock requesticle))
-    (make-hash-table :test 'equalp)
+    (clrhash (connected-to requesticle))
     (setf (request-sock requesticle)
           (zmq:socket (agent-context (organ-agent requesticle)) :pull)
 
@@ -53,6 +53,7 @@ at the request sock.")
 (defmethod disable ((requesticle agent-requesticle))
   "Disable the requesticle, or NOP if already disabled."
   (when (or (request-sock requesticle) (response-sock requesticle))
+    (clrhash (connected-to requesticle))
     (when (request-sock requesticle)
       (zmq:close (request-sock requesticle)))
 

@@ -35,26 +35,36 @@ that has a client endpoint named `name'."))
 
 ;; Setup and tear down methods
 (defmethod bind ((endpoint forwarder-endpoint))
-  (let ((template (format nil
+  (let* ((template (format nil
                         "forwarder-~A-~A~-A-~~S"
                         (forwarder (agent endpoint))
                         (route (agent endpoint))
-                        (name endpoint))))
+                        (name endpoint)))
+         (push-addr (local-address-from-string (format nil template :push) 50000))
+         (sub-addr (local-address-from-string (format nil template :sub) 50000)))
+
     (log-for (forwarder-endpoint trace) "Binding endpoint: ~A" (name endpoint))
+
     (unless (sock-of (push-sock endpoint))
-      (setf (sock-of (push-sock endpoint))
+      (setf (addr-of (push-sock endpoint))
+            push-addr
+
+            (sock-of (push-sock endpoint))
             (zmq:socket (agent-context (agent endpoint)) :push))
-      (zmq:bind (sock-of (push-sock endpoint))
-                (local-address-from-string (format nil template :push) 50000)))
+      (zmq:bind (sock-of (push-sock endpoint)) push-addr))
+
     (unless (sock-of (sub-sock endpoint))
-      (setf (sock-of (sub-sock endpoint))
+      (setf (addr-of (sub-sock endpoint))
+            sub-addr
+
+            (sock-of (sub-sock endpoint))
             (zmq:socket (agent-context (agent endpoint)) :sub))
 
       ;; TODO: Get rid of this, probably, and do a proper subscribe
       (zmq:setsockopt (sock-of (sub-sock endpoint)) :subscribe "")
 
-      (zmq:bind (sock-of (sub-sock endpoint))
-                (local-address-from-string (format nil template :sub) 50000)))
+      (zmq:bind (sock-of (sub-sock endpoint)) sub-addr))
+
     (log-for (forwarder-endpoint trace) "Bound endpoint: ~A" (name endpoint) )))
 
 

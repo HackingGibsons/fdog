@@ -20,6 +20,10 @@ external clients to internal services."))
   (setf (handler-name agent)
         (format nil "forwarder-~A-~A" (forwarder agent) (route agent))))
 
+(defmethod initialize-instance-organs :after ((agent request-forwarder-agent))
+  "Connect the organs specific to the `agent'"
+  (agent-connect agent (make-instance 'agent-sock-pocket :agent agent)))
+
 ;; Agent Hooks
 (defmethod agent-special-event :after ((agent request-forwarder-agent) (event-head (eql :boot)) event)
   ;; Disable the requesticle on boot

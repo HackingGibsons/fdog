@@ -1,6 +1,7 @@
 (in-package :request-forwarder-agent)
 
 ;; Client endpoint
+(defcategory forwarder-endpoint)
 (defclass forwarder-endpoint ()
   ((organ :initform nil
           :initarg :organ
@@ -28,21 +29,44 @@ that has a client endpoint named `name'."))
   "Bind the addresses of the given endpoint."
   (bind endpoint))
 
+;; Helper
+(defmacro sock-of (x) `(aref ,x 0))
+(defmacro addr-of (x) `(aref ,x 1))
+
 ;; Setup and tear down methods
 (defmethod bind ((endpoint forwarder-endpoint))
-  :TODO-bind-addrs)
+  (let ((template (format nil
+                        "forwarder-~A-~A~-A-~~S"
+                        (forwarder (agent endpoint))
+                        (route (agent endpoint))
+                        (name endpoint))))
+    (log-for (forwarder-endpoint trace) "Binding endpoint: ~A" (name endpoint))
+    (unless (sock-of (push-sock endpoint))
+      (setf (sock-of (push-sock endpoint))
+            (zmq:socket (agent-context (agent endpoint)) :push))
+      (zmq:bind (sock-of (push-sock endpoint))
+                (local-address-from-string (format nil template :push) 50000)))
+    (unless (sock-of (sub-sock endpoint))
+      (setf (sock-of (sub-sock endpoint))
+            (zmq:socket (agent-context (agent endpoint)) :sub))
+
+      ;; TODO: Get rid of this, probably, and do a proper subscribe
+      (zmq:setsockopt (sock-of (sub-sock endpoint)) :subscribe "")
+
+      (zmq:bind (sock-of (sub-sock endpoint))
+                (local-address-from-string (format nil template :sub) 50000)))
+    (log-for (forwarder-endpoint trace) "Bound endpoint: ~A" (name endpoint) )))
+
 
 (defmethod dispose ((endpoint forwarder-endpoint))
   "Tear down the sockets and nil out all the socket related slots."
-  (macrolet ((sock-of (x) `(aref ,x 0))
-             (addr-of (x) `(aref ,x 1)))
-    ;; Close
-    (when (sock-of (push-sock endpoint))
-      (zmq:close (push-sock endpoint)))
-    (when (sock-of (sub-sock endpoint))
-      (zmq:close (sub-sock endpoint)))
+  ;; Close
+  (when (sock-of (push-sock endpoint))
+    (zmq:close (push-sock endpoint)))
+  (when (sock-of (sub-sock endpoint))
+    (zmq:close (sub-sock endpoint)))
 
-    ;; Nil out the slots
-    (setf (push-sock endpoint) #(nil nil)
-          (sub-sock endpoint) #(nil nil)
-          (name endpoint) nil)))
+  ;; Nil out the slots
+  (setf (push-sock endpoint) #(nil nil)
+        (sub-sock endpoint) #(nil nil)
+        (name endpoint) nil))

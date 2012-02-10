@@ -3,9 +3,93 @@
 (defun header-json-type ()
   '("Content-Type" . "application/json"))
 
+(defun api-subpath (request)
+  (let* ((prefix "/api"))
+    (ppcre:regex-replace (format nil "^~A" prefix)
+                         (m2cl:request-path request) "")))
+
 (defun merge-headers (headers)
   (let ((default '((:code . 200) (:status . "OK")
                    ("Content-Type" . "text/html")
                    ("X-Fdog" . "afdog"))))
     (remove-duplicates (append default (remove-if #'null headers :key #'cdr))
                        :key #'car :test #'string=)))
+
+;; Helpers
+(defmacro with-chunked-stream-reply ((handler request stream &key code status headers) &body body)
+  (let ((g!handler (gensym "handler"))
+        (g!request (gensym "request"))
+        (g!m2-handler (gensym "m2-handler"))
+        (g!headers (gensym "headers")))
+    `(let* ((,g!handler ,handler) (,g!request ,request)
+            (,g!m2-handler ,g!handler)
+            (,g!headers (merge-headers (list '(:code . ,code) '(:status . ,status)
+                                             ,@headers))))
+       (with-open-stream (,stream (make-instance 'chunked-http-output-stream
+                                                 :handler ,g!m2-handler :request ,g!request))
+         ;; TODO: This should sit somewhere in the stream class?
+         (m2cl:handler-send-http-chunked ,g!m2-handler :request ,g!request
+                                         :code (cdr (assoc :code ,g!headers)) :status (cdr (assoc :status ,g!headers))
+                                         :headers (remove-if (lambda (x) (member x '(:code :status)))
+                                                             ,g!headers
+                                                             :key #'car))
+         ,@body))))
+
+;; Condition handling
+(defgeneric handle-http-condition (condition agent organ handler request raw)
+  (:documentation "Generic for handling HTTP conditions. Specific implementations are defined in the def-http-code macro."))
+
+(define-condition http-error-condition ()
+  ((code
+    :initarg :code
+    :reader code
+    :documentation "The numerical status code")
+   (status
+    :initarg :status
+    :reader status
+    :documentation "A text description of the status code (e.g. \"Not Found\" for 404)")
+   (message
+    :initarg :message
+    :initform nil
+    :reader message
+    :documentation "An optional message to display with the status code. Argument is a format string wrapped in a list."))
+
+  (:report (lambda (c s)
+             ;; TODO Prints message in parentheses if non-nil (but
+             ;; it's kind of a pain)
+             (format s "~A condition raised: ~A" (code c) (status c))))
+  (:documentation "Generic HTTP condition"))
+
+(defmethod handle-http-condition ((condition http-error-condition) agent organ handler request raw)
+  (declare (ignorable raw))
+  (with-slots (data) condition
+    (with-chunked-stream-reply (handler request stream
+                                        :code (code condition)
+                                        :status (status condition)
+                                        :headers ((header-json-type)))
+      (log-for (trace) "[Condition] ~A" condition)
+      (aif (message condition)
+           (json:encode-json `((:error . ,(format nil @it))) stream)
+           (json:encode-json `((:error . ,(format nil "~A" data))) stream)))))
+
+(defmacro def-http-code (code status &key message)
+  "Macro for functionality related to HTTP status codes. Currently creates a condition and API handler.
+'code' - the numerical status code (404, 500...)
+'status' - the description of the status code (\"Not found\", \"Internal server error\")
+'default' - A format string for a default error message to be encoded in the JSON"
+  (let* ((condition-name (string-upcase (format nil "~{~A~}" (list code "-condition"))))
+         (condition-sym (intern condition-name)))
+
+    `(progn
+       (define-condition ,condition-sym (http-error-condition)
+         ()
+         (:default-initargs
+          :code ,code
+           :status ,status
+           :message ,message))
+
+       (export (find-symbol ,condition-name ':http-dog) ':http-dog))))
+
+(def-http-code 400 "Bad request")
+(def-http-code 404 "Not found" :message '("Endpoint ~A not found." (api-subpath request)))
+(def-http-code 500 "Internal server error")

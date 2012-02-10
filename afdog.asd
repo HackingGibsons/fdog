@@ -133,7 +133,7 @@
                                                       (:module "http" :depends-on ("package") :components
                                                                ((:file "package")
                                                                 (:file "utils" :depends-on ("package"))
-                                                                (:file "router" :depends-on ("package"))
+                                                                (:file "router" :depends-on ("package" "utils"))
                                                                 (:file "streams" :depends-on ("utils"))))
 
                                                       (:module "app" :depends-on ("http") :components

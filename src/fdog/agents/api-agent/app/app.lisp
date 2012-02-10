@@ -3,6 +3,7 @@
 (defvar *name* "afdog-api" "Name of the application")
 (defvar *description* "AFdog network control API" "Description of the application")
 (defvar *version* "0.0.0" "Application Version")
+(defparameter *api-version* 2)
 
 (defcategory api-app)
 (defgeneric api (agent organ handler request raw)
@@ -13,6 +14,8 @@
         (funcall &route handler request
                  :raw raw :agent agent :organ organ
                  :allow-other-keys t)
+
+      (:regex "^/api/.*" :responder 'api/router)
 
       (:exact "/" :responder 'api/version)
 
@@ -31,3 +34,9 @@
                               :code 404 :status "NOT FOUND"
                               :headers ((header-json-type)))
     (json:encode-json-plist `(:error "Not Found") stream)))
+
+;; Endpoints
+(defmethod api/endpoint ((m (eql :get)) (p (eql :/)) agent organ handler request raw)
+  (with-chunked-stream-reply (handler request stream
+                              :headers ((header-json-type)))
+    (json:encode-json `((:version . ,*api-version*)) stream)))

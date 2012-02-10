@@ -25,23 +25,3 @@
 (defmethod stream-write-sequence ((stream chunked-http-output-stream) seq start end &key)
   (with-slots (handler request) stream
     (m2cl:handler-send-http-chunk handler (subseq seq (or start 0) end) :request request)))
-
-;; Helpers
-(defmacro with-chunked-stream-reply ((handler request stream &key code status headers) &body body)
-  (let ((g!handler (gensym "handler"))
-        (g!request (gensym "request"))
-        (g!m2-handler (gensym "m2-handler"))
-        (g!headers (gensym "headers")))
-    `(let* ((,g!handler ,handler) (,g!request ,request)
-            (,g!m2-handler ,g!handler)
-            (,g!headers (merge-headers (list '(:code . ,code) '(:status . ,status)
-                                             ,@headers))))
-       (with-open-stream (,stream (make-instance 'chunked-http-output-stream
-                                                 :handler ,g!m2-handler :request ,g!request))
-         ;; TODO: This should sit somewhere in the stream class?
-         (m2cl:handler-send-http-chunked ,g!m2-handler :request ,g!request
-                                         :code (cdr (assoc :code ,g!headers)) :status (cdr (assoc :status ,g!headers))
-                                         :headers (remove-if (lambda (x) (member x '(:code :status)))
-                                                             ,g!headers
-                                                             :key #'car))
-         ,@body))))

@@ -13,13 +13,17 @@ any handlers we're interested in and we should connect to them."
                (when (and (string= name (handler-name agent))
                           (not (gethash send (connected-to organ))))
                  (log-for (trace requesticle peer-collection) "Connecting to: ~A => ~A[>~A <~A]" (getf info :uuid) name send recv)
-                 (zmq:connect (request-sock organ) send)
-                 (zmq:connect (response-sock organ) recv)
-                 (setf (gethash send (connected-to organ)) (getf info :uuid))))
+                 (and (awhen (request-sock organ)
+                        (zmq:connect it send))
+                      (awhen (response-sock organ)
+                        (zmq:connect it recv))
+                      (setf (gethash send (connected-to organ)) (getf info :uuid)))))
+
              (connect-to-handler (handler)
                (let* ((handler-name (car handler))
                       (handler-info (cdr handler)))
                  (apply #'try-connecting handler-name (alexandria:alist-plist handler-info))))
+
              (search-server (server-handlers)
                "Search a server description for handlers"
                (log-for (trace requesticle peer-collection) "Destructuring: ~S" server-handlers)

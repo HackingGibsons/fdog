@@ -8,6 +8,9 @@ for Afdog.")
         :agent
         :request-processing-agent)
 
+  (:import-from :arnesi
+                :when-bind)
+
   (:export :request-forwarder-agent))
 
 (in-package :request-forwarder-agent)

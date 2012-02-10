@@ -40,7 +40,8 @@ when finished with to avoid leaking in foreign code."
 (defmethod send! (sock msg &optional flags (count 0))
   (let* ((res (handler-case (zmq:send sock msg flags) (zmq:zmq-error () -1)))
          (res (cond ((and (= res -1)
-                          (= (sb-alien:get-errno) sb-posix:eagain))
+                          (= (sb-alien:get-errno) sb-posix:eagain)
+                          (not (member :noblock flags)))
                      (send! sock msg flags (1+ count)))
 
                     (:otherwise

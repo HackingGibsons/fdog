@@ -15,6 +15,9 @@
          :initarg :name
          :accessor name)
 
+   (push-sock-state :initform :unknown
+                    :accessor push-state
+                    :accessor push-sock-state)
    (push-sock :initform #(nil nil) :initarg :push
               :accessor push-sock
               :documentation "Stored in the format #(sock addr)")
@@ -28,6 +31,25 @@ that has a client endpoint named `name'."))
 (defmethod initialize-instance :after ((endpoint forwarder-endpoint) &key)
   "Bind the addresses of the given endpoint."
   (bind endpoint))
+
+(defmethod push-ready-p ((endpoint forwarder-endpoint))
+  "Shortcut to check of `push-state' of the `endpoint' is `:ready'"
+  (eql (push-state endpoint) :ready))
+
+(defmethod push-ready ((endpoint forwarder-endpoint))
+  "Set an endpoint as ready."
+  (setf (push-state endpoint) :ready))
+
+(defmethod push-unready ((endpoint forwarder-endpoint))
+  "Set the endpoint as not ready."
+  (setf (push-state endpoint) :not-ready))
+
+(defmethod make-push-callback ((endpoint forwarder-endpoint))
+  "Return a function that signals that this `endpoint's :push
+socket is ready for IO."
+  (lambda (sock)
+    (declare (ignorable sock))
+    (push-ready endpoint)))
 
 ;; Helper
 (defmacro sock-of (x) `(aref ,x 0))

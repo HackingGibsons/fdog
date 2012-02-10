@@ -1,5 +1,14 @@
 (in-package :request-processing-agent)
 
+;; Behaviors
+(defbehavior requesticle-control (:on (:command :requesticle :from :head) :do :invoke-with-event) (organ event)
+  (log-for (requesticle trace) "Requesticle control message: ~S" event)
+  (let ((command (getf event :requesticle)))
+    (case command
+      (:enable (enable organ))
+      (:disable (disable organ))
+      (t (signal "Unknown event: ~A" event)))))
+
 (defcategory peer-collection)
 (defmethod heard-message ((agent request-processing-agent) (organ agent-requesticle) (from (eql :agent)) (type (eql :info)) &rest info)
   "The requesticle hears an info message. It should examine it to see if contains

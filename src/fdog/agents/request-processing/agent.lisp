@@ -17,3 +17,7 @@ them into it's request processing operations."))
   "Advertise the handler we're ready to process requests for."
   (append (call-next-method)
           `(:request-processing ,(handler-name agent))))
+
+(defmethod agent-special-event :after ((agent request-processing-agent) (event-head (eql :boot)) event)
+  "Boot up and make the `request-forwarder-agent' behave."
+  (make-requesticle-control (find-organ agent :requesticle)))

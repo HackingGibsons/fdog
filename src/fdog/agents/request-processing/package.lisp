@@ -13,6 +13,8 @@ Mongrel2 ZeroMQ messages")
            :agent-requesticle
            :request-handler
            :handler-name
-           :handler))
+           :handler
+           :enable
+           :disable))
 
 (in-package :request-processing-agent)

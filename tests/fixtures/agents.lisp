@@ -68,6 +68,11 @@
   (make-announce-what-i-make (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
 
+(defmethod heard-message ((agent request-processing-test-agent) organ (head (eql :requesticle)) type &rest event)
+  "Test agent requesticle toggle."
+  (send-message organ :command `(:command :requesticle
+                                 :requesticle ,type)))
+
 (defmethod agent-special-event :after ((agent request-processing-test-agent) (event-head (eql :boot)) event)
   (make-speak-request-processing-messages (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))

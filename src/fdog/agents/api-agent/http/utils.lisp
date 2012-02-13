@@ -47,7 +47,12 @@
    (status
     :initarg :status
     :reader status
-    :documentation "A text description of the status code (e.g. \"Not Found\" for 404)"))
+    :documentation "A text description of the status code (e.g. \"Not Found\" for 404)")
+   (details
+    :initarg :details
+    :initform nil
+    :reader details
+    :documentation "A detailed error message for the condition."))
 
   (:report (lambda (c s)
              ;; TODO Prints message in parentheses if non-nil (but
@@ -65,7 +70,10 @@
                                           :status status
                                           :headers ((header-json-type)))
         (log-for (trace) "[Condition] ~A" condition)
-        (json:encode-json `((:error . ,(format nil "~A" status))) stream)))))
+        (let ((error-json (list (cons :error (format nil "~A" status)))))
+          (awhen (details condition)
+            (appendf error-json (list (cons :details it))))
+          (json:encode-json error-json stream))))))
 
 (defmacro def-http-code (code status)
   "Macro for functionality related to HTTP status codes. Currently creates a condition and API handler.

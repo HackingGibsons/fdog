@@ -3,6 +3,11 @@
   (:use :log5
         :trivial-gray-streams)
   (:documentation "A package of HTTP helpers for afdog and m2cl")
+  (:import-from :arnesi
+                :awhen
+                :it)
+  (:import-from :alexandria
+                :appendf)
   (:export :chunked-http-output-stream
            :with-dispatch-on
            :with-chunked-stream-reply

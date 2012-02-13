@@ -10,8 +10,6 @@ variable URL component should specialize on this method.
 The `sub-path' will not have a trailing slash, it will be on the `rest' side of the args."))
 
 (defun api/router (handler request &key agent organ raw)
-  (log-for (trace) "REMOVEME entered router")
-  (log-for (trace) "REMOVEME AGENT ~A" agent)
   (let ((method (intern (m2cl:request-header request :method) :keyword))
         (sub-path (api-subpath request)))
 
@@ -38,7 +36,6 @@ The `sub-path' will not have a trailing slash, it will be on the `rest' side of 
                            sub-sym
                            (unintern sub-sym))))))
 
-      (log-for (trace) "REMOVEME Method ~A sub-path ~A" method sub-path)
       (multiple-value-bind (exact exact-sym) (applicable-exact sub-path)
         (if exact
             (handler-case

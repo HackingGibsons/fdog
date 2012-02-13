@@ -85,5 +85,6 @@
        (export (find-symbol ,condition-name ':http-dog) ':http-dog))))
 
 (def-http-code 400 "Bad request")
+(def-http-code 403 "Forbidden")
 (def-http-code 404 "Not found")
 (def-http-code 500 "Internal server error")

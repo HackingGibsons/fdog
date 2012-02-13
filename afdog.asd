@@ -136,12 +136,14 @@
                                                                 (:file "router" :depends-on ("package" "utils"))
                                                                 (:file "streams" :depends-on ("utils"))))
 
-                                                      (:module "app" :depends-on ("http") :components
+                                                      (:module "app" :depends-on ("http" "agent") :components
                                                                ((:file "package")
-                                                                (:file "app" :depends-on ("package" "router"))
+                                                                (:file "helpers" :depends-on ("package"))
+                                                                (:file "app" :depends-on ("package" "router" "helpers"))
                                                                 (:file "router" :depends-on ("package"))))
 
-                                                      (:file "agent" :depends-on ("package" "app"))))
+                                                      (:file "agent" :depends-on ("package"))
+                                                      (:file "request-handler" :depends-on ("agent" "app"))))
 
                                             (:module "request-processing" :depends-on ("package") :components
                                                      ((:file "package")

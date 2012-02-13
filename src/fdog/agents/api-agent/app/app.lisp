@@ -24,7 +24,7 @@
 ;; Generic handlers
 (defun api/version (handler req &key)
   (with-chunked-stream-reply (handler req stream
-                              :headers ((header-json-type)))
+                                      :headers ((header-json-type)))
     (json:encode-json-plist `(:name ,*name* :description ,*description* :version ,*version*)
                             stream)))
 

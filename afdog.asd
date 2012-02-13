@@ -138,7 +138,8 @@
 
                                                       (:module "app" :depends-on ("http") :components
                                                                ((:file "package")
-                                                                (:file "app" :depends-on ("package"))))
+                                                                (:file "app" :depends-on ("package" "router"))
+                                                                (:file "router" :depends-on ("package"))))
 
                                                       (:file "agent" :depends-on ("package" "app"))))
 

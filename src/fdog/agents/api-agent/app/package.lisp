@@ -3,6 +3,7 @@
   (:use :log5)
   (:documentation "The HTTP application")
 
+  (:use :agent)
   (:use :http-dog)
   (:import-from :api-agent
                 :api-agent

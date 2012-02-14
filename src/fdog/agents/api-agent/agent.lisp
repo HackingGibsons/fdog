@@ -11,7 +11,10 @@
 ;; Agent
 (defcategory api-agent)
 (defclass api-agent (request-processing-agent standard-leaf-agent)
-  ()
+  ((forwarders
+    :accessor forwarders
+    :initform nil
+    :documentation "A list of forwarders the agent knows about."))
   (:default-initargs . (:handle *api-handler*))
   (:documentation "This agent establishes a handler for the API endpoint
 and contains the implementation of the afdog API."))
@@ -21,6 +24,7 @@ and contains the implementation of the afdog API."))
          (provides (getf info :provides))
          (servers (getf provides :servers))
          (control (assoc *control-server* servers :test #'string=)))
+    ;; If API handler does not exist, announce need
     (multiple-value-bind (name handlers) (values (car control) (cdr control))
       (let ((handler (cdr (assoc (handler-name agent) handlers :test #'string=))))
         (when (and name (not handler))
@@ -31,4 +35,9 @@ and contains the implementation of the afdog API."))
                                                         :hosts (,*api-host*)
                                                         :route "/"
                                                         :name ,(handler-name agent)))))
-          (log-for (trace api-agent) "Server: ~S doesn't have handler ~S, adding." name (handler-name agent)))))))
+          (log-for (trace api-agent) "Server: ~S doesn't have handler ~S, adding." name (handler-name agent)))))
+
+    ;; If the announce is from a forwarder agent, update the list of
+    ;; forwarders
+    (when-bind forwarders (getf provides :forwarders)
+      (setf (forwarders agent) forwarders))))

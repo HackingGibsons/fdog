@@ -5,7 +5,8 @@
 
   (:use :http-dog)
   (:import-from :api-agent
-                :api-agent)
+                :api-agent
+                :forwarders)
   (:export :*name* :*description* :*version*
            :api))
 

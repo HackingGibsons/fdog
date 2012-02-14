@@ -28,12 +28,9 @@
     (json:encode-json-plist `(:name ,*name* :description ,*description* :version ,*version*)
                             stream)))
 
-(defun api/404 (handler req &key)
+(defun api/404 (handler req &key agent organ raw)
   (log-for (trace api-app) "404 on request: ~S" req)
-  (with-chunked-stream-reply (handler req stream
-                                      :code 404 :status "NOT FOUND"
-                                      :headers ((header-json-type)))
-    (json:encode-json-plist `(:error "Not Found") stream)))
+  (handle-http-condition (make-instance '404-condition) agent organ handler req raw))
 
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) agent organ handler request raw)

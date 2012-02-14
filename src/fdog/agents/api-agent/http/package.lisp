@@ -3,6 +3,8 @@
   (:use :log5
         :trivial-gray-streams)
   (:documentation "A package of HTTP helpers for afdog and m2cl")
+  (:import-from :api-agent
+                :api-agent)
   (:import-from :arnesi
                 :awhen
                 :it)

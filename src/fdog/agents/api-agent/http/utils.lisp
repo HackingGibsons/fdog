@@ -60,7 +60,7 @@
              (format s "~A condition raised: ~A" (code c) (status c))))
   (:documentation "Generic HTTP condition"))
 
-(defmethod handle-http-condition ((condition http-error-condition) agent organ handler request raw)
+(defmethod handle-http-condition ((condition http-error-condition) (agent api-agent) organ handler request raw)
   (declare (ignorable raw))
   (with-slots (status) condition
     (let ((code (code condition))

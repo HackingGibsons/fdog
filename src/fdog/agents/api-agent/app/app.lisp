@@ -32,54 +32,61 @@
   (log-for (trace api-app) "404 on request: ~S" req)
   (handle-http-condition (make-instance '404-condition) agent organ handler req raw))
 
+(defmethod api/forwarder/404 ((agent api-agent) organ handler request forwarder rest)
+  (error '404-condition
+         ;; TODO doesn't return name - (name forwarder)
+         :details (format nil "No resource for forwarder ~A matching ~A" forwarder rest)))
+
 ;; Endpoints
-(defmethod api/endpoint ((m (eql :get)) (p (eql :/)) agent organ handler request raw)
+(defmethod api/endpoint ((m (eql :get)) (p (eql :/)) (agent api-agent) organ handler request raw)
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
     (json:encode-json `((:version . ,*api-version*)) stream)))
 
-(defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest agent organ handler request raw)
-  (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
-    (setf forwarder (find-forwarder agent forwarder))
-    (unless forwarder
-      (error '404-condition))
+(defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest (agent api-agent) organ handler request raw)
+  (ppcre:register-groups-bind (name rest) ("^/?([^/]+)(/?.*$)" rest)
+    (let ((forwarder (find-forwarder agent name)))
+      (unless forwarder
+        ;; TODO doesn't return name
+        (error '404-condition :details (format nil "Forwarder ~A not found" name)))
 
-    (with-dispatch-on rest &route
-        (funcall &route agent organ handler request forwarder rest)
+      (with-dispatch-on rest &route
+          (funcall &route agent organ handler request forwarder rest)
 
-      (:exact "/metrics/" :responder 'api/forwarder/metrics)
-      (:exact "/" :responder 'api/forwarder/root)
-      (:404 :responder 'api/404))))
+        (:exact "/metrics/" :responder 'api/forwarder/metrics)
+        (:exact "/" :responder 'api/forwarder/root)
+        (:404 :responder 'api/forwarder/404)))))
 
-(defmethod api/endpoint-with-args ((m (eql :post)) (p (eql :|/forwarders|)) rest agent organ handler request raw)
-  (ppcre:register-groups-bind (forwarder rest) ("^/?([^/]+)(/?.*$)" rest)
-    (setf forwarder (find-forwarder agent forwarder))
-    (unless forwarder
-      (error '404-condition))
+(defmethod api/endpoint-with-args ((m (eql :post)) (p (eql :|/forwarders|)) rest (agent api-agent) organ handler request raw)
+  (ppcre:register-groups-bind (name rest) ("^/?([^/]+)(/?.*$)" rest)
+    (let ((forwarder (find-forwarder agent name)))
+      (unless forwarder
+        ;; TODO doesn't return name
+        (error '404-condition :details (format nil "Forwarder ~A not found" name)))
 
-    (with-dispatch-on rest &route
-        (funcall &route agent organ handler request forwarder rest)
+      (with-dispatch-on rest &route
+          (funcall &route agent organ handler request forwarder rest)
 
-      (:exact "/delete/" :responder 'api/forwarder/delete)
-      (:exact "/create/" :responder 'api/forwarder/create)
-      (:exact "/" :responder 'api/forwarder/update)
-      (:404 :responder 'api/404))))
+        (:exact "/delete/" :responder 'api/forwarder/delete)
+        (:exact "/create/" :responder 'api/forwarder/create)
+        (:exact "/" :responder 'api/forwarder/update)
+        (:404 :responder 'api/forwarder/404)))))
 
-(defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) agent organ handler request raw)
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) (agent api-agent) organ handler request raw)
   "Retrieves information about all known forwarders."
-  (error '403-condition))
+  (error '403-condition :details "TODO forwarders root"))
 
-(defmethod api/forwarder/root (agent organ handler request forwarder rest)
-  (error '403-condition))
+(defmethod api/forwarder/root ((agent api-agent) organ handler request forwarder rest)
+  (error '403-condition :details "TODO forwarder details"))
 
-(defmethod api/forwarder/create (agent organ handler request forwarder rest)
-  (error '403-condition))
+(defmethod api/forwarder/create ((agent api-agent) organ handler request forwarder rest)
+  (error '403-condition :details "TODO forwarder create"))
 
-(defmethod api/forwarder/delete (agent organ handler request forwarder rest)
-  (error '403-condition))
+(defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
+  (error '403-condition :details "TODO forwarder delete"))
 
-(defmethod api/forwarder/update (agent organ handler request forwarder rest)
-  (error '403-condition))
+(defmethod api/forwarder/update ((agent api-agent) organ handler request forwarder rest)
+  (error '403-condition :details "TODO forwarder update"))
 
-(defmethod api/forwarder/metrics (agent organ handler request forwarder rest)
-  (error '403-condition))
+(defmethod api/forwarder/metrics ((agent api-agent) organ handler request forwarder rest)
+  (error '403-condition :details "TODO forwarder metrics"))

@@ -130,7 +130,7 @@
 
                                             (:module "api-agent" :depends-on ("request-processing") :components
                                                      ((:file "package")
-                                                      (:module "http" :depends-on ("package") :components
+                                                      (:module "http" :depends-on ("package" "agent") :components
                                                                ((:file "package")
                                                                 (:file "utils" :depends-on ("package"))
                                                                 (:file "router" :depends-on ("package" "utils"))

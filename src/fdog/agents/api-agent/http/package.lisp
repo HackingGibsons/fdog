@@ -14,6 +14,7 @@
            :with-dispatch-on
            :with-chunked-stream-reply
            :header-json-type
+           :decode-json-from-request
            :merge-headers
            :api-subpath
            :handle-http-condition

@@ -68,7 +68,6 @@
           (funcall &route agent organ handler request forwarder rest)
 
         (:exact "/delete/" :responder 'api/forwarder/delete)
-        (:exact "/create/" :responder 'api/forwarder/create)
         (:exact "/" :responder 'api/forwarder/update)
         (:404 :responder 'api/forwarder/404)))))
 
@@ -79,8 +78,22 @@
 (defmethod api/forwarder/root ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "TODO forwarder details"))
 
-(defmethod api/forwarder/create ((agent api-agent) organ handler request forwarder rest)
-  (error '403-condition :details "TODO forwarder create"))
+(defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|)) (agent api-agent) organ handler request raw)
+  (let* ((spec (decode-json-from-request (m2cl:request-body request)))
+         (name (cdr (assoc :name spec)))
+         (hosts (cdr (assoc :hosts spec)))
+         (routes (cdr (assoc :routes spec)))
+         (existing (find-forwarder agent name)))
+    (unless (and spec name hosts routes)
+      (error '400-condition :details "Parameters missing or malformed"))
+    (if existing
+        (error '400-condition :details (format nil "Forwarder ~A already exists" name))
+        (send-message (find-organ agent :head) :command
+                      `(:command :speak
+                                 :say (:agent :need
+                                              :need :forwarder
+                                              :forwarder (:name ,name :hosts ,hosts :routes ,routes)))))
+    (error '403-condition :details "TODO forwarder create")))
 
 (defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "TODO forwarder delete"))

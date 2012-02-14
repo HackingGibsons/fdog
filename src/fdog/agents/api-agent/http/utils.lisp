@@ -3,6 +3,15 @@
 (defun header-json-type ()
   '("Content-Type" . "application/json"))
 
+(defun decode-json-from-request (request)
+  "Attempts to decode JSON from a mongrel2 request.
+If there is an error parsing the JSON, throws a 400 error."
+  (flet ((signal-400-error () (error '400-condition :details "JSON is malformed")))
+    (handler-case
+        (json:decode-json-from-string request)
+      (end-of-file (cond) (signal-400-error))
+      (json:json-syntax-error (cond) (signal-400-error)))))
+
 (defun api-subpath (request)
   (let* ((prefix "/api"))
     (ppcre:regex-replace (format nil "^~A" prefix)

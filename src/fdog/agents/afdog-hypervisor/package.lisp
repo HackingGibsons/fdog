@@ -11,6 +11,8 @@
                 :mongrel2-agent)
   (:import-from :api-agent
                 :api-agent)
+  (:import-from :forwarder-agent
+                :forwarder-agent)
   (:export :afdog-hypervisor-agent))
 
 (in-package :afdog-hypervisor-agent)

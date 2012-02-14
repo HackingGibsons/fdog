@@ -103,7 +103,7 @@
                                                       (:file "behaviors"  :depends-on ("mongrel2-agent"))
                                                       (:file "mongrel2-agent" :depends-on ("package" "helpers"))))
 
-                                            (:module "afdog-hypervisor" :depends-on ("package" "api-agent" "mongrel2") :components
+                                            (:module "afdog-hypervisor" :depends-on ("package" "api-agent" "mongrel2" "forwarder") :components
                                                      ((:file "package")
                                                       (:file "afdog-hypervisor-agent" :depends-on ("package"))))
 

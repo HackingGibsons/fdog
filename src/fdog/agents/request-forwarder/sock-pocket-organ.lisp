@@ -22,3 +22,9 @@ to. The default destination is to be called `:default'. Objects stored
            (dispose endpoint)
            (remhash key (client-socks organ))))
     (maphash #'dispose-endpoint (client-socks organ))))
+
+;; Event loop registrations
+(defmethod writer-callbacks :around ((organ agent-sock-pocket))
+  (multiple-value-bind (socks callbacks) (call-next-method)
+    :TODO-return-an-enable-callback-for-each-write-sock-in-client-socks
+    (values socks callbacks)))

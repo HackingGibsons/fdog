@@ -6,8 +6,6 @@ for Afdog.")
         :agent
         :log5
         :request-processing-agent)
-  (:import-from :arnesi
-                :when-bind)
   (:export :api-agent
            :forwarders
            :*control-server*

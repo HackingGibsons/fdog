@@ -39,5 +39,8 @@ and contains the implementation of the afdog API."))
 
     ;; If the announce is from a forwarder agent, update the list of
     ;; forwarders
-    (when-bind forwarders (getf provides :forwarders)
-      (setf (forwarders agent) forwarders))))
+    (let ((forwarders (getf provides :forwarders :not-found)))
+      ;; Differentiate between agent not providing forwarders, and agent
+      ;; with (:PROVIDES (:FORWARDERS NIL)
+      (unless (eql forwarders :not-found)
+        (setf (forwarders agent) forwarders)))))

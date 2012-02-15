@@ -128,7 +128,7 @@
                                                       (:file "agent" :depends-on ("package" "sock-pocket-organ"))
                                                       (:file "agent-behavior" :depends-on ("agent"))))
 
-                                            (:module "api-agent" :depends-on ("request-processing") :components
+                                            (:module "api-agent" :depends-on ("request-processing" "forwarder") :components
                                                      ((:file "package")
                                                       (:module "http" :depends-on ("package" "agent") :components
                                                                ((:file "package")

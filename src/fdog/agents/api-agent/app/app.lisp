@@ -79,7 +79,11 @@
       (json:encode-json-alist forwarder-list stream))))
 
 (defmethod api/forwarder/root ((agent api-agent) organ handler request forwarder rest)
-  (error '403-condition :details "TODO forwarder details"))
+  (with-chunked-stream-reply (handler request stream
+                                      :headers ((header-json-type)))
+    ;; We just want the forwarder information, not the full thing like
+    ;; in /forwarders/ list
+    (json:encode-json-alist (cdr (forwarder-to-alist forwarder)) stream)))
 
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|)) (agent api-agent) organ handler request raw)
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))

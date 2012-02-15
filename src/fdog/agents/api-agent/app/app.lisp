@@ -100,7 +100,7 @@
                                  :say (:agent :need
                                               :need :forwarder
                                               :forwarder (:name ,name :hosts ,hosts :routes ,routes)))))
-    (error '403-condition :details "TODO forwarder create")))
+    (error '403-condition :details "TODO forwarder create (callback)")))
 
 (defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "TODO forwarder delete"))

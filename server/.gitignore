@@ -1,2 +1,3 @@
 config.sqlite
+forwarders.json
 logs/*.log

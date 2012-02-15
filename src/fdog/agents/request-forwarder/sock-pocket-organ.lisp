@@ -26,5 +26,11 @@ to. The default destination is to be called `:default'. Objects stored
 ;; Event loop registrations
 (defmethod writer-callbacks :around ((organ agent-sock-pocket))
   (multiple-value-bind (socks callbacks) (call-next-method)
-    :TODO-return-an-enable-callback-for-each-write-sock-in-client-socks
+    (maphash #'(lambda (name endpoint)
+                 (unless (push-ready-p endpoint)
+                   (log-for (trace agent-sock-pocket) "Adding ~A:~A to poll list." name endpoint)
+                   (appendf socks (list (sock-of (push-sock endpoint))))
+                   (appendf callbacks (list #'(lambda (sock)
+                                                (push-ready endpoint))))))
+             (client-socks organ))
     (values socks callbacks)))

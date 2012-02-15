@@ -103,7 +103,13 @@
     (error '403-condition :details "TODO forwarder create (callback)")))
 
 (defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
-  (error '403-condition :details "TODO forwarder delete"))
+  (send-message (find-organ agent :head) :command
+                `(:command :speak
+                           :say (:agent :need
+                                        :need :remove-forwarders
+                                        :remove-forwarders
+                                        (:names (,(car forwarder))))))
+  (error '403-condition :details "TODO forwarder delete (callback)"))
 
 (defmethod api/forwarder/update ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "TODO forwarder update"))

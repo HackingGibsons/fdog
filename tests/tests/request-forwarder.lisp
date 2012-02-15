@@ -27,8 +27,9 @@
     (:seq (:eql :forwarder) (:predicate stringp)
           (:eql :route) (:predicate stringp)
           (:eql :path) (:predicate string)
-          (:eql :endpoints) (:seq (:eql :push) (:predicate stringp)
-                                  (:eql :sub) (:predicate stringp)))
+          (:eql :endpoints) (:seq (:eql :default)
+                                  (:seq (:eql :push) (:predicate stringp)
+                                        (:eql :sub) (:predicate stringp))))
   (with-agent-conversation (m e) request-forwarder-uuid
     (do* ((msg (parse-message (read-message m))
                (parse-message (read-message m)))

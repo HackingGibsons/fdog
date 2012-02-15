@@ -36,8 +36,9 @@ external clients to internal services."))
   "Provide forwarding information."
   (let ((endpoints (list)))
     (maphash #'(lambda (name endpoint)
-                 (appendf endpoints (list :push (addr-of (push-sock endpoint))
-                                          :sub (addr-of (sub-sock endpoint)))))
+                 (appendf endpoints (list name
+                                          (list :push (addr-of (push-sock endpoint))
+                                                :sub (addr-of (sub-sock endpoint))))))
              (client-socks (find-organ agent :sock-pocket)))
 
     (append (call-next-method)

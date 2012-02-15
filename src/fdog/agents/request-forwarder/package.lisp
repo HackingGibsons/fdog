@@ -10,6 +10,8 @@ for Afdog.")
 
   (:import-from :arnesi
                 :when-bind)
+  (:import-from :alexandria
+                :appendf)
 
   (:export :request-forwarder-agent))
 

@@ -26,7 +26,9 @@
 (def-test (request-forwarder-agent-announces-provides-forwarding :group request-forwarder-agent-tests)
     (:seq (:eql :forwarder) (:predicate stringp)
           (:eql :route) (:predicate stringp)
-          (:eql :path) (:predicate string))
+          (:eql :path) (:predicate string)
+          (:eql :endpoints) (:seq (:eql :push) (:predicate stringp)
+                                  (:eql :sub) (:predicate stringp)))
   (with-agent-conversation (m e) request-forwarder-uuid
     (do* ((msg (parse-message (read-message m))
                (parse-message (read-message m)))

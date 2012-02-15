@@ -73,7 +73,11 @@
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) (agent api-agent) organ handler request raw)
   "Retrieves information about all known forwarders."
-  (error '403-condition :details "TODO forwarders root"))
+  (let ((forwarders (mapcar #'car (forwarders agent))))
+    (with-chunked-stream-reply (handler request stream
+                                        :headers ((header-json-type)))
+      (let ((forwarder-list (mapcar #'forwarder-to-alist (forwarders agent))))
+        (json:encode-json-alist forwarder-list stream)))))
 
 (defmethod api/forwarder/root ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "TODO forwarder details"))

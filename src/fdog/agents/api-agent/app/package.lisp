@@ -5,6 +5,8 @@
 
   (:use :agent)
   (:use :http-dog)
+  (:import-from :forwarder-agent
+                :forwarder-to-alist)
   (:import-from :api-agent
                 :api-agent
                 :forwarders)

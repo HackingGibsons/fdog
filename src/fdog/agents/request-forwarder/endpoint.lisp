@@ -38,6 +38,7 @@ that has a client endpoint named `name'."))
 
 (defmethod push-ready ((endpoint forwarder-endpoint))
   "Set an endpoint as ready."
+  (log-for (trace forwarder-endpoint) "Readying endpoint: ~A" endpoint)
   (setf (push-state endpoint) :ready))
 
 (defmethod push-unready ((endpoint forwarder-endpoint))

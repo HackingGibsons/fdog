@@ -43,12 +43,16 @@ exceeds the timeout threshold, the timeout callback is fired and the callback is
   (appendf (callbacks agent) callback))
 
 (defmethod heard-message :after ((agent api-agent) (head agent-head) (from (eql :agent)) type &rest event)
+  "After hearing an event message, test it against the predicates for the callbacks registered
+to the agent. If any match, call the callback and unregister it."
   (dolist (callback (callbacks agent))
     (when (funcall (predicate callback) event)
       (funcall (callback callback))
       (remove callback callbacks))))
 
 (defbehavior increment-callback-timeouts (:on (:interval (:from :heart :nth 1)) :do :invoke-with-event) (organ event)
+  ;;; Every heart beat, check the registered callbacks for timeout. If
+  ;;; they have timed out, fire the `timeout-callback' and unregister.
   (let* ((time (get-internal-real-time))
          (agent (organ-agent organ))
          (callbacks (callbacks agent)))

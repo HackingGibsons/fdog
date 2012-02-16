@@ -14,7 +14,11 @@
   ((forwarders
     :accessor forwarders
     :initform nil
-    :documentation "A list of forwarders the agent knows about."))
+    :documentation "A list of forwarders the agent knows about.")
+   (callbacks
+    :accessor callbacks
+    :initform nil
+    :documentation "List of callbacks registered to the agent."))
   (:default-initargs . (:handle *api-handler*))
   (:documentation "This agent establishes a handler for the API endpoint
 and contains the implementation of the afdog API."))
@@ -44,3 +48,9 @@ and contains the implementation of the afdog API."))
       ;; with (:PROVIDES (:FORWARDERS NIL)
       (unless (eql forwarders :not-found)
         (setf (forwarders agent) forwarders)))))
+
+(defmethod heard-message :after ((agent api-agent) (head agent-head) (from (eql :agent)) type &rest event)
+  (dolist (callback (callbacks agent))
+    (when (funcall (predicate callback) event)
+      (funcall (callback callback))
+      (remove callback callbacks))))

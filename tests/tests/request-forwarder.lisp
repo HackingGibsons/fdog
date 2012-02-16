@@ -50,3 +50,44 @@
                        (getf info :requesticle)))
          ((>= (getf requesticle :peers) 1)
           :connected-to-one))))
+
+(def-test (request-forwarder-agent-signals-client-push :group request-forwarder-agent-tests)
+    (:values (:seq (:eql :forwarder) (:predicate stringp)
+                   (:eql :route) (:predicate stringp)
+                   (:eql :path) (:predicate string)
+                   (:eql :endpoints) (:seq (:eql :default)
+                                           (:seq (:eql :push) (:predicate stringp)
+                                                 (:eql :sub) (:predicate stringp))))
+             (:eql :ready)
+             (:eql :still-there))
+
+  (with-agent-conversation (m e) request-forwarder-uuid
+    (do* ((msg (parse-message (read-message m))
+               (parse-message (read-message m)))
+          (info (getf msg :info)
+                (getf msg :info))
+          (provides (getf info :provides)
+                    (getf info :provides)))
+         (provides (getf provides :forwarding))))
+
+  (zmq:with-context (ctx 1)
+    (zmq:with-socket (pull ctx :pull)
+      (let ((addr (wait-for-agent-message (request-forwarder-uuid) (msg)
+                    (getf (cadr (getf (getf (getf (getf msg
+                                                        :info)
+                                                        :provides)
+                                                        :forwarding)
+                                                        :endpoints))
+                          :push))))
+        (if addr
+          (with-agent-conversation (m e) request-forwarder-uuid
+            (do* ((connected (zmq:connect pull addr) connected)
+                  (msg (parse-message (read-message m))
+                       (parse-message (read-message m)))
+                  (transition (getf msg :transition)
+                              (getf msg :transition)))
+                 (transition
+                  (getf transition :state))))
+          :no-addr-found))))
+
+  (wait-for-agent (request-forwarder-uuid) :still-there))

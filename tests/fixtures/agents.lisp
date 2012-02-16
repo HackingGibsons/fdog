@@ -70,6 +70,7 @@
 
 (defmethod heard-message ((agent request-processing-test-agent) organ (head (eql :requesticle)) type &rest event)
   "Test agent requesticle toggle."
+  (declare (ignore event))
   (send-message organ :command `(:command :requesticle
                                  :requesticle ,type)))
 
@@ -83,6 +84,14 @@
 
 (defmethod agent-special-event :after ((agent request-forwarder-test-agent) (event-head (eql :boot)) event)
   (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod push-state-signal :after ((agent request-forwarder-test-agent) organ (endpoint forwarder-endpoint))
+  (log-for (trace request-forwarder-agent) "Announcing push state transition: ~A" endpoint)
+  (send-message (find-organ agent :head) :command `(:command :speak
+                                                    :say (:endpoint :transition
+                                                          :transition (:endpoint ,(princ-to-string endpoint)
+                                                                       :name ,(name endpoint)
+                                                                       :state ,(push-state endpoint))))))
 
 (defmethod request-handler :before ((agent api-test-agent) organ req raw)
   (log-for (trace api-agent) "Announcing request: ~Ab ~S" (length raw) (babel:octets-to-string raw))

@@ -21,6 +21,8 @@ for Afdog.")
            :sock-of
            :addr-of
            :push-ready
+           :push-state
+           :name
            :push-unready))
 
 (in-package :request-forwarder-agent)

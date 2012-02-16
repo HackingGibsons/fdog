@@ -52,8 +52,7 @@ is signaled in an I/O state transition or noted as such in an IO operation.
 Called by the simple-specialization methods `push-ready' and `push-unready'")
   (:method (agent organ (endpoint forwarder-endpoint))
     "Default method, signal a lack of a handler and complain."
-    (log-for (warn forwarder-endpoint) "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)
-    (signal "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)))
+    (log-for (warn forwarder-endpoint) "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)))
 
 (defgeneric push-ready (endpoint)
   (:documentation "Set an endpoint as ready.")
@@ -122,9 +121,9 @@ socket is ready for IO."
   "Tear down the sockets and nil out all the socket related slots."
   ;; Close
   (when (sock-of (push-sock endpoint))
-    (zmq:close (push-sock endpoint)))
+    (zmq:close (sock-of (push-sock endpoint))))
   (when (sock-of (sub-sock endpoint))
-    (zmq:close (sub-sock endpoint)))
+    (zmq:close (sock-of (sub-sock endpoint))))
 
   ;; Nil out the slots
   (setf (push-sock endpoint) #(nil nil)

@@ -35,3 +35,24 @@ predicates. If the predicate passes, the callback is fired and the callback is u
 
 Every time the agent hears a beat, if an agent's (current-time - start-time)
 exceeds the timeout threshold, the timeout callback is fired and the callback is unregistered"))
+
+(defgeneric register-callback (agent callback))
+
+(defmethod register-callback ((agent api-agent) (callback callback))
+  "Adds a `callback' instance to the agent's `callbacks' list"
+  (appendf (callbacks agent) callback))
+
+(defmethod heard-message :after ((agent api-agent) (head agent-head) (from (eql :agent)) type &rest event)
+  (dolist (callback (callbacks agent))
+    (when (funcall (predicate callback) event)
+      (funcall (callback callback))
+      (remove callback callbacks))))
+
+(defbehavior increment-callback-timeouts (:on (:interval (:from :heart :nth 1)) :do :invoke-with-event) (organ event)
+  (let* ((time (get-internal-real-time))
+         (agent (organ-agent organ))
+         (callbacks (callbacks agent)))
+    (dolist (callback callbacks)
+      (when (>= (timeout callback) (- time (start-time callback)))
+        (funcall (timeout-callback callback))
+        (remove callback callbacks)))))

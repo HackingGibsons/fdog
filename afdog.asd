@@ -142,8 +142,8 @@
                                                                 (:file "app" :depends-on ("package" "router" "helpers"))
                                                                 (:file "router" :depends-on ("package"))))
 
-                                                      (:file "callback" :depends-on ("package"))
-                                                      (:file "agent" :depends-on ("callback"))
+                                                      (:file "agent" :depends-on ("package"))
+                                                      (:file "callback" :depends-on ("agent"))
                                                       (:file "request-handler" :depends-on ("agent" "app"))))
 
                                             (:module "request-processing" :depends-on ("package") :components

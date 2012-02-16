@@ -51,11 +51,7 @@ that has a client endpoint named `name'."))
 is signaled in an I/O state transition or noted as such in an IO operation.
 Called by the simple-specialization methods `push-ready' and `push-unready'")
   (:method (agent organ (endpoint forwarder-endpoint))
-    (if (and (agent endpoint) (organ endpoint))
-        (push-state-signal (agent endpoint) (organ endpoint) endpoint)
-        (error "Endpoint ~A lacks agent or organ." endpoint)))
-
-  (:method ((agent standard-agent) (organ standard-organ) (endpoint forwarder-endpoint))
+    "Default method, signal a lack of a handler and complain."
     (log-for (warn forwarder-endpoint) "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)
     (signal "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)))
 

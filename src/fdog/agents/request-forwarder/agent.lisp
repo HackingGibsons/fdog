@@ -60,7 +60,3 @@ external clients to internal services."))
           (send-message organ :command
                 `(:command :requesticle
                   :requesticle :enable)))))))
-
-
-
-

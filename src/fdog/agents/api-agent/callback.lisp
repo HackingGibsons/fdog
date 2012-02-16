@@ -1,5 +1,9 @@
 (in-package :api-agent)
 
+;; Knobs
+(defvar *timeout-interval* 10 "Timeout length, in seconds")
+
+;; Class
 (defclass callback ()
   ((transaction-id
     :accessor transaction-id
@@ -21,7 +25,7 @@
     :documentation "The time the callback was registered.")
    (timeout
     :accessor timeout
-    :initform (* 10 internal-time-units-per-second) ;; in seconds
+    :initform (* *timeout-interval* internal-time-units-per-second) ;; in seconds
     :documentation "Number of seconds until the callback times out.")
    (timeout-callback
     :accessor timeout-callback

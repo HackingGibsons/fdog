@@ -91,3 +91,37 @@
           :no-addr-found))))
 
   (wait-for-agent (request-forwarder-uuid) :still-there))
+
+(def-test (request-forwarder-agent-forwards-request :group request-forwarder-agent-tests)
+    (:values (:eql :connected)
+             (:eql :requested)
+             (:eql :forwarded))
+
+  (zmq:with-context (ctx 1)
+    (zmq:with-socket (pull ctx :pull)
+      (values
+       (let ((addr (wait-for-agent-message (request-forwarder-uuid) (msg)
+                     (getf (cadr (getf (getf (getf (getf msg
+                                                         :info)
+                                                         :provides)
+                                                         :forwarding)
+                                                         :endpoints))
+                           :push))))
+         (if addr
+             (and (zmq:connect pull addr)
+                  :connected)
+             :no-addr-found))
+
+       (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+         (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+         (force-output (usocket:socket-stream sock))
+         :requested)
+
+       (zmq:with-poll-items (items nb-items)
+           ((pull :pollin))
+         (let ((nb-signaled-items (zmq:poll items nb-items (round (* 1 1000000)))))
+           (if (> nb-signaled-items 0)
+               (and (not (zerop (length (zmq:recv! pull :array))))
+                    :forwarded)
+               :timeout)))))))
+

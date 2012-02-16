@@ -38,14 +38,19 @@ when finished with to avoid leaking in foreign code."
 
 ;; Actual low-level interfacing methods.
 (defmethod send! (sock msg &optional flags (count 0))
-  (let* ((res (handler-case (zmq:send sock msg flags) (zmq:zmq-error () -1)))
+  (let* (condition
+         (res (handler-case (zmq:send sock msg flags) (zmq:zmq-error (c) (setf condition c) -1)))
          (res (cond ((and (= res -1)
                           (= (sb-alien:get-errno) sb-posix:eagain)
                           (not (member :noblock flags)))
                      (send! sock msg flags (1+ count)))
 
                     (:otherwise
-                     res))))
+                     (if (member :noblock flags)
+                         (or (and condition
+                                  (signal condition))
+                             res)
+                         res)))))
     (values res count)))
 
 (defmethod recv! (sock msg &optional flags (count 0))

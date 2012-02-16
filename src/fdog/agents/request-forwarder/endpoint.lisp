@@ -56,6 +56,7 @@ Called by the simple-specialization methods `push-ready' and `push-unready'")
         (error "Endpoint ~A lacks agent or organ." endpoint)))
 
   (:method ((agent standard-agent) (organ standard-organ) (endpoint forwarder-endpoint))
+    (log-for (warn forwarder-endpoint) "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)
     (signal "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)))
 
 (defgeneric push-ready (endpoint)

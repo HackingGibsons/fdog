@@ -13,6 +13,14 @@ for Afdog.")
   (:import-from :alexandria
                 :appendf)
 
-  (:export :request-forwarder-agent))
+  (:export :request-forwarder-agent
+           :push-state-signal
+           :forwarder-endpoint
+           :push-sock
+           :sub-sock
+           :sock-of
+           :addr-of
+           :push-ready
+           :push-unready))
 
 (in-package :request-forwarder-agent)

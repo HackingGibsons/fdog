@@ -28,6 +28,16 @@
 that describe a client facing endpoint for `agent'/`organ'
 that has a client endpoint named `name'."))
 
+;; Helpers to navigate the socket vectors
+(defmacro sock-of (x) `(aref ,x 0))
+(defmacro addr-of (x) `(aref ,x 1))
+
+(defmethod print-object ((endpoint forwarder-endpoint) stream)
+  "Pretty printer for the `forwarder-endpoint'"
+  (format stream "#<Forwarder-Endpoint[~S] State: ~S Push[~A]:Sub[~A]>"
+          (name endpoint) (push-sock-state endpoint)
+          (addr-of (push-sock endpoint)) (addr-of (sub-sock endpoint))))
+
 (defmethod initialize-instance :after ((endpoint forwarder-endpoint) &key)
   "Bind the addresses of the given endpoint."
   (bind endpoint))
@@ -36,14 +46,38 @@ that has a client endpoint named `name'."))
   "Shortcut to check of `push-state' of the `endpoint' is `:ready'"
   (eql (push-state endpoint) :ready))
 
-(defmethod push-ready ((endpoint forwarder-endpoint))
-  "Set an endpoint as ready."
-  (log-for (trace forwarder-endpoint) "Readying endpoint: ~A" endpoint)
-  (setf (push-state endpoint) :ready))
+(defgeneric push-state-signal (agent organ endpoint)
+  (:documentation "Called when a push socket on `endpoint' endpoint
+is signaled in an I/O state transition or noted as such in an IO operation.
+Called by the simple-specialization methods `push-ready' and `push-unready'")
+  (:method (agent organ (endpoint forwarder-endpoint))
+    (if (and (agent endpoint) (organ endpoint))
+        (push-state-signal (agent endpoint) (organ endpoint) endpoint)
+        (error "Endpoint ~A lacks agent or organ." endpoint)))
 
-(defmethod push-unready ((endpoint forwarder-endpoint))
-  "Set the endpoint as not ready."
-  (setf (push-state endpoint) :not-ready))
+  (:method ((agent standard-agent) (organ standard-organ) (endpoint forwarder-endpoint))
+    (signal "~A/~A does not care about `push-state-signal' on ~A" agent organ endpoint)))
+
+(defgeneric push-ready (endpoint)
+  (:documentation "Set an endpoint as ready.")
+  (:method ((endpoint forwarder-endpoint))
+    "Main driver method"
+    (log-for (trace forwarder-endpoint) "Readying endpoint: ~A" endpoint)
+    (setf (push-state endpoint) :ready))
+
+  (:method :after ((endpoint forwarder-endpoint))
+    (log-for (trace forwarder-endpoint) "Signaling ready endpoint: ~A" endpoint)
+    (push-state-signal (agent endpoint) (organ endpoint) endpoint)))
+
+(defgeneric push-unready (endpoint)
+  (:documentation "Set the endpoint as not ready.")
+  (:method ((endpoint forwarder-endpoint))
+    "Main driver"
+    (setf (push-state endpoint) :not-ready))
+
+  (:method :after ((endpoint forwarder-endpoint))
+    (log-for (trace forwarder-endpoint) "Signaling unready endpoint: ~A" endpoint)
+    (push-state-signal (agent endpoint) (organ endpoint) endpoint)))
 
 (defmethod make-push-callback ((endpoint forwarder-endpoint))
   "Return a function that signals that this `endpoint's :push
@@ -51,10 +85,6 @@ socket is ready for IO."
   (lambda (sock)
     (declare (ignorable sock))
     (push-ready endpoint)))
-
-;; Helper
-(defmacro sock-of (x) `(aref ,x 0))
-(defmacro addr-of (x) `(aref ,x 1))
 
 ;; Setup and tear down methods
 (defmethod bind ((endpoint forwarder-endpoint))

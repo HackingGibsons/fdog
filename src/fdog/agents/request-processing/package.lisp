@@ -12,6 +12,7 @@ Mongrel2 ZeroMQ messages")
   (:export :request-processing-agent
            :agent-requesticle
            :request-handler
+           :disconnect-handler
            :handler-name
            :handler
            :enable

@@ -10,8 +10,17 @@
           :initarg :route
           :accessor route)
    (path :initform ""
-         :accessor path))
+         :accessor path)
+
+   (transforms :initform (list)
+               :initarg :transforms
+               :accessor transforms
+               :documentation "A list of symbols, :keywords
+or funcallable objects representing non-destructive transformations
+of the request object in sequence."))
+
   (:default-initargs . (:handle "forwarder-x-undefined"))
+
   (:documentation "This agent attempts to forward requests from
 external clients to internal services."))
 

@@ -44,7 +44,11 @@ that has a client endpoint named `name'."))
 
 (defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
   (log-for (warn forwarder-endpoint) "TODO: This function is a stub: `deliver-request'.")
-  (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request))
+  (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request)
+  ;; TODO: :NOBLOCK the send request
+  ;; TODO; Unready the endpoint if :noblock fails
+  ;; TODO: Have some sort of way to handle a failed send
+  (zmq:send! (sock-of (push-sock endpoint)) (m2cl:request-serialize request)))
 
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))

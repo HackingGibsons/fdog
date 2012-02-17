@@ -47,10 +47,8 @@ exceeds the timeout threshold, the timeout callback is fired and the callback is
 (defmethod heard-message :after ((agent api-agent) (head agent-head) from type &rest event)
   "After hearing an event message, test it against the predicates for the callbacks registered
 to the agent. If any match, call the callback and unregister it."
-  (log-for (trace callback) "Heard a message, checking callback.")
   (let ((callbacks (callbacks agent)))
     (dolist (callback callbacks)
-      (log-for (trace callback) "Message ~S match ~A" event (funcall (predicate callback) from type event))
       (when (funcall (predicate callback) from type event)
         (funcall (callback callback))
         (remove callback callbacks)))))
@@ -58,13 +56,11 @@ to the agent. If any match, call the callback and unregister it."
 (defbehavior increment-callback-timeouts (:interval (:from :heart :nth 1) :do :invoke) (organ)
   ;;; Every heart beat, check the registered callbacks for timeout. If
   ;;; they have timed out, fire the `timeout-callback' and unregister.
-  (log-for (trace callback) "Checking timeouts")
   (let* ((time (get-internal-real-time))
          (agent (organ-agent organ))
          (callbacks (callbacks agent)))
     (dolist (callback callbacks)
       (when (>= (timeout callback) (- time (start-time callback)))
-        (log-for (trace callback) "Timeout reached")
         (funcall (timeout-callback callback))
         (remove callback callbacks)))))
 

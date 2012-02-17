@@ -24,7 +24,7 @@ supporting wrapping native types in ephemeral messages for transport."))
       (values (zmq:msg-data-string msg) c))))
 
 (defmethod recv! (sock (msg (eql :array)) &optional flags count)
-  "Receive a message from `sock' and return the contents as a string."
+  "Receive a message from `sock' and return the contents as an array."
   (zmq:with-msg-init (msg)
     (multiple-value-bind (r c) (recv! sock msg flags count)
       (declare (ignore r))

@@ -8,13 +8,8 @@
   (declare (ignorable data))
   (log-for (trace request-forwarder-agent) "R-F-A: Request: ~A" req)
   (flet ((apply-transformation (request transform)
-           (log-for (trace request-forwarder-agent) "Transforming ~A with ~A" acc b)
-           (funcall transform request))
-
-         (match-endpoint (selected consider request)
-           (if (wants-request-p consider request)
-               consider
-               selected)))
+           (log-for (trace request-forwarder-agent) "Transforming ~A with ~A" request transform)
+           (funcall transform request)))
 
     (let* ((sock-pocket (find-organ agent :sock-pocket))
            (request (reduce #'apply-transformation (transforms agent)

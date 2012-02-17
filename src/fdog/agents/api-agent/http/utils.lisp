@@ -105,3 +105,4 @@ If there is an error parsing the JSON, throws a 400 error."
 (def-http-code 403 "Forbidden")
 (def-http-code 404 "Not found")
 (def-http-code 500 "Internal server error")
+(def-http-code 504 "Gateway timeout")

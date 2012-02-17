@@ -113,13 +113,23 @@
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
 (defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
-  (send-message (find-organ agent :head) :command
-                `(:command :speak
-                           :say (:agent :need
-                                        :need :remove-forwarders
-                                        :remove-forwarders
-                                        (:names (,(car forwarder))))))
-  (error '403-condition :details "TODO forwarder delete (callback)"))
+  (let ((name (car forwarder)))
+    (send-message (find-organ agent :head) :command
+                  `(:command :speak
+                             :say (:agent :need
+                                          :need :remove-forwarders
+                                          :remove-forwarders
+                                          (:names (,name)))))
+    (register-callback agent
+                       (make-instance 'callback
+                          :predicate #'(lambda (from type event)
+                                         (and (eql from :filled) (string= name (car (getf (getf event :remove-forwarders) :names)))))
+                          :callback #'(lambda ()
+                                        (with-chunked-stream-reply (handler request stream
+                                                                            :headers ((header-json-type)))
+                                          (json:encode-json-alist `(("status" . "ok")) stream)))
+                          :timeout-callback #'(lambda ()
+                                                (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
 (defmethod api/forwarder/update ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "TODO forwarder update"))

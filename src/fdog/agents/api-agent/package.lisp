@@ -6,8 +6,12 @@ for Afdog.")
         :agent
         :log5
         :request-processing-agent)
+  (:import-from :alexandria
+                :appendf)
   (:export :api-agent
            :forwarders
+           :callback
+           :register-callback
            :*control-server*
            :*api-handler*))
 

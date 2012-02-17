@@ -100,7 +100,17 @@
                                  :say (:agent :need
                                               :need :forwarder
                                               :forwarder (:name ,name :hosts ,hosts :routes ,routes)))))
-    (error '403-condition :details "TODO forwarder create (callback)")))
+
+    (register-callback agent
+                       (make-instance 'callback
+                          :predicate #'(lambda (from type event)
+                                         (and (eql from :filled) (string= name (getf (getf event :forwarder) :name))))
+                          :callback #'(lambda ()
+                                        (with-chunked-stream-reply (handler request stream
+                                                                            :headers ((header-json-type)))
+                                          (json:encode-json-alist `(("status" . "ok") ,@spec) stream)))
+                          :timeout-callback #'(lambda ()
+                                                (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
 (defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
   (send-message (find-organ agent :head) :command

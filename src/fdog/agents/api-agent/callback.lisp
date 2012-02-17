@@ -3,13 +3,11 @@
 ;; Knobs
 (defvar *timeout-interval* 10 "Timeout length, in seconds")
 
+(defcategory callback)
+
 ;; Class
 (defclass callback ()
-  ((transaction-id
-    :accessor transaction-id
-    :initform (error "Transaction id is required")
-    :documentation "A uuid for the callback matching the transaction id of the associated request.")
-   (predicate
+  ((predicate
     :accessor predicate
     :initarg :predicate
     :initform t
@@ -44,15 +42,18 @@ exceeds the timeout threshold, the timeout callback is fired and the callback is
 
 (defmethod register-callback ((agent api-agent) (callback callback))
   "Adds a `callback' instance to the agent's `callbacks' list"
-  (appendf (callbacks agent) callback))
+  (appendf (callbacks agent) (list callback)))
 
-(defmethod heard-message :after ((agent api-agent) (head agent-head) (from (eql :agent)) type &rest event)
+(defmethod heard-message :after ((agent api-agent) (head agent-head) from type &rest event)
   "After hearing an event message, test it against the predicates for the callbacks registered
 to the agent. If any match, call the callback and unregister it."
-  (dolist (callback (callbacks agent))
-    (when (funcall (predicate callback) event)
-      (funcall (callback callback))
-      (remove callback callbacks))))
+  (log-for (trace callback) "Heard a message, checking callback.")
+  (let ((callbacks (callbacks agent)))
+    (dolist (callback callbacks)
+      (log-for (trace callback) "Message ~S match ~A" event (funcall (predicate callback) from type event))
+      (when (funcall (predicate callback) from type event)
+        (funcall (callback callback))
+        (remove callback callbacks)))))
 
 (defbehavior increment-callback-timeouts (:on (:interval (:from :heart :nth 1)) :do :invoke-with-event) (organ event)
   ;;; Every heart beat, check the registered callbacks for timeout. If

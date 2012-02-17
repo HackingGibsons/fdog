@@ -9,7 +9,9 @@
                 :forwarder-to-alist)
   (:import-from :api-agent
                 :api-agent
-                :forwarders)
+                :forwarders
+                :callback
+                :register-callback)
   (:export :*name* :*description* :*version*
            :api))
 

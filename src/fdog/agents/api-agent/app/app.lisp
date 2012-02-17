@@ -34,7 +34,6 @@
 
 (defmethod api/forwarder/404 ((agent api-agent) organ handler request forwarder rest)
   (error '404-condition
-         ;; TODO doesn't return name - (name forwarder)
          :details (format nil "No resource for forwarder ~A matching ~A" forwarder rest)))
 
 ;; Endpoints
@@ -47,7 +46,6 @@
   (ppcre:register-groups-bind (name rest) ("^/?([^/]+)(/?.*$)" rest)
     (let ((forwarder (find-forwarder agent name)))
       (unless forwarder
-        ;; TODO doesn't return name
         (error '404-condition :details (format nil "Forwarder ~A not found" name)))
 
       (with-dispatch-on rest &route
@@ -61,7 +59,6 @@
   (ppcre:register-groups-bind (name rest) ("^/?([^/]+)(/?.*$)" rest)
     (let ((forwarder (find-forwarder agent name)))
       (unless forwarder
-        ;; TODO doesn't return name
         (error '404-condition :details (format nil "Forwarder ~A not found" name)))
 
       (with-dispatch-on rest &route
@@ -132,7 +129,7 @@
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
 (defmethod api/forwarder/update ((agent api-agent) organ handler request forwarder rest)
-  (error '403-condition :details "TODO forwarder update"))
+  (error '403-condition :details "Not yet implemented"))
 
 (defmethod api/forwarder/metrics ((agent api-agent) organ handler request forwarder rest)
-  (error '403-condition :details "TODO forwarder metrics"))
+  (error '403-condition :details "Not yet implemented"))

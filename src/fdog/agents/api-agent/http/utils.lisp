@@ -64,8 +64,6 @@ If there is an error parsing the JSON, throws a 400 error."
     :documentation "A detailed error message for the condition."))
 
   (:report (lambda (c s)
-             ;; TODO Prints message in parentheses if non-nil (but
-             ;; it's kind of a pain)
              (format s "~A condition raised: ~A" (code c) (status c))))
   (:documentation "Generic HTTP condition"))
 

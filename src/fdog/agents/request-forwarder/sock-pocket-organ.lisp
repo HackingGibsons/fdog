@@ -28,7 +28,8 @@ to. The default destination is to be called `:default'. Objects stored
 (defmethod client-endpoint ((organ agent-sock-pocket) name)
   "Helper to pull out an endpoint named `name' from the
 sock-pocket named by `organ'"
-  (gethash name (client-socks organ)))
+  (gethash name (client-socks organ)
+           (gethash :default (client-socks organ))))
 
 ;; Event loop registrations
 (defmethod writer-callbacks :around ((organ agent-sock-pocket))

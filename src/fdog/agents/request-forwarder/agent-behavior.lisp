@@ -19,8 +19,6 @@
     (let* ((sock-pocket (find-organ agent :sock-pocket))
            (request (reduce #'apply-transformation (transforms agent)
                             :initial-value req))
-           ;; TODO: Don't just reach in and grab default
-           ;;       search for the "correct" endpoint to use
            (endpoint (client-endpoint sock-pocket :default)))
 
       (log-for (trace request-forwarder-agent)

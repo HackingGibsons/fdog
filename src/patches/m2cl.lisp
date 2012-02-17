@@ -1,5 +1,7 @@
 (in-package :m2cl)
 
+(export 'request)
+
 (export 'request-serialize)
 (defmethod request-serialize ((request request))
   "Serialize the `request' into an octet array that would represent

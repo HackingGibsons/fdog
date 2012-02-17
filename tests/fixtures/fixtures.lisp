@@ -225,7 +225,7 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :uuid hypervisor-uuid)))
 
 (def-fixtures request-forwarder-agent-fixture
-    (:documentation "A fixture that instantiates an api agent."
+    (:documentation "A fixture that instantiates a request-forwarder-agent agent."
      :setup (progn
               (start request-forwarder-runner)
               (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)

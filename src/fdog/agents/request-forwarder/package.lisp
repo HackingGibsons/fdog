@@ -24,6 +24,8 @@ for Afdog.")
            :push-ready
            :push-state
            :name
-           :push-unready))
+           :push-unready
+           :deliver-request
+           :wants-request-p))
 
 (in-package :request-forwarder-agent)

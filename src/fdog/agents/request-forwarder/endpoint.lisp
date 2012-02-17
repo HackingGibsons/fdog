@@ -42,6 +42,16 @@ that has a client endpoint named `name'."))
   "Bind the addresses of the given endpoint."
   (bind endpoint))
 
+(defmethod wants-request-p ((endpoint forwarder-endpoint) (request m2cl:request))
+  "Return non-nil if this endpoint wants to try handling this request."
+  (log-for (warn forwarder-endpoint) "TODO: I am a stub: `wants-request-p'")
+  nil)
+
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
+  (log-for (warn forwarder-endpoint) "TODO: This function is a stub: `deliver-request'.")
+  (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request))
+
+
 (defmethod push-ready-p ((endpoint forwarder-endpoint))
   "Shortcut to check of `push-state' of the `endpoint' is `:ready'"
   (eql (push-state endpoint) :ready))

@@ -9,6 +9,7 @@ for Afdog.")
         :request-processing-agent)
 
   (:import-from :arnesi
+                :rcurry
                 :when-bind)
   (:import-from :alexandria
                 :appendf)

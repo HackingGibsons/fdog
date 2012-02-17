@@ -1,6 +1,6 @@
 (defpackage #:request-forwarder-agent
-  (:documentation "A package for the agent that implements the HTTP API
-for Afdog.")
+  (:documentation "A package for the agent that implements request/response
+rewriting, routing and forwarding.")
   (:use :cl
         :log5)
 

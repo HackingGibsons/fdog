@@ -51,7 +51,6 @@ that has a client endpoint named `name'."))
 (define-condition delivery-failure (endpoint-condition) ())
 
 (defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
-  (log-for (warn forwarder-endpoint) "TODO: This function is a stub: `deliver-request'.")
   (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request)
   (handler-case
       (prog1 (zmq:send! (sock-of (push-sock endpoint)) (m2cl:request-serialize request) '(:noblock))
@@ -62,6 +61,8 @@ that has a client endpoint named `name'."))
           (push-unready endpoint))
       (signal (make-condition 'delivery-failure :reason "Delivery attempt would block")))))
 
+(defmethod deliver-response ((endpoint forwarder-endpoint) data)
+  (log-for (warn forwarder-endpoint) "TODO: Response forwarding: ~A" (babel:octets-to-string data)))
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))
   "Shortcut to check of `push-state' of the `endpoint' is `:ready'"

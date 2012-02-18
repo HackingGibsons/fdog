@@ -32,6 +32,18 @@ sock-pocket named by `organ'"
            (gethash :default (client-socks organ))))
 
 ;; Event loop registrations
+(defmethod reader-callbacks :around ((organ agent-sock-pocket))
+  (multiple-value-bind (socks callbacks) (call-next-method)
+    (maphash #'(lambda (name endpoint)
+                 (declare (ignorable name))
+                 (appendf socks (list (sock-of (sub-sock endpoint))))
+                 (appendf callbacks (list #'(lambda (sock)
+                                              ;; TODO: Extract
+                                              (deliver-response endpoint (zmq:recv! sock :array))))))
+
+             (client-socks organ))
+    (values socks callbacks)))
+
 (defmethod writer-callbacks :around ((organ agent-sock-pocket))
   (multiple-value-bind (socks callbacks) (call-next-method)
     (maphash #'(lambda (name endpoint)

@@ -125,3 +125,14 @@
                     :forwarded)
                :timeout)))))))
 
+(def-test (request-forwarder-agent-handles-delivery-failure :group request-forwarder-agent-tests)
+    (:values (:eql :requested)
+             (:eql :still-there))
+
+  (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+    (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+    (force-output (usocket:socket-stream sock))
+    :requested)
+
+  (wait-for-agent (request-forwarder-uuid :timeout 10) :still-there))
+

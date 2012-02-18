@@ -3,6 +3,14 @@
 (defmethod disconnect-handler ((agent request-forwarder-agent) organ req data)
   (log-for (trace request-forwarder-agent) "R-F-A: Disconnect: ~A" req))
 
+(defmethod delivery-failure-handler ((agent request-forwarder-agent) (organ agent-requesticle) req)
+  (log-for (trace request-forwarder-agent) "R-F-A: Request failed to deliver: ~A" req)
+  (http-dog:with-chunked-stream-reply ((handler organ) req s
+                                       :code 503 :status "SERVICE UNAVAILABLE"
+                                       :headers ((http-dog:header-json-type)))
+    (json:encode-json-plist `(:error "Upstream delivery failure. No recovery options present.")
+                            s)))
+
 (defmethod request-handler ((agent request-forwarder-agent) organ req data)
   "Handle the transformation and delivery of a request."
   (declare (ignorable data))
@@ -24,4 +32,6 @@
                "Transformed request: ~A"
                (babel:octets-to-string (m2cl:request-serialize req)))
 
-      (deliver-request endpoint request))))
+      (handler-case (deliver-request endpoint request)
+        (delivery-failure ()
+          (delivery-failure-handler agent organ request))))))

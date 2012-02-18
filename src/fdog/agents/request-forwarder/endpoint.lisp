@@ -42,13 +42,25 @@ that has a client endpoint named `name'."))
   "Bind the addresses of the given endpoint."
   (bind endpoint))
 
+(define-condition endpoint-condition ()
+  ((reason :initarg :reason :initform "Unknown failure"
+           :accessor reason))
+  (:report (lambda (c stream)
+             (format stream "Endpoint error: ~A" (reason c)))))
+
+(define-condition delivery-failure (endpoint-condition) ())
+
 (defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
   (log-for (warn forwarder-endpoint) "TODO: This function is a stub: `deliver-request'.")
   (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request)
-  ;; TODO: :NOBLOCK the send request
-  ;; TODO; Unready the endpoint if :noblock fails
-  ;; TODO: Have some sort of way to handle a failed send
-  (zmq:send! (sock-of (push-sock endpoint)) (m2cl:request-serialize request)))
+  (handler-case
+      (prog1 (zmq:send! (sock-of (push-sock endpoint)) (m2cl:request-serialize request) '(:noblock))
+        (unless (push-ready-p endpoint)
+          (push-ready endpoint)))
+    (zmq:eagain-error ()
+      (if (push-ready-p endpoint)
+          (push-unready endpoint))
+      (signal (make-condition 'delivery-failure :reason "Delivery attempt would block")))))
 
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))

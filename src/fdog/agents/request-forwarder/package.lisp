@@ -25,6 +25,7 @@ rewriting, routing and forwarding.")
            :push-state
            :name
            :push-unready
-           :deliver-request))
+           :deliver-request
+           :delivery-faulure))
 
 (in-package :request-forwarder-agent)

@@ -107,7 +107,7 @@
                                                      ((:file "package")
                                                       (:file "afdog-hypervisor-agent" :depends-on ("package"))))
 
-                                            (:module "request-forwarder" :depends-on ("request-processing") :components
+                                            (:module "request-forwarder" :depends-on ("request-processing" "api-agent") :components
                                                      ((:file "package")
                                                       (:file "endpoint" :depends-on ("package"))
                                                       (:file "sock-pocket-organ" :depends-on ("package" "endpoint"))

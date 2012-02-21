@@ -1,5 +1,12 @@
 (in-package :forwarder-agent)
 
+(defmethod agent-needs :before ((agent forwarder-agent) (organ agent-head) what need-info)
+  ;; Announce "need forwarder server"
+  (send-message organ :command
+                `(:command :speak
+                           :say (:agent :need
+                                        :need :server
+                                        :server (:name ,*forwarder-server* :port ,*forwarder-server-port* :hosts ("localhost"))))))
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :forwarder)) need-info)
   "Creates or updates a forwarder (\"forwarder server\" + named mongrel2 handler) in response to a need request."
@@ -8,12 +15,6 @@
     (let ((name (from-info :name))
           (hosts (from-info :hosts))
           (routes (from-info :routes)))
-      ;; Announce "need forwarder server"
-      (send-message organ :command
-                    `(:command :speak
-                               :say (:agent :need
-                                            :need :server
-                                            :server (:name ,*forwarder-server* :port ,*forwarder-server-port* :hosts ("localhost")))))
       ;; Announce "need handler" for each route
       (dolist (route routes)
         (let ((route-name (from route :name))

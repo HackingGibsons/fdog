@@ -109,7 +109,7 @@
                           :timeout-callback #'(lambda ()
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
-(defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder rest)
+(defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder raw)
   (let ((name (car forwarder)))
     (send-message (find-organ agent :head) :command
                   `(:command :speak

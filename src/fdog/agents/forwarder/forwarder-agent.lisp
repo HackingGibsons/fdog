@@ -29,12 +29,12 @@
 
 (defmethod routes-for-forwarder ((agent forwarder-agent) name)
   (awhen (cdr (find-forwarder-by-name agent name))
-    (getf it :routes)))
+    (cdr (assoc :routes it))))
 
 (defmethod save-forwarders ((agent forwarder-agent))
-  (let ((forwarder-file (forwarder-file-path agent))
-        (tmp-file (forwarder-file-path-tmp agent))
-        (forwarder-list (mapcar #'(lambda (x) `(,(car x) ,(alexandria:plist-alist (cdr x)))) (forwarders agent))))
+  (let* ((forwarder-file (forwarder-file-path agent))
+         (tmp-file (forwarder-file-path-tmp agent))
+         (forwarder-list (forwarders agent)))
     (with-open-file (out tmp-file :direction :output :if-exists :supersede :if-does-not-exist :create)
       (json:encode-json-alist forwarder-list out))
     (rename-file tmp-file forwarder-file)))
@@ -48,20 +48,15 @@
   (with-open-file (in (forwarder-file-path agent) :if-does-not-exist nil)
     (when in
       (dolist (forwarder (load-forwarder-json in))
-        (agent-needs agent (find-organ agent :head) :forwarder forwarder)))))
+        (agent-needs agent (find-organ agent :head) :forwarder (cadr forwarder))))))
 
 ;; Helpers
 (defun load-forwarder-json (stream)
   "Deserializes forwarder.json stream into a format expected by the `forwarder-agent''s
-`forwarders' slot. For each forwarder key in the JSON, converts the metadata from an alist
-(as presented by CL-JSON) to a plist, then converts the routes from
-(:DEFAULT . \"/path/\") to (\"default\" . \"/path/\").
+`forwarders' slot.
 
-Only decodes JSON if the file exists and is not empty."
+Only decodes JSON if the file exists and is not empty.
+
+Side effect: All forwarder names will be lowercased"
   (unless (zerop (file-length stream))
-    (let ((forwarders nil))
-      (dolist (forwarder (json:decode-json stream))
-        (let ((forwarder-plist (alexandria:alist-plist (cadr forwarder))))
-          (setf (getf forwarder-plist :routes) (mapcar #'(lambda (x) `(,(string-downcase (symbol-name (car x))) . ,(cdr x))) (getf forwarder-plist :routes)))
-          (alexandria:appendf forwarders (list forwarder-plist))))
-      forwarders)))
+    (mapcar #'(lambda (x) (list (string-downcase (symbol-name (car x))) (cdr x))) (json:decode-json stream))))

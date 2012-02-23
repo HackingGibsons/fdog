@@ -12,7 +12,7 @@
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "test" :hosts ("api.example.com" "api2.example.com") :routes (("root" . "/") ("one" . "/1/"))))) (msg)
+                            :forwarder ((:name . "test") (:hosts . ("api.example.com" "api2.example.com")) (:routes . (((:name . "root") (:route . "/")) ((:name . "one") (:route . "/1/"))))))) (msg)
        (awhen (getf msg :filled)
          (when (getf msg :forwarder)
               :need-filled)))
@@ -40,7 +40,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "remove1" :hosts ("api2.example.com") :routes (("default" . "/r1/"))))) (msg)
+                                    :forwarder ((:name . "remove1") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/r1/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-1-added)))
@@ -48,7 +48,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "remove2" :hosts ("api2.example.com") :routes (("default" . "/r2/"))))) (msg)
+                            :forwarder ((:name . "remove2") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/r2/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-2-added)))
@@ -99,7 +99,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull1" :hosts ("api2.example.com") :routes (("default" . "/c1/"))))) (msg)
+                                    :forwarder ((:name . "cull1") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/c1/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-1-added)))
@@ -107,7 +107,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull2" :hosts ("api2.example.com") :routes (("default" . "/c2/"))))) (msg)
+                                    :forwarder ((:name . "cull2") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/c2/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-2-added)))
@@ -115,7 +115,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull3" :hosts ("api2.example.com") :routes (("default" . "/c3/"))))) (msg)
+                                    :forwarder ((:name . "cull3") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/c3/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-3-added)))
@@ -123,7 +123,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "cull4" :hosts ("api2.example.com") :routes (("default" . "/c4/"))))) (msg)
+                                    :forwarder ((:name . "cull4") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/c4/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :forwarder-4-added)))
@@ -207,20 +207,20 @@
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "saveme" :hosts ("api2.example.com") :routes (("default" . "/s/"))))) (msg)
+                            :forwarder ((:name . "saveme") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:name . "/s/"))))))) (msg)
      (awhen (getf msg :filled)
        (when (getf msg :forwarder)
          :forwarder-added)))
 
    (wait-for-agent-message (forwarder-agent-uuid) (msg)
      (when-bind forwarders (getf (getf (getf msg :info) :provides) :forwarders)
-       (when (find "saveme" (loop for i in forwarders collect (car i)) :test #'string=)
+       (when (find "saveme" forwarders :key #'car :test #'string=)
          :forwarder-announced)))
 
    (let ((file (merge-pathnames *forwarder-filename* (merge-pathnames "server/" *root*))))
      (with-open-file (in file)
        (when-bind forwarders (forwarder-agent:load-forwarder-json in)
-         (when (find "saveme" (loop for i in forwarders collect (getf i :name)) :test #'string=)
+         (when (assoc "saveme" forwarders :test #'string=)
            :forwarder-exists-in-file))))
 
 
@@ -260,7 +260,7 @@
            (wait-for-agent-message (forwarder-agent-uuid :request
                            `(:agent :need
                                     :need :forwarder
-                                    :forwarder (:name "restore" :hosts ("api2-example.com") :routes (("default" . "/rs/"))))) (msg)
+                                    :forwarder ((:name . "restore") (:hosts . ("api2-example.com")) (:routes . (((:name . "default") (:route . "/rs/"))))))) (msg)
              (awhen (getf msg :filled)
                (when (getf msg :forwarder)
                  :need-filled)))))
@@ -301,7 +301,7 @@
    (wait-for-agent-message (forwarder-agent-uuid :request
                    `(:agent :need
                             :need :forwarder
-                            :forwarder (:name "missing" :hosts ("api2.example.com") :routes (("default" . "/m/"))))) (msg)
+                            :forwarder ((:name . "missing") (:hosts . ("api2.example.com")) (:routes . (((:name . "default") (:route . "/m/"))))))) (msg)
      (awhen (getf msg :filled)
        (when (getf msg :forwarder)
          :forwarder-added)))))

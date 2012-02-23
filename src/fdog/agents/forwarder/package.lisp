@@ -13,7 +13,6 @@
                 :when-bind)
   (:export :forwarder-agent
            :load-forwarder-json
-           :forwarder-to-alist
            :*forwarder-server*
            :*forwarder-server-port*))
 

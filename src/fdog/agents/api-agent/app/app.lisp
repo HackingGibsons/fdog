@@ -72,15 +72,14 @@
   "Retrieves information about all known forwarders."
   (with-chunked-stream-reply (handler request stream
                                       :headers ((header-json-type)))
-    (let ((forwarder-list (mapcar #'forwarder-to-alist (forwarders agent))))
-      (json:encode-json-alist forwarder-list stream))))
+    (json:encode-json-alist (forwarders agent) stream)))
 
 (defmethod api/forwarder/root ((agent api-agent) organ handler request forwarder rest)
   (with-chunked-stream-reply (handler request stream
                                       :headers ((header-json-type)))
     ;; We just want the forwarder information, not the full thing like
     ;; in /forwarders/ list
-    (json:encode-json-alist (cdr (forwarder-to-alist forwarder)) stream)))
+    (json:encode-json-alist (cdr forwarder) stream)))
 
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|)) (agent api-agent) organ handler request raw)
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))
@@ -96,12 +95,12 @@
                       `(:command :speak
                                  :say (:agent :need
                                               :need :forwarder
-                                              :forwarder (:name ,name :hosts ,hosts :routes ,routes)))))
+                                              :forwarder ((:name . ,name) (:hosts . ,hosts) (:routes . ,routes))))))
 
     (register-callback agent
                        (make-instance 'callback
                           :predicate #'(lambda (from type event)
-                                         (and (eql from :filled) (string= name (getf (getf event :forwarder) :name))))
+                                         (and (eql from :filled) (string= name (cdr (assoc :name (getf event :forwarder))))))
                           :callback #'(lambda ()
                                         (with-chunked-stream-reply (handler request stream
                                                                             :headers ((header-json-type)))

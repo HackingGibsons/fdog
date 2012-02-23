@@ -3,7 +3,8 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :forwarder)) need-info)
   "Creates or updates a forwarder (\"forwarder server\" + named mongrel2 handler) in response to a need request."
-  (labels ((from-info (thing) (getf need-info thing)))
+  (labels ((from (place thing) (cdr (assoc thing place)))
+           (from-info (thing) (from need-info thing)))
     (let ((name (from-info :name))
           (hosts (from-info :hosts))
           (routes (from-info :routes)))
@@ -15,11 +16,13 @@
                                             :server (:name ,*forwarder-server* :port ,*forwarder-server-port* :hosts ("localhost")))))
       ;; Announce "need handler" for each route
       (dolist (route routes)
-        (send-message organ :command
-                      `(:command :speak
-                                 :say (:agent :need
-                                              :need :handler
-                                              :handler (:server ,*forwarder-server* :hosts ,hosts :route ,(cdr route) :name ,(handler-name name (car route)))))))
+        (let ((route-name (from route :name))
+              (path (from route :route)))
+          (send-message organ :command
+                        `(:command :speak
+                                   :say (:agent :need
+                                                :need :handler
+                                                :handler (:server ,*forwarder-server* :hosts ,hosts :route ,path :name ,(handler-name name route-name)))))))
 
       ;; Add forwarder to agent list
       (add-forwarder agent name need-info)
@@ -33,11 +36,12 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :remove-forwarders)) need-info)
   "Removes the named forwarders."
-  (labels ((from-info (thing) (getf need-info thing)))
+  (labels ((from (place thing) (cdr (assoc thing place)))
+           (from-info (thing) (getf need-info thing)))
     (let* ((names (from-info :names))
            (handlers-to-remove nil))
       (dolist (name names)
-        (appendf handlers-to-remove (mapcar #'(lambda (x) (handler-name name (car x))) (routes-for-forwarder agent name))))
+        (appendf handlers-to-remove (mapcar #'(lambda (route) (handler-name name (from route :name))) (routes-for-forwarder agent name))))
 
       (send-message organ :command
                     `(:command :speak
@@ -55,11 +59,12 @@
 
 (defmethod agent-needs ((agent forwarder-agent) (organ agent-head) (what (eql :keep-forwarders)) need-info)
   "Removes all forwarders except those named."
-  (labels ((from-info (thing) (getf need-info thing)))
+  (labels ((from (place thing) (cdr (assoc thing place)))
+           (from-info (thing) (getf need-info thing)))
     (let* ((names (from-info :names))
            (handlers-to-keep nil))
       (dolist (name names)
-        (appendf handlers-to-keep (mapcar #'(lambda (x) (handler-name name (car x))) (routes-for-forwarder agent name))))
+        (appendf handlers-to-keep (mapcar #'(lambda (route) (handler-name name (from route :name))) (routes-for-forwarder agent name))))
 
       (send-message organ :command
                     `(:command :speak
@@ -88,9 +93,9 @@ if the `forwarder' server is missing handlers the agent expects, request the han
   (when-bind forwarder-server (assoc *forwarder-server* (getf (getf (getf info :info) :provides) :servers) :test #'string=)
     (log-for (trace forwarder-agent) "Heard an agent info message, forwarder server: ~A" forwarder-server)
     (labels ((handler-names-for-forwarder (forwarder)
-               (let ((name (getf (cdr forwarder) :name))
-                     (routes (getf (cdr forwarder) :routes)))
-                 (mapcar #'(lambda (x) (handler-name name x)) (mapcar #'car routes))))
+               (let ((name (cdr (assoc :name (cdr forwarder))))
+                     (routes (cdr (assoc :routes (cdr forwarder)))))
+                 (mapcar #'(lambda (x) (handler-name name x)) (mapcar #'(lambda (x) (cdr (assoc :name x))) routes))))
 
              (handler-list (forwarders)
                (let ((handler-list nil))
@@ -106,14 +111,17 @@ if the `forwarder' server is missing handlers the agent expects, request the han
           ;; Request all handlers, requesting a handler that already
           ;; exists is harmless
           (dolist (forwarder agent-forwarders)
-            (labels ((from-info (thing) (getf (cdr forwarder) thing)))
+            (labels ((from (place thing) (cdr (assoc thing place)))
+                     (from-info (thing) (from (cdr forwarder) thing)))
               (let ((name (from-info :name))
                     (hosts (from-info :hosts))
                     (routes (from-info :routes)))
                 ;; Announce "need handler" for each route
                 (dolist (route routes)
-                  (send-message organ :command
-                                `(:command :speak
-                                           :say (:agent :need
-                                                        :need :handler
-                                                        :handler (:server ,*forwarder-server* :hosts ,hosts :route ,(cdr route) :name ,(handler-name name (car route)))))))))))))))
+                  (let ((route-name (from route :name))
+                        (path (from route :route)))
+                    (send-message organ :command
+                                  `(:command :speak
+                                             :say (:agent :need
+                                                          :need :handler
+                                                          :handler (:server ,*forwarder-server* :hosts ,hosts :route ,path :name ,(handler-name name route-name)))))))))))))))

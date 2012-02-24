@@ -15,6 +15,10 @@
     :accessor forwarders
     :initform nil
     :documentation "A list of forwarders the agent knows about.")
+   (handlers
+    :accessor handlers
+    :initform nil
+    :documentation "A list of handlers the agent knows about.")
    (callbacks
     :accessor callbacks
     :initform nil
@@ -47,4 +51,13 @@ and contains the implementation of the afdog API."))
       ;; Differentiate between agent not providing forwarders, and agent
       ;; with (:PROVIDES (:FORWARDERS NIL)
       (unless (eql forwarders :not-found)
-        (setf (forwarders agent) forwarders)))))
+        (setf (forwarders agent) forwarders)))
+
+    ;; If the announce is from a mongrel2 agent, look for a
+    ;; "forwarder" server. If found, update the stored handler sockets
+    ;; on the agent.
+    (let ((servers (getf provides :servers :not-found)))
+      (unless (eql servers :not-found)
+        (when-bind forwarder-server (assoc "forwarder" servers :test #'string=)
+          (let ((handlers (cdr forwarder-server)))
+            (setf (handlers agent) handlers)))))))

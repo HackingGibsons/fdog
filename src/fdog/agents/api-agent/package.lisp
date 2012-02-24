@@ -8,8 +8,11 @@ for Afdog.")
         :request-processing-agent)
   (:import-from :alexandria
                 :appendf)
+  (:import-from :arnesi
+                :when-bind)
   (:export :api-agent
            :forwarders
+           :handlers
            :callback
            :register-callback
            :*control-server*

@@ -8,6 +8,7 @@
   (:import-from :api-agent
                 :api-agent
                 :forwarders
+                :handlers
                 :callback
                 :register-callback)
   (:export :*name* :*description* :*version*

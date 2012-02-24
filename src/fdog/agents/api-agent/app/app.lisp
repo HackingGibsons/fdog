@@ -104,7 +104,7 @@
                           :callback #'(lambda ()
                                         (with-chunked-stream-reply (handler request stream
                                                                             :headers ((header-json-type)))
-                                          (json:encode-json-alist `(("status" . "ok") ,@spec) stream)))
+                                          (json:encode-json-alist `(("success" . t) ,@spec) stream)))
                           :timeout-callback #'(lambda ()
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
@@ -123,7 +123,7 @@
                           :callback #'(lambda ()
                                         (with-chunked-stream-reply (handler request stream
                                                                             :headers ((header-json-type)))
-                                          (json:encode-json-alist `(("status" . "ok")) stream)))
+                                          (json:encode-json-alist `(("success" . t)) stream)))
                           :timeout-callback #'(lambda ()
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 

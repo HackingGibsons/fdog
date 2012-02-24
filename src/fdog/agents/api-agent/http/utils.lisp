@@ -77,7 +77,7 @@ If there is an error parsing the JSON, throws a 400 error."
                                           :status status
                                           :headers ((header-json-type)))
         (log-for (trace) "[Condition] ~A" condition)
-        (let ((error-json (list (cons :error (format nil "~A" status)))))
+        (let ((error-json (list (cons :success nil) (cons :error (format nil "~A" status)))))
           (awhen (details condition)
             (appendf error-json (list (cons :details it))))
           (json:encode-json error-json stream))))))

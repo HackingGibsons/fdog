@@ -56,8 +56,8 @@
 (defmethod agent-provides :around ((agent mongrel2-agent))
   (labels ((handler-description (handler)
              (let ((name (mongrel2-handler-name handler)))
-               `(,name . (:send ,(fdog-models:mongrel2-handler-send-spec handler)
-                          :recv ,(fdog-models:mongrel2-handler-recv-spec handler)))))
+               `(,name . ((:send . ,(fdog-models:mongrel2-handler-send-spec handler))
+                          (:recv . ,(fdog-models:mongrel2-handler-recv-spec handler))))))
 
            (server-ad (server)
              `(,(fdog-models:mongrel2-server-name server)

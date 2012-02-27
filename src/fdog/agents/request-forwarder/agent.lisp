@@ -59,13 +59,16 @@ external clients to internal services."))
 (defmethod heard-message :after ((agent request-forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   (when-bind forwarder (assoc (forwarder agent)
                               (getf (getf (getf info :info) :provides) :forwarders) :test #'string=)
-    (when-bind routes (getf (rest forwarder) :routes)
-      (when-bind my-path (cdr (assoc (route agent) routes :test #'string=))
-        ;; If we aren't using the path we hear, set the new one
-        ;; and ask the requesticle to start processing.
-        (unless (string= (path agent) my-path)
-          (log-for (request-forwarder-agent trace) "My path is now: ~S" my-path)
-          (setf (path agent) my-path)
-          (send-message organ :command
-                `(:command :requesticle
-                  :requesticle :enable)))))))
+    (when-bind routes (cdr (assoc :routes (rest forwarder)))
+      (log-for (request-forwarder-agent trace) "Looking for path in forwarder-routes: ~S" routes)
+      (when-bind route (assoc (route agent) routes :key #'cdr :test #'string=)
+        (when-bind my-path (cdr (assoc :route route))
+          ;; Only perform the requesticle toggle
+          ;; when we see a path for our forwarder
+          ;; that doesn't match ours
+          (unless (string= (path agent) my-path)
+            (log-for (request-forwarder-agent trace) "My path is now: ~S" my-path)
+            (setf (path agent) my-path)
+            (send-message organ :command
+                          `(:command :requesticle
+                            :requesticle :enable))))))))

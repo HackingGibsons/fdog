@@ -238,9 +238,10 @@ Does kill -9 to ensure the process dies in cleanup.")
                                                :request
                                                `(:agent :need
                                                         :need :forwarder
-                                                        :forwarder (:name "test"
-                                                                    :hosts ("api.example.com" "localhost")
-                                                                    :routes (("default" . "/") ("one" . "/1/")))))
+                                                        :forwarder ((:name . "test")
+                                                                    (:hosts . ("api.example.com" "localhost"))
+                                                                    (:routes . (((:name . "default") (:route . "/"))
+                                                                                ((:name . "one") (:route . "/1/")))))))
                           (msg)
                         (awhen (getf msg :filled)
                           (when (getf msg :forwarder)

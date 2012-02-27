@@ -25,16 +25,23 @@
          (provides (getf provides :request-processing)))))
 
 (def-test (api-agent-builds-api-handler :group api-agent-tests)
-    (:all (:apply car (:equalp "api"))
-          (:apply cdr (:permute (:seq (:equalp :send)
-                                      (:predicate stringp)
-                                      (:equalp :recv)
-                                      (:predicate stringp)))))
+    (:seq
+     (:equalp "api")
+     (:all (:apply car (:equalp :send))
+           (:apply cdr (:predicate stringp)))
+     (:all (:apply car (:equalp :recv))
+           (:apply cdr (:predicate stringp))))
   (wait-for-agent-message (mongrel2-uuid) (msg)
     (let* ((control (cdr (assoc "control"
-                               (getf (getf (getf msg :info) :provides) :servers)
-                               :test #'string=))))
-      (assoc "api" control :test #'string=))))
+                                (getf (getf (getf msg :info) :provides) :servers)
+                                :test #'string=)))
+           (api-info (assoc "api" control :test #'string=))
+           (api-name (car api-info))
+           (send-info (assoc :send (cdr api-info)))
+           (recv-info (assoc :recv (cdr api-info))))
+      (list  api-name
+             send-info
+             recv-info))))
 
 (def-test (api-agent-fires-request-handler :group api-agent-tests)
     (:values (:eql :connected-to-one)

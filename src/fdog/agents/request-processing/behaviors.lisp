@@ -16,15 +16,17 @@ any handlers we're interested in and we should connect to them."
                  (zmq:connect (request-sock organ) send)
                  (zmq:connect (response-sock organ) recv)
                  (setf (gethash send (connected-to organ)) (getf info :uuid))))
-
+             (connect-to-handler (handler)
+               (let* ((handler-name (car handler))
+                      (handler-info (cdr handler)))
+                 (apply #'try-connecting handler-name (alexandria:alist-plist handler-info))))
              (search-server (server-handlers)
                "Search a server description for handlers"
                (log-for (trace requesticle peer-collection) "Destructuring: ~S" server-handlers)
                (destructuring-bind (server &rest handlers) server-handlers
                  (declare (ignorable server))
                  (log-for (trace requesticle peer-collection) "Handlers: ~S" handlers)
-                 (mapc #'(lambda (handler) (apply #'try-connecting handler)) handlers))))
-
+                 (mapc #'connect-to-handler handlers))))
       (log-for (trace requesticle peer-collection) "Requesticle hears info: ~S" info)
       (log-for (trace requesticle peer-collection) "Found servers: ~S" servers)
       (mapc #'search-server servers))))

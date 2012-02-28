@@ -62,7 +62,8 @@ that has a client endpoint named `name'."))
       (signal (make-condition 'delivery-failure :reason "Delivery attempt would block")))))
 
 (defmethod deliver-response ((endpoint forwarder-endpoint) data)
-  (log-for (warn forwarder-endpoint) "TODO: Response forwarding: ~A" (babel:octets-to-string data)))
+  (log-for (warn forwarder-endpoint) "TODO: Response forwarding: ~A" (babel:octets-to-string data))
+  (zmq:send! (sock-of (sub-sock endpoint)) data))
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))
   "Shortcut to check of `push-state' of the `endpoint' is `:ready'"

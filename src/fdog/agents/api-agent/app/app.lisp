@@ -132,3 +132,10 @@
 
 (defmethod api/forwarder/metrics ((agent api-agent) organ handler request forwarder rest)
   (error '403-condition :details "Not yet implemented"))
+
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/healthcheck/|)) (agent api-agent) organ handler request raw)
+  "Naive health check. Returns {\"state\":\"ok\"} if it works."
+  (with-chunked-stream-reply (handler request stream
+                                      :headers ((header-json-type)))
+    (json:encode-json-plist `(:state "ok")
+                            stream)))

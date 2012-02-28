@@ -12,7 +12,8 @@
                    request-processing-agent-tests
                    api-agent-tests
                    forwarder-agent-tests
-                   request-forwarder-agent-tests))
+                   request-forwarder-agent-tests
+                   api-functional-tests))
 
 ;; Directly runnable
 (def-test-group basic-tests ())
@@ -55,4 +56,8 @@
 (def-test-group forwarder-agent-tests
     (db-path-fixture
      forwarder-agent-fixture
+     kill-everything-fixture))
+(def-test-group api-functional-tests
+    (db-path-fixture
+     api-functional-fixture
      kill-everything-fixture))

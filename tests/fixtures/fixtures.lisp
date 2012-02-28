@@ -301,6 +301,31 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :root *root* ;; different root for the test agents
                                  :uuid hypervisor-uuid)))
 
+(def-fixtures api-functional-fixture
+    (:documentation "A fixture that instantiates an api agent."
+     :setup (progn
+              (start api-runner)
+              (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                        (awhen (getf msg :info)
+                          (assoc api-uuid (getf it :peers) :test #'string=)))
+                (error "API Agent didn't peer up."))
+              (log-for (api-tests trace) "api-agent-fixture :setup finished."))
+
+     :cleanup (progn
+                (stop api-runner)))
+
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (api-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (api-runner (make-runner :test :include '(:afdog-tests)
+                                 :class 'afdog-hypervisor-test-agent
+                                 :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)
+                                                   api-test-agent  (:uuid ,api-uuid)
+                                                   forwarder-test-agent (:uuid ,forwarder-agent-uuid)))
+                                 :root *root* ;; different root for the test agents
+                                 :uuid hypervisor-uuid)))
+
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
      :cleanup (progn

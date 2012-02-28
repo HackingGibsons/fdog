@@ -27,4 +27,5 @@
                                    (:file "cli")
                                    (:file "behavior")
                                    (:file "supervision")
-                                   (:file "agent")))))))
+                                   (:file "agent")
+                                   (:file "api.functional")))))))

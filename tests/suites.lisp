@@ -49,7 +49,10 @@
     (db-path-fixture
      api-agent-fixture
      kill-everything-fixture))
-(def-test-group forwarder-agent-tests (db-path-fixture forwarder-agent-fixture kill-everything-fixture))
 (def-test-group request-forwarder-agent-tests (db-path-fixture
                                                request-forwarder-agent-fixture
                                                kill-everything-fixture))
+(def-test-group forwarder-agent-tests
+    (db-path-fixture
+     forwarder-agent-fixture
+     kill-everything-fixture))

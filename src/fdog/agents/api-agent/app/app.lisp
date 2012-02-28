@@ -69,17 +69,17 @@
         (:404 :responder 'api/forwarder/404)))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) (agent api-agent) organ handler request raw)
-  "Retrieves information about all known forwarders."
+  "Retrieves information about all known forwarders. Only returns a list of forwarder names"
   (with-chunked-stream-reply (handler request stream
                                       :headers ((header-json-type)))
-    (json:encode-json-alist (forwarders agent) stream)))
+    (json:encode-json-alist (list (cons :forwarders (mapcar #'car (forwarders agent)))) stream)))
 
 (defmethod api/forwarder/root ((agent api-agent) organ handler request forwarder rest)
   (with-chunked-stream-reply (handler request stream
                                       :headers ((header-json-type)))
     ;; We just want the forwarder information, not the full thing like
     ;; in /forwarders/ list
-    (json:encode-json-alist (cdr forwarder) stream)))
+    (json:encode-json-alist (forwarder-with-handlers forwarder agent) stream)))
 
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|)) (agent api-agent) organ handler request raw)
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))
@@ -104,7 +104,7 @@
                           :callback #'(lambda ()
                                         (with-chunked-stream-reply (handler request stream
                                                                             :headers ((header-json-type)))
-                                          (json:encode-json-alist `(("success" . t) ,@spec) stream)))
+                                          (json:encode-json-alist (append '((:success . t)) spec) stream)))
                           :timeout-callback #'(lambda ()
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 

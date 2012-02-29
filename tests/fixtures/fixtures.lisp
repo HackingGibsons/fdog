@@ -307,8 +307,15 @@ Does kill -9 to ensure the process dies in cleanup.")
               (start api-runner)
               (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
                         (awhen (getf msg :info)
-                          (assoc api-uuid (getf it :peers) :test #'string=)))
+                          (and
+                           (assoc api-uuid (getf it :peers) :test #'string=)
+                           (assoc forwarder-agent-uuid (getf it :peers) :test #'string=)
+                           (assoc mongrel2-uuid (getf it :peers) :test #'string=))))
                 (error "API Agent didn't peer up."))
+              (unless (wait-for-agent-message (mongrel2-uuid :timeout 60) (msg)
+                        (awhen (getf (getf (getf msg :info) :provides) :servers)
+                          (assoc "control" it :test #'string=)))
+                (error "Mongrel2 agent didn't start"))
               (log-for (api-tests trace) "api-agent-fixture :setup finished."))
 
      :cleanup (progn

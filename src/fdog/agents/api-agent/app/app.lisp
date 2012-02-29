@@ -37,7 +37,7 @@
 (defmethod api/forwarder/404 ((agent api-agent) organ handler request forwarder rest)
   "Forwarder-specific 404."
   (error '404-condition
-         :details (format nil "No resource for forwarder ~A matching ~A" forwarder rest)))
+         :details (format nil "No resource for forwarder ~A matching ~A" (car forwarder) rest)))
 
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) (agent api-agent) organ handler request raw)

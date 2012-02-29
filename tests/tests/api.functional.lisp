@@ -4,8 +4,25 @@
     (:values
      (:eql :match)
      (:eql 200))
-  (multiple-value-bind (res meta) (http->string (format nil "http://localhost:~A/" *control-port*))))
-(def-test (can-hit-api-root :group api-functional-tests) (:eql :pending))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/" *control-port*))
+    (values
+     (when (and
+            (string= (cdr (assoc :name res)) api-app::*name*)
+            (string= (cdr (assoc :description res)) api-app::*description*)
+            (string= (cdr (assoc :version res)) api-app::*version*))
+       :match)
+     (getf meta :status-code))))
+
+(def-test (can-hit-api-root :group api-functional-tests)
+    (:values
+     (:eql :match)
+     (:eql 200))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*))
+    (values
+     (when (equal (cdr (assoc :version res)) api-app::*api-version*)
+       :match)
+     (getf meta :status-code))))
+
 (def-test (can-hit-404 :group api-functional-tests) (:eql :pending))
 (def-test (can-hit-400 :group api-functional-tests) (:eql :pending))
 (def-test (can-hit-500 :group api-functional-tests) (:eql :pending))

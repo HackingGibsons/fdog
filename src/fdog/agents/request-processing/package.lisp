@@ -15,6 +15,8 @@ Mongrel2 ZeroMQ messages")
            :disconnect-handler
            :handler-name
            :handler
+           :request-sock
+           :response-sock
            :enable
            :disable))
 

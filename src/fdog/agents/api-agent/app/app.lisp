@@ -23,26 +23,31 @@
 
 ;; Generic handlers
 (defun api/version (handler req &key)
+  "API root - returns app version."
   (with-chunked-stream-reply (handler req stream
                                       :headers ((header-json-type)))
     (json:encode-json-plist `(:name ,*name* :description ,*description* :version ,*version*)
                             stream)))
 
 (defun api/404 (handler req &key agent organ raw)
+  "Generic 404."
   (log-for (trace api-app) "404 on request: ~S" req)
   (handle-http-condition (make-instance '404-condition) agent organ handler req raw))
 
 (defmethod api/forwarder/404 ((agent api-agent) organ handler request forwarder rest)
+  "Forwarder-specific 404."
   (error '404-condition
          :details (format nil "No resource for forwarder ~A matching ~A" forwarder rest)))
 
 ;; Endpoints
 (defmethod api/endpoint ((m (eql :get)) (p (eql :/)) (agent api-agent) organ handler request raw)
+  "API root - returns API version."
   (with-chunked-stream-reply (handler request stream
                               :headers ((header-json-type)))
     (json:encode-json `((:version . ,*api-version*)) stream)))
 
 (defmethod api/endpoint-with-args ((m (eql :get)) (p (eql :|/forwarders|)) rest (agent api-agent) organ handler request raw)
+  "Forwarder GET method routing - info and metrics."
   (ppcre:register-groups-bind (name rest) ("^/?([^/]+)(/?.*$)" rest)
     (let ((forwarder (find-forwarder agent name)))
       (unless forwarder
@@ -56,6 +61,7 @@
         (:404 :responder 'api/forwarder/404)))))
 
 (defmethod api/endpoint-with-args ((m (eql :post)) (p (eql :|/forwarders|)) rest (agent api-agent) organ handler request raw)
+  "Forwarder POST method routing - update and delete."
   (ppcre:register-groups-bind (name rest) ("^/?([^/]+)(/?.*$)" rest)
     (let ((forwarder (find-forwarder agent name)))
       (unless forwarder
@@ -82,6 +88,7 @@
     (json:encode-json-alist (forwarder-with-handlers forwarder agent) stream)))
 
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/forwarders/create/|)) (agent api-agent) organ handler request raw)
+  "Forwarder create."
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))
          (name (cdr (assoc :name spec)))
          (hosts (cdr (assoc :hosts spec)))
@@ -109,6 +116,7 @@
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
 (defmethod api/forwarder/delete ((agent api-agent) organ handler request forwarder raw)
+  "Forwarder delete."
   (let ((name (car forwarder)))
     (send-message (find-organ agent :head) :command
                   `(:command :speak
@@ -128,6 +136,7 @@
                                                 (handle-http-condition (make-instance '504-condition) agent organ handler request raw))))))
 
 (defmethod api/forwarder/update ((agent api-agent) organ handler request forwarder rest)
+  "Forwarder update."
   (error '403-condition :details "Not yet implemented"))
 
 (defmethod api/forwarder/metrics ((agent api-agent) organ handler request forwarder rest)

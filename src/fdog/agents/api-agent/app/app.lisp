@@ -140,6 +140,11 @@
   (error '403-condition :details "Not yet implemented"))
 
 (defmethod api/forwarder/metrics ((agent api-agent) organ handler request forwarder rest)
+  "Forwarder metrics."
+  (error '403-condition :details "Not yet implemented"))
+
+(defmethod api/endpoint ((m (eql :get)) (p (eql :|/metrics/|)) (agent api-agent) organ handler request raw)
+  "Aggregate metrics."
   (error '403-condition :details "Not yet implemented"))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/healthcheck/|)) (agent api-agent) organ handler request raw)

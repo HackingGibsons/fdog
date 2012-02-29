@@ -62,8 +62,10 @@ that has a client endpoint named `name'."))
       (signal (make-condition 'delivery-failure :reason "Delivery attempt would block")))))
 
 (defmethod deliver-response ((endpoint forwarder-endpoint) data)
-  (log-for (warn forwarder-endpoint) "TODO: Response forwarding: ~A" (babel:octets-to-string data))
-  (zmq:send! (sock-of (sub-sock endpoint)) data))
+  (let ((requesticle (find-organ (agent endpoint) :requesticle)))
+    (if (response-sock requesticle)
+        (zmq:send! (response-sock requesticle) data)
+        (log-for (warn forwarder-endpoint) "No response socket on the requesticle! Response not delivered."))))
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))
   "Shortcut to check of `push-state' of the `endpoint' is `:ready'"

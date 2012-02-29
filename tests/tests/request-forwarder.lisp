@@ -136,3 +136,50 @@
 
   (wait-for-agent (request-forwarder-uuid :timeout 10) :still-there))
 
+(def-test (request-forwarder-agent-request->response-forwarding :group request-forwarder-agent-tests)
+    (:values (:eql :connected)
+             (:eql :requested)
+             (:eql :handled)
+             (:eql :replied))
+  (zmq:with-context (ctx 1)
+    (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
+      (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*
+                                                                   :element-type 'flex:octet))
+        (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
+                        (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
+               (push-addr (getf addrs :push))
+               (sub-addr (getf addrs :sub))
+               (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
+
+          (values
+           (if handler
+               (and (zmq:connect pull push-addr)
+                    (zmq:connect pub sub-addr)
+                    :connected)
+               :no-addr-found)
+
+           (prog1 :requested
+             (write-sequence (flex:string-to-octets (http-request-string "/" :host "api.example.com"))
+                             (usocket:socket-stream sock))
+             (force-output (usocket:socket-stream sock)))
+
+           (or (when-bind request (m2cl:handler-receive handler :timeout 3000000)
+                 (m2cl:handler-send-http handler "OHI" :request request)
+                 :handled)
+               :didnt-get-request)
+
+           (handler-case
+               (bt:with-timeout (3)
+                 (let* ((status (drakma::read-status-line (usocket:socket-stream sock)))
+                        (headers (and (member 200 status :test #'equalp)
+                                      (drakma::read-http-headers (usocket:socket-stream sock))))
+                        (body (and headers
+                                   (drakma::read-body (flex:make-flexi-stream (chunga:make-chunked-stream (usocket:socket-stream sock)))
+                                                      headers nil t))))
+                   (if (equalp body "OHI")
+                       :replied
+                       `(:bad-reply ,status ,headers ,body))))
+             (bt:timeout () :TIMEOUT-reading-HTTP-response))))))))
+
+
+

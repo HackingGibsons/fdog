@@ -52,7 +52,31 @@
     ;; TODO check response?
     (getf meta :status-code)))
 
-(def-test (can-create-forwarder :group api-functional-tests) (:eql :pending) nil)
+(def-test (can-create-forwarder :group api-functional-tests)
+    (:values
+     (:eql :match)
+     (:eql 200))
+  (let* ((forwarder-name "create")
+         (host "api.example.com")
+         (route-name "default")
+         (route-path "/")
+         (req `((:name . ,forwarder-name)
+                (:hosts . ,(list host))
+                (:routes . (((:name . ,route-name)
+                             (:route . ,route-path)))))))
+    (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                                                :method :POST
+                                                :content (json:encode-json-to-string req))
+      (values
+       (when (and
+              (cdr (assoc :success res))
+              (string= (cdr (assoc :name res)) forwarder-name)
+              (find host (cdr (assoc :hosts res)) :test #'string=)
+              (find route-name (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :name route))))
+              (find route-path (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :route route)))))
+         :match)
+       (getf meta :status-code)))))
+
 (def-test (forwarder-info-formatted-correctly :group api-functional-tests) (:eql :pending) nil)
 (def-test (cant-create-double-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)

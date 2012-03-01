@@ -25,11 +25,32 @@
        :match)
      (getf meta :status-code))))
 
-(def-test (can-hit-404 :group api-functional-tests) (:eql :pending) nil)
-(def-test (can-hit-400 :group api-functional-tests) (:eql :pending) nil)
+(def-test (can-hit-404 :group api-functional-tests)
+    (:eql 404)
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/404" *control-port*))
+    ;; TODO check response?
+    (getf meta :status-code)))
+
+(def-test (can-hit-400 :group api-functional-tests)
+    (:eql 400)
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*) :method :POST
+                                              :content (json:encode-json-to-string nil))
+    ;; TODO check response?
+    (getf meta :status-code)))
+
 (def-test (can-hit-500 :group api-functional-tests) (:eql :pending) nil)
-(def-test (posting-to-a-get-url-returns-404 :group api-functional-tests) (:eql :pending) nil)
-(def-test (getting-to-a-post-url-returns-404 :group api-functional-tests) (:eql :pending) nil)
+(def-test (can-hit-504 :group api-functional-tests) (:eql :pending) nil)
+
+(def-test (posting-to-a-get-url-returns-404 :group api-functional-tests)
+    (:eql 404)
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*) :method :POST)
+    ;; TODO check response?
+    (getf meta :status-code)))
+(def-test (getting-to-a-post-url-returns-404 :group api-functional-tests)
+    (:eql 404)
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*) :method :GET)
+    ;; TODO check response?
+    (getf meta :status-code)))
 
 (def-test (can-create-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (forwarder-info-formatted-correctly :group api-functional-tests) (:eql :pending) nil)

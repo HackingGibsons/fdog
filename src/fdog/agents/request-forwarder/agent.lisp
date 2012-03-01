@@ -1,7 +1,21 @@
 (in-package :request-forwarder-agent)
+(defcategory request-forwarder-agent)
+
+;; Transform functions
+(defun add-identifier (request)
+  "Update the request sender in a manner that
+will still match the ZMQ_SUBSCRIBE mask of the sending
+mongrel, but such that we can still parse it out
+also add it as a request header in case anyone upstream
+wants to know it."
+  (let ((id (prin1-to-string (uuid:make-v4-uuid))))
+    (unless (assoc "x-fdog-request-id" (m2cl:request-headers request) :test #'string-equal)
+      (setf (m2cl:request-sender request)
+          (concatenate 'string (m2cl:request-sender request) (format nil "--id-~A" id)))
+      (push (cons "X-Fdog-Request-ID" id) (m2cl:request-headers request)))
+    request))
 
 ;; Agent
-(defcategory request-forwarder-agent)
 (defclass request-forwarder-agent (request-processing-agent standard-leaf-agent)
   ((forwarder :initform "x-NO-forwarder"
               :initarg :forwarder
@@ -12,7 +26,7 @@
    (path :initform ""
          :accessor path)
 
-   (transforms :initform (list)
+   (transforms :initform (list 'add-identifier)
                :initarg :transforms
                :accessor transforms
                :documentation "A list of symbols, :keywords

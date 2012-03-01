@@ -125,6 +125,37 @@
                     :forwarded)
                :timeout)))))))
 
+(def-test (request-forwarder-agent-adds-request-id-header :group request-forwarder-agent-tests)
+    (:values (:eql :connected)
+             (:eql :requested)
+             (:eql :forwarded-with-header))
+
+  (zmq:with-context (ctx 1)
+    (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
+      (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
+                      (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
+             (push-addr (getf addrs :push))
+             (sub-addr (getf addrs :sub))
+             (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
+
+        (values
+         (if handler
+             (and (zmq:connect pull push-addr)
+                  (zmq:connect pub sub-addr)
+                  :connected)
+             :no-addr-found)
+
+         (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+           (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+           (force-output (usocket:socket-stream sock))
+           :requested)
+
+         (or (when-bind request (m2cl:handler-receive handler :timeout 3000000)
+               (if (assoc "x-fdog-request-id" (m2cl:request-headers request) :test #'string-equal)
+                   :forwarded-with-header
+                   :forwarded-without-x-fdog-request-id-header))
+               :didnt-get-request))))))
+
 (def-test (request-forwarder-agent-handles-delivery-failure :group request-forwarder-agent-tests)
     (:values (:eql :requested)
              (:eql :still-there))

@@ -7,6 +7,7 @@
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/" *control-port*))
     (values
      (when (and
+            ;; private because only used here to compare, deal with it
             (string= (cdr (assoc :name res)) api-app::*name*)
             (string= (cdr (assoc :description res)) api-app::*description*)
             (string= (cdr (assoc :version res)) api-app::*version*))
@@ -19,6 +20,7 @@
      (:eql 200))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*))
     (values
+     ;; private because only used here to compare, deal with it
      (when (equal (cdr (assoc :version res)) api-app::*api-version*)
        :match)
      (getf meta :status-code))))

@@ -15,6 +15,7 @@ rewriting, routing and forwarding.")
                 :appendf)
 
   (:export :request-forwarder-agent
+           :agent-request-transform
            :push-state-signal
            :forwarder-endpoint
            :push-sock

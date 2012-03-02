@@ -17,7 +17,9 @@
   (log-for (trace request-forwarder-agent) "R-F-A: Request: ~A" req)
   (flet ((apply-transformation (request transform)
            (log-for (trace request-forwarder-agent) "Transforming ~A with ~A" request transform)
-           (funcall transform request)))
+           (if (keywordp transform)
+               (agent-request-transform agent transform req)
+               (funcall transform request))))
 
     (let* ((sock-pocket (find-organ agent :sock-pocket))
            (request (reduce #'apply-transformation (transforms agent)

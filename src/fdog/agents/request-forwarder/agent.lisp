@@ -2,6 +2,17 @@
 (defcategory request-forwarder-agent)
 
 ;; Transform functions
+(defgeneric agent-request-transform (agent transform request)
+  (:documentation "A generic method for handling `:keyword' transforms
+for an agent. Defining methods specializing on `transform' will allow
+them to be named in the `transforms' for transformations
+that require access to the data accessible through the current agent.")
+  (:method (agent transform request)
+    "The default transformation action for an unknown transform is `identity'"
+    (log-for (warn request-forwarder-agent) "The ~S transform is not defined for ~A" transform agent)
+    request))
+
+
 (defun add-identifier (request)
   "Update the request sender in a manner that
 will still match the ZMQ_SUBSCRIBE mask of the sending
@@ -15,6 +26,22 @@ wants to know it."
       (push (cons "X-Fdog-Request-ID" id) (m2cl:request-headers request)))
     request))
 
+(defmethod agent-request-transform (agent (transform (eql :strip-prefix)) request)
+  "Remove the prefix of request as configured in the agent."
+  (let ((prefix-re (format nil "^~A" (route agent))))
+    (setf (m2cl:request-path request)
+          (ppcre:regex-replace prefix-re (m2cl:request-path request) "/"))
+
+    (when-bind path-hdr (assoc :PATH (m2cl:request-headers request))
+      (setf (cdr path-hdr)
+            (ppcre:regex-replace prefix-re (cdr path-hdr) "/")))
+
+    (when-bind uri-hdr (assoc :URI (m2cl:request-headers request))
+      (setf (cdr uri-hdr)
+            (ppcre:regex-replace prefix-re (cdr uri-hdr) "/")))
+
+    request))
+
 ;; Agent
 (defclass request-forwarder-agent (request-processing-agent standard-leaf-agent)
   ((forwarder :initform "x-NO-forwarder"
@@ -26,7 +53,8 @@ wants to know it."
    (path :initform ""
          :accessor path)
 
-   (transforms :initform (list 'add-identifier)
+   (transforms :initform (list 'add-identifier
+                               :strip-prefix)
                :initarg :transforms
                :accessor transforms
                :documentation "A list of symbols, :keywords

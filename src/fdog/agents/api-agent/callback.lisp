@@ -60,9 +60,10 @@ to the agent. If any match, call the callback and unregister it."
          (agent (organ-agent organ))
          (callbacks (callbacks agent)))
     (dolist (callback callbacks)
-      (when (>= (timeout callback) (- time (start-time callback)))
-        (funcall (timeout-callback callback))
-        (remove callback callbacks)))))
+      (let ((difference (- time (start-time callback))))
+        (when (>= difference (timeout callback))
+          (funcall (timeout-callback callback))
+          (remove callback callbacks))))))
 
 (defmethod agent-special-event :after ((agent api-agent) (event-head (eql :boot)) event)
   (make-increment-callback-timeouts (find-organ agent :head)))

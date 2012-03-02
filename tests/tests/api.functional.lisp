@@ -79,17 +79,21 @@
          :match)))))
 
 (def-test (forwarder-list-formatted-correctly :group api-functional-tests
-  :setup (let* ((forwarder-name "list")
-                (host "api.example.com")
-                (route-name "default")
-                (route-path "/list/")
-                (req `((:name . ,forwarder-name)
-                       (:hosts . ,(list host))
-                       (:routes . (((:name . ,route-name)
-                                    (:route . ,route-path)))))))
-           (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
-                       :method :POST
-                       :content (json:encode-json-to-string req))))
+  :setup (progn
+           (let* ((forwarder-name "list")
+                  (host "api.example.com")
+                  (route-name "default")
+                  (route-path "/list/")
+                  (req `((:name . ,forwarder-name)
+                         (:hosts . ,(list host))
+                         (:routes . (((:name . ,route-name)
+                                      (:route . ,route-path)))))))
+             (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                         :method :POST
+                         :content (json:encode-json-to-string req)))
+           (wait-for-agent-message (forwarder-agent-uuid :timeout 3) (msg)
+             (when (getf msg :filled)
+               :forwarder-created))))
     (:values
      (:eql 200)
      (:eql :found))

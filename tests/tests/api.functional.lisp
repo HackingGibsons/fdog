@@ -78,6 +78,27 @@
               (find route-path (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :route route)))))
          :match)))))
 
+(def-test (forwarder-list-formatted-correctly :group api-functional-tests
+  :setup (let* ((forwarder-name "list")
+                (host "api.example.com")
+                (route-name "default")
+                (route-path "/list/")
+                (req `((:name . ,forwarder-name)
+                       (:hosts . ,(list host))
+                       (:routes . (((:name . ,route-name)
+                                    (:route . ,route-path)))))))
+           (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                       :method :POST
+                       :content (json:encode-json-to-string req))))
+    (:values
+     (:eql 200)
+     (:eql :found))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/" *control-port*))
+    (values
+     (getf meta :status-code)
+     (when (find "list" (cdr (assoc :forwarders res)) :test #'string=)
+       :found))))
+
 (def-test (forwarder-info-formatted-correctly :group api-functional-tests) (:eql :pending) nil)
 (def-test (cant-create-double-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)

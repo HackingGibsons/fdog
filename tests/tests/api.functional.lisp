@@ -103,7 +103,40 @@
      (when (find "list" (cdr (assoc :forwarders res)) :test #'string=)
        :found))))
 
-(def-test (forwarder-info-formatted-correctly :group api-functional-tests) (:eql :pending) nil)
+(def-test (forwarder-info-formatted-correctly :group api-functional-tests
+  :setup (progn
+           (let* ((forwarder-name "info")
+                  (host "api.example.com")
+                  (route-name "default")
+                  (route-path "/info/")
+                  (req `((:name . ,forwarder-name)
+                         (:hosts . ,(list host))
+                         (:routes . (((:name . ,route-name)
+                                      (:route . ,route-path)))))))
+             (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                         :method :POST
+                         :content (json:encode-json-to-string req)))
+           (wait-for-agent-message (forwarder-agent-uuid :timeout 3) (msg)
+             (when (getf msg :filled)
+               :forwarder-created))))
+    (:values
+     (:eql 200)
+     (:eql :info-exists)
+     (:eql :handlers-exist))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/info/" *control-port*))
+    (values
+     (getf meta :status-code)
+     (when (and
+            (string= (cdr (assoc :name res)) "info")
+            (find "api.example.com" (cdr (assoc :hosts res)) :test #'string=)
+            (find "default" (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :name route))))
+            (find "/info/" (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :route route)))))
+       :info-exists)
+     (let ((route (find "default" (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :name route))))))
+       (when (and
+              (assoc :push route)
+              (assoc :sub route))
+         :handlers-exist)))))
 (def-test (cant-create-double-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (cant-delete-nonexistent-forwarder :group api-functional-tests) (:eql :pending) nil)

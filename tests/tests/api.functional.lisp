@@ -137,7 +137,8 @@
               (assoc :push route)
               (assoc :sub route))
          :handlers-exist)))))
-(def-test (cant-create-double-forwarder :group api-functional-tests) (:eql :pending) nil)
+
+(def-test (cant-double-create-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (cant-delete-nonexistent-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-hit-health-check :group api-functional-tests)

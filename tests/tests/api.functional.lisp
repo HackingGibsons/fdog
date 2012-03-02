@@ -82,7 +82,16 @@
 (def-test (cant-create-double-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (cant-delete-nonexistent-forwarder :group api-functional-tests) (:eql :pending) nil)
-(def-test (can-hit-health-check :group api-functional-tests) (:eql :pending) nil)
+(def-test (can-hit-health-check :group api-functional-tests)
+    (:values
+     (:eql 200)
+     (:eql :match))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/healthcheck/" *control-port*))
+    (values
+     (getf meta :status-code)
+     (when
+         (string= (cdr (assoc :state res)) "ok")
+       :match))))
 
 (def-test (forwarder-update-returns-403 :group api-functional-tests) (:eql :pending) nil)
 (def-test (forwarder-metrics-returns-403 :group api-functional-tests) (:eql :pending) nil)

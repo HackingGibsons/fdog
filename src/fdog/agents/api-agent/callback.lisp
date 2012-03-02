@@ -1,7 +1,7 @@
 (in-package :api-agent)
 
 ;; Knobs
-(defvar *timeout-interval* 10 "Timeout length, in seconds")
+(defvar *timeout-interval* 5 "Timeout length, in seconds")
 
 (defcategory callback)
 

@@ -85,4 +85,8 @@
 
 (def-test (forwarder-update-returns-403 :group api-functional-tests) (:eql :pending) nil)
 (def-test (forwarder-metrics-returns-403 :group api-functional-tests) (:eql :pending) nil)
-(def-test (aggregate-metrics-returns-403 :group api-functional-tests) (:eql :pending) nil)
+(def-test (aggregate-metrics-returns-403 :group api-functional-tests)
+    (:eql 403)
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/metrics/" *control-port*))
+    ;; TODO check response?
+    (getf meta :status-code)))

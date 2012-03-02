@@ -2,28 +2,28 @@
 
 (def-test (can-hit-root :group api-functional-tests)
     (:values
-     (:eql :match)
-     (:eql 200))
+     (:eql 200)
+     (:eql :match))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/" *control-port*))
     (values
+     (getf meta :status-code)
      (when (and
             ;; private because only used here to compare, deal with it
             (string= (cdr (assoc :name res)) api-app::*name*)
             (string= (cdr (assoc :description res)) api-app::*description*)
             (string= (cdr (assoc :version res)) api-app::*version*))
-       :match)
-     (getf meta :status-code))))
+       :match))))
 
 (def-test (can-hit-api-root :group api-functional-tests)
     (:values
-     (:eql :match)
-     (:eql 200))
+     (:eql 200)
+     (:eql :match))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*))
     (values
+     (getf meta :status-code)
      ;; private because only used here to compare, deal with it
      (when (equal (cdr (assoc :version res)) api-app::*api-version*)
-       :match)
-     (getf meta :status-code))))
+       :match))))
 
 (def-test (can-hit-404 :group api-functional-tests)
     (:eql 404)
@@ -46,6 +46,7 @@
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*) :method :POST)
     ;; TODO check response?
     (getf meta :status-code)))
+
 (def-test (getting-to-a-post-url-returns-404 :group api-functional-tests)
     (:eql 404)
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*) :method :GET)
@@ -54,8 +55,8 @@
 
 (def-test (can-create-forwarder :group api-functional-tests)
     (:values
-     (:eql :match)
-     (:eql 200))
+     (:eql 200)
+     (:eql :match))
   (let* ((forwarder-name "create")
          (host "api.example.com")
          (route-name "default")
@@ -68,14 +69,14 @@
                                                 :method :POST
                                                 :content (json:encode-json-to-string req))
       (values
+       (getf meta :status-code)
        (when (and
               (cdr (assoc :success res))
               (string= (cdr (assoc :name res)) forwarder-name)
               (find host (cdr (assoc :hosts res)) :test #'string=)
               (find route-name (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :name route))))
               (find route-path (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :route route)))))
-         :match)
-       (getf meta :status-code)))))
+         :match)))))
 
 (def-test (forwarder-info-formatted-correctly :group api-functional-tests) (:eql :pending) nil)
 (def-test (cant-create-double-forwarder :group api-functional-tests) (:eql :pending) nil)

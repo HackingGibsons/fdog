@@ -140,7 +140,13 @@
 
 (def-test (cant-double-create-forwarder :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)
-(def-test (cant-delete-nonexistent-forwarder :group api-functional-tests) (:eql :pending) nil)
+(def-test (cant-delete-nonexistent-forwarder :group api-functional-tests)
+    (:eql 404)
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/nonexistent/delete/" *control-port*)
+                                                      :method :POST)
+    ;; TODO check response?
+    (getf meta :status-code)))
+
 (def-test (can-hit-health-check :group api-functional-tests)
     (:values
      (:eql 200)

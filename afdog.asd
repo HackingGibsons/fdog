@@ -17,6 +17,7 @@
                #:trivial-backtrace
                #:drakma
                #:cl-json
+               #:cl-redis
 
                ;; Vendord
                #:clsql

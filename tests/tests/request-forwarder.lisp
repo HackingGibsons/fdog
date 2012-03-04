@@ -212,5 +212,33 @@
                        `(:bad-reply ,status ,headers ,body))))
              (bt:timeout () :TIMEOUT-reading-HTTP-response))))))))
 
+(def-test (request-forwarder-agent-strips-prefix :group request-forwarder-agent-tests)
+    (:values (:eql :connected)
+             (:eql :requested)
+             (:eql :forwarded-with-/))
 
+  (zmq:with-context (ctx 1)
+    (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
+      (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
+                      (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
+             (push-addr (getf addrs :push))
+             (sub-addr (getf addrs :sub))
+             (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
+        (values
+         (if handler
+             (and (zmq:connect pull push-addr)
+                  (zmq:connect pub sub-addr)
+                  :connected)
+             :no-addr-found)
+
+         (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+           (write-string (http-request-string "/api/" :host "api.example.com") (usocket:socket-stream sock))
+           (force-output (usocket:socket-stream sock))
+           :requested)
+
+         (or (when-bind request (m2cl:handler-receive handler :timeout 3000000)
+               (if (string= (m2cl:request-path request) "/")
+                   :forwarded-with-/
+                   :forwarded-without-stripping))
+               :didnt-get-request))))))

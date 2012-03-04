@@ -28,7 +28,7 @@ wants to know it."
 
 (defmethod agent-request-transform (agent (transform (eql :strip-prefix)) request)
   "Remove the prefix of request as configured in the agent."
-  (let ((prefix-re (format nil "^~A" (route agent))))
+  (let ((prefix-re (format nil "^~A" (path agent))))
     (setf (m2cl:request-path request)
           (ppcre:regex-replace prefix-re (m2cl:request-path request) "/"))
 

@@ -113,7 +113,7 @@
              :no-addr-found))
 
        (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
-         (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+         (write-string (http-request-string "/api/" :host "api.example.com") (usocket:socket-stream sock))
          (force-output (usocket:socket-stream sock))
          :requested)
 
@@ -146,7 +146,7 @@
              :no-addr-found)
 
          (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
-           (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+           (write-string (http-request-string "/api/" :host "api.example.com") (usocket:socket-stream sock))
            (force-output (usocket:socket-stream sock))
            :requested)
 
@@ -161,7 +161,7 @@
              (:eql :still-there))
 
   (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
-    (write-string (http-request-string "/" :host "api.example.com") (usocket:socket-stream sock))
+    (write-string (http-request-string "/api/" :host "api.example.com") (usocket:socket-stream sock))
     (force-output (usocket:socket-stream sock))
     :requested)
 
@@ -190,7 +190,7 @@
                :no-addr-found)
 
            (prog1 :requested
-             (write-sequence (flex:string-to-octets (http-request-string "/" :host "api.example.com"))
+             (write-sequence (flex:string-to-octets (http-request-string "/api/" :host "api.example.com"))
                              (usocket:socket-stream sock))
              (force-output (usocket:socket-stream sock)))
 

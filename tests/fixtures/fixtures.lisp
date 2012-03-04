@@ -240,7 +240,7 @@ Does kill -9 to ensure the process dies in cleanup.")
                                                         :need :forwarder
                                                         :forwarder ((:name . "test")
                                                                     (:hosts . ("api.example.com" "localhost"))
-                                                                    (:routes . (((:name . "default") (:route . "/"))
+                                                                    (:routes . (((:name . "default") (:route . "/api/"))
                                                                                 ((:name . "one") (:route . "/1/")))))))
                           (msg)
                         (awhen (getf msg :filled)

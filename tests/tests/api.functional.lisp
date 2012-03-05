@@ -219,8 +219,57 @@
          (string= (cdr (assoc :state res)) "ok")
        :match))))
 
-(def-test (forwarder-update-returns-403 :group api-functional-tests) (:eql :pending) nil)
-(def-test (forwarder-metrics-returns-403 :group api-functional-tests) (:eql :pending) nil)
+(def-test (forwarder-update-returns-403 :group api-functional-tests
+  :setup (progn
+           (let* ((forwarder-name "updateme")
+                  (host "api.example.com")
+                  (route-name "default")
+                  (route-path "/u/")
+                  (req `((:name . ,forwarder-name)
+                         (:hosts . ,(list host))
+                         (:routes . (((:name . ,route-name)
+                                      (:route . ,route-path)))))))
+             (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                         :method :POST
+                         :content (json:encode-json-to-string req)))
+           (wait-for-agent-message (forwarder-agent-uuid :timeout 3) (msg)
+             (when (getf msg :filled)
+               :forwarder-created))))
+    (:values
+     (:eql 403)
+     (:eql :not-yet-implemented))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/updateme/update/" *control-port*)
+                                              :method :POST)
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "implemented" (cdr (assoc :details res)))
+       :not-yet-implemented))))
+
+(def-test (forwarder-metrics-returns-403 :group api-functional-tests
+  :setup (progn
+           (let* ((forwarder-name "metrics")
+                  (host "api.example.com")
+                  (route-name "default")
+                  (route-path "/metrics/")
+                  (req `((:name . ,forwarder-name)
+                         (:hosts . ,(list host))
+                         (:routes . (((:name . ,route-name)
+                                      (:route . ,route-path)))))))
+             (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                         :method :POST
+                         :content (json:encode-json-to-string req)))
+           (wait-for-agent-message (forwarder-agent-uuid :timeout 3) (msg)
+             (when (getf msg :filled)
+               :forwarder-created))))
+    (:values
+     (:eql 403)
+     (:eql :not-yet-implemented))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/metrics/metrics/" *control-port*))
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "implemented" (cdr (assoc :details res)))
+       :not-yet-implemented))))
+
 (def-test (aggregate-metrics-returns-403 :group api-functional-tests)
     (:eql 403)
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/metrics/" *control-port*))

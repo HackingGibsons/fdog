@@ -38,7 +38,6 @@
     ;; TODO check response?
     (getf meta :status-code)))
 
-(def-test (can-hit-500 :group api-functional-tests) (:eql :pending) nil)
 (def-test (can-hit-504 :group api-functional-tests) (:eql :pending) nil)
 
 (def-test (posting-to-a-get-url-returns-404 :group api-functional-tests)

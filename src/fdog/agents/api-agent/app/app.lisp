@@ -71,7 +71,7 @@
           (funcall &route agent organ handler request forwarder rest)
 
         (:exact "/delete/" :responder 'api/forwarder/delete)
-        (:exact "/" :responder 'api/forwarder/update)
+        (:exact "/update/" :responder 'api/forwarder/update)
         (:404 :responder 'api/forwarder/404)))))
 
 (defmethod api/endpoint ((m (eql :get)) (p (eql :|/forwarders/|)) (agent api-agent) organ handler request raw)

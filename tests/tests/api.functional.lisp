@@ -3,7 +3,7 @@
 (def-test (can-hit-root :group api-functional-tests)
     (:values
      (:eql 200)
-     (:eql :match))
+     (:eql :version-info-exists))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/" *control-port*))
     (values
      (getf meta :status-code)
@@ -12,18 +12,18 @@
             (string= (cdr (assoc :name res)) api-app::*name*)
             (string= (cdr (assoc :description res)) api-app::*description*)
             (string= (cdr (assoc :version res)) api-app::*version*))
-       :match))))
+       :version-info-exists))))
 
 (def-test (can-hit-api-root :group api-functional-tests)
     (:values
      (:eql 200)
-     (:eql :match))
+     (:eql :version-exists))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*))
     (values
      (getf meta :status-code)
      ;; private because only used here to compare, deal with it
      (when (equal (cdr (assoc :version res)) api-app::*api-version*)
-       :match))))
+       :version-exists))))
 
 (def-test (can-hit-404 :group api-functional-tests)
     (:eql 404)
@@ -55,7 +55,7 @@
 (def-test (can-create-forwarder :group api-functional-tests)
     (:values
      (:eql 200)
-     (:eql :match))
+     (:eql :forwarder-info-echoed))
   (let* ((forwarder-name "create")
          (host "api.example.com")
          (route-name "default")
@@ -75,7 +75,7 @@
               (find host (cdr (assoc :hosts res)) :test #'string=)
               (find route-name (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :name route))))
               (find route-path (cdr (assoc :routes res)) :test #'string= :key #'(lambda (route) (cdr (assoc :route route)))))
-         :match)))))
+         :forwarder-info-echoed)))))
 
 (def-test (forwarder-list-formatted-correctly :group api-functional-tests
   :setup (progn
@@ -155,7 +155,7 @@
                :forwarder-created))))
     (:values
      (:eql 400)
-     (:eql :error-mentions-exists))
+     (:eql :already-exists))
   (let* ((forwarder-name "double")
          (host "api.example.com")
          (route-name "default")
@@ -171,7 +171,7 @@
        (getf meta :status-code)
        (when
            (ppcre:scan "already exists" (cdr (assoc :details res)))
-         :error-mentions-exists)))))
+         :already-exists)))))
 
 (def-test (can-delete-forwarder :group api-functional-tests
   :setup (progn
@@ -211,13 +211,13 @@
 (def-test (can-hit-health-check :group api-functional-tests)
     (:values
      (:eql 200)
-     (:eql :match))
+     (:eql :health-info-found))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/healthcheck/" *control-port*))
     (values
      (getf meta :status-code)
      (when
          (string= (cdr (assoc :state res)) "ok")
-       :match))))
+       :health-info-found))))
 
 (def-test (forwarder-update-returns-403 :group api-functional-tests
   :setup (progn

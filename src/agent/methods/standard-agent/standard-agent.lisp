@@ -106,9 +106,7 @@ as fire any callbacks that may be pending IO when it is ready."
                            (zmq:poll-item-socket item)))
                 (awhen (zmq:poll-item-events-signaled-p item :pollout)
                   (funcall (gethash (sock-id (zmq:poll-item-socket item) :out) callbacks)
-                           (zmq:poll-item-socket item)))
-                    (log-for (trace) "Moving on.")))))
-              (log-for (trace) "Poll finished")))
+                           (zmq:poll-item-socket item)))))))))
     (log-for (trace) "Agent event: ~S" agent-event)
     agent-event))
 

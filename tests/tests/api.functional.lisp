@@ -42,8 +42,6 @@
      (when (ppcre:scan "missing or malformed" (cdr (assoc :details res)))
        :params-missing))))
 
-(def-test (can-hit-504 :group api-functional-tests) (:eql :pending) nil)
-
 (def-test (posting-to-a-get-url-returns-404 :group api-functional-tests)
     (:eql 404)
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*) :method :POST)

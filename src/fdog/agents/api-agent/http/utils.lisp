@@ -12,10 +12,9 @@ If there is an error parsing the JSON, throws a 400 error."
       (end-of-file (cond) (signal-400-error))
       (json:json-syntax-error (cond) (signal-400-error)))))
 
-(defun api-subpath (request)
-  (let* ((prefix "/api"))
-    (ppcre:regex-replace (format nil "^~A" prefix)
-                         (m2cl:request-path request) "")))
+(defun api-subpath (request &optional (prefix "/api"))
+  (ppcre:regex-replace (format nil "^~A" prefix)
+                       (m2cl:request-path request) ""))
 
 (defun merge-headers (headers)
   (let ((default '((:code . 200) (:status . "OK")

@@ -139,7 +139,35 @@
          :handlers-exist)))))
 
 (def-test (cant-double-create-forwarder :group api-functional-tests) (:eql :pending) nil)
-(def-test (can-delete-forwarder :group api-functional-tests) (:eql :pending) nil)
+
+(def-test (can-delete-forwarder :group api-functional-tests
+  :setup (progn
+           (let* ((forwarder-name "deleteme")
+                  (host "api.example.com")
+                  (route-name "default")
+                  (route-path "/dm/")
+                  (req `((:name . ,forwarder-name)
+                         (:hosts . ,(list host))
+                         (:routes . (((:name . ,route-name)
+                                      (:route . ,route-path)))))))
+             (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                         :method :POST
+                         :content (json:encode-json-to-string req)))
+           (wait-for-agent-message (forwarder-agent-uuid :timeout 3) (msg)
+             (when (getf msg :filled)
+               :forwarder-created))))
+    (:values
+     (:eql 200)
+     (:eql :forwarder-deleted))
+  (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/deleteme/delete/" *control-port*)
+                                              :method :POST)
+    (values
+     (getf meta :status-code)
+     (when
+         (cdr (assoc :success res))
+       :forwarder-deleted))))
+
+
 (def-test (cant-delete-nonexistent-forwarder :group api-functional-tests)
     (:eql 404)
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/nonexistent/delete/" *control-port*)

@@ -138,7 +138,41 @@
               (assoc :sub route))
          :handlers-exist)))))
 
-(def-test (cant-double-create-forwarder :group api-functional-tests) (:eql :pending) nil)
+(def-test (cant-double-create-forwarder :group api-functional-tests
+  :setup (progn
+           (let* ((forwarder-name "double")
+                  (host "api.example.com")
+                  (route-name "default")
+                  (route-path "/db/")
+                  (req `((:name . ,forwarder-name)
+                         (:hosts . ,(list host))
+                         (:routes . (((:name . ,route-name)
+                                      (:route . ,route-path)))))))
+             (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                         :method :POST
+                         :content (json:encode-json-to-string req)))
+           (wait-for-agent-message (forwarder-agent-uuid :timeout 3) (msg)
+             (when (getf msg :filled)
+               :forwarder-created))))
+    (:values
+     (:eql 400)
+     (:eql :error-mentions-exists))
+  (let* ((forwarder-name "double")
+         (host "api.example.com")
+         (route-name "default")
+         (route-path "/db/")
+         (req `((:name . ,forwarder-name)
+                (:hosts . ,(list host))
+                (:routes . (((:name . ,route-name)
+                             (:route . ,route-path)))))))
+    (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*)
+                 :method :POST
+                 :content (json:encode-json-to-string req))
+      (values
+       (getf meta :status-code)
+       (when
+           (ppcre:scan "already exists" (cdr (assoc :details res)))
+         :error-mentions-exists)))))
 
 (def-test (can-delete-forwarder :group api-functional-tests
   :setup (progn

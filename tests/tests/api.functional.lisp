@@ -26,17 +26,25 @@
        :version-exists))))
 
 (def-test (can-hit-404 :group api-functional-tests)
-    (:eql 404)
+    (:values
+     (:eql 404)
+     (:eql :not-found))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/404" *control-port*))
-    ;; TODO check response?
-    (getf meta :status-code)))
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "found" (cdr (assoc :details res)))
+       :not-found))))
 
 (def-test (can-hit-400 :group api-functional-tests)
-    (:eql 400)
+    (:values
+     (:eql 400)
+     (:eql :params-missing))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*) :method :POST
                                               :content (json:encode-json-to-string nil))
-    ;; TODO check response?
-    (getf meta :status-code)))
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "missing or malformed" (cdr (assoc :details res)))
+       :params-missing))))
 
 (def-test (can-hit-504 :group api-functional-tests) (:eql :pending) nil)
 
@@ -47,10 +55,14 @@
     (getf meta :status-code)))
 
 (def-test (getting-to-a-post-url-returns-404 :group api-functional-tests)
-    (:eql 404)
+    (:values
+     (:eql 404)
+     (:eql :not-found))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/create/" *control-port*) :method :GET)
-    ;; TODO check response?
-    (getf meta :status-code)))
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "found" (cdr (assoc :details res)))
+       :not-found))))
 
 (def-test (can-create-forwarder :group api-functional-tests)
     (:values
@@ -202,11 +214,15 @@
 
 
 (def-test (cant-delete-nonexistent-forwarder :group api-functional-tests)
-    (:eql 404)
+    (:values
+     (:eql 404)
+     (:eql :not-found))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/forwarders/nonexistent/delete/" *control-port*)
                                                       :method :POST)
-    ;; TODO check response?
-    (getf meta :status-code)))
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "found" (cdr (assoc :details res)))
+       :not-found))))
 
 (def-test (can-hit-health-check :group api-functional-tests)
     (:values
@@ -271,7 +287,12 @@
        :not-yet-implemented))))
 
 (def-test (aggregate-metrics-returns-403 :group api-functional-tests)
-    (:eql 403)
+    (:values
+     (:eql 403)
+     (:eql :not-yet-implemented))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/metrics/" *control-port*))
     ;; TODO check response?
-    (getf meta :status-code)))
+    (values
+     (getf meta :status-code)
+     (when (ppcre:scan "implemented" (cdr (assoc :details res)))
+       :not-yet-implemented))))

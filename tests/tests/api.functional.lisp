@@ -26,14 +26,10 @@
        :version-exists))))
 
 (def-test (can-hit-404 :group api-functional-tests)
-    (:values
-     (:eql 404)
-     (:eql :not-found))
+    (:eql 404)
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/404" *control-port*))
-    (values
-     (getf meta :status-code)
-     (when (ppcre:scan "found" (cdr (assoc :details res)))
-       :not-found))))
+    (declare (ignorable res))
+    (getf meta :status-code)))
 
 (def-test (can-hit-400 :group api-functional-tests)
     (:values

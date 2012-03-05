@@ -51,7 +51,7 @@
 (def-test (posting-to-a-get-url-returns-404 :group api-functional-tests)
     (:eql 404)
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/" *control-port*) :method :POST)
-    ;; TODO check response?
+    (declare (ignorable res))
     (getf meta :status-code)))
 
 (def-test (getting-to-a-post-url-returns-404 :group api-functional-tests)

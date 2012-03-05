@@ -291,7 +291,6 @@
      (:eql 403)
      (:eql :not-yet-implemented))
   (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/metrics/" *control-port*))
-    ;; TODO check response?
     (values
      (getf meta :status-code)
      (when (ppcre:scan "implemented" (cdr (assoc :details res)))

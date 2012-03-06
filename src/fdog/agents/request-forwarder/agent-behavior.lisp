@@ -34,6 +34,8 @@
                "Transformed request: ~A"
                (babel:octets-to-string (m2cl:request-serialize req)))
 
-      (handler-case (deliver-request endpoint request)
-        (delivery-failure ()
-          (delivery-failure-handler agent organ request))))))
+      (if (push-ready-p endpoint)
+          (handler-case (deliver-request endpoint request)
+            (delivery-failure ()
+              (delivery-failure-handler agent organ request)))
+          (log-for (warn request-forwarder-agent) "TODO: Delivery not attempted. Queue request.")))))

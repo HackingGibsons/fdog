@@ -72,10 +72,15 @@
 
   (:method ((agent request-forwarder-agent) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
-           (key (prefixed-key agent id :request)))
+           (key (prefixed-key agent id :request))
+           (expireset-key (prefixed-key agent "requests" "expiring")))
 
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-        (redis:red-expire key *expire-after*)))))
+        (redis:with-pipelining
+          (redis:red-zadd expireset-key (+ (get-universal-time) *expire-after*) key)
+          (redis:red-expire key *expire-after*)
+          (redis:red-expire expireset-key *expire-after*)
+          (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time)))))))
 
 (defgeneric store-response (agent response)
   (:documentation "Store the response data in a way that can be found through

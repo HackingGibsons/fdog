@@ -12,6 +12,8 @@ that require access to the data accessible through the current agent.")
     (log-for (warn request-forwarder-agent) "The ~S transform is not defined for ~A" transform agent)
     request))
 
+(defvar *request-id-header* "X-Fdog-Request-ID"
+  "The header used to store the generated request ID.")
 
 (defun add-identifier (request)
   "Update the request sender in a manner that
@@ -20,10 +22,10 @@ mongrel, but such that we can still parse it out
 also add it as a request header in case anyone upstream
 wants to know it."
   (let ((id (prin1-to-string (uuid:make-v4-uuid))))
-    (unless (assoc "x-fdog-request-id" (m2cl:request-headers request) :test #'string-equal)
+    (unless (assoc *request-id-header* (m2cl:request-headers request) :test #'string-equal)
       (setf (m2cl:request-sender request)
           (concatenate 'string (m2cl:request-sender request) (format nil "--id-~A" id)))
-      (push (cons "X-Fdog-Request-ID" id) (m2cl:request-headers request)))
+      (push (cons *request-id-header* id) (m2cl:request-headers request)))
     request))
 
 (defmethod agent-request-transform (agent (transform (eql :strip-prefix)) request)

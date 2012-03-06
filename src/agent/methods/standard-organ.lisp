@@ -55,6 +55,11 @@
              (prepare-message (case msg-type
                                 (:raw message)
                                 (otherwise `(,(organ-tag organ) ,msg-type ,@message))))))
+(defgeneric writer-callbacks (organ)
+  (:documentation "Returns two values both lists: any sockets to add to the poller
+and callbacks for each socket mentioned, for :pollout.")
+  (:method ((organ standard-organ))
+    (values nil nil)))
 
 (defgeneric reader-callbacks (organ)
   (:documentation "Returns two values both lists: any sockets to add to the poller

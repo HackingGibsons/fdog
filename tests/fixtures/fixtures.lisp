@@ -124,9 +124,12 @@ Does kill -9 to ensure the process dies in cleanup.")
 
 (def-fixtures db-path-fixture
     (:documentation "Provides path to an sqlite database."
-                    :cleanup (progn
-                               (ignore-errors (clsql:disconnect) (fdog-models:disconnect))
-                               (sb-ext:delete-directory db-root :recursive t)))
+     :setup (progn
+              (ignore-errors (clsql:disconnect) (fdog-models:disconnect))
+              (ignore-errors (sb-ext:delete-directory db-root :recursive t)))
+     :cleanup (progn
+                (ignore-errors (clsql:disconnect) (fdog-models:disconnect))
+                (ignore-errors (sb-ext:delete-directory db-root :recursive t))))
   (db-root (merge-pathnames (make-pathname :directory fdog-models:*server-dir*)
                             *root*))
   (db-path (merge-pathnames fdog-models:*config-file*
@@ -220,6 +223,48 @@ Does kill -9 to ensure the process dies in cleanup.")
                                                    api-test-agent  (:uuid ,api-uuid)))
                                  :root *root* ;; different root for the test agents
                                  :uuid hypervisor-uuid)))
+
+(def-fixtures request-forwarder-agent-fixture
+    (:documentation "A fixture that instantiates a request-forwarder-agent agent."
+     :setup (progn
+              (start request-forwarder-runner)
+              (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                        (awhen (getf msg :info)
+                          (and (assoc request-forwarder-uuid (getf it :peers) :test #'string=)
+                               (assoc forwarder-agent-uuid (getf it :peers) :test #'string=))))
+                (error "Request forwarder and forwarder config Agents didn't peer up."))
+
+              (unless (wait-for-agent-message (forwarder-agent-uuid
+                                               :request
+                                               `(:agent :need
+                                                        :need :forwarder
+                                                        :forwarder ((:name . "test")
+                                                                    (:hosts . ("api.example.com" "localhost"))
+                                                                    (:routes . (((:name . "default") (:route . "/api/"))
+                                                                                ((:name . "one") (:route . "/1/")))))))
+                          (msg)
+                        (awhen (getf msg :filled)
+                          (when (getf msg :forwarder)
+                            :need-filled)))
+                (error "Could not create forwarder.")))
+
+     :cleanup (progn
+                (stop request-forwarder-runner)))
+
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-forwarder-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (forwarder-handler "forwarder-test-default")
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-forwarder-runner (make-runner :test :include '(:afdog-tests)
+                                         :class 'afdog-hypervisor-test-agent
+                                         :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)
+                                                           forwarder-test-agent (:uuid ,forwarder-agent-uuid)
+                                                           request-forwarder-test-agent  (:uuid ,request-forwarder-uuid
+                                                                                          :forwarder "test"
+                                                                                          :route "default")))
+                                         :root *root* ;; different root for the test agents
+                                         :uuid hypervisor-uuid)))
 
 (def-fixtures forwarder-agent-fixture
     (:documentation "A fixture that instantiates a mongrel2 test agent."

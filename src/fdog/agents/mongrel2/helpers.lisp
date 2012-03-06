@@ -1,22 +1,5 @@
 (in-package :mongrel2-agent)
 
-(defmethod string-to-integer (input &key width (base 0))
-  "Perform a SHA1 hash of the `input' string. If provided, perform (mod hash `width') to narrow the result.
-The result is returned added to `base' which defaults to zero."
-  (let* ((digest (crypto:octets-to-integer (crypto:digest-sequence :sha1 (babel:string-to-octets input))))
-         (digest (if width (mod digest width) digest)))
-    (+ base digest)))
-
-(defun local-tcp-address (port)
-  "Make a ZMQ endpoint compatible string from the local tcp address with the given `port'"
-  (format nil "tcp://~A:~A" (agent::get-local-address :as :string :update :please) port))
-
-(defun local-address-from-string (string &optional (base 20000) (width 10000))
-  "Make a local address using the given `string' as the seed to generate the
-port using `string-to-integer' with the given `base' defaulting to 20000.
-The `width' is defaulted to 10000"
-  (local-tcp-address (string-to-integer string :base base :width width)))
-
 (defmethod unlink-server ((organ agent::standard-organ) (server fdog-models:mongrel2-server) config)
   (flet ((make-mongrel2-arguments (server config)
            (let ((uuid (fdog-models:mongrel2-server-uuid server)))

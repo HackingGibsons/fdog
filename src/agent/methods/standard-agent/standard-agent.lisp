@@ -55,20 +55,31 @@ for `agent'"
 or `:timeout' otherwise after a scheduled pause. Will also poll
 all of the organs and deliver any internal messages from the bus as well
 as fire any callbacks that may be pending IO when it is ready."
-  (let ((callbacks (make-hash-table))
+  (let ((callbacks (make-hash-table :test 'equalp))
         (agent-event :timeout))
     (labels ((s2us (s)
                "Seconds to uSeconds"
                (round (* s 1000000)))
 
-             (sock-id (sock)
+             (sock-id (sock &optional (inout :in))
                "Return the pointer address of the sock so we can use it in `make-hash-table'"
-               (cffi:pointer-address sock))
+               (format nil "~A-~S" (cffi:pointer-address sock) inout))
 
              (read-agent-event (s)
                "Read and store the agent event. Used as the `agent-event-sock' callback"
                (setf agent-event
                      (afdog:read-message s)))
+
+             (organ-writers+store-callbacks ()
+               "Returns a list of writer sockets and fills in the callbacks for them in the HT"
+               (alexandria:flatten
+                (mapcar #'(lambda (organ)
+                            (multiple-value-bind (socks funs) (writer-callbacks organ)
+                              (prog1 socks
+                                (mapc #'(lambda (sock fun)
+                                          (setf (gethash (sock-id sock :out) callbacks) fun))
+                                      socks funs))))
+                        (agent-organs agent))))
 
              (organ-readers+store-callbacks ()
                "Return a list of organ reader sockets and fill in the callbacks in the HT"
@@ -84,23 +95,18 @@ as fire any callbacks that may be pending IO when it is ready."
             #'read-agent-event)
 
       (let ((readers (append (list (agent-event-sock agent))
-                             (organ-readers+store-callbacks))))
-        (zmq:with-poll-sockets (items nb-items :in readers)
+                             (organ-readers+store-callbacks)))
+            (writers (organ-writers+store-callbacks)))
+        (zmq:with-poll-sockets (items nb-items :in readers :out writers)
           (let ((signalled (zmq:poll items nb-items (s2us (agent-poll-timeout agent)))))
             (when (> signalled 0)
-              (log-for (trace) "Doing poll ~S items" nb-items)
-              (log-for (trace) "Socks: ~S" readers)
-              (log-for (trace) "Ids: ~S" (mapcar #'sock-id readers))
               (zmq:do-poll-items (item items nb-items)
                 (awhen (zmq:poll-item-events-signaled-p item :pollin)
-                  (log-for (trace) "PI: ~S Sock: ~S ID: ~S Events: ~S"
-                           item (zmq:poll-item-socket item) (sock-id (zmq:poll-item-socket item)) it)
-                  (log-for (trace) "Callbacks: ~S" (arnesi:hash-to-alist callbacks))
-                  (multiple-value-bind (cb found?) (gethash (sock-id (zmq:poll-item-socket item)) callbacks)
-                    (log-for (trace) "CB: ~S Found: ~S" cb found?)
-                    (funcall cb (zmq:poll-item-socket item))
-                    (log-for (trace) "Moving on."))))
-              (log-for (trace) "Poll finished"))))))
+                  (funcall (gethash (sock-id (zmq:poll-item-socket item) :in) callbacks)
+                           (zmq:poll-item-socket item)))
+                (awhen (zmq:poll-item-events-signaled-p item :pollout)
+                  (funcall (gethash (sock-id (zmq:poll-item-socket item) :out) callbacks)
+                           (zmq:poll-item-socket item)))))))))
     (log-for (trace) "Agent event: ~S" agent-event)
     agent-event))
 

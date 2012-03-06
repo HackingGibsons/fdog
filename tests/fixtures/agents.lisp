@@ -39,6 +39,10 @@
   ()
   (:documentation "A `forwarder-test-agent' for testing the control of fdog forwarders."))
 
+(defclass request-forwarder-test-agent (request-forwarder-agent)
+  ()
+  (:documentation "A `request-forwarder-agent' for testing request forwarding and tranformations."))
+
 (defmethod agent-special-event :after ((agent hypervisor-test-agent) (event-head (eql :boot)) event)
   ;; Boot the hypervisor and make it loud
   (make-spawn-dependant-when-asked (agent::find-organ agent :head))
@@ -64,6 +68,12 @@
   (make-announce-what-i-make (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
 
+(defmethod heard-message ((agent request-processing-test-agent) organ (head (eql :requesticle)) type &rest event)
+  "Test agent requesticle toggle."
+  (declare (ignore event))
+  (send-message organ :command `(:command :requesticle
+                                 :requesticle ,type)))
+
 (defmethod agent-special-event :after ((agent request-processing-test-agent) (event-head (eql :boot)) event)
   (make-speak-request-processing-messages (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
@@ -72,6 +82,18 @@
   (make-speak-request-processing-messages (find-organ agent :head))
   (make-kill-self-after-timeout (find-organ agent :head)))
 
+(defmethod agent-special-event :after ((agent request-forwarder-test-agent) (event-head (eql :boot)) event)
+  (make-speak-request-processing-messages (find-organ agent :head))
+  (make-kill-self-after-timeout (find-organ agent :head)))
+
+(defmethod push-state-signal :after ((agent request-forwarder-test-agent) organ (endpoint forwarder-endpoint))
+  (log-for (trace request-forwarder-agent) "Announcing push state transition: ~A" endpoint)
+  (send-message (find-organ agent :head) :command `(:command :speak
+                                                    :say (:endpoint :transition
+                                                          :transition (:endpoint ,(princ-to-string endpoint)
+                                                                       :name ,(name endpoint)
+                                                                       :state ,(push-state endpoint))))))
+
 (defmethod request-handler :before ((agent api-test-agent) organ req raw)
   (log-for (trace api-agent) "Announcing request: ~Ab ~S" (length raw) (babel:octets-to-string raw))
   (send-message organ :request-handler `(:request-handler :raw
@@ -79,6 +101,11 @@
 
 (defmethod request-handler :before ((agent request-processing-test-agent) (organ agent-requesticle) req raw)
   (log-for (trace request-processing-agent::request-handler) "Announcing request: ~Ab" (length raw))
+  (send-message organ :request-handler `(:request-handler :raw
+                                         :serial ,(m2cl:request-serialize req)
+                                         :raw ,raw)))
+
+(defmethod request-handler :before ((agent request-forwarder-test-agent) (organ agent-requesticle) req raw)
   (send-message organ :request-handler `(:request-handler :raw
                                          :serial ,(m2cl:request-serialize req)
                                          :raw ,raw)))

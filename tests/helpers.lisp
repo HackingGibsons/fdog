@@ -1,19 +1,25 @@
 (in-package :afdog-tests)
 
-(defmacro wait-for-agent-message ((uuid &key (timeout 25) request) arglist &body forms)
+(defmacro wait-for-agent-message ((uuid &key (timeout 25) request requests) arglist &body forms)
   "Start a conversation with agent at `uuid' with a timeout of `timeout' (25 by default).
 Optionally sends a `request' at the start of the conversation, then
-will read and parse messages. For each message a lambda constructed as
-(lambda `arglist' `forms') will be applied as in (apply #'lambda parsed-message)
+any `requests' as a list then will read and parse messages.
+For each message a lambda constructed as
+  (lambda `arglist' `forms')
+will be applied as in
+  (apply #'lambda parsed-message)
 If the result of applying the message to the lambda yields a non-`nil' value,
 that value is returned. The form blocks for at most `timeout' seconds, when the timeout
 is exceeded the return is `nil'"
-  (alexandria:with-gensyms (m e msg msg-p result g!req)
+  (alexandria:with-gensyms (m e msg msg-p result g!req g!reqs)
     `(flet ((,msg-p ,arglist
               ,@forms))
        (with-agent-conversation (,m ,e :timeout ,timeout) ,uuid
-         (let ((,g!req ,request))
-           (when ,g!req (zmq:send! ,e (prepare-message ,g!req))))
+         (let ((,g!req ,request)
+               (,g!reqs ,requests))
+           (when ,g!req (zmq:send! ,e (prepare-message ,g!req)))
+           (dolist (,g!req ,g!reqs)
+             (when ,g!req (zmq:send! ,e (prepare-message ,g!req)))))
            (do* ((,msg (parse-message (read-message ,m))
                        (parse-message (read-message ,m)))
                  (,result (,msg-p ,msg) (,msg-p ,msg)))

@@ -12,7 +12,12 @@ Mongrel2 ZeroMQ messages")
   (:export :request-processing-agent
            :agent-requesticle
            :request-handler
+           :disconnect-handler
            :handler-name
-           :handler))
+           :handler
+           :request-sock
+           :response-sock
+           :enable
+           :disable))
 
 (in-package :request-processing-agent)

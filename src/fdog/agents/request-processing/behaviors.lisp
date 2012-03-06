@@ -1,5 +1,14 @@
 (in-package :request-processing-agent)
 
+;; Behaviors
+(defbehavior requesticle-control (:on (:command :requesticle :from :head) :do :invoke-with-event) (organ event)
+  (log-for (requesticle trace) "Requesticle control message: ~S" event)
+  (let ((command (getf event :requesticle)))
+    (case command
+      (:enable (enable organ))
+      (:disable (disable organ))
+      (t (signal "Unknown event: ~A" event)))))
+
 (defcategory peer-collection)
 (defmethod heard-message ((agent request-processing-agent) (organ agent-requesticle) (from (eql :agent)) (type (eql :info)) &rest info)
   "The requesticle hears an info message. It should examine it to see if contains
@@ -13,13 +22,17 @@ any handlers we're interested in and we should connect to them."
                (when (and (string= name (handler-name agent))
                           (not (gethash send (connected-to organ))))
                  (log-for (trace requesticle peer-collection) "Connecting to: ~A => ~A[>~A <~A]" (getf info :uuid) name send recv)
-                 (zmq:connect (request-sock organ) send)
-                 (zmq:connect (response-sock organ) recv)
-                 (setf (gethash send (connected-to organ)) (getf info :uuid))))
+                 (and (awhen (request-sock organ)
+                        (zmq:connect it send))
+                      (awhen (response-sock organ)
+                        (zmq:connect it recv))
+                      (setf (gethash send (connected-to organ)) (getf info :uuid)))))
+
              (connect-to-handler (handler)
                (let* ((handler-name (car handler))
                       (handler-info (cdr handler)))
                  (apply #'try-connecting handler-name (alexandria:alist-plist handler-info))))
+
              (search-server (server-handlers)
                "Search a server description for handlers"
                (log-for (trace requesticle peer-collection) "Destructuring: ~S" server-handlers)
@@ -48,14 +61,10 @@ and `data' will be an array of the original data."
 that it is ready for read for submission into the event loop."
   (lambda (sock)
     (declare (ignore sock))
-    (handler-case
-        (multiple-value-bind (req raw) (m2cl:handler-read-request (handler organ))
-          (if (m2cl:request-disconnect-p req)
-              (disconnect-handler (organ-agent organ) organ req raw)
-              (request-handler (organ-agent organ) organ req raw)))
-      (t (c)
-        (log-for (warn request-handler) "Request failed to apply: ~S" c)
-        nil))))
+    (multiple-value-bind (req raw) (m2cl:handler-read-request (handler organ))
+      (if (m2cl:request-disconnect-p req)
+          (disconnect-handler (organ-agent organ) organ req raw)
+          (request-handler (organ-agent organ) organ req raw)))))
 
 (defmethod reader-callbacks :around ((organ agent-requesticle))
   "Ask to be notified of read activity on the request socket of the `organ'"

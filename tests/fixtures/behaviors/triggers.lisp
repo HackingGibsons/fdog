@@ -2,6 +2,7 @@
 
 ;; Agent test driving behaviors
 (defbehavior speak-request-processing-messages (:on (:request-handler :raw :from :requesticle) :do :invoke-with-event) (organ event)
+  (log-for (warn) "Announcing raw request on ~A/~A" (organ-agent organ) organ)
   (send-message organ :command `(:command :speak
                                  :say ,event)))
 

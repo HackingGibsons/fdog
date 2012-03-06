@@ -22,6 +22,7 @@
                                    (:file "request-processing")
                                    (:file "api")
                                    (:file "forwarder")
+                                   (:file "request-forwarder")
                                    (:file "booted")
                                    (:file "cli")
                                    (:file "behavior")

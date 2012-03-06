@@ -278,7 +278,7 @@ Does kill -9 to ensure the process dies in cleanup.")
                              (log-for (trace) "Waiting for forwarder-agent to discover peers")
                              (wait-for-agent-message (forwarder-agent-uuid :timeout 60) (msg)
                                (awhen (getf msg :info)
-                                 (getf it :peers))))
+                                 (and (assoc mongrel2-uuid (getf it :peers) :test #'string=)))))
                     :cleanup (progn
                                (stop forwarder-runner)
                                (with-agent-conversation (m e :timeout 5 :linger -1) mongrel2-uuid

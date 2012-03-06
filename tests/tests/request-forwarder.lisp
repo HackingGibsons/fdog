@@ -7,13 +7,19 @@
   (and (running-p request-forwarder-runner) :running))
 
 (def-test (request-forwarder-agent-announces-provides :group request-forwarder-agent-tests)
-    (:equalp "forwarder-test-default")
+    (:values (:equalp "forwarder-test-default")
+             :true)
 
   (wait-for-agent-message (request-forwarder-uuid) (msg)
     (let* ((info (getf msg :info))
            (provides (getf info :provides)))
          (when provides
-           (getf provides :request-processing)))))
+           (getf provides :request-processing))))
+
+  (wait-for-agent-message (request-forwarder-uuid) (msg)
+    (let* ((info (getf msg :info))
+           (provides (getf info :provides)))
+      (getf provides :redis))))
 
 (def-test (request-forwarder-agent-announces-provides-forwarding :group request-forwarder-agent-tests)
     (:seq (:eql :forwarder) (:predicate stringp)

@@ -68,6 +68,11 @@ of the request object in sequence."))
   (:documentation "This agent attempts to forward requests from
 external clients to internal services."))
 
+(defmethod run-agent :around ((agent request-forwarder-agent))
+  "Connect `agent' to redis."
+  (redis:with-connection ()
+    (call-next-method)))
+
 (defmethod initialize-instance :after ((agent request-forwarder-agent) &key)
   "Bind a `handler-name' to the agent based on the `forwarder' and `route'"
   (setf (handler-name agent)
@@ -95,7 +100,8 @@ external clients to internal services."))
              (client-socks (find-organ agent :sock-pocket)))
 
     (append (call-next-method)
-            `(:forwarding (:forwarder ,(forwarder agent)
+            `(:redis ,(redis:connected-p)
+              :forwarding (:forwarder ,(forwarder agent)
                            :route ,(route agent)
                            :path ,(path agent)
                            :endpoints ,endpoints)))))

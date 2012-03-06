@@ -2,7 +2,7 @@
 (defcategory request-storage)
 
 ;; Knobs
-(defvar *expire-after* 60
+(defvar *expire-after* 600
   "The interval of time requests and responses persist in the database after they are written.")
 
 ;; Helpers
@@ -77,20 +77,36 @@
 
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
+          (redis:red-multi)
           (redis:red-zadd expireset-key (+ (get-universal-time) *expire-after*) key)
           (redis:red-expire key *expire-after*)
           (redis:red-expire expireset-key *expire-after*)
-          (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time)))))))
+          (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
+          (redis:red-exec))))))
 
 (defgeneric store-response (agent response)
   (:documentation "Store the response data in a way that can be found through
 the request data.")
 
   (:method ((agent request-forwarder-agent) data)
-    (let ((identifier (response-id data)))
-      (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+      (let* ((id (response-id data))
+             (key (prefixed-key agent id :response))
+             (expireset-key (prefixed-key agent "responses" "expiring"))
+             (reply-count (redis:red-hincrby key :count 1))
+             (specific-key (format nil "~A:~A" key reply-count)))
 
-        (log-for (warn request-storage) "TODO: Handle the response [~S] == [~S] by storing it." identifier (babel:octets-to-string data))))))
+        (redis:with-pipelining
+          (redis:red-hmset specific-key
+                           :data (babel:octets-to-string data)
+                           :stored (get-universal-time))
+          (redis:red-multi)
+          (redis:red-zadd expireset-key (+ (get-universal-time) *expire-after*) key)
+          (redis:red-expire key *expire-after*)
+          (redis:red-expire specific-key *expire-after*)
+          (redis:red-expire expireset-key *expire-after*)
+          (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
+          (redis:red-exec))))))
 
 (defgeneric queue-request (agent request)
   (:documentation "Append the request to the queue of requests handled by `agent'")

@@ -11,6 +11,19 @@
     (json:encode-json-plist `(:error "Upstream delivery failure. No recovery options present.")
                             s)))
 
+(defun response-id (data)
+  "Read the id of a response to match it up with a request produced by the system."
+  (let* ((response (babel:octets-to-string data))
+         (target-end (position #\Space response)))
+    (and (numberp target-end)
+         (not (zerop target-end))
+         (second (ppcre:split "--id-([^\s]+)" response :end target-end :with-registers-p t :omit-unmatched-p t)))))
+
+(defmethod response-handler ((agent request-forwarder-agent) organ data)
+  "Trigger for response handling."
+  (let ((identifier (response-id data)))
+    (log-for (warn request-forwarder-agent) "TODO: Handle the response [~S] by storing it." (babel:octets-to-string data))))
+
 (defmethod request-handler ((agent request-forwarder-agent) organ req data)
   "Handle the transformation and delivery of a request."
   (declare (ignorable data))

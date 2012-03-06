@@ -64,7 +64,9 @@ that has a client endpoint named `name'."))
 (defmethod deliver-response ((endpoint forwarder-endpoint) data)
   (let ((requesticle (find-organ (agent endpoint) :requesticle)))
     (if (response-sock requesticle)
-        (zmq:send! (response-sock requesticle) data)
+        (progn
+          (zmq:send! (response-sock requesticle) data)
+          (response-handler (agent endpoint) (organ endpoint) data))
         (log-for (warn forwarder-endpoint) "No response socket on the requesticle! Response not delivered."))))
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))

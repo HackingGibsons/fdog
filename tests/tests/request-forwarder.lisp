@@ -178,7 +178,7 @@
                :no-addr-found)
 
            (prog1 :requested
-             (write-sequence (flex:string-to-octets (http-request-string "/api/" :host "api.example.com"))
+             (write-sequence (flex:string-to-octets (http-request-string "/api/test-reply/" :host "api.example.com"))
                              (usocket:socket-stream sock))
              (force-output (usocket:socket-stream sock)))
 

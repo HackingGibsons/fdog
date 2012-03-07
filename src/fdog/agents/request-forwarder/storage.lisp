@@ -34,6 +34,10 @@
   (when (push-ready-p endpoint)
     (update-queue-count endpoint)))
 
+(defmethod endpoint-write-callback :after ((endpoint forwarder-endpoint))
+  (unless (zerop (queue-count endpoint))
+    (log-for (warn forwarder-endpoint) "TODO: Attempt to drain the queue.")))
+
 (defmethod delivery-failure-handler ((agent request-forwarder-agent) organ (endpoint forwarder-endpoint) req)
   "Request queue hook."
   (queue-request endpoint req))

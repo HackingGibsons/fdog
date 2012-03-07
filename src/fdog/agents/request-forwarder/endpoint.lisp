@@ -65,7 +65,7 @@ forwarder-$name:$routename:$param1:param2..."
   (unless (push-ready-p endpoint)
     (push-ready endpoint))
 
-  (unless (zerop (update-queue-count endpoint))
+  (unless (zerop (queue-count endpoint))
     (log-for (warn forwarder-endpoint) "TODO: Attempt to drain the queue.")))
 
 (defmethod writer-callbacks-p ((endpoint forwarder-endpoint))

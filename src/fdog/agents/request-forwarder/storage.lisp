@@ -15,15 +15,13 @@
          (second (ppcre:split "--id-([^\s]+)" response :end target-end :with-registers-p t :omit-unmatched-p t)))))
 
 ;; Hooks
-(defmethod deliver-request :around ((endpoint forwarder-endpoint) req)
-  "Request storage and expiry hook."
-  (flet ((do-store (&optional c)
-           (declare (ignore c))
-           (store-request endpoint req)))
-    (handler-bind ((t #'do-store))
-      (prog1 (call-next-method)
-        (do-store)
-        (expire-request endpoint req)))))
+(defmethod deliver-request :before ((endpoint forwarder-endpoint) (req m2cl:request))
+  "Request storage hook."
+  (store-request endpoint req))
+
+(defmethod deliver-request :after ((endpoint forwarder-endpoint) (req m2cl:request))
+  "Request expire hook"
+  (expire-request endpoint req))
 
 (defmethod deliver-response :around ((endpoint forwarder-endpoint) data)
   "Response storage hook."
@@ -36,7 +34,7 @@
 
 (defmethod endpoint-write-callback :after ((endpoint forwarder-endpoint))
   (unless (zerop (queue-count endpoint))
-    (log-for (warn forwarder-endpoint) "TODO: Attempt to drain the queue.")))
+    (deliver-from-queue endpoint)))
 
 (defmethod delivery-failure-handler ((agent request-forwarder-agent) organ (endpoint forwarder-endpoint) req)
   "Request queue hook."
@@ -115,3 +113,22 @@ the request data.")
           (redis:red-sadd queues-key queue-key)
           (redis:red-lpush queue-key request-key)
           (redis:red-exec))))))
+
+(defgeneric deliver-from-queue (endpoint)
+  (:documentation "Try to deliver a request from the queue and update the queue count.")
+
+  (:method ((endpoint forwarder-endpoint))
+    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+      (let* ((queue-key (prefixed-key (agent endpoint) :request :queue))
+             (request-key (redis:red-rpop queue-key))
+             (request (and request-key
+                           (m2cl:request-parse (babel:string-to-octets (redis:red-hget request-key :data))))))
+
+        (when request
+          (handler-case (deliver-request endpoint request)
+              (delivery-failure ()
+                (delivery-failure-handler (agent endpoint) (organ endpoint) endpoint request)))))))
+
+  (:method :after ((endpoint forwarder-endpoint))
+    (update-queue-count endpoint)))
+

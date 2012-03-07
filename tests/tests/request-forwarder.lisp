@@ -187,9 +187,11 @@
                              (usocket:socket-stream sock))
              (force-output (usocket:socket-stream sock)))
 
-           (or (when-bind request (m2cl:handler-receive handler :timeout 3000000)
-                 (m2cl:handler-send-http handler "OHI" :request request)
-                 :handled)
+           (or (let (result)
+                 (loop while (when-bind request (m2cl:handler-receive handler :timeout 1000000)
+                               (m2cl:handler-send-http handler "OHI" :request request)
+                               (setf result :handled)))
+                 result)
                :didnt-get-request)
 
            (handler-case
@@ -235,3 +237,55 @@
                    :forwarded-with-/
                    :forwarded-without-stripping))
                :didnt-get-request))))))
+
+(def-test (request-forwarder-queues-requests :group request-forwarder-agent-tests)
+    (:seq (:eql :sent1)
+          (:eql :sent2)
+          (:eql :connected)
+          (:eql :got1)
+          (:eql :got2))
+
+  (alexandria:flatten
+   (list
+    (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+      (write-string (http-request-string "/api/1/" :host "api.example.com") (usocket:socket-stream sock))
+      (force-output (usocket:socket-stream sock))
+      :sent1)
+
+    (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+      (write-string (http-request-string "/api/2/" :host "api.example.com") (usocket:socket-stream sock))
+      (force-output (usocket:socket-stream sock))
+      :sent2)
+
+    (zmq:with-context (ctx 1)
+      (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
+        (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
+                        (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
+               (push-addr (getf addrs :push))
+               (sub-addr (getf addrs :sub))
+               (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
+
+          (list
+           (if handler
+               (and (zmq:connect pull push-addr)
+                    (zmq:connect pub sub-addr)
+                    :connected)
+               :no-addr-found)
+
+           (or (let (result)
+                 (loop while (and (not result)
+                                  (when-bind request (m2cl:handler-receive handler :timeout 1000000)
+                                    (m2cl:handler-send-http handler "OHI" :request request)
+                                    (when (string-equal (m2cl:request-path request) "/1/")
+                                      (setf result :got1)))))
+                 result)
+               :didnt-get-request)
+
+           (or (let (result)
+                 (loop while (and (not result)
+                                  (when-bind request (m2cl:handler-receive handler :timeout 1000000)
+                                    (m2cl:handler-send-http handler "OHI" :request request)
+                                    (when (string-equal (m2cl:request-path request) "/2/")
+                                      (setf result :got2)))))
+                 result)
+               :didnt-get-request))))))))

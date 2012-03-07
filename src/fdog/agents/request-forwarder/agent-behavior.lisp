@@ -37,7 +37,5 @@ that comes in from the outside.")
            (endpoint (client-endpoint sock-pocket :default)))
 
       (prog1 request
-        (if (push-ready-p endpoint)
-            (handler-case (deliver-request endpoint request)
-              (delivery-failure () (delivery-failure-handler agent organ endpoint request)))
-            (delivery-failure-handler agent organ endpoint request))))))
+        (handler-case (deliver-request endpoint request)
+          (delivery-failure () (delivery-failure-handler agent organ endpoint request)))))))

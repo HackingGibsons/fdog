@@ -63,10 +63,7 @@ forwarder-$name:$routename:$param1:param2..."
 (defmethod endpoint-write-callback ((endpoint forwarder-endpoint))
   "Callback that fires when the pull socket is ready for write."
   (unless (push-ready-p endpoint)
-    (push-ready endpoint))
-
-  (unless (zerop (queue-count endpoint))
-    (log-for (warn forwarder-endpoint) "TODO: Attempt to drain the queue.")))
+    (push-ready endpoint)))
 
 (defmethod writer-callbacks-p ((endpoint forwarder-endpoint))
   "Predicate function to determine if write callbacks need to be submitted
@@ -90,16 +87,21 @@ for `endpoint'"
 
 (define-condition delivery-failure (endpoint-condition) ())
 
-(defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
-  (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request)
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request sequence))
   (handler-case
-      (prog1 (zmq:send! (sock-of (push-sock endpoint)) (m2cl:request-serialize request) '(:noblock))
+      (prog1 (zmq:send! (sock-of (push-sock endpoint)) request '(:noblock))
         (unless (push-ready-p endpoint)
           (push-ready endpoint)))
     (zmq:eagain-error ()
-      (if (push-ready-p endpoint)
-          (push-unready endpoint))
+      (when (push-ready-p endpoint)
+        (push-unready endpoint))
       (signal (make-condition 'delivery-failure :reason "Delivery attempt would block")))))
+
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request string))
+  (deliver-request endpoint endpoint (babel:string-to-octets request)))
+
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
+  (deliver-request endpoint (m2cl:request-serialize request)))
 
 (defmethod deliver-response ((endpoint forwarder-endpoint) data)
   (let ((requesticle (find-organ (agent endpoint) :requesticle)))

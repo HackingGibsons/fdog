@@ -3,11 +3,11 @@
 (defmethod disconnect-handler ((agent request-forwarder-agent) organ req data)
   (log-for (trace request-forwarder-agent) "R-F-A: Disconnect: ~A" req))
 
-(defgeneric delivery-failure-handler (agent organ request)
+(defgeneric delivery-failure-handler (agent organ endpoint request)
   (:documentation "A hook to handle the failure to deliver a request
 that comes in from the outside.")
 
-  (:method ((agent standard-agent) organ req)
+  (:method ((agent standard-agent) organ endpoint req)
     "Default handler is to fail with a 503"
     (log-for (trace request-forwarder-agent) "R-F-A: Request failed to deliver: ~A" req)
     (let ((organ (find-organ agent :requesticle)))
@@ -39,5 +39,5 @@ that comes in from the outside.")
       (prog1 request
         (if (push-ready-p endpoint)
             (handler-case (deliver-request endpoint request)
-              (delivery-failure () (delivery-failure-handler agent organ request)))
-            (delivery-failure-handler agent organ request))))))
+              (delivery-failure () (delivery-failure-handler agent organ endpoint request)))
+            (delivery-failure-handler agent organ endpoint request))))))

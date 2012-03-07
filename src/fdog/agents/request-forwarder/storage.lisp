@@ -36,27 +36,28 @@ forwarder-$name:$routename:$param1:param2..."
   "Request storage and expiry hook."
   (flet ((do-store (&optional c)
            (declare (ignore c))
-           (store-request (agent endpoint) req)))
+           (store-request endpoint req)))
     (handler-bind ((t #'do-store))
       (prog1 (call-next-method)
         (do-store)
-        (expire-request (agent endpoint) req)))))
+        (expire-request endpoint req)))))
 
-(defmethod response-handler :after ((agent request-forwarder-agent) organ data)
+(defmethod deliver-response :around (endpoint data)
   "Response storage hook."
-  (store-response agent data))
+  (unwind-protect (call-next-method)
+    (store-response endpoint data)))
 
-(defmethod delivery-failure-handler ((agent request-forwarder-agent) organ req)
+(defmethod delivery-failure-handler ((agent request-forwarder-agent) organ endpoint req)
   "Request queue hook."
-  (queue-request agent req))
+  (queue-request endpoint req))
 
 ;; Action methods.
-(defgeneric store-request (agent request)
+(defgeneric store-request (endpoint request)
   (:documentation "Store the request data.")
 
-  (:method ((agent request-forwarder-agent) req)
+  (:method (endpoint req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
-           (key (prefixed-key agent :request id)))
+           (key (prefixed-key (agent endpoint) :request id)))
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
           (redis:red-multi)
@@ -64,13 +65,13 @@ forwarder-$name:$routename:$param1:param2..."
           (redis:red-hsetnx key :stored (get-universal-time))
           (redis:red-exec))))))
 
-(defgeneric expire-request (agent request)
+(defgeneric expire-request (endpoint request)
   (:documentation "Set the request to expire after a given time.")
 
-  (:method ((agent request-forwarder-agent) req)
+  (:method (endpoint req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
-           (key (prefixed-key agent :request id))
-           (expireset-key (prefixed-key agent "requests" "expiring")))
+           (key (prefixed-key (agent endpoint) :request id))
+           (expireset-key (prefixed-key (agent endpoint) "requests" "expiring")))
 
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
@@ -81,15 +82,15 @@ forwarder-$name:$routename:$param1:param2..."
           (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
           (redis:red-exec))))))
 
-(defgeneric store-response (agent response)
+(defgeneric store-response (endpoint response)
   (:documentation "Store the response data in a way that can be found through
 the request data.")
 
-  (:method ((agent request-forwarder-agent) data)
+  (:method (endpoint data)
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (let* ((id (response-id data))
-             (key (prefixed-key agent :response id))
-             (expireset-key (prefixed-key agent "responses" "expiring"))
+             (key (prefixed-key (agent endpoint) :response id))
+             (expireset-key (prefixed-key (agent endpoint) "responses" "expiring"))
              (reply-count (redis:red-hincrby key :count 1))
              (specific-key (format nil "~A:~A" key reply-count)))
 
@@ -105,8 +106,8 @@ the request data.")
           (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
           (redis:red-exec))))))
 
-(defgeneric queue-request (agent request)
+(defgeneric queue-request (endpoint request)
   (:documentation "Append the request to the queue of requests handled by `agent'")
 
-  (:method ((agent request-forwarder-agent) request)
+  (:method (endpoint request)
     (log-for (warn request-storage) "TODO: Queue the request: [~S]" (babel:octets-to-string (m2cl:request-serialize request)))))

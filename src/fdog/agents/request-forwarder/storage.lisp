@@ -106,12 +106,26 @@ the request data.")
           (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
           (redis:red-exec))))))
 
+(defmethod push-state-signal :after (agent organ (endpoint forwarder-endpoint))
+  (when (push-ready-p endpoint)
+    (let ((queue-key (queue-key (prefixed-key agent :request :queue))))
+      (setf (queue-count endpoint) (redis:red-llen queue-key)))))
+
 (defgeneric queue-request (endpoint request)
   (:documentation "Append the request to the queue of requests handled by `agent'")
 
   (:method ((endpoint forwarder-endpoint) request)
     (let* ((id (m2cl:request-header request *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
            (request-key (prefixed-key (agent endpoint) :request id))
-           (queue-key (prefixed-key (agent endpoint) :request :queue)))
+           (queue-key (prefixed-key (agent endpoint) :request :queue))
+           (queues-key (prefixed-key (agent endpoint) :queues)))
 
-    (log-for (warn request-storage) "TODO: Queue the request: ~S => ~S [~S]" request-key queue-key (babel:octets-to-string (m2cl:request-serialize request))))))
+      (incf (queue-count endpoint))
+
+      (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+        (redis:with-pipelining
+          (redis:red-multi)
+          ;; Store the name of the current queue
+          (redis:red-sadd queues-key queue-key)
+          (redis:red-lpush queue-key request-key)
+          (redis:red-exec))))))

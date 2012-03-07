@@ -15,6 +15,13 @@
          :initarg :name
          :accessor name)
 
+   (queue-count :initform 0
+                :accessor queue-count
+                :documentation "The number of requests that
+this endpoint is aware of being in the queue. When it is non-zero
+a queue drain should be attempted until the queue is reported to
+be empty.")
+
    (push-sock-state :initform :unknown
                     :accessor push-state
                     :accessor push-sock-state)

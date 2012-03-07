@@ -14,6 +14,11 @@
          (not (zerop target-end))
          (second (ppcre:split "--id-([^\s]+)" response :end target-end :with-registers-p t :omit-unmatched-p t)))))
 
+(defun timestamp ()
+  "A wrapper around a timestamp for request/response data.
+Should always be a numeric type."
+  (get-universal-time))
+
 ;; Hooks
 (defmethod deliver-request :before ((endpoint forwarder-endpoint) (req m2cl:request))
   "Request storage hook."
@@ -51,7 +56,7 @@
         (redis:with-pipelining
           (redis:red-multi)
           (redis:red-hsetnx key :data (babel:octets-to-string (m2cl:request-serialize req)))
-          (redis:red-hsetnx key :stored (get-universal-time))
+          (redis:red-hsetnx key :stored (timestamp))
           (redis:red-exec))))))
 
 (defgeneric expire-request (endpoint request)
@@ -65,10 +70,11 @@
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
           (redis:red-multi)
-          (redis:red-zadd expireset-key (+ (get-universal-time) *expire-after*) key)
+          (redis:red-hsetnx key :delivered (timestamp))
+          (redis:red-zadd expireset-key (+ (timestamp) *expire-after*) key)
           (redis:red-expire key *expire-after*)
           (redis:red-expire expireset-key *expire-after*)
-          (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
+          (redis:red-zremrangebyscore expireset-key "-inf" (timestamp))
           (redis:red-exec))))))
 
 (defgeneric store-response (endpoint response)
@@ -84,15 +90,18 @@ the request data.")
              (specific-key (format nil "~A:~A" key reply-count)))
 
         (redis:with-pipelining
+          (redis:red-multi)
           (redis:red-hmset specific-key
                            :data (babel:octets-to-string data)
-                           :stored (get-universal-time))
+                           :stored (timestamp))
+          (redis:red-hsetnx key :first-reply (timestamp))
+          (redis:red-exec)
           (redis:red-multi)
-          (redis:red-zadd expireset-key (+ (get-universal-time) *expire-after*) key)
+          (redis:red-zadd expireset-key (+ (timestamp) *expire-after*) key)
           (redis:red-expire key *expire-after*)
           (redis:red-expire specific-key *expire-after*)
           (redis:red-expire expireset-key *expire-after*)
-          (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
+          (redis:red-zremrangebyscore expireset-key "-inf" (timestamp))
           (redis:red-exec))))))
 
 (defgeneric queue-request (endpoint request)

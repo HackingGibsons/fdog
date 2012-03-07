@@ -83,13 +83,6 @@ external clients to internal services."))
   (agent-connect agent (make-instance 'agent-sock-pocket :agent agent)))
 
 ;; Agent Hooks
-(defmethod agent-special-event :after ((agent request-forwarder-agent) (event-head (eql :boot)) event)
-  ;; Disable the requesticle on boot
-  ;; wait until we figure out our path rewriting rules before enabling it.
-  (send-message (find-organ agent :head) :command
-                `(:command :requesticle
-                  :requesticle :disable)))
-
 (defmethod agent-provides :around ((agent request-forwarder-agent))
   "Provide forwarding information."
   (let ((endpoints (list)))

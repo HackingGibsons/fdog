@@ -1,5 +1,22 @@
 (in-package :request-forwarder-agent)
 
+;; Agent behavior
+(defbehavior check-queue-length (:interval (:from :heart :nth 1) :do :invoke) (organ)
+  (maphash #'(lambda (name endpoint)
+               (declare (ignore name))
+               (update-queue-count endpoint))
+           (client-socks organ)))
+
+(defmethod agent-special-event :after ((agent request-forwarder-agent) (event-head (eql :boot)) event)
+  (make-check-queue-length (find-organ agent :sock-pocket))
+  ;; Disable the requesticle on boot
+  ;; wait until we figure out our path rewriting rules before enabling it.
+  (send-message (find-organ agent :head) :command
+                `(:command :requesticle
+                  :requesticle :disable)))
+
+
+;; Handler hooks
 (defmethod disconnect-handler ((agent request-forwarder-agent) organ req data)
   (log-for (trace request-forwarder-agent) "R-F-A: Disconnect: ~A" req))
 

@@ -18,13 +18,10 @@
           (log-for (warn) "There is no reconnect restart")
           (error c)))))
 
-(defun prefixed-key (agent id suffix &rest suffix-args)
-  "Generate a key usable for storage using the `agent', `request', `id' and `suffix'.
-`suffix-args' will be applied to suffix as in `format'"
-  (format nil "~A:~A:~A" (forwarder agent) (apply #'format nil (typecase suffix
-                                                                 (string suffix)
-                                                                 (otherwise (prin1-to-string suffix)))
-                                                  suffix-args) id))
+(defun prefixed-key (agent &rest params)
+  "Generate a key usable for storage using the `agent', and : separated params as in:
+forwarder-$name:$routename:$param1:param2..."
+  (format nil "forwarder-~A:~A:~{~A~^:~}" (forwarder agent) (route agent) params))
 
 (defun response-id (data)
   "Read the id of a response to match it up with a request produced by the system."
@@ -59,7 +56,7 @@
 
   (:method ((agent request-forwarder-agent) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
-           (key (prefixed-key agent id :request)))
+           (key (prefixed-key agent :request id)))
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
           (redis:red-multi)
@@ -72,7 +69,7 @@
 
   (:method ((agent request-forwarder-agent) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
-           (key (prefixed-key agent id :request))
+           (key (prefixed-key agent :request id))
            (expireset-key (prefixed-key agent "requests" "expiring")))
 
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
@@ -91,7 +88,7 @@ the request data.")
   (:method ((agent request-forwarder-agent) data)
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (let* ((id (response-id data))
-             (key (prefixed-key agent id :response))
+             (key (prefixed-key agent :response id))
              (expireset-key (prefixed-key agent "responses" "expiring"))
              (reply-count (redis:red-hincrby key :count 1))
              (specific-key (format nil "~A:~A" key reply-count)))

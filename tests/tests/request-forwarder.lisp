@@ -157,6 +157,7 @@
 
 (def-test (request-forwarder-agent-request->response-forwarding :group request-forwarder-agent-tests)
     (:values (:eql :connected)
+             (:eql :waited)
              (:eql :requested)
              (:eql :handled)
              (:eql :replied))
@@ -176,6 +177,8 @@
                     (zmq:connect pub sub-addr)
                     :connected)
                :no-addr-found)
+
+           (wait-for-agent (request-forwarder-uuid) :waited)
 
            (prog1 :requested
              (write-sequence (flex:string-to-octets (http-request-string "/api/test-reply/" :host "api.example.com"))

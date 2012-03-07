@@ -65,7 +65,7 @@ Should always be a numeric type."
   (:method ((endpoint forwarder-endpoint) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
            (key (prefixed-key (agent endpoint) :request id))
-           (expireset-key (prefixed-key (agent endpoint) "requests" "expiring")))
+           (expireset-key (prefixed-key (agent endpoint) :requests :expiring)))
 
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
@@ -85,7 +85,7 @@ the request data.")
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (let* ((id (response-id data))
              (key (prefixed-key (agent endpoint) :response id))
-             (expireset-key (prefixed-key (agent endpoint) "responses" "expiring"))
+             (expireset-key (prefixed-key (agent endpoint) :responses :expiring))
              (reply-count (redis:red-hincrby key :count 1))
              (specific-key (format nil "~A:~A" key reply-count)))
 
@@ -130,8 +130,8 @@ the request data.")
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (let* ((queue-key (prefixed-key (agent endpoint) :request :queue))
              (request-key (redis:red-rpop queue-key))
-             (request (and request-key
-                           (m2cl:request-parse (babel:string-to-octets (redis:red-hget request-key :data))))))
+             (request (and request-key (redis:red-hget request-key :data)))
+             (request (m2cl:request-parse (babel:string-to-octets request))))
 
         (when request
           (handler-case (deliver-request endpoint request)

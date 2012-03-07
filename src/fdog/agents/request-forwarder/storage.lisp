@@ -32,7 +32,7 @@ forwarder-$name:$routename:$param1:param2..."
          (second (ppcre:split "--id-([^\s]+)" response :end target-end :with-registers-p t :omit-unmatched-p t)))))
 
 ;; Hooks
-(defmethod deliver-request :around (endpoint req)
+(defmethod deliver-request :around ((endpoint forwarder-endpoint) req)
   "Request storage and expiry hook."
   (flet ((do-store (&optional c)
            (declare (ignore c))
@@ -42,12 +42,12 @@ forwarder-$name:$routename:$param1:param2..."
         (do-store)
         (expire-request endpoint req)))))
 
-(defmethod deliver-response :around (endpoint data)
+(defmethod deliver-response :around ((endpoint forwarder-endpoint) data)
   "Response storage hook."
   (unwind-protect (call-next-method)
     (store-response endpoint data)))
 
-(defmethod delivery-failure-handler ((agent request-forwarder-agent) organ endpoint req)
+(defmethod delivery-failure-handler ((agent request-forwarder-agent) organ (endpoint forwarder-endpoint) req)
   "Request queue hook."
   (queue-request endpoint req))
 
@@ -55,7 +55,7 @@ forwarder-$name:$routename:$param1:param2..."
 (defgeneric store-request (endpoint request)
   (:documentation "Store the request data.")
 
-  (:method (endpoint req)
+  (:method ((endpoint forwarder-endpoint) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
            (key (prefixed-key (agent endpoint) :request id)))
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
@@ -68,7 +68,7 @@ forwarder-$name:$routename:$param1:param2..."
 (defgeneric expire-request (endpoint request)
   (:documentation "Set the request to expire after a given time.")
 
-  (:method (endpoint req)
+  (:method ((endpoint forwarder-endpoint) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
            (key (prefixed-key (agent endpoint) :request id))
            (expireset-key (prefixed-key (agent endpoint) "requests" "expiring")))
@@ -86,7 +86,7 @@ forwarder-$name:$routename:$param1:param2..."
   (:documentation "Store the response data in a way that can be found through
 the request data.")
 
-  (:method (endpoint data)
+  (:method ((endpoint forwarder-endpoint) data)
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (let* ((id (response-id data))
              (key (prefixed-key (agent endpoint) :response id))
@@ -109,5 +109,9 @@ the request data.")
 (defgeneric queue-request (endpoint request)
   (:documentation "Append the request to the queue of requests handled by `agent'")
 
-  (:method (endpoint request)
-    (log-for (warn request-storage) "TODO: Queue the request: [~S]" (babel:octets-to-string (m2cl:request-serialize request)))))
+  (:method ((endpoint forwarder-endpoint) request)
+    (let* ((id (m2cl:request-header request *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
+           (request-key (prefixed-key (agent endpoint) :request id))
+           (queue-key (prefixed-key (agent endpoint) :request :queue)))
+
+    (log-for (warn request-storage) "TODO: Queue the request: ~S => ~S [~S]" request-key queue-key (babel:octets-to-string (m2cl:request-serialize request))))))

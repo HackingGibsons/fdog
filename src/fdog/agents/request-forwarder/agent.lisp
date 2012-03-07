@@ -96,7 +96,10 @@ external clients to internal services."))
     (maphash #'(lambda (name endpoint)
                  (appendf endpoints (list name
                                           (list :push (addr-of (push-sock endpoint))
-                                                :sub (addr-of (sub-sock endpoint))))))
+                                                :sub (addr-of (sub-sock endpoint))
+                                                :meta (list
+                                                       :push-state (push-sock-state endpoint)
+                                                       :queue-depth (queue-count endpoint))))))
              (client-socks (find-organ agent :sock-pocket)))
 
     (append (call-next-method)

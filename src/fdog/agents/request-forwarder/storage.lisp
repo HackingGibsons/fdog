@@ -6,29 +6,6 @@
   "The interval of time requests and responses persist in the database after they are written.")
 
 ;; Helpers
-(defun reconnect-redis-handler (c)
-  "Reconnect handler for a redis connection"
-  (log-for (warn) "Reconnecting to Redis!!")
-  (let ((reconnect (find-restart :reconnect)))
-    (if reconnect
-        (progn
-          (log-for (warn) "Reconnect restart found")
-          (invoke-restart reconnect))
-        (progn
-          (log-for (warn) "There is no reconnect restart")
-          (error c)))))
-
-(defmethod update-queue-count ((endpoint forwarder-endpoint))
-  "Refresh the count of the number of elements in this endpoint's queue."
-  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-    (let ((queue-key (prefixed-key (agent endpoint) :request :queue)))
-      (setf (queue-count endpoint) (redis:red-llen queue-key)))))
-
-(defun prefixed-key (agent &rest params)
-  "Generate a key usable for storage using the `agent', and : separated params as in:
-forwarder-$name:$routename:$param1:param2..."
-  (format nil "forwarder-~A:~A:~{~A~^:~}" (forwarder agent) (route agent) params))
-
 (defun response-id (data)
   "Read the id of a response to match it up with a request produced by the system."
   (let* ((response (babel:octets-to-string data))

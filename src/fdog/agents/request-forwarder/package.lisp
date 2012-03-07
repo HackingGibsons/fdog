@@ -33,3 +33,16 @@ rewriting, routing and forwarding.")
            :delivery-faulure))
 
 (in-package :request-forwarder-agent)
+
+;; TODO: Find a new home for this
+(defun reconnect-redis-handler (c)
+  "Reconnect handler for a redis connection"
+  (log-for (warn) "Reconnecting to Redis!!")
+  (let ((reconnect (find-restart :reconnect)))
+    (if reconnect
+        (progn
+          (log-for (warn) "Reconnect restart found")
+          (invoke-restart reconnect))
+        (progn
+          (log-for (warn) "There is no reconnect restart")
+          (error c)))))

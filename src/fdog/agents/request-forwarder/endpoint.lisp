@@ -49,6 +49,39 @@ that has a client endpoint named `name'."))
   "Bind the addresses of the given endpoint."
   (bind endpoint))
 
+(defun prefixed-key (agent &rest params)
+  "Generate a key usable for storage using the `agent', and : separated params as in:
+forwarder-$name:$routename:$param1:param2..."
+  (format nil "forwarder-~A:~A:~{~A~^:~}" (forwarder agent) (route agent) params))
+
+(defmethod update-queue-count ((endpoint forwarder-endpoint))
+  "Refresh the count of the number of elements in this endpoint's queue."
+  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (let ((queue-key (prefixed-key (agent endpoint) :request :queue)))
+      (setf (queue-count endpoint) (redis:red-llen queue-key)))))
+
+(defmethod endpoint-write-callback ((endpoint forwarder-endpoint))
+  "Callback that fires when the pull socket is ready for write."
+  (unless (push-ready-p endpoint)
+    (push-ready endpoint))
+
+  (unless (zerop (update-queue-count endpoint))
+    (log-for (warn forwarder-endpoint) "TODO: Attempt to drain the queue.")))
+
+(defmethod writer-callbacks-p ((endpoint forwarder-endpoint))
+  "Predicate function to determine if write callbacks need to be submitted
+for `endpoint'"
+  (or (not (push-ready-p endpoint))
+      (not (zerop (queue-count endpoint)))))
+
+(defmethod writer-callbacks ((endpoint forwarder-endpoint))
+  "Return writer sockets and callbacks for `endpoint'"
+  (when (writer-callbacks-p endpoint)
+    (values (list (sock-of (push-sock endpoint)))
+            (list (lambda (sock)
+                    (declare (ignore sock))
+                    (endpoint-write-callback endpoint))))))
+
 (define-condition endpoint-condition ()
   ((reason :initarg :reason :initform "Unknown failure"
            :accessor reason))

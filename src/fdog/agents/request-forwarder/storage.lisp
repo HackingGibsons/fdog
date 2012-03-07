@@ -18,6 +18,12 @@
           (log-for (warn) "There is no reconnect restart")
           (error c)))))
 
+(defmethod update-queue-count ((endpoint forwarder-endpoint))
+  "Refresh the count of the number of elements in this endpoint's queue."
+  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (let ((queue-key (prefixed-key (agent endpoint) :request :queue)))
+      (setf (queue-count endpoint) (redis:red-llen queue-key)))))
+
 (defun prefixed-key (agent &rest params)
   "Generate a key usable for storage using the `agent', and : separated params as in:
 forwarder-$name:$routename:$param1:param2..."
@@ -46,6 +52,10 @@ forwarder-$name:$routename:$param1:param2..."
   "Response storage hook."
   (unwind-protect (call-next-method)
     (store-response endpoint data)))
+
+(defmethod push-state-signal :after (agent organ (endpoint forwarder-endpoint))
+  (when (push-ready-p endpoint)
+    (update-queue-count endpoint)))
 
 (defmethod delivery-failure-handler ((agent request-forwarder-agent) organ (endpoint forwarder-endpoint) req)
   "Request queue hook."
@@ -105,11 +115,6 @@ the request data.")
           (redis:red-expire expireset-key *expire-after*)
           (redis:red-zremrangebyscore expireset-key "-inf" (get-universal-time))
           (redis:red-exec))))))
-
-(defmethod push-state-signal :after (agent organ (endpoint forwarder-endpoint))
-  (when (push-ready-p endpoint)
-    (let ((queue-key (queue-key (prefixed-key agent :request :queue))))
-      (setf (queue-count endpoint) (redis:red-llen queue-key)))))
 
 (defgeneric queue-request (endpoint request)
   (:documentation "Append the request to the queue of requests handled by `agent'")

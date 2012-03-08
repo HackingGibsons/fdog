@@ -142,8 +142,7 @@ the request data.")
         (when request
           (handler-case (deliver-request endpoint request)
               (delivery-failure ()
-                (delivery-failure-handler (agent endpoint) (organ endpoint) endpoint request)))))))
+                (delivery-failure-handler (agent endpoint) (organ endpoint) endpoint request))))))
 
-  (:method :after ((endpoint forwarder-endpoint))
     (update-queue-count endpoint)))
 

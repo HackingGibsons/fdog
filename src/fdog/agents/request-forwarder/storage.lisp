@@ -14,11 +14,6 @@
          (not (zerop target-end))
          (second (ppcre:split "--id-([^\s]+)" response :end target-end :with-registers-p t :omit-unmatched-p t)))))
 
-(defun timestamp ()
-  "A wrapper around a timestamp for request/response data.
-Should always be a numeric type."
-  (get-universal-time))
-
 ;; Hooks
 (defmethod deliver-request :before ((endpoint forwarder-endpoint) (req m2cl:request))
   "Request storage hook."
@@ -56,7 +51,7 @@ Should always be a numeric type."
         (redis:with-pipelining
           (redis:red-multi)
           (redis:red-hsetnx key :data (babel:octets-to-string (m2cl:request-serialize req)))
-          (redis:red-hsetnx key :stored (timestamp))
+          (redis:red-hsetnx key :stored (timestamp (agent endpoint)))
           (redis:red-exec))))))
 
 (defgeneric expire-request (endpoint request)
@@ -70,11 +65,11 @@ Should always be a numeric type."
       (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
         (redis:with-pipelining
           (redis:red-multi)
-          (redis:red-hsetnx key :delivered (timestamp))
-          (redis:red-zadd expireset-key (+ (timestamp) *expire-after*) key)
+          (redis:red-hsetnx key :delivered (timestamp (agent endpoint)))
+          (redis:red-zadd expireset-key (+ (timestamp (agent endpoint)) *expire-after*) key)
           (redis:red-expire key *expire-after*)
           (redis:red-expire expireset-key *expire-after*)
-          (redis:red-zremrangebyscore expireset-key "-inf" (timestamp))
+          (redis:red-zremrangebyscore expireset-key "-inf" (timestamp (agent endpoint)))
           (redis:red-exec))))))
 
 (defgeneric store-response (endpoint response)
@@ -85,23 +80,34 @@ the request data.")
     (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
       (let* ((id (response-id data))
              (key (prefixed-key (agent endpoint) :response id))
+             (request-key (prefixed-key (agent endpoint) :request id))
              (expireset-key (prefixed-key (agent endpoint) :responses :expiring))
-             (reply-count (redis:red-hincrby key :count 1))
+
+             (request-delivered-at (parse-integer (or (redis:red-hget request-key :delivered) "0")))
+             (reply-count (parse-integer (first (alexandria:last-elt
+                                                 ;; To keep the TTL atomic
+                                                 (redis:with-pipelining
+                                                   (redis:red-multi)
+                                                   (redis:red-hincrby key :count 1)
+                                                   (redis:red-expire key *expire-after*)
+                                                   (redis:red-exec))))))
              (specific-key (format nil "~A:~A" key reply-count)))
 
         (redis:with-pipelining
           (redis:red-multi)
           (redis:red-hmset specific-key
                            :data (babel:octets-to-string data)
-                           :stored (timestamp))
-          (redis:red-hsetnx key :first-reply (timestamp))
-          (redis:red-exec)
-          (redis:red-multi)
-          (redis:red-zadd expireset-key (+ (timestamp) *expire-after*) key)
+                           :stored (timestamp (agent endpoint)))
+
+          (redis:red-hsetnx request-key :latency (- (timestamp (agent endpoint)) request-delivered-at))
+          (redis:red-expire request-key *expire-after*) ;; Since we just violated the TTL
+
+          (redis:red-hsetnx key :first-reply (timestamp (agent endpoint)))
+          (redis:red-zadd expireset-key (+ (timestamp (agent endpoint)) *expire-after*) key)
           (redis:red-expire key *expire-after*)
           (redis:red-expire specific-key *expire-after*)
           (redis:red-expire expireset-key *expire-after*)
-          (redis:red-zremrangebyscore expireset-key "-inf" (timestamp))
+          (redis:red-zremrangebyscore expireset-key "-inf" (timestamp (agent endpoint)))
           (redis:red-exec))))))
 
 (defgeneric queue-request (endpoint request)

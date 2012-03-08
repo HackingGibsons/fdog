@@ -84,12 +84,9 @@
     (zmq:with-socket (pull ctx :pull)
       (values
        (let ((addr (wait-for-agent-message (request-forwarder-uuid) (msg)
-                     (getf (cadr (getf (getf (getf (getf msg
-                                                         :info)
-                                                         :provides)
-                                                         :forwarding)
-                                                         :endpoints))
-                           :push))))
+                     (let ((provides (getf (getf msg :info) :provides)))
+                       (when-bind forwarding (and provides (getf provides :forwarding))
+                         (cdr (assoc :push (cdr (assoc :default (cdr (assoc :endpoints forwarding)))))))))))
          (if addr
              (and (zmq:connect pull addr)
                   :connected)
@@ -116,9 +113,11 @@
   (zmq:with-context (ctx 1)
     (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
       (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                      (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-             (push-addr (getf addrs :push))
-             (sub-addr (getf addrs :sub))
+                      (let ((provides (getf (getf msg :info) :provides)))
+                        (when-bind forwarding (and provides (getf provides :forwarding))
+                          (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+             (push-addr (cdr (assoc :push addrs)))
+             (sub-addr (cdr (assoc :sub addrs)))
              (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
         (values
@@ -161,9 +160,11 @@
       (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*
                                                                    :element-type 'flex:octet))
         (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                        (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-               (push-addr (getf addrs :push))
-               (sub-addr (getf addrs :sub))
+                        (let ((provides (getf (getf msg :info) :provides)))
+                          (when-bind forwarding (and provides (getf provides :forwarding))
+                            (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+               (push-addr (cdr (assoc :push addrs)))
+               (sub-addr (cdr (assoc :sub addrs)))
                (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
           (values
@@ -208,9 +209,11 @@
   (zmq:with-context (ctx 1)
     (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
       (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                      (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-             (push-addr (getf addrs :push))
-             (sub-addr (getf addrs :sub))
+                      (let ((provides (getf (getf msg :info) :provides)))
+                        (when-bind forwarding (and provides (getf provides :forwarding))
+                          (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+             (push-addr (cdr (assoc :push addrs)))
+             (sub-addr (cdr (assoc :sub addrs)))
              (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
         (values
@@ -253,9 +256,11 @@
     (zmq:with-context (ctx 1)
       (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
         (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                        (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-               (push-addr (getf addrs :push))
-               (sub-addr (getf addrs :sub))
+                        (let ((provides (getf (getf msg :info) :provides)))
+                          (when-bind forwarding (and provides (getf provides :forwarding))
+                            (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+               (push-addr (cdr (assoc :push addrs)))
+               (sub-addr (cdr (assoc :sub addrs)))
                (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
           (list

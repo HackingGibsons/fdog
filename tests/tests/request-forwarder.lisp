@@ -42,31 +42,26 @@
           :connected-to-one))))
 
 (def-test (request-forwarder-agent-signals-client-push :group request-forwarder-agent-tests)
-    (:values (:seq (:eql :forwarder) (:predicate stringp)
-                   (:eql :route) (:predicate stringp)
-                   (:eql :path) (:predicate string)
-                   (:eql :endpoints) (:seq (:eql :default)
-                                           (:seq (:eql :push) (:predicate stringp)
-                                                 (:eql :sub) (:predicate stringp)
-                                                 (:eql :meta) (:predicate listp))))
+    (:values (:seq (:eql :forwarder)
+                   (:eql :route)
+                   (:eql :path)
+                   (:eql :endpoints))
              (:eql :ready)
              (:eql :still-there))
 
   (wait-for-agent-message (request-forwarder-uuid :timeout 30) (msg)
     (let* ((info (getf msg :info))
            (provides (getf info :provides)))
-      (when provides
-        (getf provides :forwarding))))
+      (when-bind forwarding (and provides (getf provides :forwarding))
+        (mapcar #'car forwarding))))
 
   (zmq:with-context (ctx 1)
     (zmq:with-socket (pull ctx :pull)
       (let ((addr (wait-for-agent-message (request-forwarder-uuid) (msg)
-                    (getf (cadr (getf (getf (getf (getf msg
-                                                        :info)
-                                                        :provides)
-                                                        :forwarding)
-                                                        :endpoints))
-                          :push))))
+                    (let ((provides (getf (getf msg :info) :provides)))
+                      (when-bind forwarding (and provides (getf provides :forwarding))
+                        (cdr (assoc :push (cdr (assoc :default (cdr (assoc :endpoints forwarding)))))))))))
+
         (if addr
           (with-agent-conversation (m e) request-forwarder-uuid
             (do* ((connected (zmq:connect pull addr) connected)

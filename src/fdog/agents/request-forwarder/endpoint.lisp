@@ -54,10 +54,13 @@ that has a client endpoint named `name'."))
 forwarder-$name:$routename:$param1:param2..."
   (format nil "forwarder-~A:~A:~{~A~^:~}" (forwarder agent) (route agent) params))
 
+(defmethod queue-key ((endpoint forwarder-endpoint) &optional (type :request))
+  (prefixed-key (agent endpoint) (name endpoint) type :queue))
+
 (defmethod update-queue-count ((endpoint forwarder-endpoint))
   "Refresh the count of the number of elements in this endpoint's queue."
   (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
-    (let ((queue-key (prefixed-key (agent endpoint) :request :queue)))
+    (let ((queue-key (queue-key endpoint)))
       (setf (queue-count endpoint) (redis:red-llen queue-key)))))
 
 (defmethod endpoint-write-callback ((endpoint forwarder-endpoint))

@@ -15,10 +15,10 @@
     :accessor forwarders
     :initform nil
     :documentation "A list of forwarders the agent knows about.")
-   (handlers
-    :accessor handlers
+   (endpoints
+    :accessor endpoints
     :initform nil
-    :documentation "A list of handlers the agent knows about.")
+    :documentation "A list of endpoints the agent knows about.")
    (callbacks
     :accessor callbacks
     :initform nil
@@ -53,11 +53,28 @@ and contains the implementation of the afdog API."))
       (unless (eql forwarders :not-found)
         (setf (forwarders agent) forwarders)))
 
-    ;; If the announce is from a mongrel2 agent, look for a
-    ;; "forwarder" server. If found, update the stored handler sockets
-    ;; on the agent.
-    (let ((servers (getf provides :servers :not-found)))
-      (unless (eql servers :not-found)
-        (when-bind forwarder-server (assoc "forwarder" servers :test #'string=)
-          (let ((handlers (cdr forwarder-server)))
-            (setf (handlers agent) handlers)))))))
+    ;; If the announce is from a req-processing agent,
+    ;; see what forwarder it handles and update the information
+    ;; for that matching (forwarder . route) pair
+
+    ;; TODO deleting will be handled by looking for :filled
+    ;; :remove-forwarder messages
+    (let ((forwarding (getf provides :forwarding :not-found)))
+      (unless (eql forwarding :not-found)
+        (let ((forwarder (cdr (assoc :forwarder forwarding)))
+              (route (cdr (assoc :route forwarding)))
+              (path (cdr (assoc :path forwarding)))
+              (endpoints (endpoints agent)))
+          ;; Check if the endpoint exists. If it does, remove the old
+          ;; endpoint announce.
+          ;; (Last announce wins since each endpoint is announced by a
+          ;; separate agent)
+          (when-bind endpoint (find-if #'(lambda (e) (and
+                                                 (string= forwarder (cdr (assoc :forwarder e)))
+                                                 (string= route (cdr (assoc :route e)))
+                                                 (string= path (cdr (assoc :path e)))))
+                                       endpoints)
+            (setf endpoints (remove endpoint endpoints)))
+
+          ;; Then append the endpoint we saw to the agent's list
+          (appendf (endpoints agent) (list forwarding)))))))

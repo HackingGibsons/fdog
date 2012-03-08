@@ -1,5 +1,13 @@
 (in-package :agent)
 
+(defmethod timestamp ((agent standard-agent))
+  "Return a universal time in milliseconds"
+  (let* ((base (* (universal-start-time agent) 1000))
+         (running (* (/ (- (get-internal-real-time) (start-time agent))
+                        internal-time-units-per-second)
+                     1000)))
+    (+ base running)))
+
 ;; Agent methods
 (defmethod agent-connect ((agent standard-agent) organ &rest options)
   (declare (ignorable options))

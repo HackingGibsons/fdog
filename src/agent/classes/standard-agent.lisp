@@ -43,8 +43,10 @@
    (tick-delta :initform 0
                :accessor agent-tick-delta)
 
+   (universal-start-time :initform (get-universal-time)
+                         :reader universal-start-time)
    (start-time :initform (get-internal-real-time)
-               :accessor start-time))
+               :reader start-time))
 
   (:documentation "A standard agent shell. Capable of communication, but completely dead inside."))
 

@@ -87,20 +87,20 @@ external clients to internal services."))
   "Provide forwarding information."
   (let ((endpoints (list)))
     (maphash #'(lambda (name endpoint)
-                 (appendf endpoints (list name
-                                          (list :push (addr-of (push-sock endpoint))
-                                                :sub (addr-of (sub-sock endpoint))
-                                                :meta (list
-                                                       :push-state (push-sock-state endpoint)
-                                                       :queue-depth (queue-count endpoint))))))
+                 (appendf endpoints (list (cons name
+                                                (list (cons :push (addr-of (push-sock endpoint)))
+                                                      (cons :sub (addr-of (sub-sock endpoint)))
+                                                      (cons :meta (list
+                                                                   (cons :push-state (push-sock-state endpoint))
+                                                                   (cons :queue-depth (queue-count endpoint)))))))))
              (client-socks (find-organ agent :sock-pocket)))
 
     (append (call-next-method)
             `(:redis ,(redis:connected-p)
-              :forwarding (:forwarder ,(forwarder agent)
-                           :route ,(route agent)
-                           :path ,(path agent)
-                           :endpoints ,endpoints)))))
+              :forwarding ((:forwarder . ,(forwarder agent))
+                           (:route . ,(route agent))
+                           (:path . ,(path agent))
+                           (:endpoints . ,endpoints))))))
 
 (defmethod heard-message :after ((agent request-forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   (when-bind forwarder (assoc (forwarder agent)

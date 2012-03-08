@@ -22,18 +22,16 @@
       (getf provides :redis))))
 
 (def-test (request-forwarder-agent-announces-provides-forwarding :group request-forwarder-agent-tests)
-    (:seq (:eql :forwarder) (:predicate stringp)
-          (:eql :route) (:predicate stringp)
-          (:eql :path) (:predicate string)
-          (:eql :endpoints) (:seq (:eql :default)
-                                  (:seq (:eql :push) (:predicate stringp)
-                                        (:eql :sub) (:predicate stringp)
-                                        (:eql :meta) (:predicate listp))))
+    (:seq (:eql :forwarder)
+          (:eql :route)
+          (:eql :path)
+          (:eql :endpoints))
   (wait-for-agent-message (request-forwarder-uuid) (msg)
     (let* ((info (getf msg :info))
            (provides (getf info :provides)))
-         (when provides
-           (getf provides :forwarding)))))
+         (when-bind forwarding (and provides
+                                    (getf provides :forwarding))
+           (mapcar #'car forwarding)))))
 
 (def-test (request-forwarder-agent-connects :group request-forwarder-agent-tests)
     (:eql :connected-to-one)

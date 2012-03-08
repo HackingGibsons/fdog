@@ -1,15 +1,42 @@
 (in-package :request-forwarder-agent)
 
+;; Agent behavior
+(defbehavior check-queue-length (:interval (:from :heart :nth 1) :do :invoke) (organ)
+  (maphash #'(lambda (name endpoint)
+               (declare (ignore name))
+               (update-queue-count endpoint))
+           (client-socks organ)))
+
+(defmethod agent-special-event :after ((agent request-forwarder-agent) (event-head (eql :boot)) event)
+  (make-check-queue-length (find-organ agent :sock-pocket))
+  ;; Disable the requesticle on boot
+  ;; wait until we figure out our path rewriting rules before enabling it.
+  (send-message (find-organ agent :head) :command
+                `(:command :requesticle
+                  :requesticle :disable)))
+
+
+;; Handler hooks
 (defmethod disconnect-handler ((agent request-forwarder-agent) organ req data)
   (log-for (trace request-forwarder-agent) "R-F-A: Disconnect: ~A" req))
 
-(defmethod delivery-failure-handler ((agent request-forwarder-agent) (organ agent-requesticle) req)
-  (log-for (trace request-forwarder-agent) "R-F-A: Request failed to deliver: ~A" req)
-  (http-dog:with-chunked-stream-reply ((handler organ) req s
-                                       :code 503 :status "SERVICE UNAVAILABLE"
-                                       :headers ((http-dog:header-json-type)))
-    (json:encode-json-plist `(:error "Upstream delivery failure. No recovery options present.")
-                            s)))
+(defgeneric delivery-failure-handler (agent organ endpoint request)
+  (:documentation "A hook to handle the failure to deliver a request
+that comes in from the outside.")
+
+  (:method ((agent standard-agent) organ endpoint req)
+    "Default handler is to fail with a 503"
+    (log-for (trace request-forwarder-agent) "R-F-A: Request failed to deliver: ~A" req)
+    (let ((organ (find-organ agent :requesticle)))
+      (and organ
+           (http-dog:with-chunked-stream-reply ((handler organ) req s
+                                                :code 503 :status "SERVICE UNAVAILABLE"
+                                                :headers ((http-dog:header-json-type)))
+             (json:encode-json-plist `(:error "Upstream delivery failure. No recovery options present.") s))))))
+
+(defgeneric response-handler (agent organ data)
+  (:documentation "Trigger for response handling.")
+  (:method (agent organ data) nil))
 
 (defmethod request-handler ((agent request-forwarder-agent) organ req data)
   "Handle the transformation and delivery of a request."
@@ -26,14 +53,6 @@
                             :initial-value req))
            (endpoint (client-endpoint sock-pocket :default)))
 
-      (log-for (trace request-forwarder-agent)
-               "Sockpock: ~A" sock-pocket)
-      (log-for (trace request-forwarder-agent)
-               "Endpoint: ~A" endpoint)
-      (log-for (trace request-forwarder-agent)
-               "Transformed request: ~A"
-               (babel:octets-to-string (m2cl:request-serialize req)))
-
-      (handler-case (deliver-request endpoint request)
-        (delivery-failure ()
-          (delivery-failure-handler agent organ request))))))
+      (prog1 request
+        (handler-case (deliver-request endpoint request)
+          (delivery-failure () (delivery-failure-handler agent organ endpoint request)))))))

@@ -7,26 +7,31 @@
   (and (running-p request-forwarder-runner) :running))
 
 (def-test (request-forwarder-agent-announces-provides :group request-forwarder-agent-tests)
-    (:equalp "forwarder-test-default")
+    (:values (:equalp "forwarder-test-default")
+             :true)
 
   (wait-for-agent-message (request-forwarder-uuid) (msg)
     (let* ((info (getf msg :info))
            (provides (getf info :provides)))
          (when provides
-           (getf provides :request-processing)))))
+           (getf provides :request-processing))))
+
+  (wait-for-agent-message (request-forwarder-uuid) (msg)
+    (let* ((info (getf msg :info))
+           (provides (getf info :provides)))
+      (getf provides :redis))))
 
 (def-test (request-forwarder-agent-announces-provides-forwarding :group request-forwarder-agent-tests)
-    (:seq (:eql :forwarder) (:predicate stringp)
-          (:eql :route) (:predicate stringp)
-          (:eql :path) (:predicate string)
-          (:eql :endpoints) (:seq (:eql :default)
-                                  (:seq (:eql :push) (:predicate stringp)
-                                        (:eql :sub) (:predicate stringp))))
+    (:seq (:eql :forwarder)
+          (:eql :route)
+          (:eql :path)
+          (:eql :endpoints))
   (wait-for-agent-message (request-forwarder-uuid) (msg)
     (let* ((info (getf msg :info))
            (provides (getf info :provides)))
-         (when provides
-           (getf provides :forwarding)))))
+         (when-bind forwarding (and provides
+                                    (getf provides :forwarding))
+           (mapcar #'car forwarding)))))
 
 (def-test (request-forwarder-agent-connects :group request-forwarder-agent-tests)
     (:eql :connected-to-one)
@@ -37,30 +42,26 @@
           :connected-to-one))))
 
 (def-test (request-forwarder-agent-signals-client-push :group request-forwarder-agent-tests)
-    (:values (:seq (:eql :forwarder) (:predicate stringp)
-                   (:eql :route) (:predicate stringp)
-                   (:eql :path) (:predicate string)
-                   (:eql :endpoints) (:seq (:eql :default)
-                                           (:seq (:eql :push) (:predicate stringp)
-                                                 (:eql :sub) (:predicate stringp))))
+    (:values (:seq (:eql :forwarder)
+                   (:eql :route)
+                   (:eql :path)
+                   (:eql :endpoints))
              (:eql :ready)
              (:eql :still-there))
 
   (wait-for-agent-message (request-forwarder-uuid :timeout 30) (msg)
     (let* ((info (getf msg :info))
            (provides (getf info :provides)))
-      (when provides
-        (getf provides :forwarding))))
+      (when-bind forwarding (and provides (getf provides :forwarding))
+        (mapcar #'car forwarding))))
 
   (zmq:with-context (ctx 1)
     (zmq:with-socket (pull ctx :pull)
       (let ((addr (wait-for-agent-message (request-forwarder-uuid) (msg)
-                    (getf (cadr (getf (getf (getf (getf msg
-                                                        :info)
-                                                        :provides)
-                                                        :forwarding)
-                                                        :endpoints))
-                          :push))))
+                    (let ((provides (getf (getf msg :info) :provides)))
+                      (when-bind forwarding (and provides (getf provides :forwarding))
+                        (cdr (assoc :push (cdr (assoc :default (cdr (assoc :endpoints forwarding)))))))))))
+
         (if addr
           (with-agent-conversation (m e) request-forwarder-uuid
             (do* ((connected (zmq:connect pull addr) connected)
@@ -83,12 +84,9 @@
     (zmq:with-socket (pull ctx :pull)
       (values
        (let ((addr (wait-for-agent-message (request-forwarder-uuid) (msg)
-                     (getf (cadr (getf (getf (getf (getf msg
-                                                         :info)
-                                                         :provides)
-                                                         :forwarding)
-                                                         :endpoints))
-                           :push))))
+                     (let ((provides (getf (getf msg :info) :provides)))
+                       (when-bind forwarding (and provides (getf provides :forwarding))
+                         (cdr (assoc :push (cdr (assoc :default (cdr (assoc :endpoints forwarding)))))))))))
          (if addr
              (and (zmq:connect pull addr)
                   :connected)
@@ -115,9 +113,11 @@
   (zmq:with-context (ctx 1)
     (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
       (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                      (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-             (push-addr (getf addrs :push))
-             (sub-addr (getf addrs :sub))
+                      (let ((provides (getf (getf msg :info) :provides)))
+                        (when-bind forwarding (and provides (getf provides :forwarding))
+                          (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+             (push-addr (cdr (assoc :push addrs)))
+             (sub-addr (cdr (assoc :sub addrs)))
              (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
         (values
@@ -151,6 +151,7 @@
 
 (def-test (request-forwarder-agent-request->response-forwarding :group request-forwarder-agent-tests)
     (:values (:eql :connected)
+             (:eql :waited)
              (:eql :requested)
              (:eql :handled)
              (:eql :replied))
@@ -159,9 +160,11 @@
       (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*
                                                                    :element-type 'flex:octet))
         (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                        (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-               (push-addr (getf addrs :push))
-               (sub-addr (getf addrs :sub))
+                        (let ((provides (getf (getf msg :info) :provides)))
+                          (when-bind forwarding (and provides (getf provides :forwarding))
+                            (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+               (push-addr (cdr (assoc :push addrs)))
+               (sub-addr (cdr (assoc :sub addrs)))
                (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
           (values
@@ -171,14 +174,18 @@
                     :connected)
                :no-addr-found)
 
+           (wait-for-agent (request-forwarder-uuid) :waited)
+
            (prog1 :requested
-             (write-sequence (flex:string-to-octets (http-request-string "/api/" :host "api.example.com"))
+             (write-sequence (flex:string-to-octets (http-request-string "/api/test-reply/" :host "api.example.com"))
                              (usocket:socket-stream sock))
              (force-output (usocket:socket-stream sock)))
 
-           (or (when-bind request (m2cl:handler-receive handler :timeout 3000000)
-                 (m2cl:handler-send-http handler "OHI" :request request)
-                 :handled)
+           (or (let (result)
+                 (loop while (when-bind request (m2cl:handler-receive handler :timeout 1000000)
+                               (m2cl:handler-send-http handler "OHI" :request request)
+                               (setf result :handled)))
+                 result)
                :didnt-get-request)
 
            (handler-case
@@ -202,9 +209,11 @@
   (zmq:with-context (ctx 1)
     (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
       (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
-                      (cadr (getf (getf (getf (getf msg :info) :provides) :forwarding) :endpoints))))
-             (push-addr (getf addrs :push))
-             (sub-addr (getf addrs :sub))
+                      (let ((provides (getf (getf msg :info) :provides)))
+                        (when-bind forwarding (and provides (getf provides :forwarding))
+                          (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+             (push-addr (cdr (assoc :push addrs)))
+             (sub-addr (cdr (assoc :sub addrs)))
              (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
 
         (values
@@ -224,3 +233,57 @@
                    :forwarded-with-/
                    :forwarded-without-stripping))
                :didnt-get-request))))))
+
+(def-test (request-forwarder-queues-requests :group request-forwarder-agent-tests)
+    (:seq (:eql :sent1)
+          (:eql :sent2)
+          (:eql :connected)
+          (:eql :got1)
+          (:eql :got2))
+
+  (alexandria:flatten
+   (list
+    (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+      (write-string (http-request-string "/api/1/" :host "api.example.com") (usocket:socket-stream sock))
+      (force-output (usocket:socket-stream sock))
+      :sent1)
+
+    (usocket:with-connected-socket (sock (usocket:socket-connect "localhost" forwarder-agent:*forwarder-server-port*))
+      (write-string (http-request-string "/api/2/" :host "api.example.com") (usocket:socket-stream sock))
+      (force-output (usocket:socket-stream sock))
+      :sent2)
+
+    (zmq:with-context (ctx 1)
+      (zmq:with-sockets ((pull ctx :pull) (pub ctx :pub))
+        (let* ((addrs (wait-for-agent-message (request-forwarder-uuid) (msg)
+                        (let ((provides (getf (getf msg :info) :provides)))
+                          (when-bind forwarding (and provides (getf provides :forwarding))
+                            (cdr (assoc :default (cdr (assoc :endpoints forwarding))))))))
+               (push-addr (cdr (assoc :push addrs)))
+               (sub-addr (cdr (assoc :sub addrs)))
+               (handler (and push-addr sub-addr (make-instance 'm2cl:handler :pull pull :pub pub))))
+
+          (list
+           (if handler
+               (and (zmq:connect pull push-addr)
+                    (zmq:connect pub sub-addr)
+                    :connected)
+               :no-addr-found)
+
+           (or (let (result)
+                 (loop while (and (not result)
+                                  (when-bind request (m2cl:handler-receive handler :timeout 1000000)
+                                    (m2cl:handler-send-http handler "OHI" :request request)
+                                    (when (string-equal (m2cl:request-path request) "/1/")
+                                      (setf result :got1)))))
+                 result)
+               :didnt-get-request)
+
+           (or (let (result)
+                 (loop while (and (not result)
+                                  (when-bind request (m2cl:handler-receive handler :timeout 1000000)
+                                    (m2cl:handler-send-http handler "OHI" :request request)
+                                    (when (string-equal (m2cl:request-path request) "/2/")
+                                      (setf result :got2)))))
+                 result)
+               :didnt-get-request))))))))

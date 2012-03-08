@@ -12,6 +12,8 @@ that require access to the data accessible through the current agent.")
     (log-for (warn request-forwarder-agent) "The ~S transform is not defined for ~A" transform agent)
     request))
 
+(defvar *request-id-header* "X-Fdog-Request-ID"
+  "The header used to store the generated request ID.")
 
 (defun add-identifier (request)
   "Update the request sender in a manner that
@@ -20,10 +22,10 @@ mongrel, but such that we can still parse it out
 also add it as a request header in case anyone upstream
 wants to know it."
   (let ((id (prin1-to-string (uuid:make-v4-uuid))))
-    (unless (assoc "x-fdog-request-id" (m2cl:request-headers request) :test #'string-equal)
+    (unless (assoc *request-id-header* (m2cl:request-headers request) :test #'string-equal)
       (setf (m2cl:request-sender request)
           (concatenate 'string (m2cl:request-sender request) (format nil "--id-~A" id)))
-      (push (cons "X-Fdog-Request-ID" id) (m2cl:request-headers request)))
+      (push (cons *request-id-header* id) (m2cl:request-headers request)))
     request))
 
 (defmethod agent-request-transform (agent (transform (eql :strip-prefix)) request)
@@ -66,6 +68,11 @@ of the request object in sequence."))
   (:documentation "This agent attempts to forward requests from
 external clients to internal services."))
 
+(defmethod run-agent :around ((agent request-forwarder-agent))
+  "Connect `agent' to redis."
+  (redis:with-connection ()
+    (call-next-method)))
+
 (defmethod initialize-instance :after ((agent request-forwarder-agent) &key)
   "Bind a `handler-name' to the agent based on the `forwarder' and `route'"
   (setf (handler-name agent)
@@ -76,27 +83,24 @@ external clients to internal services."))
   (agent-connect agent (make-instance 'agent-sock-pocket :agent agent)))
 
 ;; Agent Hooks
-(defmethod agent-special-event :after ((agent request-forwarder-agent) (event-head (eql :boot)) event)
-  ;; Disable the requesticle on boot
-  ;; wait until we figure out our path rewriting rules before enabling it.
-  (send-message (find-organ agent :head) :command
-                `(:command :requesticle
-                  :requesticle :disable)))
-
 (defmethod agent-provides :around ((agent request-forwarder-agent))
   "Provide forwarding information."
   (let ((endpoints (list)))
     (maphash #'(lambda (name endpoint)
-                 (appendf endpoints (list name
-                                          (list :push (addr-of (push-sock endpoint))
-                                                :sub (addr-of (sub-sock endpoint))))))
+                 (appendf endpoints (list (cons name
+                                                (list (cons :push (addr-of (push-sock endpoint)))
+                                                      (cons :sub (addr-of (sub-sock endpoint)))
+                                                      (cons :meta (list
+                                                                   (cons :push-state (push-sock-state endpoint))
+                                                                   (cons :queue-depth (queue-count endpoint)))))))))
              (client-socks (find-organ agent :sock-pocket)))
 
     (append (call-next-method)
-            `(:forwarding (:forwarder ,(forwarder agent)
-                           :route ,(route agent)
-                           :path ,(path agent)
-                           :endpoints ,endpoints)))))
+            `(:redis ,(redis:connected-p)
+              :forwarding ((:forwarder . ,(forwarder agent))
+                           (:route . ,(route agent))
+                           (:path . ,(path agent))
+                           (:endpoints . ,endpoints))))))
 
 (defmethod heard-message :after ((agent request-forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   (when-bind forwarder (assoc (forwarder agent)

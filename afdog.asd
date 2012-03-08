@@ -111,6 +111,7 @@
                                             (:module "request-forwarder" :depends-on ("request-processing" "api-agent") :components
                                                      ((:file "package")
                                                       (:file "endpoint" :depends-on ("package"))
+                                                      (:file "storage" :depends-on ("agent-behavior" "endpoint"))
                                                       (:file "sock-pocket-organ" :depends-on ("package" "endpoint"))
                                                       (:file "agent" :depends-on ("package" "sock-pocket-organ"))
                                                       (:file "agent-behavior" :depends-on ("agent"))))

@@ -1,6 +1,7 @@
 (in-package :m2cl)
 
 (export 'request)
+(export 'request-parse)
 
 (export 'request-serialize)
 (defmethod request-serialize ((request request))

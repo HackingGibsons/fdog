@@ -58,6 +58,9 @@
            :agent-context
            :agent-organs
            :run-agent
+           :universal-start-time
+           :start-time
+           :timestamp
            :standard-state-machine
            :state-machine
            :state

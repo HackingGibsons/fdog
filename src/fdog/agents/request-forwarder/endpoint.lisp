@@ -15,6 +15,13 @@
          :initarg :name
          :accessor name)
 
+   (queue-count :initform 0
+                :accessor queue-count
+                :documentation "The number of requests that
+this endpoint is aware of being in the queue. When it is non-zero
+a queue drain should be attempted until the queue is reported to
+be empty.")
+
    (push-sock-state :initform :unknown
                     :accessor push-state
                     :accessor push-sock-state)
@@ -42,6 +49,39 @@ that has a client endpoint named `name'."))
   "Bind the addresses of the given endpoint."
   (bind endpoint))
 
+(defun prefixed-key (agent &rest params)
+  "Generate a key usable for storage using the `agent', and : separated params as in:
+forwarder-$name:$routename:$param1:param2..."
+  (format nil "forwarder-~A:~A:~{~A~^:~}" (forwarder agent) (route agent) params))
+
+(defmethod queue-key ((endpoint forwarder-endpoint) &optional (type :request))
+  (prefixed-key (agent endpoint) (name endpoint) type :queue))
+
+(defmethod update-queue-count ((endpoint forwarder-endpoint))
+  "Refresh the count of the number of elements in this endpoint's queue."
+  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (let ((queue-key (queue-key endpoint)))
+      (setf (queue-count endpoint) (redis:red-llen queue-key)))))
+
+(defmethod endpoint-write-callback ((endpoint forwarder-endpoint))
+  "Callback that fires when the pull socket is ready for write."
+  (unless (push-ready-p endpoint)
+    (push-ready endpoint)))
+
+(defmethod writer-callbacks-p ((endpoint forwarder-endpoint))
+  "Predicate function to determine if write callbacks need to be submitted
+for `endpoint'"
+  (or (not (push-ready-p endpoint))
+      (not (zerop (queue-count endpoint)))))
+
+(defmethod writer-callbacks ((endpoint forwarder-endpoint))
+  "Return writer sockets and callbacks for `endpoint'"
+  (when (writer-callbacks-p endpoint)
+    (values (list (sock-of (push-sock endpoint)))
+            (list (lambda (sock)
+                    (declare (ignore sock))
+                    (endpoint-write-callback endpoint))))))
+
 (define-condition endpoint-condition ()
   ((reason :initarg :reason :initform "Unknown failure"
            :accessor reason))
@@ -50,21 +90,28 @@ that has a client endpoint named `name'."))
 
 (define-condition delivery-failure (endpoint-condition) ())
 
-(defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
-  (log-for (trace forwarder-endpoint) "~A wants to deliver ~A" endpoint request)
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request sequence))
   (handler-case
-      (prog1 (zmq:send! (sock-of (push-sock endpoint)) (m2cl:request-serialize request) '(:noblock))
+      (prog1 (zmq:send! (sock-of (push-sock endpoint)) request '(:noblock))
         (unless (push-ready-p endpoint)
           (push-ready endpoint)))
     (zmq:eagain-error ()
-      (if (push-ready-p endpoint)
-          (push-unready endpoint))
+      (when (push-ready-p endpoint)
+        (push-unready endpoint))
       (signal (make-condition 'delivery-failure :reason "Delivery attempt would block")))))
+
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request string))
+  (deliver-request endpoint endpoint (babel:string-to-octets request)))
+
+(defmethod deliver-request ((endpoint forwarder-endpoint) (request m2cl:request))
+  (deliver-request endpoint (m2cl:request-serialize request)))
 
 (defmethod deliver-response ((endpoint forwarder-endpoint) data)
   (let ((requesticle (find-organ (agent endpoint) :requesticle)))
     (if (response-sock requesticle)
-        (zmq:send! (response-sock requesticle) data)
+        (progn
+          (zmq:send! (response-sock requesticle) data)
+          (response-handler (agent endpoint) (organ endpoint) data))
         (log-for (warn forwarder-endpoint) "No response socket on the requesticle! Response not delivered."))))
 
 (defmethod push-ready-p ((endpoint forwarder-endpoint))

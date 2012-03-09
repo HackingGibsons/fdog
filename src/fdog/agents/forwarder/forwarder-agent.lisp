@@ -11,6 +11,10 @@
     :initform nil
     :documentation "A list of previously killed agents, in cases they are killed faster than they boot.
 If they are announced and in this list they should be killed again.")
+   (forwarder-agent-type :initform `(:request-forwarder-agent :request-forwarder-agent)
+                         :accessor forwarder-agent-type
+                         :documentation "The package and symbol of the agent that
+should be spawned for each forwarder.")
    (forwarder-agents
     :accessor forwarder-agents
     :initform nil

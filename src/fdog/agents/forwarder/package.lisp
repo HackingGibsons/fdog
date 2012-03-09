@@ -6,7 +6,8 @@
         #:log5
         #:alexandria
         #:json
-        #:fdog-agent)
+        #:fdog-agent
+        #:request-forwarder-agent)
   (:import-from :arnesi
                 :it
                 :awhen

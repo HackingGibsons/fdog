@@ -148,7 +148,7 @@
                                                       (:file "requesticle-organ" :depends-on ("package"))
                                                       (:file "behaviors" :depends-on ("requesticle-organ" "agent"))))
 
-                                            (:module "forwarder" :depends-on ("package") :components
+                                            (:module "forwarder" :depends-on ("package" "request-forwarder") :components
                                                      ((:file "package")
                                                       (:file "behaviors" :depends-on ("forwarder-agent" "children"))
                                                       (:file "children" :depends-on ("forwarder-agent"))

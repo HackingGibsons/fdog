@@ -9,9 +9,19 @@
              name-cell))))
 
 (defmethod spawn-forwarder ((agent forwarder-agent) name route)
-  (let ((uuid (princ-to-string (uuid:make-v4-uuid))))
-    (prog1 uuid
-      (log-for (warn forwarder-kids) "TODO: Make agent: ~S=>~S: ~A" name route uuid))))
+  (let ((uuid (princ-to-string (uuid:make-v4-uuid)))
+        (parent-uuid (agent-uuid agent))
+        (parent-mouth (mouth-addr (find-organ agent :mouth))))
+    (destructuring-bind (package class) (forwarder-agent-type agent)
+      (prog1 uuid
+        (send-message (find-organ agent :head) :command
+                      `(:command :link
+                        :link :agent
+                        :agent (:uuid ,uuid :class ,(find-symbol (symbol-name class) (find-package package)) :package ,package
+                                :parent-uuid ,parent-uuid
+                                :parent-mouth ,parent-mouth
+                                :forwarder ,name :route ,route)))
+        (log-for (warn forwarder-kids) "TODO: Make agent: ~S=>~S: (~S/~S):~A" name route (find-package package) class uuid)))))
 
 (defmethod maybe-spawn-forwarder ((agent forwarder-agent) name route)
   (let ((name-cell (find-forwarding-agent-cell agent name)))
@@ -29,7 +39,9 @@
 (defmethod kill-forwarder ((agent forwarder-agent) name route)
   (when-bind agent-cell (find-forwarding-agent-cell agent name nil)
     (when-bind uuid (cdr (assoc route (cdr agent-cell) :test #'string-equal))
-      (log-for (warn forwarder-kids) "TODO: Perform an unwatch on: ~A" uuid)
+      (send-message (find-organ agent :head) :command
+                      `(:command :unlink
+                        :unlink :agent :uuid ,uuid))
       (pushnew uuid (dead-agents agent) :test #'string-equal))))
 
 (defmethod maybe-kill-forwarder ((agent forwarder-agent) name route)

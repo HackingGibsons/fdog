@@ -6,6 +6,11 @@
     :accessor forwarders
     :initform nil
     :documentation "A list of forwarders this agent provides. Elements take the form (name . (list-of-metadata))")
+   (dead-agents
+    :accessor dead-agents
+    :initform nil
+    :documentation "A list of previously killed agents, in cases they are killed faster than they boot.
+If they are announced and in this list they should be killed again.")
    (forwarder-agents
     :accessor forwarder-agents
     :initform nil

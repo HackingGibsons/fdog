@@ -10,6 +10,7 @@
   (:import-from :arnesi
                 :it
                 :awhen
+                :if-bind
                 :when-bind)
   (:export :forwarder-agent
            :load-forwarder-json

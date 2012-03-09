@@ -150,7 +150,7 @@
 
                                             (:module "forwarder" :depends-on ("package") :components
                                                      ((:file "package")
-                                                      (:file "behaviors" :depends-on ("forwarder-agent"))
+                                                      (:file "behaviors" :depends-on ("forwarder-agent" "children"))
                                                       (:file "children" :depends-on ("forwarder-agent"))
                                                       (:file "forwarder-agent" :depends-on ("package"))))))))
 

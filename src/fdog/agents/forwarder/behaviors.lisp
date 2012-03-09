@@ -86,7 +86,7 @@
          (need-info (getf request need-what)))
     (agent-needs agent organ need-what need-info)))
 
-(defmethod heard-message :after ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
+(defmethod maybe-heard-mongrel2-info ((agent forwarder-agent) (organ agent-head) info)
   "When hearing an announcement from an agent that provides mongrel2 servers,
 if the `forwarder' server is missing handlers the agent expects, request the handlers."
   (log-for (trace forwarder-agent) "Heard an agent info message, info: ~A" info)
@@ -125,3 +125,8 @@ if the `forwarder' server is missing handlers the agent expects, request the han
                                              :say (:agent :need
                                                           :need :handler
                                                           :handler (:server ,*forwarder-server* :hosts ,hosts :route ,path :name ,(handler-name name route-name)))))))))))))))
+
+(defmethod heard-message :after ((agent forwarder-agent) (organ agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
+  "Call agent hooks interested in the info announce."
+  (maybe-heard-mongrel2-info agent organ info)
+  (maybe-heard-blacklist-agent agent organ info))

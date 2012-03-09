@@ -1,4 +1,11 @@
-This is the Dark Work.
+# FDog - API Router
+FDog is a service that configures Mongrel2 endpoints and provides service request rewriting. 
+Put another way, FDog can act as a router for service endpoints. 
+
+## Documentation
+Documentation is on the [Wiki](https://github.com/vitrue/fdog/wiki)
+
+[API Documentation](https://github.com/vitrue/fdog/wiki/External-API)
 
 ## Ubuntu Setup
 Constructed during debugging why the hell the test suite

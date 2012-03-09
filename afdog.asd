@@ -15,6 +15,7 @@
                #:usocket
                #:arnesi
                #:trivial-backtrace
+               #:trivial-garbage
                #:drakma
                #:cl-json
                #:cl-redis
@@ -39,6 +40,10 @@
                          (:module "patches" :components
                                   ((:file "zmq")
                                    (:file "m2cl")))
+
+                         ;; Agent host
+                         (:module "host" :depends-on ("package" "agent") :components
+                                  ((:file "package")))
 
                          ;; Agent components and standard library
                          (:module "agent" :depends-on ("logging" "utils") :components

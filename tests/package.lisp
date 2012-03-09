@@ -1,6 +1,7 @@
 (defpackage #:afdog-tests
   (:use #:cl
         #:afdog
+        #:agent-host
         #:agent
         #:fdog
         #:json

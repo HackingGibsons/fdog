@@ -13,7 +13,7 @@
          :initform (print-object (uuid:make-v4-uuid) nil))
 
    (context :initarg :context
-            :reader agent-context
+            :accessor agent-context
             :initform nil)
    ;; Subscription addr/sock pair
    (event-addr :initarg :event-addr

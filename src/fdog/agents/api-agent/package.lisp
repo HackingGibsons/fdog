@@ -12,7 +12,7 @@ for Afdog.")
                 :when-bind)
   (:export :api-agent
            :forwarders
-           :handlers
+           :endpoints
            :callback
            :register-callback
            :*control-server*

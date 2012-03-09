@@ -7,10 +7,12 @@
   (:use :http-dog)
   (:import-from :alexandria
                 :appendf)
+  (:import-from :arnesi
+                :when-bind)
   (:import-from :api-agent
                 :api-agent
                 :forwarders
-                :handlers
+                :endpoints
                 :callback
                 :register-callback)
   (:import-from :forwarder-agent

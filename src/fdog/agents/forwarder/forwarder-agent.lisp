@@ -5,7 +5,11 @@
   ((forwarders
     :accessor forwarders
     :initform nil
-    :documentation "A list of forwarders this agent provides. Elements take the form (name . (list-of-metadata))"))
+    :documentation "A list of forwarders this agent provides. Elements take the form (name . (list-of-metadata))")
+   (forwarder-agents
+    :accessor forwarder-agents
+    :initform nil
+    :documentation "An alist mapping forwarder names and routs to request forwarder agents."))
   (:documentation "Fdog forwarder Agent."))
 
 ;; Helpers

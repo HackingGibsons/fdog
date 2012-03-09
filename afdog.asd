@@ -151,6 +151,7 @@
                                             (:module "forwarder" :depends-on ("package") :components
                                                      ((:file "package")
                                                       (:file "behaviors" :depends-on ("forwarder-agent"))
+                                                      (:file "children" :depends-on ("forwarder-agent"))
                                                       (:file "forwarder-agent" :depends-on ("package"))))))))
 
                          (:module "cli" :depends-on ("agent" "fdog") :components

@@ -11,6 +11,7 @@
                 :when-bind
                 :awhen)
   (:import-from :alexandria
+                :appendf
                 :flatten)
 
   (:export :agent-host))
@@ -63,7 +64,7 @@ loop/process."))
 
   ;; Bind the sockets
   (zmq:bind (agent-event-sock agent) (agent-event-addr agent))
-  (zmq:bind (agent-message-sock agent) (agent-message-sock agent))
+  (zmq:bind (agent-message-sock agent) (agent-message-addr agent))
 
   ;; Set options
   (zmq:setsockopt (agent-event-sock agent) :linger *socket-linger*)
@@ -81,12 +82,16 @@ loop/process."))
 (defmethod remove-agent ((host agent-host) (agent standard-agent))
   (remove-agent host (agent-uuid agent)))
 (defmethod remove-agent ((host agent-host) (uuid string))
-  (when-bind agent (find uuid (agents host) :key #'agent-uuid :test #'equalp)
+  (when-bind agent (find uuid (agents host) :key #'agent-uuid :test #'string-equal)
+    (log-for (warn agent-host) "Found agent to remove: ~S" agent)
     (flet ((organ-disconnect (o) (agent-disconnect agent o)))
       (log-for (warn) "[~A] Disconnecting organs." uuid)
       (mapcar #'organ-disconnect (agent-organs agent))
       (log-for (warn) "[~A] Organs disconnected." uuid))
-    (delete uuid (agents host) :key #'agent-uuid :test #'equalp)))
+    (log-for (warn agent-host) "TODO: Close event and message socks.")
+    (setf (agents host)
+          (delete uuid (agents host) :key #'agent-uuid :test #'string-equal))))
+
 
 
 (defmethod run-once ((host agent-host))
@@ -140,7 +145,7 @@ Returns three values.
 
         (mapc #'(lambda (agent)
                   ;; Agent event callback
-                  (appendf readers (agent-event-sock agent))
+                  (appendf readers (list (agent-event-sock agent)))
                   (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
                         (make-agent-event-callback agent))
                   ;; Agent lack of event callback

@@ -153,58 +153,6 @@ result into the desired type.")
     (setf (agent-handle runner) nil)
     runner))
 
-
-;;
-;; A runner that forks a child process to run the agent
-;;
-(defclass proc-runner (agent-runner)
-  ())
-
-(defmethod make-runner ((style (eql :proc)) &key)
-  (change-class (call-next-method) 'proc-runner))
-
-(defmethod running-p ((runner proc-runner))
-  (handler-case
-      (and (agent-handle runner)
-           (iolib.syscalls:kill (agent-handle runner) 0)
-           (agent-handle runner))
-
-    (iolib.syscalls:ESRCH () nil)))
-
-(defmethod start ((runner proc-runner) &key (category '(log5:dribble+)))
-  "Forking starter. Does not work in multithreaded sbcl."
-  (unless (running-p runner)
-    (prog1 runner
-      (let ((child  (handler-case (sb-posix:fork) (t () nil))))
-        (case child
-          (nil nil)
-          (-1 (log-for (warn) "~A: FORK FAILED!" runner)
-              nil)
-          (0
-           (start-logging :category category)
-
-           (setf (agent-handle runner) (iolib.syscalls:getpid))
-           (unwind-protect (run-agent (agent-instance runner))
-             (setf (agent-handle runner) nil)
-             (iolib.syscalls::exit 0)))
-          (t
-            (start-logging :category category)
-
-            (setf (agent-handle runner) child)))))))
-
-(defmethod stop ((runner proc-runner))
-  (when (running-p runner)
-    (prog1 (agent-handle runner)
-      (iolib.syscalls:kill (agent-handle runner) iolib.syscalls:sigkill)
-
-      (handler-case (bt:with-timeout (1)
-                      (iolib.syscalls:waitpid (agent-handle runner) 0))
-
-        (bt:timeout () nil)
-        (iolib.syscalls:echild () nil))
-
-      (setf (agent-handle runner) nil))))
-
 ;;
 ;; Blocked runner, for operation within the current thread.
 ;;

@@ -90,6 +90,11 @@ loop/process."))
 
 
 (defmethod run-once ((host agent-host))
+  "Run a single iteration of the event loop for all managed agents.
+Returns three values.
+ * The number of callbacks signaled
+ * The number of agents managed by the host
+ * The number of agents removed this iteration"
   (let ((callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing
         (else-callbacks (make-hash-table :test 'equalp))  ;; Callbacks for sockets that don't fire
         (remove (list)))                                  ;; List of UUIDs of agents that should be removed
@@ -163,6 +168,7 @@ loop/process."))
             (mapc (curry #'remove-agent host) remove)
 
             (values signaled
+                    (length (agents host))
                     (length remove))))))))
 
 

@@ -14,7 +14,10 @@
                 :appendf
                 :flatten)
 
-  (:export :agent-host))
+  (:export :agent-host
+           :add-agent
+           :remove-agent
+           :run-once))
 (in-package :agent-host)
 
 (defcategory agent-host)
@@ -35,7 +38,7 @@ loop/process."))
 (defmethod initialize-instance :after ((inst agent-host) &key)
   "Setup the context and finalizer."
   (let ((ctx (zmq:init 1)))
-    (tg:finalize inst #'(lambda () (zmq:term ctx)))
+    (tg:finalize inst #'(lambda () (ignore-errors (zmq:term ctx))))
     (setf (context inst) ctx)))
 
 ;; Generics
@@ -73,7 +76,7 @@ loop/process."))
 
 
 
-  (when (not (find agent (agents host) :test #'string-equal :key #'agent-uuid))
+  (when (not (find (agent-uuid agent) (agents host) :test #'string-equal :key #'agent-uuid))
     (prog1 agent
       (push agent (agents host))
       ;; Send boot
@@ -88,7 +91,8 @@ loop/process."))
       (log-for (warn) "[~A] Disconnecting organs." uuid)
       (mapcar #'organ-disconnect (agent-organs agent))
       (log-for (warn) "[~A] Organs disconnected." uuid))
-    (log-for (warn agent-host) "TODO: Close event and message socks.")
+    (zmq:close (agent-event-sock agent))
+    (zmq:close (agent-message-sock agent))
     (setf (agents host)
           (delete uuid (agents host) :key #'agent-uuid :test #'string-equal))))
 

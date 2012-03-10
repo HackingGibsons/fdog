@@ -6,7 +6,10 @@
 
   (:import-from :arnesi
                 :it
+                :when-bind
                 :awhen)
+  (:import-from :alexandria
+                :flatten)
 
   (:export :agent-host))
 (in-package :agent-host)
@@ -33,6 +36,8 @@ loop/process."))
 ;; Generics
 (defgeneric add-agent (host agent)
   (:documentation "Add the agent to the host container."))
+(defgeneric remove-agent (host agent)
+  (:documentation "Remove and terminate the agent in the host."))
 (defgeneric run-once (host)
   (:documentation "Run a single iteration of the event loop and return."))
 
@@ -67,6 +72,16 @@ loop/process."))
       (push agent (agents host))
       ;; Send boot
       (agent-publish-event agent `(:boot ,(get-internal-real-time) :uuid ,(agent-uuid agent))))))
+
+(defmethod remove-agent ((host agent-host) (agent standard-agent))
+  (remove-agent host (agent-uuid agent)))
+(defmethod remove-agent ((host agent-host) (uuid string))
+  (when-bind agent (find uuid (agents host) :key #'agent-uuid :test #'equalp)
+    (flet ((organ-disconnect (o) (agent-disconnect agent o)))
+      (log-for (warn) "[~A] Disconnecting organs." uuid)
+      (mapcar #'organ-disconnect (agent-organs agent))
+      (log-for (warn) "[~A] Organs disconnected." uuid))
+    (delete uuid (agents host) :key #'agent-uuid :test #'equalp)))
 
 
 (defmethod run-once ((host agent-host))

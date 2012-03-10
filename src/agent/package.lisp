@@ -58,6 +58,7 @@
            :agent-event-count
            :agent-context
            :agent-organs
+           :agent-poll-timeout
            :run-agent
            :universal-start-time
            :start-time

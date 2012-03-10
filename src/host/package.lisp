@@ -14,6 +14,8 @@
   (:export :agent-host))
 (in-package :agent-host)
 
+(defcategory agent-host)
+
 (define-condition agent-host-error (error) ())
 
 ;; Class and init
@@ -86,24 +88,69 @@ loop/process."))
 
 (defmethod run-once ((host agent-host))
   (let ((callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing
-        (else-callbacks (make-hash-table :test 'equalp))) ;; Callbacks for sockets that don't fire
+        (else-callbacks (make-hash-table :test 'equalp))  ;; Callbacks for sockets that don't fire
+        (remove (list)))                                  ;; List of UUIDs of agents that should be removed
 
-    (let ((timeout 0)
-          (readers (list))
-          (writers (list)))
+    (labels ((make-agent-event-callback (agent)
+               #'(lambda (sock)
+                   (log-for (warn agent-host) "TODO: Handle ~S message: ~S" agent sock)))
 
-      (zmq:with-poll-sockets (items nb-items :in readers :out writers)
-        (let ((signaled (zmq:poll items nb-items timeout)))
-          (when (> signaled 0)
-            (zmq:do-poll-items (item items nb-items)
-              (awhen (zmq:poll-item-events-signaled-p item :pollin)
-                (remhash (sock-id (zmq:poll-item-socket item) :in) else-callbacks)
-                (funcall (gethash (sock-id (zmq:poll-item-socket item) :in) callbacks)
-                         (zmq:poll-item-socket item)))
-              (awhen (zmq:poll-item-events-signaled-p item :pollout)
-                (remhash (sock-id (zmq:poll-item-socket item) :out) else-callbacks)
-                (funcall (gethash (sock-id (zmq:poll-item-socket item) :out) callbacks)
-                         (zmq:poll-item-socket item))))))))))
+             (make-agent-else-callback (agent)
+               #'(lambda ()
+                   (log-for (warn agent-host) "TODO: Handle the lack of an event by sending ~S timeout" agent)))
+
+             (organ-writers+store-callbacks (agent)
+               "Returns a list of writer sockets and fills in the callbacks for them in the HT"
+               (alexandria:flatten
+                (mapcar #'(lambda (organ)
+                            (multiple-value-bind (socks funs) (writer-callbacks organ)
+                              (prog1 socks
+                                (mapc #'(lambda (sock fun)
+                                          (setf (gethash (sock-id sock :out) callbacks) fun))
+                                      socks funs))))
+                        (agent-organs agent))))
+
+             (organ-readers+store-callbacks (agent)
+               "Return a list of organ reader sockets and fill in the callbacks in the HT"
+               (alexandria:flatten
+                (mapcar #'(lambda (organ)
+                            (multiple-value-bind (socks funs) (reader-callbacks organ)
+                              (prog1 socks
+                                (mapc #'(lambda (sock fun)
+                                          (setf (gethash (sock-id sock) callbacks) fun))
+                                      socks funs))))
+                        (agent-organs agent)))))
+
+      (let ((timeout (s2us (apply #'min (or (mapcar #'agent-poll-timeout (agents host))
+                                            `(0)))))
+            (readers (alexandria:flatten (mapcar #'organ-readers+store-callbacks (agents host))))
+            (writers (alexandria:flatten (mapcar #'organ-writers+store-callbacks (agents host)))))
+
+        (mapc #'(lambda (agent)
+                  ;; Agent event callback
+                  (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
+                        (make-agent-event-callback agent))
+                  ;; Agent lack of event callback
+                  (setf (gethash (sock-id (agent-event-sock agent)) else-callbacks)
+                        (make-agent-else-callback agent)))
+              (agents host))
+
+        (zmq:with-poll-sockets (items nb-items :in readers :out writers)
+          (let ((signaled (zmq:poll items nb-items timeout)))
+            (when (> signaled 0)
+              (zmq:do-poll-items (item items nb-items)
+                (awhen (zmq:poll-item-events-signaled-p item :pollin)
+                  (remhash (sock-id (zmq:poll-item-socket item) :in) else-callbacks)
+                  (funcall (gethash (sock-id (zmq:poll-item-socket item) :in) callbacks)
+                           (zmq:poll-item-socket item)))
+                (awhen (zmq:poll-item-events-signaled-p item :pollout)
+                  (remhash (sock-id (zmq:poll-item-socket item) :out) else-callbacks)
+                  (funcall (gethash (sock-id (zmq:poll-item-socket item) :out) callbacks)
+                           (zmq:poll-item-socket item)))))
+
+            (maphash #'(lambda (key val)
+                         (log-for (warn agent-host) "TODO: Calling else callback: ~S => ~S" key val))
+                     else-callbacks)))))))
 
 
 

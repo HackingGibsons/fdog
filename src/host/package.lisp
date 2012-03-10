@@ -17,7 +17,8 @@
   (:export :agent-host
            :add-agent
            :remove-agent
-           :run-once))
+           :run-once
+           :run))
 (in-package :agent-host)
 
 (defcategory agent-host)
@@ -48,6 +49,8 @@ loop/process."))
   (:documentation "Remove and terminate the agent in the host."))
 (defgeneric run-once (host)
   (:documentation "Run a single iteration of the event loop and return."))
+(defgeneric run (host)
+  (:documentation "Run the host until there are no more agents registered."))
 
 ;; Light helpers
 (defun s2us (s)
@@ -88,15 +91,16 @@ loop/process."))
   (when-bind agent (find uuid (agents host) :key #'agent-uuid :test #'string-equal)
     (log-for (warn agent-host) "Found agent to remove: ~S" agent)
     (flet ((organ-disconnect (o) (agent-disconnect agent o)))
-      (log-for (warn) "[~A] Disconnecting organs." uuid)
+      (log-for (warn agent-host) "[~A] Disconnecting organs." uuid)
       (mapcar #'organ-disconnect (agent-organs agent))
-      (log-for (warn) "[~A] Organs disconnected." uuid))
+      (log-for (warn agent-host) "[~A] Organs disconnected." uuid))
     (zmq:close (agent-event-sock agent))
     (zmq:close (agent-message-sock agent))
     (setf (agents host)
           (delete uuid (agents host) :key #'agent-uuid :test #'string-equal))))
 
-
+(defmethod run ((host agent-host))
+  (log-for (warn agent-host) "TODO: `run-once' until we have no more agents."))
 
 (defmethod run-once ((host agent-host))
   "Run a single iteration of the event loop for all managed agents.

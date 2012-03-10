@@ -46,8 +46,28 @@ loop/process."))
 
 ;; Implementation
 (defmethod add-agent ((host agent-host) (agent standard-agent))
-  (setf (agent-context agent) (context host))
-  (pushnew (agents host) agent :test #'string-equal :key #'agent-uuid))
+  ;; Bind the sockets and context structures
+  ;; TODO: Extract
+  (setf (agent-context agent) (context host)
+        (agent-event-sock agent) (zmq:socket (context host) :sub)
+        (agent-message-sock agent) (zmq:socket (context host) :pub))
+
+  ;; Bind the sockets
+  (zmq:bind (agent-event-sock agent) (agent-event-addr agent))
+  (zmq:bind (agent-message-sock agent) (agent-message-sock agent))
+
+  ;; Set options
+  (zmq:setsockopt (agent-event-sock agent) :linger *socket-linger*)
+  (zmq:setsockopt (agent-message-sock agent) :linger *socket-linger*)
+
+
+
+  (when (not (find agent (agents host) :test #'string-equal :key #'agent-uuid))
+    (prog1 agent
+      (push agent (agents host))
+      ;; Send boot
+      (agent-publish-event agent `(:boot ,(get-internal-real-time) :uuid ,(agent-uuid agent))))))
+
 
 (defmethod run-once ((host agent-host))
   (let ((callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing

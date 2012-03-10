@@ -40,6 +40,7 @@
            :organ-incoming-sock
            :organ-outgoing-sock
            :agent-special-event
+           :agent-publish-event
            :agent-info
            :agent-provides
            :watching

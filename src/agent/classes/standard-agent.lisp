@@ -18,11 +18,11 @@
    ;; Subscription addr/sock pair
    (event-addr :initarg :event-addr
                :reader agent-event-addr)
-   (event-sock :reader agent-event-sock)
+   (event-sock :accessor agent-event-sock)
    ;; Publish addr/sock pair
    (message-addr :initarg :message-addr
                  :reader agent-message-addr)
-   (message-sock :reader agent-message-sock)
+   (message-sock :accessor agent-message-sock)
 
    ;; Squigly spooges
    (organs :initform nil

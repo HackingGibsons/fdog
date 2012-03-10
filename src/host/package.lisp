@@ -135,6 +135,7 @@ loop/process."))
 
         (mapc #'(lambda (agent)
                   ;; Agent event callback
+                  (appendf readers (agent-event-sock agent))
                   (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
                         (make-agent-event-callback agent))
                   ;; Agent lack of event callback

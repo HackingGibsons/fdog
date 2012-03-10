@@ -67,6 +67,7 @@ loop/process."))
 
   ;; Set options
   (zmq:setsockopt (agent-event-sock agent) :linger *socket-linger*)
+  (zmq:setsockopt (agent-event-sock agent) :subscribe "")
   (zmq:setsockopt (agent-message-sock agent) :linger *socket-linger*)
 
 

@@ -55,6 +55,7 @@
            :tell-agent-about
            :discover-agents-on-host
            :local-ipc-addr
+           :handle-agent-event
            :agent-event-count
            :agent-context
            :agent-organs

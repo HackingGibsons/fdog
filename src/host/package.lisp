@@ -6,6 +6,8 @@
 
   (:import-from :arnesi
                 :it
+                :curry
+                :if-bind
                 :when-bind
                 :awhen)
   (:import-from :alexandria
@@ -93,11 +95,15 @@ loop/process."))
 
     (labels ((make-agent-event-callback (agent)
                #'(lambda (sock)
-                   (log-for (warn agent-host) "TODO: Handle ~S message: ~S" agent sock)))
+                   (if-bind result (handle-agent-event agent (read-message sock))
+                     result
+                     (pushnew (agent-uuid agent) remove))))
 
              (make-agent-else-callback (agent)
                #'(lambda ()
-                   (log-for (warn agent-host) "TODO: Handle the lack of an event by sending ~S timeout" agent)))
+                   (if-bind result (handle-agent-event agent :timeout)
+                     result
+                     (pushnew (agent-uuid agent) remove))))
 
              (organ-writers+store-callbacks (agent)
                "Returns a list of writer sockets and fills in the callbacks for them in the HT"
@@ -149,8 +155,13 @@ loop/process."))
                            (zmq:poll-item-socket item)))))
 
             (maphash #'(lambda (key val)
-                         (log-for (warn agent-host) "TODO: Calling else callback: ~S => ~S" key val))
-                     else-callbacks)))))))
+                         (log-for (warn agent-host) "TODO: Calling else callback: ~S => ~S" key val)
+                         (funcall val))
+                     else-callbacks)
+            (mapc (curry #'remove-agent host) remove)
+
+            (values signaled
+                    (length remove))))))))
 
 
 

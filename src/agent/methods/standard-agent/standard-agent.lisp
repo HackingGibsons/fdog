@@ -198,17 +198,8 @@ as fire any callbacks that may be pending IO when it is ready."
         (log-for (trace) "Entering agent event loop.")
         (unwind-protect
              (do ((event (next-event agent) (next-event agent)))
-                 ((event-fatal-p agent event)
-                  event)
-               (log-for (trace) "Agent[~A] Event: ~A" agent event)
-
-               ;; Process, Tick, Increment counter
-               ;; Event has to be acted on before the tick fires
-               ;; Because actions can alter the reactor before the tick
-               ;; Operates
-               (act-on-event agent event)
-               (agent-tick agent event)
-               (incf (agent-event-count agent)))
+                 ((not (handle-agent-event agent event))
+                  event))
 
           ;; Event loop unwind
           (flet ((organ-disconnect (o) (agent-disconnect agent o)))
@@ -217,6 +208,18 @@ as fire any callbacks that may be pending IO when it is ready."
             (log-for (warn) "Organs disconnected.")))
 
         (log-for (warn) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))))
+
+(defmethod handle-agent-event ((agent standard-agent) event)
+  (unless (event-fatal-p agent event)
+    (log-for (trace) "Agent[~A] Event: ~A" agent event)
+
+    ;; Process, Tick, Increment counter
+    ;; Event has to be acted on before the tick fires
+    ;; Because actions can alter the reactor before the tick
+    ;; Operates
+    (act-on-event agent event)
+    (agent-tick agent event)
+    (incf (agent-event-count agent))))
 
 (defgeneric prepare-message (message)
   (:method (message)

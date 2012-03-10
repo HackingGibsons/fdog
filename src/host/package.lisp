@@ -98,13 +98,13 @@ loop/process."))
                #'(lambda (sock)
                    (if-bind result (handle-agent-event agent (read-message sock))
                      result
-                     (pushnew (agent-uuid agent) remove))))
+                     (pushnew (agent-uuid agent) remove :test #'string-equal))))
 
              (make-agent-else-callback (agent)
                #'(lambda ()
                    (if-bind result (handle-agent-event agent :timeout)
                      result
-                     (pushnew (agent-uuid agent) remove))))
+                     (pushnew (agent-uuid agent) remove :test #'string-equal))))
 
              (organ-writers+store-callbacks (agent)
                "Returns a list of writer sockets and fills in the callbacks for them in the HT"

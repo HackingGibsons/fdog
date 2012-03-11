@@ -113,74 +113,106 @@ Returns three values.
  * The number of callbacks signaled
  * The number of agents managed by the host
  * The number of agents removed this iteration"
-  (let ((callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing
+  (let ((callback-agents (make-hash-table :test 'equalp)) ;; Mapping of sockets -> agents for error handling
+        (callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing
         (else-callbacks (make-hash-table :test 'equalp))  ;; Callbacks for sockets that don't fire
         (remove (list)))                                  ;; List of UUIDs of agents that should be removed
 
-    (labels ((make-agent-event-callback (agent)
-               #'(lambda (sock)
-                   (if-bind result (handle-agent-event agent (read-message sock))
-                     result
-                     (pushnew (agent-uuid agent) remove :test #'string-equal))))
+    (labels ((store-callback-agent (agent sock &optional (direction :in))
+               "Store which `agent' requested the binding of a callback on `sock' in `direction'
+Used to trap errors with the correct agent around callback invocation."
+               (setf (gethash (sock-id sock direction) callback-agents) agent))
+
+             (make-agent-event-callback (agent)
+               "Make a callback that will read and process an agent event. If the agent
+fails to successfully process the message by returning `nil' the agent is marked
+for removal at the end of the iteration."
+               (prog1 #'(lambda (sock)
+                          (if-bind result (handle-agent-event agent (read-message sock))
+                            result
+                            (pushnew (agent-uuid agent) remove :test #'string-equal)))
+                 (store-callback-agent agent (agent-event-sock agent))))
 
              (make-agent-else-callback (agent)
-               #'(lambda ()
-                   (if-bind result (handle-agent-event agent :timeout)
-                     result
-                     (pushnew (agent-uuid agent) remove :test #'string-equal))))
+               "Register a callback on the `agent' event socket that fires a `:timeout'
+event at the agent. If the `agent' handles the `:timeout' by returning nil it is marked
+for removal at the end of the iteration."
+               (prog1 #'(lambda ()
+                          (if-bind result (handle-agent-event agent :timeout)
+                            result
+                            (pushnew (agent-uuid agent) remove :test #'string-equal)))
+                 (store-callback-agent agent (agent-event-sock agent))))
+
 
              (organ-writers+store-callbacks (agent)
-               "Returns a list of writer sockets and fills in the callbacks for them in the HT"
+               "Returns a list of writer sockets of `agent' and fills in the callbacks for them in the HT
+along with the reference to the given `agent' in the ownership table."
                (alexandria:flatten
                 (mapcar #'(lambda (organ)
                             (multiple-value-bind (socks funs) (writer-callbacks organ)
                               (prog1 socks
                                 (mapc #'(lambda (sock fun)
+                                          (store-callback-agent agent sock :out)
                                           (setf (gethash (sock-id sock :out) callbacks) fun))
                                       socks funs))))
                         (agent-organs agent))))
 
              (organ-readers+store-callbacks (agent)
-               "Return a list of organ reader sockets and fill in the callbacks in the HT"
+               "Return a list of organ reader sockets and fill in the callbacks in the HT
+along with the reference to the given `agent' in the ownership table."
                (alexandria:flatten
                 (mapcar #'(lambda (organ)
                             (multiple-value-bind (socks funs) (reader-callbacks organ)
                               (prog1 socks
                                 (mapc #'(lambda (sock fun)
+                                          (store-callback-agent agent sock :in)
                                           (setf (gethash (sock-id sock) callbacks) fun))
                                       socks funs))))
-                        (agent-organs agent)))))
+                        (agent-organs agent))))
+
+             (fire-callback (socket direction)
+               "Fire a callback on `socket' in the given `direction' from the callbacks table.
+Also removes any `else-callbacks' registered against this callback.
+TODO: Handle errors with respect to `callback-agents'"
+               (let ((id (sock-id socket direction)))
+                 (remhash id else-callbacks)
+                 (funcall (gethash id callbacks) socket)))
+
+             (maybe-trigger-callback (pollitem)
+               "Try to trigger a callback from the hash table if this pollitem is signaled for IO"
+               (when (zmq:poll-item-events-signaled-p pollitem :pollin)
+                 (fire-callback (zmq:poll-item-socket pollitem) :in))
+               (when (zmq:poll-item-events-signaled-p pollitem :pollout)
+                 (fire-callback (zmq:poll-item-socket pollitem) :out))))
 
       (let ((timeout (s2us (apply #'min (or (mapcar #'agent-poll-timeout (agents host))
                                             `(0)))))
+            ;; These bind only the organ socket callbacks from each agent
             (readers (alexandria:flatten (mapcar #'organ-readers+store-callbacks (agents host))))
             (writers (alexandria:flatten (mapcar #'organ-writers+store-callbacks (agents host)))))
 
-        (mapc #'(lambda (agent)
-                  ;; Agent event callback
-                  (appendf readers (list (agent-event-sock agent)))
-                  (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
-                        (make-agent-event-callback agent))
-                  ;; Agent lack of event callback
-                  (setf (gethash (sock-id (agent-event-sock agent)) else-callbacks)
-                        (make-agent-else-callback agent)))
-              (agents host))
+        ;; Here we bind all of the agent-side event sockets
+        ;; And bind a failure callback for them so agents can
+        ;; Receive :timeout messages when they fail to read an event
+        ;; TODO: That operation primarily drives the agent :beat clock
+        ;;       and should be the first for extraction when we use
+        ;;       and external loop like libev
+        (dolist (agent (agents host))
+          (appendf readers (list (agent-event-sock agent)))
+          (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
+                (make-agent-event-callback agent)
+
+                (gethash (sock-id (agent-event-sock agent)) else-callbacks)
+                (make-agent-else-callback agent)))
 
         (zmq:with-poll-sockets (items nb-items :in readers :out writers)
           (let ((signaled (zmq:poll items nb-items timeout)))
             (when (> signaled 0)
               (zmq:do-poll-items (item items nb-items)
-                (awhen (zmq:poll-item-events-signaled-p item :pollin)
-                  (remhash (sock-id (zmq:poll-item-socket item) :in) else-callbacks)
-                  (funcall (gethash (sock-id (zmq:poll-item-socket item) :in) callbacks)
-                           (zmq:poll-item-socket item)))
-                (awhen (zmq:poll-item-events-signaled-p item :pollout)
-                  (remhash (sock-id (zmq:poll-item-socket item) :out) else-callbacks)
-                  (funcall (gethash (sock-id (zmq:poll-item-socket item) :out) callbacks)
-                           (zmq:poll-item-socket item)))))
+                (maybe-trigger-callback item)))
 
             (maphash #'(lambda (key val)
-                         (log-for (warn agent-host) "TODO: Calling else callback: ~S => ~S" key val)
+                         (declare (ignore key))
                          (funcall val))
                      else-callbacks)
             (mapc (curry #'remove-agent host) remove)

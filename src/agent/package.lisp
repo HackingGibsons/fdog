@@ -34,7 +34,10 @@
            :watch-when-told
            :start
            :stop
+           :agent-runner
            :make-runner
+           :agent-instance
+           :agent-handle
            :*spawner*
            :behaviors
            :behavior-organ

@@ -14,18 +14,22 @@
                 :appendf
                 :flatten)
 
-  (:export :agent-host
+  (:export :*agent-host*
+           :host-runner
+           :agent-host
            :add-agent
            :remove-agent
            :run-once
            :run))
 (in-package :agent-host)
-
-;; Basic logging category for the package
 (defcategory agent-host)
 
-;; Basic condition type for the package
 (define-condition agent-host-error (error) ())
+
+(defvar *agent-host* nil
+  "The instance of the current `agent-host' that will
+be used by any `host-runner' uses. If it does not exist
+it will be created the first time a runner is used.")
 
 
 

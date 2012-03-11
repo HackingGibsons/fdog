@@ -48,7 +48,9 @@
 
                                    (:file "agent-host" :depends-on ("package"))
                                    (:file "generics" :depends-on ("package"))
-                                   (:file "methods" :depends-on ("package" "utils" "agent-host" "generics"))))
+                                   (:file "methods" :depends-on ("package" "utils" "agent-host" "generics"))
+
+                                   (:file "runner" :depends-on ("agent-host" "generics"))))
 
                          ;; Agent components and standard library
                          (:module "agent" :depends-on ("logging" "utils") :components

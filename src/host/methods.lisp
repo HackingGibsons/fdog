@@ -97,7 +97,7 @@ fails to successfully process the message by returning `nil' the agent is marked
 for removal at the end of the iteration."
                (prog1 #'(lambda (sock)
                           (if-bind result (handle-agent-event agent (read-message sock))
-                            (prog1 result (incf (events host)))
+                            result
                             (remove-agent host agent)))
                  (store-callback-agent agent (agent-event-sock agent))))
 

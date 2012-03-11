@@ -6,6 +6,7 @@
                 :it
                 :awhen)
   (:export :standard-agent
+           :age
            :agent-uuid
            :organ-uuid
            :agent-boot

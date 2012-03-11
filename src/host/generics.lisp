@@ -3,6 +3,9 @@
 ;; Generics
 (defgeneric add-agent (host agent)
   (:documentation "Add the agent to the host container."))
+(defgeneric register-agent (host agent)
+  (:documentation "Register the agent in the container and add it to
+the event loop."))
 (defgeneric remove-agent (host agent)
   (:documentation "Remove and terminate the agent in the host."))
 (defgeneric run-once (host)

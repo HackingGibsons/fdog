@@ -1,7 +1,14 @@
 (in-package :agent-host)
 
 ;; Implementation
-(defmethod add-agent ((host agent-host) (agent standard-agent))
+(defmethod add-agent ((host agent-host)  (agent standard-agent))
+  "Add the agent to the container. It will be initialized when the
+container is run or during the next tick."
+  (unless (find (agent-uuid agent) (added host) :test #'string-equal :key #'agent-uuid)
+    (prog1 agent
+      (push agent (added host)))))
+
+(defmethod register-agent ((host agent-host) (agent standard-agent))
   ;; Bind the sockets and context structures
   ;; TODO: Extract
   (setf (agent-context agent) (context host)
@@ -17,9 +24,7 @@
   (zmq:setsockopt (agent-event-sock agent) :subscribe "")
   (zmq:setsockopt (agent-message-sock agent) :linger *socket-linger*)
 
-
-
-  (when (not (find (agent-uuid agent) (agents host) :test #'string-equal :key #'agent-uuid))
+  (unless (find (agent-uuid agent) (agents host) :test #'string-equal :key #'agent-uuid)
     (prog1 agent
       (push agent (agents host))
       ;; Send boot
@@ -49,10 +54,19 @@ The number of loop iterations and the number of events fired."
 
 (defmethod run-once ((host agent-host))
   "Run a single iteration of the event loop for all managed agents.
-Returns three values.
+
+At the beginning of the call any agents that have not yet been
+registered are registered.
+
+Returns three values:
  * The number of callbacks signaled
  * The number of agents managed by the host
  * The number of agents removed this iteration"
+  ;; Register any pending added agents
+  (do ((agent (pop (added host)) (pop (added host))))
+      ((not agent))
+    (register-agent host agent))
+
   (let ((callback-agents (make-hash-table :test 'equalp)) ;; Mapping of sockets -> agents for error handling
         (callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing
         (else-callbacks (make-hash-table :test 'equalp))  ;; Callbacks for sockets that don't fire

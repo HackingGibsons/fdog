@@ -5,8 +5,11 @@
   ((context :initarg :context
             :initform nil
             :accessor context)
-   (agents :initarg :agents
-           :initform nil
+   (added :initarg :agents
+          :initarg :add
+          :initform (list)
+          :accessor added)
+   (agents :initform nil
            :accessor agents)
 
    (ticks :initform 0

@@ -13,7 +13,7 @@
                   :accessor organ-outgoing-sock)))
 
 (defclass standard-beating-organ (standard-organ)
-  ((keep-beats :initform 5
+  ((keep-beats :initform 10
                :accessor keep-beats)
    (last-beat :accessor last-beat)
    (tag :initform :anonymous-organ

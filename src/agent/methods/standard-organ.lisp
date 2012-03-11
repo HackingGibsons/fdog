@@ -99,7 +99,7 @@ and callbacks for each socket mentioned.")
 
   (prog1 event
     (when (and (listp event) (eql (getf event :heart) :beat))
-      (setf (last-beat organ) (subseq `(,(getf event :time) ,@(last-beat organ)) 0 (keep-beats organ)))
+      (setf (last-beat organ) (subseq (append (list (getf event :time)) (last-beat organ)) 0 (keep-beats organ)))
 
       (log-for (trace) "~A replying to heartbeat." organ)
       (send-message organ :beat `(:uuid ,(organ-uuid organ)

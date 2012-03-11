@@ -1,6 +1,7 @@
 (in-package :agent)
 
 ;; Organ health check
+(defcategory health-check)
 (defmethod act-on-event ((head agent-head) event)
   (prog1 event
     (cond ((and (listp event) (getf (reverse event) :beat))
@@ -17,7 +18,7 @@
       (log-for (warn) "~A: organ-beat-event did nat have all of: tag, :uuid or :time" head)
       (error "organ-beat-event did nat have all of: tag, :uuid or :time"))
 
-    (log-for (trace) "Updating organ: ~A/~A @ ~A" tag uuid time)
+    (log-for (health-check) "Updating organ: ~A/~A @ ~A" tag uuid time)
     (setf (gethash uuid (agent-organs head)) status)))
 
 (defmethod organ-beat-event :after ((head agent-head) (event list))
@@ -30,12 +31,13 @@
 
 (defmethod organ-healthy-p ((head agent-head) uuid (status list))
   "Check the status of the organ as a predicate"
-  (log-for (trace) "~A checking health of ~A using ~A" head uuid status)
-  (let ((cutoff (or (car (last (last-beat head))) 0)))
-    (log-for (trace) "Setting death cutoff to be <~A" cutoff)
+  (log-for (health-check) "~A checking health of ~A using ~A" head uuid status)
+  (let* ((beats (remove nil (last-beat head)))
+         (cutoff (apply #'min (or beats (list 0)))))
+    (log-for (health-check) "Setting death cutoff to be <~A" cutoff)
     (if (< (or (getf status :time) 0) cutoff)
-        (prog1 nil (log-for (warn) "~A/~A appears dead." uuid status))
-        (prog1 t (log-for (trace) "~A/~A appears alive." uuid status)))))
+        (prog1 nil (log-for (warn health-check) "~A/~A[~A] appears dead. [~A]" uuid status (getf status :time) cutoff))
+        (prog1 t (log-for (health-check) "~A/~A appears alive." uuid status)))))
 
 ;; Death
 (defmethod suicide ((agent standard-agent) &optional reason)
@@ -53,6 +55,7 @@
                                 :time ,(get-internal-real-time))))
 
 ;; Peer maintenence
+(defcategory agent-peers)
 (defmethod map-peers ((head agent-head) fun)
   "Map `fun' across the known peers of `head' returning
 the result of accumulating the results."
@@ -74,7 +77,7 @@ The default `too long` interval is 10 seconds"
     (flet ((check-peer (peer)
              (destructuring-bind (uuid time) peer
                (when (>= (- now time) threshold)
-                 (format t "Evicting: ~A~%" uuid)
+                 (log-for (agent-peers) "~A Evicting: ~A~%" (organ-agent head) uuid)
                  (remhash uuid (agent-peers head))
                  uuid))))
 
@@ -83,7 +86,6 @@ The default `too long` interval is 10 seconds"
 (defmethod update-peer :before ((head agent-head) peer-info)
   "Check if the peer has the same UUID as the agent.
 If it does, the younger agent will kill itself."
-(log-for (trace) "before called")
   (let* ((agent (organ-agent head))
          (age (age agent))
          (uuid (agent-uuid agent))
@@ -91,11 +93,11 @@ If it does, the younger agent will kill itself."
          (peer-timestamp (getf peer-info :timestamp))
          (peer-age (getf peer-info :age))
          (corrected-age (correct-age peer-age peer-timestamp)))
-    (log-for (trace) "uuid: ~A my-timestamp: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid (get-universal-time) age peer-uuid peer-timestamp peer-age corrected-age)
+    (log-for (agent-peers) "uuid: ~A my-timestamp: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid (get-universal-time) age peer-uuid peer-timestamp peer-age corrected-age)
     (when (equalp uuid peer-uuid)
-      (log-for (warn) "Agent UUID collision found")
+      (log-for (warn agent-peers) "Agent UUID collision found")
       (when (younger-p agent corrected-age)
-        (log-for (warn) "I'm younger, dying")
+        (log-for (warn agent-peers) "I'm younger, dying")
         (suicide head)))))
 
 (defmethod update-peer ((head agent-head) peer-info)
@@ -105,10 +107,10 @@ If it does, the younger agent will kill itself."
         (mouth (getf peer-info :mouth)))
 
     (unless (and uuid ear mouth)
-      (log-for (warn) "Info did not contain a UUID mouth or ear.")
+      (log-for (warn agent-peers) "Info did not contain a UUID mouth or ear.")
       (return-from update-peer))
 
-    (log-for (trace) "Storing info on ~A => ~A/~A" uuid ear mouth)
+    (log-for (agent-peers) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
@@ -134,7 +136,7 @@ If it does, the younger agent will kill itself."
 
 (defmethod heard-message ((agent standard-agent) (head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
-  (log-for (trace) "heard info")
+  (log-for (agent-peers) "heard info")
   (let ((info (getf info :info)))
     (update-peer head info)))
 

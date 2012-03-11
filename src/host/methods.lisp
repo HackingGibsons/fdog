@@ -106,9 +106,16 @@ for removal at the end of the iteration."
 event at the agent. If the `agent' handles the `:timeout' by returning nil it is marked
 for removal at the end of the iteration."
                (prog1 #'(lambda ()
-                          (if-bind result (handle-agent-event agent :timeout)
-                            (prog1 result (incf (events host)))
-                            (remove-agent host agent)))
+                          ;; TODO: Extract this handler-case/bind wrapper to a macro
+                          ;;       it exists in `fire-callback' in this method as well
+                          (handler-case
+                              (handler-bind ((error (curry #'report-error agent)))
+                                (if-bind result (handle-agent-event agent :timeout)
+                                  (prog1 result (incf (events host)))
+                                  (remove-agent host agent)))
+                            (t (c)
+                              (log-for (warn) "Agent: [~A/~A] Terminating because of: ~A" (type-of agent) (agent-uuid agent) c)
+                              (remove-agent host agent))))
                  (store-callback-agent agent (agent-event-sock agent))))
 
 
@@ -142,10 +149,17 @@ along with the reference to the given `agent' in the ownership table."
                "Fire a callback on `socket' in the given `direction' from the callbacks table.
 Also removes any `else-callbacks' registered against this callback.
 TODO: Handle errors with respect to `callback-agents'"
-               (let ((id (sock-id socket direction)))
-                 (incf (events host))
-                 (remhash id else-callbacks)
-                 (funcall (gethash id callbacks) socket)))
+               (let* ((id (sock-id socket direction))
+                      (agent (gethash id callback-agents)))
+                 (handler-case
+                     (handler-bind ((error (curry #'report-error agent)))
+                       (incf (events host))
+                       (remhash id else-callbacks)
+                       (funcall (gethash id callbacks) socket))
+                   (t (c)
+                     (log-for (warn) "Agent: [~A/~A] Terminating because of: ~A" (type-of agent) (agent-uuid agent) c)
+                     (remove-agent host agent)))))
+
 
              (maybe-trigger-callback (pollitem)
                "Try to trigger a callback from the hash table if this pollitem is signaled for IO"

@@ -65,6 +65,7 @@
            :agent-organs
            :agent-poll-timeout
            :run-agent
+           :report-error
            :universal-start-time
            :start-time
            :timestamp

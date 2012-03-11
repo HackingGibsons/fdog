@@ -123,37 +123,6 @@ result into the desired type.")
 
 
 ;;
-;; A runer that runs the given agent in a thread of the current process.
-;;
-(defclass thread-runner (agent-runner)
-  ())
-
-(defmethod make-runner ((style (eql :thread)) &key)
-  (let ((runner (call-next-method)))
-    (change-class runner 'thread-runner)))
-
-(defmethod start ((runner thread-runner) &key (category '(log5:dribble+)))
-  (unless (running-p runner)
-    (start-logging :category category)
-
-    (setf (agent-handle runner)
-          (bt:make-thread #'(lambda () (run-agent (agent-instance runner)))))
-    runner))
-
-
-(defmethod running-p ((runner thread-runner))
-  (with-accessors ((handle agent-handle)) runner
-    (and handle
-         (bt:threadp handle)
-         (bt:thread-alive-p handle))))
-
-(defmethod stop ((runner thread-runner))
-  (when (running-p runner)
-    (bt:destroy-thread (agent-handle runner))
-    (setf (agent-handle runner) nil)
-    runner))
-
-;;
 ;; Blocked runner, for operation within the current thread.
 ;;
 (defclass blocked-runner (agent-runner)

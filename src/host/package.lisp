@@ -30,6 +30,8 @@
   ((context :initarg :context
             :initform nil
             :accessor context)
+   (ticks :initform 0
+          :accessor ticks)
    (agents :initarg :agents
            :initform nil
            :accessor agents))
@@ -100,7 +102,10 @@ loop/process."))
           (delete uuid (agents host) :key #'agent-uuid :test #'string-equal))))
 
 (defmethod run ((host agent-host))
-  (log-for (warn agent-host) "TODO: `run-once' until we have no more agents."))
+  (do ((iter-result (multiple-value-list (run-once host))
+                    (multiple-value-list (run-once host))))
+       ((not (agents host))
+        (ticks host))))
 
 (defmethod run-once ((host agent-host))
   "Run a single iteration of the event loop for all managed agents.
@@ -179,6 +184,8 @@ Returns three values.
                          (funcall val))
                      else-callbacks)
             (mapc (curry #'remove-agent host) remove)
+
+            (incf (ticks host))
 
             (values signaled
                     (length (agents host))

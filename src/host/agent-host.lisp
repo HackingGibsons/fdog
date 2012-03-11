@@ -5,11 +5,16 @@
   ((context :initarg :context
             :initform nil
             :accessor context)
-   (ticks :initform 0
-          :accessor ticks)
    (agents :initarg :agents
            :initform nil
-           :accessor agents))
+           :accessor agents)
+
+   (ticks :initform 0
+          :accessor ticks
+          :documentation "Number of iterations of the event loop.")
+   (events :initform 0
+           :accessor events
+           :documentation "Number of events fired from the event loop."))
   (:documentation "A container for running multiple agents in a single event
 loop/process."))
 

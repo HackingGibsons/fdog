@@ -40,6 +40,8 @@
           (delete uuid (agents host) :key #'agent-uuid :test #'string-equal))))
 
 (defmethod run ((host agent-host))
+  "Run forever. When finished, returns two values.
+The number of loop iterations and the number of events fired."
   (do ((iter-result (multiple-value-list (run-once host))
                     (multiple-value-list (run-once host))))
        ((not (agents host))
@@ -67,7 +69,7 @@ fails to successfully process the message by returning `nil' the agent is marked
 for removal at the end of the iteration."
                (prog1 #'(lambda (sock)
                           (if-bind result (handle-agent-event agent (read-message sock))
-                            result
+                            (prog1 result (incf (events host)))
                             (pushnew (agent-uuid agent) remove :test #'string-equal)))
                  (store-callback-agent agent (agent-event-sock agent))))
 
@@ -77,7 +79,7 @@ event at the agent. If the `agent' handles the `:timeout' by returning nil it is
 for removal at the end of the iteration."
                (prog1 #'(lambda ()
                           (if-bind result (handle-agent-event agent :timeout)
-                            result
+                            (prog1 result (incf (events host)))
                             (pushnew (agent-uuid agent) remove :test #'string-equal)))
                  (store-callback-agent agent (agent-event-sock agent))))
 
@@ -113,6 +115,7 @@ along with the reference to the given `agent' in the ownership table."
 Also removes any `else-callbacks' registered against this callback.
 TODO: Handle errors with respect to `callback-agents'"
                (let ((id (sock-id socket direction)))
+                 (incf (events host))
                  (remhash id else-callbacks)
                  (funcall (gethash id callbacks) socket)))
 

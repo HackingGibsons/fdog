@@ -160,7 +160,7 @@
     (log-for (warn) "~A: Timeout reached, killing myself" organ)
     (suicide (organ-agent organ)
              (format nil "Test agent life timeout. Lived ~3$ seconds"
-                     (/ (age agent) internal-time-units-per-second)))))
+                     (/ (age (organ-agent organ)) internal-time-units-per-second)))))
 
 (defbehavior forge-agent-info (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

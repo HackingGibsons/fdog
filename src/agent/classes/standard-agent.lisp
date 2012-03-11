@@ -3,7 +3,7 @@
 ;; Globals
 (defparameter *context-threads* 1
   "Number of threads an agent context uses.")
-(defparameter *event-starvation-timeout* 3
+(defparameter *event-starvation-timeout* 10
   "Number of seconds that an agent can live without events.")
 
 ;; Classes

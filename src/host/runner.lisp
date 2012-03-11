@@ -12,9 +12,8 @@ run agents instead of using threads or processes"))
   (let ((runner (call-next-method)))
     (change-class runner 'host-runner)))
 
-(defmethod initialize-instance :after ((runner host-runner) &rest initargs &key)
-  (declare (ignorable initargs))
-  (log-for (agent-runner) "Creating `host-runner' instance: ~A/~A" (agent-instance runner) initargs)
+(defmethod update-instance-for-different-class :after (previous (runner host-runner) &key)
+  (log-for (agent-runner) "Creating `host-runner' instance: ~A" (agent-instance runner))
 
   ;; Find and bind an agent-host, store it globally if it isn't yet
   (unless (agent-handle runner)
@@ -22,6 +21,21 @@ run agents instead of using threads or processes"))
           (or *agent-host* (make-instance 'agent-host))))
   (unless *agent-host*
     (log-for (warn agent-runner) "`*agent-host*' is nil. Binding to ~A" (agent-handle runner))
-    (setf *agent-host* (agent-handle runner)))
+    (setf *agent-host* (agent-handle runner))))
 
-  (add-agent (agent-handle runner) (agent-instance runner)))
+;; Methods
+(defmethod stop ((runner host-runner))
+  (remove-agent (agent-handle runner) (agent-instance runner)))
+
+(defmethod start ((runner host-runner) &key category)
+  (declare (ignore category))
+  (add-agent (agent-handle runner) (agent-instance runner))
+  (if (running-p (agent-handle runner))
+      (agent-handle runner)
+      (run (agent-handle runner))))
+
+
+(defmethod running-p ((runner host-runner))
+  "Ask the container if it's running."
+  (and (running-p (agent-handle runner))
+       (has-agent-p (agent-handle runner) (agent-instance runner))))

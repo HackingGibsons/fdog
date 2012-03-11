@@ -1,6 +1,12 @@
 (in-package :agent-host)
 
 ;; Implementation
+(defmethod has-agent-p ((host agent-host) (agent standard-agent))
+  (has-agent-p host (agent-uuid agent)))
+(defmethod has-agent-p ((host agent-host) (uuid string))
+  (or (find uuid (added host) :test #'string-equal :key #'agent-uuid)
+      (find uuid (agents host) :test #'string-equal :key #'agent-uuid)))
+
 (defmethod add-agent ((host agent-host)  (agent standard-agent))
   "Add the agent to the container. It will be initialized when the
 container is run or during the next tick."
@@ -33,6 +39,11 @@ container is run or during the next tick."
 (defmethod remove-agent ((host agent-host) (agent standard-agent))
   (remove-agent host (agent-uuid agent)))
 (defmethod remove-agent ((host agent-host) (uuid string))
+  (pushnew uuid (removed host)))
+
+(defmethod evict-agent ((host agent-host) (agent standard-agent))
+  (evict-agent host (agent-uuid agent)))
+(defmethod evict-agent ((host agent-host) (uuid string))
   (when-bind agent (find uuid (agents host) :key #'agent-uuid :test #'string-equal)
     (log-for (warn agent-host) "Found agent to remove: ~S" agent)
     (flet ((organ-disconnect (o) (agent-disconnect agent o)))
@@ -47,10 +58,14 @@ container is run or during the next tick."
 (defmethod run ((host agent-host))
   "Run forever. When finished, returns two values.
 The number of loop iterations and the number of events fired."
-  (do ((iter-result (multiple-value-list (run-once host))
-                    (multiple-value-list (run-once host))))
-       ((not (agents host))
-        (ticks host))))
+  (unwind-protect
+       (progn
+         (setf (running host) t)
+         (do ((iter-result (multiple-value-list (run-once host))
+                           (multiple-value-list (run-once host))))
+             ((not (agents host))
+              (ticks host))))
+    (setf (running host) nil)))
 
 (defmethod run-once ((host agent-host))
   "Run a single iteration of the event loop for all managed agents.
@@ -69,8 +84,7 @@ Returns three values:
 
   (let ((callback-agents (make-hash-table :test 'equalp)) ;; Mapping of sockets -> agents for error handling
         (callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing
-        (else-callbacks (make-hash-table :test 'equalp))  ;; Callbacks for sockets that don't fire
-        (remove (list)))                                  ;; List of UUIDs of agents that should be removed
+        (else-callbacks (make-hash-table :test 'equalp))) ;; Callbacks for sockets that don't fire
 
     (labels ((store-callback-agent (agent sock &optional (direction :in))
                "Store which `agent' requested the binding of a callback on `sock' in `direction'
@@ -84,7 +98,7 @@ for removal at the end of the iteration."
                (prog1 #'(lambda (sock)
                           (if-bind result (handle-agent-event agent (read-message sock))
                             (prog1 result (incf (events host)))
-                            (pushnew (agent-uuid agent) remove :test #'string-equal)))
+                            (remove-agent host agent)))
                  (store-callback-agent agent (agent-event-sock agent))))
 
              (make-agent-else-callback (agent)
@@ -94,7 +108,7 @@ for removal at the end of the iteration."
                (prog1 #'(lambda ()
                           (if-bind result (handle-agent-event agent :timeout)
                             (prog1 result (incf (events host)))
-                            (pushnew (agent-uuid agent) remove :test #'string-equal)))
+                            (remove-agent host agent)))
                  (store-callback-agent agent (agent-event-sock agent))))
 
 
@@ -170,10 +184,12 @@ TODO: Handle errors with respect to `callback-agents'"
                          (declare (ignore key))
                          (funcall val))
                      else-callbacks)
-            (mapc (curry #'remove-agent host) remove)
+
+
 
             (incf (ticks host))
 
             (values signaled
                     (length (agents host))
-                    (length remove))))))))
+                    (length (prog1 (mapc (curry #'evict-agent host) (removed host))
+                              (setf (removed host) (list)))))))))))

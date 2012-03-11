@@ -9,9 +9,15 @@
           :initarg :add
           :initform (list)
           :accessor added)
+   (removed :initform (list)
+            :accessor removed
+            :documentation "List of UUIDs of agents that should be removed")
    (agents :initform nil
            :accessor agents)
 
+   (running :initform nil
+            :accessor running
+            :reader running-p)
    (ticks :initform 0
           :accessor ticks
           :documentation "Number of iterations of the event loop.")

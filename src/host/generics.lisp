@@ -6,8 +6,12 @@
 (defgeneric register-agent (host agent)
   (:documentation "Register the agent in the container and add it to
 the event loop."))
+(defgeneric has-agent-p (host agent)
+  (:documentation "Predicate to determine if a given agent is running within this loop."))
 (defgeneric remove-agent (host agent)
-  (:documentation "Remove and terminate the agent in the host."))
+  (:documentation "Schedule to remove and terminate the agent in the host."))
+(defgeneric evict-agent (host agent)
+  (:documentation "Remove and disconnect the agent from the event loop."))
 (defgeneric run-once (host)
   (:documentation "Run a single iteration of the event loop and return."))
 (defgeneric run (host)

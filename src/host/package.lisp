@@ -16,9 +16,11 @@
 
   (:export :*agent-host*
            :host-runner
+           :has-agent-p
            :agent-host
            :add-agent
            :remove-agent
+           :running-p
            :run-once
            :run))
 (in-package :agent-host)

@@ -15,23 +15,25 @@ container is run or during the next tick."
       (push agent (added host)))))
 
 (defmethod register-agent ((host agent-host) (agent standard-agent))
-  ;; Bind the sockets and context structures
-  ;; TODO: Extract
-  (setf (agent-context agent) (context host)
-        (agent-event-sock agent) (zmq:socket (context host) :sub)
-        (agent-message-sock agent) (zmq:socket (context host) :pub))
-
-  ;; Bind the sockets
-  (zmq:bind (agent-event-sock agent) (agent-event-addr agent))
-  (zmq:bind (agent-message-sock agent) (agent-message-addr agent))
-
-  ;; Set options
-  (zmq:setsockopt (agent-event-sock agent) :linger *socket-linger*)
-  (zmq:setsockopt (agent-event-sock agent) :subscribe "")
-  (zmq:setsockopt (agent-message-sock agent) :linger *socket-linger*)
-
+  "Bind the sockets and context of the `host' to the `agent'.
+Once `agent' is added and bound to the transport context a boot event is sent."
   (unless (find (agent-uuid agent) (agents host) :test #'string-equal :key #'agent-uuid)
+    ;; TODO: Should there be an agent method for this that is called
+    ;;       rather than this being done inline on registration?
     (prog1 agent
+      (setf (agent-context agent) (context host)
+            (agent-event-sock agent) (zmq:socket (context host) :sub)
+            (agent-message-sock agent) (zmq:socket (context host) :pub))
+
+      ;; Bind the sockets
+      (zmq:bind (agent-event-sock agent) (agent-event-addr agent))
+      (zmq:bind (agent-message-sock agent) (agent-message-addr agent))
+
+      ;; Set options
+      (zmq:setsockopt (agent-event-sock agent) :linger *socket-linger*)
+      (zmq:setsockopt (agent-event-sock agent) :subscribe "")
+      (zmq:setsockopt (agent-message-sock agent) :linger *socket-linger*)
+
       (push agent (agents host))
       ;; Send boot
       (agent-publish-event agent `(:boot ,(get-internal-real-time) :uuid ,(agent-uuid agent))))))

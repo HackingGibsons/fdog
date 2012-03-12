@@ -47,7 +47,7 @@
   (:method ((endpoint forwarder-endpoint) req)
     (let* ((id (m2cl:request-header req *request-id-header* (format nil "UNKNOWN-~A" (uuid:make-v4-uuid))))
            (key (prefixed-key (agent endpoint) :request id)))
-      (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+      (with-agent-redis ((agent endpoint))
         (redis:with-pipelining
           (redis:red-multi)
           (redis:red-hsetnx key :data (babel:octets-to-string (m2cl:request-serialize req)))
@@ -62,7 +62,7 @@
            (key (prefixed-key (agent endpoint) :request id))
            (expireset-key (prefixed-key (agent endpoint) :requests :expiring)))
 
-      (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+      (with-agent-redis ((agent endpoint))
         (redis:with-pipelining
           (redis:red-multi)
           (redis:red-hsetnx key :delivered (timestamp (agent endpoint)))
@@ -77,7 +77,7 @@
 the request data.")
 
   (:method ((endpoint forwarder-endpoint) data)
-    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (with-agent-redis ((agent endpoint))
       (let* ((id (response-id data))
              (key (prefixed-key (agent endpoint) :response id))
              (request-key (prefixed-key (agent endpoint) :request id))
@@ -121,7 +121,7 @@ the request data.")
 
       (incf (queue-count endpoint))
 
-      (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+      (with-agent-redis ((agent endpoint))
         (redis:with-pipelining
           (redis:red-multi)
           ;; Store the name of the current queue
@@ -133,7 +133,7 @@ the request data.")
   (:documentation "Try to deliver a request from the queue and update the queue count.")
 
   (:method ((endpoint forwarder-endpoint))
-    (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+    (with-agent-redis ((agent endpoint))
       (let* ((queue-key (queue-key endpoint))
              (request-key (redis:red-rpop queue-key))
              (request (and request-key (redis:red-hget request-key :data)))

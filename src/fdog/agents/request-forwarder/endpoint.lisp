@@ -59,7 +59,7 @@ forwarder-$name:$routename:$param1:param2..."
 
 (defmethod update-queue-count ((endpoint forwarder-endpoint))
   "Refresh the count of the number of elements in this endpoint's queue."
-  (handler-bind ((redis:redis-connection-error #'reconnect-redis-handler))
+  (with-agent-redis ((agent endpoint))
     (let ((queue-key (queue-key endpoint)))
       (setf (queue-count endpoint) (redis:red-llen queue-key)))))
 

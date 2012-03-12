@@ -21,7 +21,7 @@ result into the desired type.")
       (make-instance 'agent-runner :agent agent))))
 
 (defgeneric start (runner &key category)
-  (:documentation "Start the `runner' by invoking `run-agent' on the enclosed agent"))
+  (:documentation "Start the `runner' by feeding events to the underlying agent"))
 (defgeneric stop (runner)
   (:documentation "Stop the running agent in the container."))
 (defgeneric running-p (runner)
@@ -116,22 +116,3 @@ result into the desired type.")
     (handler-case (bt:with-timeout (1)
                     (sb-ext:process-wait (agent-handle runner) t))
       (bt:timeout () :timeout))))
-
-
-;;
-;; Blocked runner, for operation within the current thread.
-;;
-(defclass blocked-runner (agent-runner)
-  ())
-
-(defmethod make-runner ((style (eql :blocked)) &key)
-  (let ((runner (call-next-method)))
-    (change-class runner 'blocked-runner)))
-
-(defmethod start ((runner blocked-runner) &key (category '(log5:dribble+)))
-  (prog1 runner
-    (start-logging :category category)
-
-    (setf (agent-handle runner) (agent-instance runner))
-    (unwind-protect (run-agent (agent-handle runner))
-      (setf (agent-handle runner) nil))))

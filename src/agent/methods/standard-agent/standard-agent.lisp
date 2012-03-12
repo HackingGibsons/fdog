@@ -160,55 +160,6 @@ as fire any callbacks that may be pending IO when it is ready."
       (t (write-error)
         (log-for (warn) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))))
 
-(defmethod run-agent :around ((agent standard-agent))
-  (handler-case
-      (handler-bind ((error (arnesi:curry #'report-error agent)))
-        (call-next-method))
-    (t (c)
-      (log-for (warn) "Agent: [~A/~A] Terminating because of: ~A" (type-of agent) (agent-uuid agent) c))))
-
-
-
-(defmethod run-agent ((agent standard-agent))
-  "Enter the agent event loop, return only when agent is dead."
-  (zmq:with-context (ctx *context-threads*)
-    (zmq:with-socket (event-sock ctx :sub)
-      (zmq:setsockopt event-sock :linger *socket-linger*)
-      (zmq:with-socket (message-sock ctx :pub)
-        (zmq:setsockopt message-sock :linger *socket-linger*)
-        (log-for (trace) "Binding event sock to: ~A" (agent-event-addr agent))
-        (zmq:bind event-sock (agent-event-addr agent))
-        (log-for (warn) "Subscribing event sock to everyting")
-        (zmq:setsockopt event-sock :subscribe "")
-
-        (log-for (trace) "Binding message sock to: ~A" (agent-message-addr agent))
-        (zmq:bind message-sock (agent-message-addr agent))
-
-        (log-for (trace) "Setting agent context and event sock: ~A" agent)
-        (setf (slot-value agent 'context) ctx
-              (slot-value agent 'event-sock) event-sock
-              (slot-value agent 'message-sock) message-sock)
-
-        ;; Send boot
-        (agent-publish-event agent `(:boot ,(get-internal-real-time) :uuid ,(agent-uuid agent)))
-
-        ;; Agent event loop
-        (setf (agent-last-event agent) (get-internal-real-time))
-        (setf (agent-event-count agent) 0)
-        (log-for (trace) "Entering agent event loop.")
-        (unwind-protect
-             (do ((event (next-event agent) (next-event agent)))
-                 ((not (handle-agent-event agent event))
-                  event))
-
-          ;; Event loop unwind
-          (flet ((organ-disconnect (o) (agent-disconnect agent o)))
-            (log-for (warn) "Disconnecting organs.")
-            (mapcar #'organ-disconnect (agent-organs agent))
-            (log-for (warn) "Organs disconnected.")))
-
-        (log-for (warn) "Agent exiting: ~A. ~A events processed" agent (agent-event-count agent))))))
-
 (defmethod handle-agent-event ((agent standard-agent) event)
   (unless (event-fatal-p agent event)
     (log-for (trace) "Agent[~A] Event: ~A" agent event)

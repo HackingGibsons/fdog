@@ -21,10 +21,14 @@
 ;; This test will scaffold a running agent and run any tests driven by the event loop
 ;; then execute the terminated agent group
 (def-test (test-running-agent :group basic-tests :fixtures (agent-fixture))
-    (:process (:eval (handler-case (bt:with-timeout (30)
-                                     (run-agent agent))
+    (:process (:eval (handler-case (bt:with-timeout (10)
+                                     (agent-host:add-agent host agent)
+                                     (agent-host:run host))
                        (bt:timeout ()
-                         (format t "Timing out!~%")
+                         (format t "Timing out removing and running..~%")
+                         (agent-host:remove-agent host agent)
+                         (agent-host:run host)
+                         (format t "Done!~%")
                          nil)))
               (:eval (nst:nst-cmd :run-group terminated-agent-tests))))
 

@@ -29,7 +29,7 @@ Called as a result of `change-class' in `make-runner' specialized on `:host'"
 (defmethod stop ((runner host-runner))
   (remove-agent (agent-handle runner) (agent-instance runner)))
 
-(defmethod start ((runner host-runner) &key (category '(log5:dribble+)))
+(defmethod start ((runner host-runner) &key (category '(log5:warn+)))
   (start-logging :category category)
 
   (add-agent (agent-handle runner) (agent-instance runner))

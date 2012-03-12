@@ -4,20 +4,30 @@
 (defclass agent-host ()
   ((context :initarg :context
             :initform nil
-            :accessor context)
+            :accessor context
+            :documentation "The ZeroMQ context that this host will attach to the agents.
+It's finalized with the host instance, should not need explicit termination.")
+
+   ;; Agent management slots
    (added :initarg :agents
           :initarg :add
           :initform (list)
-          :accessor added)
+          :accessor added
+          :documentation "Agents that have been added to the host but not yet registered.
+Agent registration will transfer the agent instance to the `agents' list after connecting
+all of its sockets.")
    (removed :initform (list)
             :accessor removed
-            :documentation "List of UUIDs of agents that should be removed")
+            :documentation "List of UUIDs of agents that should be removed at the end of a tick.")
    (agents :initform nil
-           :accessor agents)
+           :accessor agents
+           :documentation "List of agent instances that the host is currently actively managing.")
 
+   ;; Info and statistics
    (running :initform nil
             :accessor running
-            :reader running-p)
+            :reader running-p
+            :documentation "Flag to signal the state of the host.")
    (ticks :initform 0
           :accessor ticks
           :documentation "Number of iterations of the event loop.")

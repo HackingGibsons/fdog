@@ -12,7 +12,9 @@ run agents instead of using threads or processes"))
   (let ((runner (call-next-method)))
     (change-class runner 'host-runner)))
 
-(defmethod update-instance-for-different-class :after (previous (runner host-runner) &key)
+(defmethod update-instance-for-different-class :after ((previous agent-runner) (runner host-runner) &key)
+  "Handles the upgrade to the `host-runner' class of instances of another runner.
+Called as a result of `change-class' in `make-runner' specialized on `:host'"
   (log-for (agent-runner) "Creating `host-runner' instance: ~A" (agent-instance runner))
 
   ;; Find and bind an agent-host, store it globally if it isn't yet

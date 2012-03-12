@@ -14,6 +14,7 @@
 ;; Test fixtures
 (def-fixtures agent-fixture
     (:special (agent))
+  (host (make-instance 'agent-host:agent-host))
   (agent (make-instance 'test-agent)))
 
 (def-fixtures running-hypervisor-fixture

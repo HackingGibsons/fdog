@@ -1,6 +1,7 @@
 (defpackage #:afdog-tests
   (:use #:cl
         #:afdog
+        #:agent-host
         #:agent
         #:fdog
         #:json
@@ -40,8 +41,9 @@
 
 (in-package :afdog-tests)
 
-(defvar *spawner* :test
-  "Use the :test spawner in the :afdog-tests package")
+(defvar *spawner* :host
+  "Use the :host spawner in the :afdog-tests package
+with the :test spawner used to initially start agents")
 
 (defvar *root* (merge-pathnames (make-pathname :directory '(:relative "tests"))
                                 (asdf:system-source-directory :afdog-tests))

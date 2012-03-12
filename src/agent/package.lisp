@@ -6,6 +6,7 @@
                 :it
                 :awhen)
   (:export :standard-agent
+           :age
            :agent-uuid
            :organ-uuid
            :agent-boot
@@ -33,13 +34,17 @@
            :watch-when-told
            :start
            :stop
+           :agent-runner
            :make-runner
+           :agent-instance
+           :agent-handle
            :*spawner*
            :behaviors
            :behavior-organ
            :organ-incoming-sock
            :organ-outgoing-sock
            :agent-special-event
+           :agent-publish-event
            :agent-info
            :agent-provides
            :watching
@@ -54,10 +59,12 @@
            :tell-agent-about
            :discover-agents-on-host
            :local-ipc-addr
+           :handle-agent-event
            :agent-event-count
            :agent-context
            :agent-organs
-           :run-agent
+           :agent-poll-timeout
+           :report-error
            :universal-start-time
            :start-time
            :timestamp
@@ -75,6 +82,6 @@
 
 (in-package :agent)
 
-(defvar *spawner* :exec
+(defvar *spawner* :host
   "The type of maker to use to spawn agents. Define it in another package
 to specify how agents in that package should spawn.")

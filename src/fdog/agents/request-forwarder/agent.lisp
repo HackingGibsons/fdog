@@ -45,8 +45,15 @@ wants to know it."
     request))
 
 ;; Agent
+(defvar *redis-host* #(127 0 0 1) "The redis host the agent should connect to.")
+(defvar *redis-port* 6379 "The redis port the agent should connect to.")
+
 (defclass request-forwarder-agent (request-processing-agent standard-leaf-agent)
-  ((forwarder :initform "x-NO-forwarder"
+  ((redis :initform (make-instance 'redis:redis-connection :host *redis-host* :port *redis-port*)
+          :initarg :redis
+          :accessor redis)
+
+   (forwarder :initform "x-NO-forwarder"
               :initarg :forwarder
               :accessor forwarder)
    (route :initform "x-NO-route"
@@ -67,11 +74,6 @@ of the request object in sequence."))
 
   (:documentation "This agent attempts to forward requests from
 external clients to internal services."))
-
-(defmethod run-agent :around ((agent request-forwarder-agent))
-  "Connect `agent' to redis."
-  (redis:with-connection ()
-    (call-next-method)))
 
 (defmethod initialize-instance :after ((agent request-forwarder-agent) &key)
   "Bind a `handler-name' to the agent based on the `forwarder' and `route'"
@@ -96,7 +98,7 @@ external clients to internal services."))
              (client-socks (find-organ agent :sock-pocket)))
 
     (append (call-next-method)
-            `(:redis ,(redis:connected-p)
+            `(:redis ,(with-agent-redis (agent) (redis:connected-p))
               :forwarding ((:forwarder . ,(forwarder agent))
                            (:route . ,(route agent))
                            (:path . ,(path agent))

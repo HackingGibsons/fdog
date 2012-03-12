@@ -158,7 +158,9 @@
         (log-for (trace) "no new interval, current time: ~A, timeout interval ~A" (- (get-internal-real-time) (start-time behavior)) (timeout behavior))  )))
   (when (>= (- (get-internal-real-time) (start-time behavior)) (timeout behavior))
     (log-for (warn) "~A: Timeout reached, killing myself" organ)
-    (suicide (organ-agent organ))))
+    (suicide (organ-agent organ)
+             (format nil "Test agent life timeout. Lived ~3$ seconds"
+                     (/ (age (organ-agent organ)) internal-time-units-per-second)))))
 
 (defbehavior forge-agent-info (:on (:heard :message :from :ear) :do :invoke-with-event) (organ event)
   (let ((message (getf event :message)))

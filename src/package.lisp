@@ -8,6 +8,10 @@
   (:export :start-logging
            :stop-logging
            :make-local-sock
+           :agent-message-sock
+           :agent-event-sock
+           :agent-message-addr
+           :agent-event-addr
            :get-local-address
            :read-message
            :parse-message

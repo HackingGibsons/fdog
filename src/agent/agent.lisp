@@ -21,7 +21,7 @@ result into the desired type.")
       (make-instance 'agent-runner :agent agent))))
 
 (defgeneric start (runner &key category)
-  (:documentation "Start the `runner' by invoking `run-agent' on the enclosed agent"))
+  (:documentation "Start the `runner' by feeding events to the underlying agent"))
 (defgeneric stop (runner)
   (:documentation "Stop the running agent in the container."))
 (defgeneric running-p (runner)
@@ -76,20 +76,16 @@ result into the desired type.")
   (setf (exec-forms runner)
         (append (exec-forms runner)
                 `((in-package ,(package-name (symbol-package (agent-instance runner))))
-                  (start (make-runner :blocked :class (quote ,(agent-instance runner))
+                  (start (make-runner :host :class (quote ,(agent-instance runner))
                                       ,@(runner-agent-initargs runner))))))
     (log-for (exec-runner trace) "Runner agent execforms ~S" (exec-forms runner)))
 
 (defmethod make-runner ((style (eql :exec)) &rest initargs &key (class 'standard-agent) &allow-other-keys)
   (log-for (warn) "Exec runner initargs: ~A" initargs)
-  (labels ((remove-from-plist (list key &rest keys)
-             (reduce #'(lambda (acc b) (remove-from-plist acc b)) keys
-                     :initial-value (cond ((null list) nil)
-                                          ((equalp (car list) key) (remove-from-plist (cddr list) key))
-                                          (t (append (list (first list) (second list)) (remove-from-plist (cddr list) key)))))))
-    ;; TODO: Make this not make me want to gouge my eyes out.
-    (make-instance 'exec-runner :agent class
-                   :initargs (remove-from-plist initargs :class :agent :include))))
+  (mapc  #'(lambda (key) (remf initargs key)) '(:class :agent :include))
+  (log-for (warn) "Exec runner initargs after prune: ~A" initargs)
+  (make-instance 'exec-runner :agent class
+                 :initargs initargs))
 
 (defmethod start ((runner exec-runner) &key (category '(log5:dribble+)))
   "Starts a runner by starting a new lisp."
@@ -120,105 +116,3 @@ result into the desired type.")
     (handler-case (bt:with-timeout (1)
                     (sb-ext:process-wait (agent-handle runner) t))
       (bt:timeout () :timeout))))
-
-
-;;
-;; A runer that runs the given agent in a thread of the current process.
-;;
-(defclass thread-runner (agent-runner)
-  ())
-
-(defmethod make-runner ((style (eql :thread)) &key)
-  (let ((runner (call-next-method)))
-    (change-class runner 'thread-runner)))
-
-(defmethod start ((runner thread-runner) &key (category '(log5:dribble+)))
-  (unless (running-p runner)
-    (start-logging :category category)
-
-    (setf (agent-handle runner)
-          (bt:make-thread #'(lambda () (run-agent (agent-instance runner)))))
-    runner))
-
-
-(defmethod running-p ((runner thread-runner))
-  (with-accessors ((handle agent-handle)) runner
-    (and handle
-         (bt:threadp handle)
-         (bt:thread-alive-p handle))))
-
-(defmethod stop ((runner thread-runner))
-  (when (running-p runner)
-    (bt:destroy-thread (agent-handle runner))
-    (setf (agent-handle runner) nil)
-    runner))
-
-
-;;
-;; A runner that forks a child process to run the agent
-;;
-(defclass proc-runner (agent-runner)
-  ())
-
-(defmethod make-runner ((style (eql :proc)) &key)
-  (change-class (call-next-method) 'proc-runner))
-
-(defmethod running-p ((runner proc-runner))
-  (handler-case
-      (and (agent-handle runner)
-           (iolib.syscalls:kill (agent-handle runner) 0)
-           (agent-handle runner))
-
-    (iolib.syscalls:ESRCH () nil)))
-
-(defmethod start ((runner proc-runner) &key (category '(log5:dribble+)))
-  "Forking starter. Does not work in multithreaded sbcl."
-  (unless (running-p runner)
-    (prog1 runner
-      (let ((child  (handler-case (sb-posix:fork) (t () nil))))
-        (case child
-          (nil nil)
-          (-1 (log-for (warn) "~A: FORK FAILED!" runner)
-              nil)
-          (0
-           (start-logging :category category)
-
-           (setf (agent-handle runner) (iolib.syscalls:getpid))
-           (unwind-protect (run-agent (agent-instance runner))
-             (setf (agent-handle runner) nil)
-             (iolib.syscalls::exit 0)))
-          (t
-            (start-logging :category category)
-
-            (setf (agent-handle runner) child)))))))
-
-(defmethod stop ((runner proc-runner))
-  (when (running-p runner)
-    (prog1 (agent-handle runner)
-      (iolib.syscalls:kill (agent-handle runner) iolib.syscalls:sigkill)
-
-      (handler-case (bt:with-timeout (1)
-                      (iolib.syscalls:waitpid (agent-handle runner) 0))
-
-        (bt:timeout () nil)
-        (iolib.syscalls:echild () nil))
-
-      (setf (agent-handle runner) nil))))
-
-;;
-;; Blocked runner, for operation within the current thread.
-;;
-(defclass blocked-runner (agent-runner)
-  ())
-
-(defmethod make-runner ((style (eql :blocked)) &key)
-  (let ((runner (call-next-method)))
-    (change-class runner 'blocked-runner)))
-
-(defmethod start ((runner blocked-runner) &key (category '(log5:dribble+)))
-  (prog1 runner
-    (start-logging :category category)
-
-    (setf (agent-handle runner) (agent-instance runner))
-    (unwind-protect (run-agent (agent-handle runner))
-      (setf (agent-handle runner) nil))))

@@ -3,7 +3,7 @@
 ;; Globals
 (defparameter *context-threads* 1
   "Number of threads an agent context uses.")
-(defparameter *event-starvation-timeout* 3
+(defparameter *event-starvation-timeout* 10
   "Number of seconds that an agent can live without events.")
 
 ;; Classes
@@ -13,16 +13,16 @@
          :initform (print-object (uuid:make-v4-uuid) nil))
 
    (context :initarg :context
-            :reader agent-context
+            :accessor agent-context
             :initform nil)
    ;; Subscription addr/sock pair
    (event-addr :initarg :event-addr
                :reader agent-event-addr)
-   (event-sock :reader agent-event-sock)
+   (event-sock :accessor agent-event-sock)
    ;; Publish addr/sock pair
    (message-addr :initarg :message-addr
                  :reader agent-message-addr)
-   (message-sock :reader agent-message-sock)
+   (message-sock :accessor agent-message-sock)
 
    ;; Squigly spooges
    (organs :initform nil

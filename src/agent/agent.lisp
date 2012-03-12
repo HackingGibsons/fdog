@@ -76,7 +76,7 @@ result into the desired type.")
   (setf (exec-forms runner)
         (append (exec-forms runner)
                 `((in-package ,(package-name (symbol-package (agent-instance runner))))
-                  (start (make-runner :blocked :class (quote ,(agent-instance runner))
+                  (start (make-runner :host :class (quote ,(agent-instance runner))
                                       ,@(runner-agent-initargs runner))))))
     (log-for (exec-runner trace) "Runner agent execforms ~S" (exec-forms runner)))
 

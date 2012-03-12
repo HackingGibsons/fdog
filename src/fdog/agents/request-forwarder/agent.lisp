@@ -45,8 +45,15 @@ wants to know it."
     request))
 
 ;; Agent
+(defvar *redis-host* #(127 0 0 1) "The redis host the agent should connect to.")
+(defvar *redis-port* 6379 "The redis port the agent should connect to.")
+
 (defclass request-forwarder-agent (request-processing-agent standard-leaf-agent)
-  ((forwarder :initform "x-NO-forwarder"
+  ((redis :initform (make-instance 'redis:redis-connection :host *redis-host* :port *redis-port*)
+          :initarg :redis
+          :accessor redis)
+
+   (forwarder :initform "x-NO-forwarder"
               :initarg :forwarder
               :accessor forwarder)
    (route :initform "x-NO-route"
@@ -67,6 +74,25 @@ of the request object in sequence."))
 
   (:documentation "This agent attempts to forward requests from
 external clients to internal services."))
+
+(defmacro with-agent-redis ((agent) &body forms)
+  "Handle binding the `agent' specific redis connection to
+the redis dynamic var during the execution of `forms'"
+  (let ((g!reconnect-handler (gensym "reconnect-handler")))
+    `(flet ((,g!reconnect-handler (c)
+              "Reconnect handler for a redis connection"
+              (log-for (warn) "Reconnecting to Redis!!")
+              (let ((reconnect (find-restart :reconnect)))
+                (if reconnect
+                    (progn
+                      (log-for (warn) "Reconnect restart found")
+                      (invoke-restart reconnect))
+                    (progn
+                      (log-for (warn) "There is no reconnect restart")
+                      (error c))))))
+       (let ((redis:*connection* (redis ,agent)))
+         (handler-bind ((redis:redis-connection-error #',g!reconnect-handler))
+           ,@forms)))))
 
 (defmethod run-agent :around ((agent request-forwarder-agent))
   "Connect `agent' to redis."

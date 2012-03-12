@@ -82,14 +82,10 @@ result into the desired type.")
 
 (defmethod make-runner ((style (eql :exec)) &rest initargs &key (class 'standard-agent) &allow-other-keys)
   (log-for (warn) "Exec runner initargs: ~A" initargs)
-  (labels ((remove-from-plist (list key &rest keys)
-             (reduce #'(lambda (acc b) (remove-from-plist acc b)) keys
-                     :initial-value (cond ((null list) nil)
-                                          ((equalp (car list) key) (remove-from-plist (cddr list) key))
-                                          (t (append (list (first list) (second list)) (remove-from-plist (cddr list) key)))))))
-    ;; TODO: Make this not make me want to gouge my eyes out.
-    (make-instance 'exec-runner :agent class
-                   :initargs (remove-from-plist initargs :class :agent :include))))
+  (mapc  #'(lambda (key) (remf initargs key)) '(:class :agent :include))
+  (log-for (warn) "Exec runner initargs after prune: ~A" initargs)
+  (make-instance 'exec-runner :agent class
+                 :initargs initargs))
 
 (defmethod start ((runner exec-runner) &key (category '(log5:dribble+)))
   "Starts a runner by starting a new lisp."

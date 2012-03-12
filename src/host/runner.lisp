@@ -27,8 +27,9 @@ run agents instead of using threads or processes"))
 (defmethod stop ((runner host-runner))
   (remove-agent (agent-handle runner) (agent-instance runner)))
 
-(defmethod start ((runner host-runner) &key category)
-  (declare (ignore category))
+(defmethod start ((runner host-runner) &key (category '(log5:dribble+)))
+  (start-logging :category category)
+
   (add-agent (agent-handle runner) (agent-instance runner))
   (if (running-p (agent-handle runner))
       (agent-handle runner)

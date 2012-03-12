@@ -93,7 +93,7 @@ If it does, the younger agent will kill itself."
          (peer-timestamp (getf peer-info :timestamp))
          (peer-age (getf peer-info :age))
          (corrected-age (correct-age peer-age peer-timestamp)))
-    (log-for (agent-peers) "uuid: ~A my-timestamp: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid (get-universal-time) age peer-uuid peer-timestamp peer-age corrected-age)
+    (log-for (dribble agent-peers) "uuid: ~A my-timestamp: ~A my-age: ~A other-uuid: ~A other-timestamp: ~A other-age: ~A corrected-age: ~A" uuid (get-universal-time) age peer-uuid peer-timestamp peer-age corrected-age)
     (when (equalp uuid peer-uuid)
       (log-for (warn agent-peers) "Agent UUID collision found")
       (when (younger-p agent corrected-age)
@@ -110,7 +110,7 @@ If it does, the younger agent will kill itself."
       (log-for (warn agent-peers) "Info did not contain a UUID mouth or ear.")
       (return-from update-peer))
 
-    (log-for (agent-peers) "Storing info on ~A => ~A/~A" uuid ear mouth)
+    (log-for (dribble agent-peers) "Storing info on ~A => ~A/~A" uuid ear mouth)
     (setf (gethash uuid (agent-peers head))
           `(:time ,(get-internal-real-time) ,@peer-info))))
 
@@ -136,7 +136,7 @@ If it does, the younger agent will kill itself."
 
 (defmethod heard-message ((agent standard-agent) (head agent-head) (from (eql :agent)) (type (eql :info)) &rest info)
   "Agent info hearing and storing."
-  (log-for (agent-peers) "heard info")
+  (log-for (dribble agent-peers) "heard info")
   (let ((info (getf info :info)))
     (update-peer head info)))
 

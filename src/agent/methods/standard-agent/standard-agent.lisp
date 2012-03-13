@@ -162,8 +162,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod handle-agent-event ((agent standard-agent) event)
   (unless (event-fatal-p agent event)
-    (log-for (trace) "Agent[~A] Event: ~A" agent event)
-
     ;; Process, Tick, Increment counter
     ;; Event has to be acted on before the tick fires
     ;; Because actions can alter the reactor before the tick
@@ -239,13 +237,10 @@ as fire any callbacks that may be pending IO when it is ready."
 
 
     (unless (event-timeout-p event)
-      (log-for (trace) "Not a timeout event.")
       (setf (agent-last-event agent) now))
 
     (setf (agent-tick-delta agent) (- now last)
-          (agent-last-tick agent) now)
-
-    (log-for (trace) "Agent ~A tick. Tick Delta: ~A" agent (agent-tick-delta agent))))
+          (agent-last-tick agent) now)))
 
 (defmethod agent-info ((organ standard-organ))
   "An organ specific information snippet. Collected by

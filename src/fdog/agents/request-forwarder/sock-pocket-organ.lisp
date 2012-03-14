@@ -36,10 +36,11 @@ sock-pocket named by `organ'"
   (multiple-value-bind (socks callbacks) (call-next-method)
     (maphash #'(lambda (name endpoint)
                  (declare (ignorable name))
-                 (appendf socks (list (sock-of (sub-sock endpoint))))
-                 (appendf callbacks (list #'(lambda (sock)
-                                              ;; TODO: Extract
-                                              (deliver-response endpoint (zmq:recv! sock :array))))))
+                 (when (sock-of (sub-sock endpoint))
+                   (appendf socks (list (sock-of (sub-sock endpoint))))
+                   (appendf callbacks (list #'(lambda (sock)
+                                                ;; TODO: Extract
+                                                (deliver-response endpoint (zmq:recv! sock :array)))))))
 
              (client-socks organ))
     (values socks callbacks)))

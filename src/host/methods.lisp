@@ -48,26 +48,57 @@ Once `agent' is added and bound to the transport context a boot event is sent."
 (defmethod evict-agent ((host agent-host) (uuid string))
   (when-bind agent (find uuid (agents host) :key #'agent-uuid :test #'string-equal)
     (log-for (warn agent-host) "Found agent to remove: ~S" agent)
-    (flet ((organ-disconnect (o) (agent-disconnect agent o)))
+    (flet ((organ-disconnect (o)
+             (log-for (warn agent-host) "Disconnecting: ~A" o)
+             (agent-disconnect agent o)))
       (log-for (warn agent-host) "[~A] Disconnecting organs." uuid)
       (mapcar #'organ-disconnect (agent-organs agent))
       (log-for (warn agent-host) "[~A] Organs disconnected." uuid))
+
     (zmq:close (agent-event-sock agent))
     (zmq:close (agent-message-sock agent))
+
+    (setf (agent-event-sock agent) nil
+          (agent-message-sock agent) nil
+          (agent-context agent) nil)
+
     (setf (agents host)
           (delete uuid (agents host) :key #'agent-uuid :test #'string-equal))))
 
 (defmethod run ((host agent-host))
   "Run forever. When finished, returns two values.
 The number of loop iterations and the number of events fired."
-  (unwind-protect
-       (progn
-         (setf (running host) t)
-         (do ((iter-result (multiple-value-list (run-once host))
-                           (multiple-value-list (run-once host))))
-             ((not (agents host))
-              (ticks host))))
-    (setf (running host) nil)))
+  (flet ((log-error (c)
+           "Write an error report with a stack trace when the run iteration fails."
+           (let ((output (make-pathname :directory `(:absolute "tmp") :type "log"
+                                        :name (format nil "agent-host.crash.~A-~A" (iolib.syscalls:getpid) (get-universal-time)))))
+             (handler-case
+                 (with-open-file (s output :if-does-not-exist :create :if-exists :append :direction :output)
+                   (format s "~&=Crash report for agent-host ~A: ~A=~%" (iolib.syscalls:getpid)
+                           (multiple-value-bind (second minute hour date month year)
+                               (decode-universal-time (get-universal-time))
+                             (format nil "[~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D]" year month date hour minute second)))
+                   (format s "~&==Condition==~%")
+                   (format s "~&Type: ~A~%" (type-of c))
+                   (trivial-backtrace:print-condition c s)
+                   (format s "~&==Condition End==~%")
+                   (format s "~&==Backtrace==~%")
+                   (trivial-backtrace:print-backtrace-to-stream s)
+                   (format s "~&==Backtrace End==~%")
+                   (format s "~&=Crash report end=~%")
+                   (log-for (warn agent-host) "Crash report written to: ~A" (namestring output)))
+               (t (write-error)
+                 (log-for (warn agent-host) "Error writing crash report to: ~A: ~A" (namestring output) write-error)))
+           (log-for (warn agent-host) "EXITING: Condition raised in iteration: ~S" c))))
+    (unwind-protect
+         (handler-bind ((error #'log-error))
+           (progn
+             (setf (running host) t)
+             (do ((iter-result (multiple-value-list (run-once host))
+                               (multiple-value-list (run-once host))))
+                 ((not (agents host))
+                  (ticks host)))))
+      (setf (running host) nil))))
 
 (defmethod run-once ((host agent-host))
   "Run a single iteration of the event loop for all managed agents.
@@ -79,9 +110,8 @@ Returns three values:
  * The number of callbacks signaled
  * The number of agents managed by the host
  * The number of agents removed this iteration"
-  ;; Register any pending added agents
-  (do ((agent (pop (added host)) (pop (added host))))
-      ((not agent))
+  ;; Register one pending added agents
+  (when-bind agent (pop (added host))
     (register-agent host agent))
 
   (let ((callback-agents (make-hash-table :test 'equalp)) ;; Mapping of sockets -> agents for error handling
@@ -130,6 +160,8 @@ along with the reference to the given `agent' in the ownership table."
                               (prog1 socks
                                 (mapc #'(lambda (sock fun)
                                           (store-callback-agent agent sock :out)
+                                          (log-for (trace agent-host) "Storing callback ~A :out for (~A/~A ~A)" sock (agent-uuid agent) agent organ)
+                                          (log-for (trace agent-host) "FD: ~A" (zmq:getsockopt sock :fd))
                                           (setf (gethash (sock-id sock :out) callbacks) fun))
                                       socks funs))))
                         (agent-organs agent))))
@@ -143,6 +175,8 @@ along with the reference to the given `agent' in the ownership table."
                               (prog1 socks
                                 (mapc #'(lambda (sock fun)
                                           (store-callback-agent agent sock :in)
+                                          (log-for (trace agent-host) "Storing callback ~A :in for (~A/~A ~A)" sock (agent-uuid agent) agent organ)
+                                          (log-for (trace agent-host) "FD: ~A" (zmq:getsockopt sock :fd))
                                           (setf (gethash (sock-id sock) callbacks) fun))
                                       socks funs))))
                         (agent-organs agent))))
@@ -184,6 +218,8 @@ TODO: Handle errors with respect to `callback-agents'"
         ;;       and external loop like libev
         (dolist (agent (agents host))
           (appendf readers (list (agent-event-sock agent)))
+          (log-for (trace agent-host) "Storing callback ~A :in for (~A/~A ~A)" (agent-event-sock agent) (agent-uuid agent) agent :agent)
+          (log-for (trace agent-host) "FD: ~A" (zmq:getsockopt (agent-event-sock agent) :fd))
           (setf (gethash (sock-id (agent-event-sock agent)) callbacks)
                 (make-agent-event-callback agent)
 
@@ -201,11 +237,9 @@ TODO: Handle errors with respect to `callback-agents'"
                          (funcall val))
                      else-callbacks)
 
-
-
-            (incf (ticks host))
-
-            (values signaled
-                    (length (agents host))
-                    (length (prog1 (mapc (curry #'evict-agent host) (removed host))
-                              (setf (removed host) (list)))))))))))
+            (let ((evicted (prog1 (mapc (curry #'evict-agent host) (removed host))
+                             (setf (removed host) (list)))))
+              (incf (ticks host))
+              (values signaled
+                      (length (agents host))
+                      (length evicted)))))))))

@@ -118,10 +118,9 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod event-fatal-p ((agent standard-agent) event)
   "Predicate to determine if this event should end the agent."
-  (log-for (trace) "Testing event fatalaty of ~A[~A] for ~A" event (type-of event) agent)
   (let ((parsed (and (typep event 'string) (handler-case (read-from-string event) (end-of-file () nil)))))
     (cond ((not event)
-           (log-for (warn) "Not an event! Considering fatal.")
+           (log-for (warn) "Event ~A not an event! Considering fatal." event)
            t)
 
           ((and (event-timeout-p event)
@@ -176,7 +175,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defgeneric agent-publish-event (agent event)
   (:method ((agent standard-agent) event)
-    (log-for (trace) "Publishing event: [~A]" (with-output-to-string (s) (prin1 event s)))
     (zmq:with-socket (esock (agent-context agent) :pub)
       (zmq:setsockopt esock :linger *socket-linger*)
       (zmq:connect esock (agent-event-addr agent))
@@ -184,7 +182,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defgeneric agent-send-message (agent event)
   (:method ((agent standard-agent) event)
-    (log-for (trace) "Sending message: [~A]" (with-output-to-string (s) (prin1 event s)))
     (zmq:send! (agent-message-sock agent) (prepare-message event))))
 
 (defmethod agent-event-special-p ((agent standard-agent) event)
@@ -200,7 +197,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod act-on-event ((agent standard-agent) event)
   "Perform any action an `agent' would need to take to act on `event'"
-  (log-for (trace) "Agent: ~A processing event(~A): ~A" agent (type-of event) event)
 
   (let ((event (typecase event
                  (string (handler-case (read-from-string event) (end-of-file () nil)))

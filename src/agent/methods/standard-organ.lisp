@@ -93,7 +93,7 @@ and callbacks for each socket mentioned.")
     (when (and (listp event) (eql (getf event :heart) :beat))
       (setf (last-beat organ) (subseq (append (list (getf event :time)) (last-beat organ)) 0 (keep-beats organ)))
 
-      (log-for (trace) "~A replying to heartbeat." organ)
+      ;; Reply to heartbeat
       (send-message organ :beat `(:uuid ,(organ-uuid organ)
                                   :time ,(get-internal-real-time))))))
 ;; Hard ticks

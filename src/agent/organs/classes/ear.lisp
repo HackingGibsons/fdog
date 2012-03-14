@@ -20,11 +20,10 @@
   "Ear specific socket init."
   (declare (ignorable options))
 
-  (log-for (warn) "Booting ear: ~A => ~A" agent ear)
   (with-slots (listen-addr listen-sock) ear
     (multiple-value-bind (sock addr) (make-local-sock (agent-context agent) :sub)
       (zmq:bind sock (local-ipc-addr ear))
-      (log-for (warn) "~A now subscribes to everything." ear)
+      ;; TODO stop subscribing to everything
       (zmq:setsockopt sock :subscribe "")
 
       (setf listen-addr addr

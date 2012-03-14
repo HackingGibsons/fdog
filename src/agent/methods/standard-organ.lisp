@@ -15,7 +15,6 @@
   (call-next-method)
   (log-for (trace) "Organ specific boot of ~A for ~A" organ agent)
 
-  (log-for (trace) "Building and connecting sockets.")
   (setf (organ-incoming-sock organ)
         (zmq:socket (agent-context agent) :sub)
 
@@ -24,12 +23,10 @@
   (zmq:setsockopt (organ-incoming-sock organ) :linger *socket-linger*)
   (zmq:setsockopt (organ-outgoing-sock organ) :linger *socket-linger*)
 
-  (log-for (trace) "Connecting the incoming socket: ~A" (agent-message-addr agent))
   (zmq:connect (organ-incoming-sock organ) (agent-message-addr agent))
-  (log-for (warn) "Subscribing incoming socket to everything.")
+  ;; TODO stop subscribing to everything
   (zmq:setsockopt (organ-incoming-sock organ) :subscribe "")
 
-  (log-for (trace) "Connecting the outgoing socket: ~A" (agent-event-addr agent))
   (zmq:connect (organ-outgoing-sock organ) (agent-event-addr agent))
 
   organ)

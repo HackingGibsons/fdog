@@ -2,7 +2,6 @@
 
 ;; Agent test driving behaviors
 (defbehavior speak-request-processing-messages (:on (:request-handler :raw :from :requesticle) :do :invoke-with-event) (organ event)
-  (log-for (warn) "Announcing raw request on ~A/~A" (organ-agent organ) organ)
   (send-message organ :command `(:command :speak
                                  :say ,event)))
 
@@ -140,22 +139,14 @@
                                                   (:interval (:from :heart :nth 1)))
                                              :include (timeout-mixin)
                                              :do :invoke-with-event) (organ event)
-  (log-for (trace) "event: ~A" event)
   (let ((new-timeout-interval (getf (getf event :message) :new-timeout-interval))
         (reset-timeout (eql (getf (getf event :message) :reset) :timeout)))
-    (log-for (trace) "new-timeout-interval: ~A" new-timeout-interval)
-    (log-for (trace) "reset-timeout: ~A" reset-timeout)
     (cond
       (new-timeout-interval
-        (log-for (trace) "new timeout interval: ~A" new-timeout-interval)
         (setf (timeout behavior) (* new-timeout-interval internal-time-units-per-second)))
 
       (reset-timeout
-        (log-for (trace) "resetting timeout")
-        (setf (start-time behavior) (get-internal-real-time)))
-
-      (t
-        (log-for (trace) "no new interval, current time: ~A, timeout interval ~A" (- (get-internal-real-time) (start-time behavior)) (timeout behavior))  )))
+        (setf (start-time behavior) (get-internal-real-time)))))
   (when (>= (- (get-internal-real-time) (start-time behavior)) (timeout behavior))
     (log-for (warn) "~A: Timeout reached, killing myself" organ)
     (suicide (organ-agent organ)

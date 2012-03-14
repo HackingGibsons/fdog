@@ -111,8 +111,8 @@ Returns three values:
  * The number of agents managed by the host
  * The number of agents removed this iteration"
   ;; Register one pending added agents
-  (when-bind agent (pop (added host))
-    (register-agent host agent))
+  (mapc (curry #'register-agent host) (added host))
+  (setf (removed host) (list))
 
   (let ((callback-agents (make-hash-table :test 'equalp)) ;; Mapping of sockets -> agents for error handling
         (callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing

@@ -36,7 +36,7 @@
          (cutoff (apply #'min (or beats (list 0)))))
     (log-for (health-check) "Setting death cutoff to be <~A" cutoff)
     (if (< (or (getf status :time) 0) cutoff)
-        (prog1 nil (log-for (warn health-check) "~A/~A[~A] appears dead. [~A]" uuid status (getf status :time) cutoff))
+        (prog1 nil (log-for (warn health-check) "A[~A/~A] ~A/~A[~A] appears dead. [~A]" (organ-agent head) (agent-uuid (organ-agent head)) uuid status (getf status :time) cutoff))
         (prog1 t (log-for (health-check) "~A/~A appears alive." uuid status)))))
 
 ;; Death

@@ -30,7 +30,9 @@ Called as a result of `change-class' in `make-runner' specialized on `:host'"
   (remove-agent (agent-handle runner) (agent-instance runner)))
 
 (defmethod start ((runner host-runner) &key (category '(log5:warn+)))
-  (start-logging :category category)
+  ;; TODO: Logging has been disabled until it's fast not
+  ;;       costing minutes per build and failing tests :(
+  ;(start-logging :category category)
 
   (add-agent (agent-handle runner) (agent-instance runner))
   (if (running-p (agent-handle runner))

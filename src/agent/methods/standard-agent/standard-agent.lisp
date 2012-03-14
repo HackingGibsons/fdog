@@ -43,7 +43,6 @@
 (defmethod agent-poll-timeout ((agent standard-agent))
   "Determine how long the poll timeout should be for the current poll
 for `agent'"
-  (log-for (trace) "Calculating timeout. Cron: ~A" (agent-cron agent))
   (let* ((now (get-internal-real-time))
          (soon (pop (agent-cron agent)))
          (soon (and soon
@@ -55,7 +54,6 @@ for `agent'"
     (setf (agent-cron agent)
           (remove-if #'(lambda (c) (< c now)) (agent-cron agent)))
 
-    (log-for (trace) "Using poll timeout of: ~Fs" timeout)
     timeout))
 
 (defmethod next-event ((agent standard-agent))

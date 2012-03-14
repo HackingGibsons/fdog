@@ -37,6 +37,7 @@
 
 (defclass forwarder-test-agent (forwarder-agent)
   ()
+  (:default-initargs . (:forwarder-agent-type `(:afdog-tests :request-forwarder-test-agent)))
   (:documentation "A `forwarder-test-agent' for testing the control of fdog forwarders."))
 
 (defclass request-forwarder-test-agent (request-forwarder-agent)

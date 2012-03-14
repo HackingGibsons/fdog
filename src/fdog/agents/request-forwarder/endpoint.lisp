@@ -25,10 +25,10 @@ be empty.")
    (push-sock-state :initform :unknown
                     :accessor push-state
                     :accessor push-sock-state)
-   (push-sock :initform #(nil nil) :initarg :push
+   (push-sock :initform (vector nil nil) :initarg :push
               :accessor push-sock
               :documentation "Stored in the format #(sock addr)")
-   (sub-sock :initform #(nil nil) :initarg :sub
+   (sub-sock :initform (vector nil nil) :initarg :sub
              :accessor sub-sock
              :documentation "Stored in the format #(sock addr)"))
   (:documentation "A collection of sockets and addresses

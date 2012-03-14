@@ -50,7 +50,6 @@
 
 ;; Messaging
 (defmethod send-message ((organ standard-organ) msg-type message &key sock)
-  (log-for (trace) "Organ sending message: [~A]" message)
   (zmq:send! (or sock (organ-outgoing-sock organ))
              (prepare-message (case msg-type
                                 (:raw message)
@@ -85,8 +84,6 @@ and callbacks for each socket mentioned.")
 (defmethod act-on-event :around ((organ standard-organ) event)
   "Process the event for consumption by the primary method chain by trying to read it into a cons."
 
-  (log-for (trace) "Organ: ~A processing event(~A): ~A" organ (type-of event) event)
-
   (let ((parsed (typecase event
                   (string (handler-case (read-from-string event) (end-of-file () nil)))
                   (otherwise event))))
@@ -94,8 +91,6 @@ and callbacks for each socket mentioned.")
 
 (defmethod act-on-event :before ((organ standard-beating-organ) event)
   "Process any heart-beat events of a `standard-beating-organ' with magic."
-
-  (log-for (trace) "Maybe replying to heartbeat for ~A" organ)
 
   (prog1 event
     (when (and (listp event) (eql (getf event :heart) :beat))

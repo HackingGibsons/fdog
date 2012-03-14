@@ -63,7 +63,7 @@ Keys:
   "Cleans up the zeromq socket when stream is closed."
   (with-slots (ctx socket) stream
     (zmq:close socket)
-    (zmq:term ctx)))
+    ))
 
 (defmethod stream-write-char ((stream zmq-logging-stream) char)
   (stream-write-sequence stream

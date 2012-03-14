@@ -71,8 +71,9 @@ forwarder-$name:$routename:$param1:param2..."
 (defmethod writer-callbacks-p ((endpoint forwarder-endpoint))
   "Predicate function to determine if write callbacks need to be submitted
 for `endpoint'"
-  (or (not (push-ready-p endpoint))
-      (not (zerop (queue-count endpoint)))))
+  (and (sock-of (push-sock endpoint))
+       (or (not (push-ready-p endpoint))
+           (not (zerop (queue-count endpoint))))))
 
 (defmethod writer-callbacks ((endpoint forwarder-endpoint))
   "Return writer sockets and callbacks for `endpoint'"
@@ -198,6 +199,6 @@ socket is ready for IO."
     (zmq:close (sock-of (sub-sock endpoint))))
 
   ;; Nil out the slots
-  (setf (push-sock endpoint) #(nil nil)
-        (sub-sock endpoint) #(nil nil)
+  (setf (push-sock endpoint) (vector nil nil)
+        (sub-sock endpoint) (vector nil nil)
         (name endpoint) nil))

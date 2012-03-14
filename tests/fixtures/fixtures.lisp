@@ -231,9 +231,8 @@ Does kill -9 to ensure the process dies in cleanup.")
               (start request-forwarder-runner)
               (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
                         (awhen (getf msg :info)
-                          (and (assoc request-forwarder-uuid (getf it :peers) :test #'string=)
-                               (assoc forwarder-agent-uuid (getf it :peers) :test #'string=))))
-                (error "Request forwarder and forwarder config Agents didn't peer up."))
+                          (assoc forwarder-agent-uuid (getf it :peers) :test #'string=)))
+                (error "Forwarder config agent didn't peer up."))
 
               (log-for (trace) "Waiting for forwarder-agent to discover peers")
               (wait-for-agent-message (forwarder-agent-uuid :timeout 60) (msg)
@@ -252,23 +251,30 @@ Does kill -9 to ensure the process dies in cleanup.")
                         (awhen (getf msg :filled)
                           (when (getf msg :forwarder)
                             :need-filled)))
-                (error "Could not create forwarder.")))
+                (error "Could not create forwarder."))
+
+              (unless (discover-agents-on-host () (uuid info)
+                        (let* ((provides (getf info :provides))
+                               (forwarding (getf provides :forwarding))
+                               (forwarder (cdr (assoc :forwarder forwarding)))
+                               (route (cdr (assoc :route forwarding))))
+                          (when (and (equalp forwarder "test") (equalp route "default"))
+                            (format t "~S: Forwarding: ~S~%" uuid forwarding)
+                            (setf request-forwarder-uuid uuid))))
+                (error "Could not find Request Forwarder Agent.")))
 
      :cleanup (progn
                 (stop request-forwarder-runner)))
 
   (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
-  (request-forwarder-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (request-forwarder-uuid "RFA-UUID-UNKNOWN")
   (forwarder-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (forwarder-handler "forwarder-test-default")
   (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
   (request-forwarder-runner (make-runner :test :include '(:afdog-tests)
                                          :class 'afdog-hypervisor-test-agent
                                          :agents `(quote ( mongrel2-test-agent  (:uuid ,mongrel2-uuid)
-                                                           forwarder-test-agent (:uuid ,forwarder-agent-uuid)
-                                                           request-forwarder-test-agent  (:uuid ,request-forwarder-uuid
-                                                                                          :forwarder "test"
-                                                                                          :route "default")))
+                                                           forwarder-test-agent (:uuid ,forwarder-agent-uuid)))
                                          :root *root* ;; different root for the test agents
                                          :uuid hypervisor-uuid)))
 

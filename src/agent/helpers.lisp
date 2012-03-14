@@ -84,7 +84,7 @@ If the timeout is reached nil is returned."
                            (,g!result ,g!result)
                         (when (and ,g!peers ,e!traverse)
                           (flet ((maybe-connect (peer)
-                                   (destructuring-bind (uuid &key ear mouth) peer
+                                   (destructuring-bind (uuid &key ear mouth &allow-other-keys) peer
                                      (declare (ignorable ear))
                                      (unless (find uuid ,g!connected :test #'equalp)
                                        (push uuid ,g!connected)

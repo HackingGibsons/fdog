@@ -112,7 +112,7 @@ Returns three values:
  * The number of agents removed this iteration"
   ;; Register one pending added agents
   (mapc (curry #'register-agent host) (added host))
-  (setf (removed host) (list))
+  (setf (added host) (list))
 
   (let ((callback-agents (make-hash-table :test 'equalp)) ;; Mapping of sockets -> agents for error handling
         (callbacks (make-hash-table :test 'equalp))       ;; Callbacks for sockets firing

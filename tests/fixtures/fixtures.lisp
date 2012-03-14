@@ -259,7 +259,6 @@ Does kill -9 to ensure the process dies in cleanup.")
                                (forwarder (cdr (assoc :forwarder forwarding)))
                                (route (cdr (assoc :route forwarding))))
                           (when (and (equalp forwarder "test") (equalp route "default"))
-                            (format t "~S: Forwarding: ~S~%" uuid forwarding)
                             (setf request-forwarder-uuid uuid))))
                 (error "Could not find Request Forwarder Agent.")))
 

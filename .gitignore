@@ -5,6 +5,7 @@ scratch.lisp
 *.sqlite
 *.old
 /coverage/
+bin/logger
 build/*
 /.test/*
 \#*

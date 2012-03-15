@@ -55,7 +55,7 @@ Keys:
   "Opens the appropriate zeromq socket."
   (with-slots (ctx socket address) stream
     (setf ctx (or *logging-context* (setf *logging-context* (zmq:init 1))))
-    (setf socket (zmq:socket ctx :push))
+    (setf socket (zmq:socket ctx :pub))
     (zmq:setsockopt socket :linger *socket-linger*)
     (zmq:connect socket address)))
 
@@ -118,7 +118,9 @@ Keys:
                        :category-spec '(output)
                        :output-spec '(log5:message)))
   (zmq:with-context (ctx 1)
-    (zmq:with-socket (socket ctx :pull)
+    (zmq:with-socket (socket ctx :sub)
+      (zmq:setsockopt socket :subscribe "")
+      (zmq:setsockopt socket :linger *socket-linger*)
       (zmq:bind socket *socket-address*)
       (labels ((run-once ()
                  (let ((string (zmq:recv! socket :string)))

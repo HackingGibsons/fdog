@@ -9,5 +9,6 @@ logger-macports: OPTFLAGS += -I/opt/local/include/
 logger-macports: LIBFLAGS += -L/opt/local/lib/
 logger-macports: logger
 
+.PHONY: logger-clean
 logger-clean:
 	rm bin/logger

@@ -120,7 +120,7 @@ as fire any callbacks that may be pending IO when it is ready."
   "Predicate to determine if this event should end the agent."
   (let ((parsed (and (typep event 'string) (handler-case (read-from-string event) (end-of-file () nil)))))
     (cond ((not event)
-           (log-for (warn) "Event ~A not an event! Considering fatal." event)
+           (log-for (warn) "Not an event! Considering fatal.")
            t)
 
           ((and (event-timeout-p event)

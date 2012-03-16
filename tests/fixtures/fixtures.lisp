@@ -147,7 +147,7 @@ Does kill -9 to ensure the process dies in cleanup.")
                                (error "Mongrel2 didn't start.")))
                     :cleanup (progn
                                (stop mongrel2-runner)
-                               (with-agent-conversation (m e :timeout 5 :linger -1) mongrel2-uuid
+                               (with-agent-conversation (m e :timeout 1 :linger -1) mongrel2-uuid
                                    (zmq:send! e (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))))
 
   (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
@@ -287,9 +287,9 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  (and (assoc mongrel2-uuid (getf it :peers) :test #'string=)))))
                     :cleanup (progn
                                (stop forwarder-runner)
-                               (with-agent-conversation (m e :timeout 5 :linger -1) mongrel2-uuid
+                               (with-agent-conversation (m e :timeout 1 :linger -1) mongrel2-uuid
                                    (zmq:send! e (prepare-message `(:agent :kill :kill ,mongrel2-uuid))))
-                               (with-agent-conversation (m e :timeout 5 :linger -1) forwarder-agent-uuid
+                               (with-agent-conversation (m e :timeout 1 :linger -1) forwarder-agent-uuid
                                    (zmq:send! e (prepare-message `(:agent :kill :kill ,forwarder-agent-uuid))))))
 
   (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))

@@ -43,7 +43,6 @@
 (defmethod agent-poll-timeout ((agent standard-agent))
   "Determine how long the poll timeout should be for the current poll
 for `agent'"
-  (log-for (trace) "Calculating timeout. Cron: ~A" (agent-cron agent))
   (let* ((now (get-internal-real-time))
          (soon (pop (agent-cron agent)))
          (soon (and soon
@@ -55,7 +54,6 @@ for `agent'"
     (setf (agent-cron agent)
           (remove-if #'(lambda (c) (< c now)) (agent-cron agent)))
 
-    (log-for (trace) "Using poll timeout of: ~Fs" timeout)
     timeout))
 
 (defmethod next-event ((agent standard-agent))
@@ -120,7 +118,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod event-fatal-p ((agent standard-agent) event)
   "Predicate to determine if this event should end the agent."
-  (log-for (trace) "Testing event fatalaty of ~A[~A] for ~A" event (type-of event) agent)
   (let ((parsed (and (typep event 'string) (handler-case (read-from-string event) (end-of-file () nil)))))
     (cond ((not event)
            (log-for (warn) "Not an event! Considering fatal.")
@@ -162,8 +159,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod handle-agent-event ((agent standard-agent) event)
   (unless (event-fatal-p agent event)
-    (log-for (trace) "Agent[~A] Event: ~A" agent event)
-
     ;; Process, Tick, Increment counter
     ;; Event has to be acted on before the tick fires
     ;; Because actions can alter the reactor before the tick
@@ -180,7 +175,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defgeneric agent-publish-event (agent event)
   (:method ((agent standard-agent) event)
-    (log-for (trace) "Publishing event: [~A]" (with-output-to-string (s) (prin1 event s)))
     (zmq:with-socket (esock (agent-context agent) :pub)
       (zmq:setsockopt esock :linger *socket-linger*)
       (zmq:connect esock (agent-event-addr agent))
@@ -188,7 +182,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defgeneric agent-send-message (agent event)
   (:method ((agent standard-agent) event)
-    (log-for (trace) "Sending message: [~A]" (with-output-to-string (s) (prin1 event s)))
     (zmq:send! (agent-message-sock agent) (prepare-message event))))
 
 (defmethod agent-event-special-p ((agent standard-agent) event)
@@ -204,7 +197,6 @@ as fire any callbacks that may be pending IO when it is ready."
 
 (defmethod act-on-event ((agent standard-agent) event)
   "Perform any action an `agent' would need to take to act on `event'"
-  (log-for (trace) "Agent: ~A processing event(~A): ~A" agent (type-of event) event)
 
   (let ((event (typecase event
                  (string (handler-case (read-from-string event) (end-of-file () nil)))
@@ -239,13 +231,10 @@ as fire any callbacks that may be pending IO when it is ready."
 
 
     (unless (event-timeout-p event)
-      (log-for (trace) "Not a timeout event.")
       (setf (agent-last-event agent) now))
 
     (setf (agent-tick-delta agent) (- now last)
-          (agent-last-tick agent) now)
-
-    (log-for (trace) "Agent ~A tick. Tick Delta: ~A" agent (agent-tick-delta agent))))
+          (agent-last-tick agent) now)))
 
 (defmethod agent-info ((organ standard-organ))
   "An organ specific information snippet. Collected by

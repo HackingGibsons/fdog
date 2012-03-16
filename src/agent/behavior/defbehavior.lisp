@@ -39,5 +39,4 @@ contain `behavior' bound to the current instance of the behavior class `name'"
            (log-for (trace) "Binding funcallable lambda to ~A" behavior)
            (c2mop:set-funcallable-instance-function
             behavior
-            #'(lambda ,invoke-lambda (progn (log-for (trace) "Behavior ~A running" (symbol-name ',name))
-                                            ,@body))))))))
+            #'(lambda ,invoke-lambda (progn ,@body))))))))

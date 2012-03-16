@@ -15,7 +15,6 @@
   (call-next-method)
   (log-for (trace) "Organ specific boot of ~A for ~A" organ agent)
 
-  (log-for (trace) "Building and connecting sockets.")
   (setf (organ-incoming-sock organ)
         (zmq:socket (agent-context agent) :sub)
 
@@ -24,12 +23,10 @@
   (zmq:setsockopt (organ-incoming-sock organ) :linger *socket-linger*)
   (zmq:setsockopt (organ-outgoing-sock organ) :linger *socket-linger*)
 
-  (log-for (trace) "Connecting the incoming socket: ~A" (agent-message-addr agent))
   (zmq:connect (organ-incoming-sock organ) (agent-message-addr agent))
-  (log-for (warn) "Subscribing incoming socket to everything.")
+  ;; TODO stop subscribing to everything
   (zmq:setsockopt (organ-incoming-sock organ) :subscribe "")
 
-  (log-for (trace) "Connecting the outgoing socket: ~A" (agent-event-addr agent))
   (zmq:connect (organ-outgoing-sock organ) (agent-event-addr agent))
 
   organ)
@@ -50,7 +47,6 @@
 
 ;; Messaging
 (defmethod send-message ((organ standard-organ) msg-type message &key sock)
-  (log-for (trace) "Organ sending message: [~A]" message)
   (zmq:send! (or sock (organ-outgoing-sock organ))
              (prepare-message (case msg-type
                                 (:raw message)
@@ -85,8 +81,6 @@ and callbacks for each socket mentioned.")
 (defmethod act-on-event :around ((organ standard-organ) event)
   "Process the event for consumption by the primary method chain by trying to read it into a cons."
 
-  (log-for (trace) "Organ: ~A processing event(~A): ~A" organ (type-of event) event)
-
   (let ((parsed (typecase event
                   (string (handler-case (read-from-string event) (end-of-file () nil)))
                   (otherwise event))))
@@ -95,13 +89,11 @@ and callbacks for each socket mentioned.")
 (defmethod act-on-event :before ((organ standard-beating-organ) event)
   "Process any heart-beat events of a `standard-beating-organ' with magic."
 
-  (log-for (trace) "Maybe replying to heartbeat for ~A" organ)
-
   (prog1 event
     (when (and (listp event) (eql (getf event :heart) :beat))
       (setf (last-beat organ) (subseq (append (list (getf event :time)) (last-beat organ)) 0 (keep-beats organ)))
 
-      (log-for (trace) "~A replying to heartbeat." organ)
+      ;; Reply to heartbeat
       (send-message organ :beat `(:uuid ,(organ-uuid organ)
                                   :time ,(get-internal-real-time))))))
 ;; Hard ticks

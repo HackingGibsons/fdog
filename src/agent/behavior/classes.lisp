@@ -78,9 +78,7 @@ behavior attached to predicate the invocation of the funcallabable lambda of tha
   "Deterimine if this event should result in a behavior invocation"
   (let (fired)
     (dolist (behavior (behaviors organ) fired)
-      (log-for (trace) "Testing ~A of ~A" behavior organ)
       (when (funcall (invoke-p behavior) event)
-        (log-for (trace) " Passed, invoking: ~A" (getf (invoke-when behavior) :do))
         (case (getf (invoke-when behavior) :do)
           (:invoke (funcall behavior organ))
           (:invoke-with-event (funcall behavior organ event)))

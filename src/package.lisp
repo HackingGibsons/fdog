@@ -50,6 +50,8 @@
 
 (defparameter *socket-address* "ipc:///tmp/afdog-logging")
 
+(defparameter *logging-context* nil
+  "ZMQ logging context")
 
 (defun version-string (&key (separator "/") (version t) (revision t))
   "Get a version string for people to read. The parameters

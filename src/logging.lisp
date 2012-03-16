@@ -54,16 +54,15 @@ Keys:
 (defmethod initialize-instance :after ((stream zmq-logging-stream) &key)
   "Opens the appropriate zeromq socket."
   (with-slots (ctx socket address) stream
-    (setf ctx (zmq:init 1))
-    (setf socket (zmq:socket ctx :push))
+    (setf ctx (or *logging-context* (setf *logging-context* (zmq:init 1))))
+    (setf socket (zmq:socket ctx :pub))
     (zmq:setsockopt socket :linger *socket-linger*)
     (zmq:connect socket address)))
 
 (defmethod close ((stream zmq-logging-stream) &key abort)
   "Cleans up the zeromq socket when stream is closed."
   (with-slots (ctx socket) stream
-    (zmq:close socket)
-    (zmq:term ctx)))
+    (zmq:close socket)))
 
 (defmethod stream-write-char ((stream zmq-logging-stream) char)
   (stream-write-sequence stream
@@ -119,7 +118,9 @@ Keys:
                        :category-spec '(output)
                        :output-spec '(log5:message)))
   (zmq:with-context (ctx 1)
-    (zmq:with-socket (socket ctx :pull)
+    (zmq:with-socket (socket ctx :sub)
+      (zmq:setsockopt socket :subscribe "")
+      (zmq:setsockopt socket :linger *socket-linger*)
       (zmq:bind socket *socket-address*)
       (labels ((run-once ()
                  (let ((string (zmq:recv! socket :string)))

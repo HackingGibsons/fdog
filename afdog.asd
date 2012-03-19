@@ -128,7 +128,7 @@
                                                       (:file "agent" :depends-on ("package" "sock-pocket-organ"))
                                                       (:file "agent-behavior" :depends-on ("agent"))))
 
-                                            (:module "api-agent" :depends-on ("request-processing" "forwarder") :components
+                                            (:module "api-agent" :depends-on ("request-processing" "forwarder" "mongrel2") :components
                                                      ((:file "package")
                                                       (:module "http" :depends-on ("package" "agent") :components
                                                                ((:file "package")
@@ -142,7 +142,8 @@
                                                                 (:file "app" :depends-on ("package" "router" "helpers"))
                                                                 (:file "router" :depends-on ("package"))))
 
-                                                      (:file "agent" :depends-on ("package"))
+                                                      (:file "agent" :depends-on ("mixin"))
+                                                      (:file "mixin" :depends-on ("package"))
                                                       (:file "callback" :depends-on ("agent"))
                                                       (:file "request-handler" :depends-on ("agent" "app"))))
 

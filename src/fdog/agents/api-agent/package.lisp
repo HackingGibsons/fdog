@@ -10,6 +10,8 @@ for Afdog.")
                 :appendf)
   (:import-from :arnesi
                 :when-bind)
+  (:import-from :mongrel2-agent
+                :*control-port*)
   (:export :api-agent
            :forwarders
            :endpoints

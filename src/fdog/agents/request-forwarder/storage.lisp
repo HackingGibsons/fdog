@@ -17,6 +17,7 @@
 ;; Hooks
 (defmethod deliver-request :before ((endpoint forwarder-endpoint) (req m2cl:request))
   "Request storage hook."
+  ;; TODO better place for this (this file concerns redis)
   (validate-request endpoint req)
   (store-request endpoint req))
 
@@ -41,13 +42,14 @@
   "Request queue hook."
   (queue-request endpoint req))
 
+;; TODO better place
 (defgeneric validate-request (endpoint request)
   (:documentation "Validate the request against Accounts.")
 
   (:method ((endpoint forwarder-endpoint) (req m2cl:request))
     ;; TODO ignore in development
     ;; specialize on an environment?
-    (let ((api-key (request-header req *api-key-header*))))
+    (let ((api-key (m2cl:request-header req *api-key-header*))))
     ;; TODO see if key is valid and cached in redis
     ;; Hit the API method
     ;; TODO how to determine api key and service name?

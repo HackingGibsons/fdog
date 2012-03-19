@@ -53,3 +53,5 @@ the redis dynamic var during the execution of `forms'"
        (let ((redis:*connection* (redis ,agent)))
          (handler-bind ((redis:redis-connection-error #',g!reconnect-handler))
            ,@forms)))))
+
+(defvar *api-key-header* "X-Vitrue-API-Key")

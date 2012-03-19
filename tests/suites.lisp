@@ -13,7 +13,8 @@
                    api-agent-tests
                    forwarder-agent-tests
                    request-forwarder-agent-tests
-                   api-functional-tests))
+                   api-functional-tests
+                   accounts-tests))
 
 ;; Directly runnable
 (def-test-group basic-tests ())
@@ -61,3 +62,5 @@
     (db-path-fixture
      api-functional-fixture
      kill-everything-fixture))
+;; TODO what fixtures?
+(def-test-group accounts-tests ())

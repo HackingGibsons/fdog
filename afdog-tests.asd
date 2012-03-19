@@ -9,6 +9,8 @@
                                   ((:module "behaviors" :components
                                             ((:file "triggers")))
 
+                                   (:file "accounts")
+
                                    (:file "agents" :depends-on ("behaviors"))
 
                                    (:file "fixtures" :depends-on ("agents"))))
@@ -28,4 +30,5 @@
                                    (:file "behavior")
                                    (:file "supervision")
                                    (:file "agent")
-                                   (:file "api.functional")))))))
+                                   (:file "api.functional")
+                                   (:file "accounts")))))))

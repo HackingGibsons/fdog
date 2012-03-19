@@ -27,6 +27,8 @@
   (:documentation "This agent establishes a handler for the API endpoint
 and contains the implementation of the afdog API."))
 
+;; TODO change spec from api-agent to api-mixin
+;; TODO add a "listen for mongrel2 server" clause
 (defmethod heard-message :after ((agent api-agent) (head agent-head) (from (eql :agent)) (info (eql :info)) &rest event)
   (let* ((info (getf event :info))
          (provides (getf info :provides))

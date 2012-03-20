@@ -13,6 +13,7 @@ for Afdog.")
   (:import-from :mongrel2-agent
                 :*control-port*)
   (:export :api-agent
+           :api-mixin
            :forwarders
            :endpoints
            :callback

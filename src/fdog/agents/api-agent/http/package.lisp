@@ -10,6 +10,8 @@
                 :it)
   (:import-from :alexandria
                 :appendf)
+  (:import-from :api-agent
+                :api-mixin)
   (:export :chunked-http-output-stream
            :with-dispatch-on
            :with-chunked-stream-reply

@@ -28,6 +28,10 @@
 (defvar *accounts-server* "accounts")
 (defvar *accounts-port* 1338)
 
+;; valid API keys
+(defvar *valid-key-regex* "^valid"
+  "Regular expression to match valid keys for testing")
+
 (defclass accounts-agent (api-mixin leaf-test-agent)
   ((handler
     :initarg :handler))

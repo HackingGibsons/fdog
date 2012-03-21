@@ -39,9 +39,10 @@
            (api-name (car api-info))
            (send-info (assoc :send (cdr api-info)))
            (recv-info (assoc :recv (cdr api-info))))
-      (list  api-name
-             send-info
-             recv-info))))
+      (when api-info
+        (list  api-name
+               send-info
+               recv-info)))))
 
 (def-test (api-agent-fires-request-handler :group api-agent-tests)
     (:values (:eql :connected-to-one)

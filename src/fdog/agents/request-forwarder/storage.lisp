@@ -49,19 +49,32 @@
   (:method ((endpoint forwarder-endpoint) (req m2cl:request))
     ;; TODO ignore in development
     ;; specialize on an environment?
-    (let ((api-key (m2cl:request-header req *api-key-header*))))
-    ;; TODO see if key is valid and cached in redis
-    ;; Hit the API method
-    ;; TODO how to determine api key and service name?
+
     ;; TODO does fdog have its own api key?
-    ;; TODO how to store this?
-    ;; If response is bad (not 200), send a 401
-    ;; TODO If response is valid, cache in redis, set TTL
-    ;; TODO strategy for different URLs and API keys in sandbox vs
-    ;; staging
-    ;; TODO keep that out of git
-    ;; TODO mock testing service
-    ))
+    ;; TODO keep that out of version control
+    ;; TODO where do i get the service name?
+    (let* ((api-key (m2cl:request-header req *api-key-header*))
+           (service nil)
+           (content (json:encode-json-alist-to-string `(("api_key" . ,api-key) ("service" . ,service))))
+           (args `(:method :POST :content-type "application/json" :content content :additional-headers ((,*api-key-header* . ,*agent-api-key*))))))
+
+    ;; TODO REDIS see if key is valid and cached in redis
+    ;; and when that's done move the content/args into an inner let
+    ;; block
+
+    ;; TODO how to get accounts url?
+    (multiple-value-bind (response status-code headers uri stream must-close reason-phrase)
+        (apply 'drakma:http-request *accounts-url* args)
+      (when must-close (close stream))
+
+      (cond
+        ((eql status-code 401)
+         ;; TODO raise a 401 condition
+         )
+        ((eql status-code 200)
+         ;; TODO REDIS cache in redis, set TTL
+         )
+        ))))
 
 ;; Action methods.
 (defgeneric store-request (endpoint request)
@@ -168,4 +181,3 @@ the request data.")
                 (delivery-failure-handler (agent endpoint) (organ endpoint) endpoint request))))))
 
     (update-queue-count endpoint)))
-

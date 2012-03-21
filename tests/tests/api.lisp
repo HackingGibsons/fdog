@@ -55,7 +55,7 @@
                 (getf msg :info))
           (requesticle (getf info :requesticle)
                        (getf info :requesticle)))
-         ((>= (getf requesticle :peers) 1)
+         ((>= (or (getf requesticle :peers) 0) 1)
           :connected-to-one)))
 
   (with-agent-conversation (m e) api-uuid

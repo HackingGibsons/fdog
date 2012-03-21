@@ -70,6 +70,7 @@
       (cond
         ((eql status-code 401)
          ;; TODO raise a 401 condition
+         ;; TODO REDIS cache bad responses too?
          )
         ((eql status-code 200)
          ;; TODO REDIS cache in redis, set TTL

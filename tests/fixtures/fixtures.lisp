@@ -334,6 +334,36 @@ Does kill -9 to ensure the process dies in cleanup.")
                                  :root *root* ;; different root for the test agents
                                  :uuid hypervisor-uuid)))
 
+(def-fixtures accounts-agent-fixture
+    (:documentation "A fixture that instantiates an api agent."
+     :setup (progn
+              (start accounts-runner)
+              (unless (wait-for-agent-message (hypervisor-uuid :timeout 60) (msg)
+                        (awhen (getf msg :info)
+                          (and
+                           (assoc accounts-agent-uuid (getf it :peers) :test #'string=)
+                           (assoc mongrel2-uuid (getf it :peers) :test #'string=))))
+                (error "Accounts agent didn't peer up."))
+              (unless (wait-for-agent-message (mongrel2-uuid :timeout 60) (msg)
+                        (awhen (getf (getf (getf msg :info) :provides) :servers)
+                          (awhen (assoc "accounts" it :test #'string=)
+                            (assoc "accounts" (cdr it) :test #'string=))))
+                (error "Mongrel2 agent didn't start"))
+              (log-for (test trace) "forwarder-agent-fixture :setup finished."))
+
+     :cleanup (progn
+                (stop accounts-runner)))
+
+  (hypervisor-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (accounts-agent-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (mongrel2-uuid (format nil "~A" (uuid:make-v4-uuid)))
+  (accounts-runner (make-runner :test :include '(:afdog-tests)
+                                :class 'afdog-hypervisor-test-agent
+                                :agents `(quote (mongrel2-test-agent  (:uuid ,mongrel2-uuid)
+                                                 accounts-agent  (:uuid ,accounts-agent-uuid)))
+                                :root *root* ;; different root for the test agents
+                                :uuid hypervisor-uuid)))
+
 (def-fixtures kill-everything-fixture
     (:documentation "A fixture that kills every process spawned by an agent"
      :cleanup (progn

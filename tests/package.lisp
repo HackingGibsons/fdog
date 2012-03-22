@@ -24,6 +24,7 @@
                 :agent-requesticle)
 
   (:import-from :api-agent
+                :api-mixin
                 :api-agent)
 
   (:import-from :request-forwarder-agent

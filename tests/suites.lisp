@@ -62,5 +62,7 @@
     (db-path-fixture
      api-functional-fixture
      kill-everything-fixture))
-;; TODO what fixtures?
-(def-test-group accounts-tests ())
+(def-test-group accounts-tests
+    (db-path-fixture
+     accounts-agent-fixture
+     kill-everything-fixture))

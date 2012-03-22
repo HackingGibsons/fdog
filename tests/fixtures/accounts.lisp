@@ -1,13 +1,4 @@
-(defpackage #:afdog-accounts
-  (:use :cl)
-  (:documentation "Mock accounts service.")
-  (:use :afdog
-        :agent
-        :log5
-        :request-processing-agent
-        :http-dog))
-
-(in-package :afdog-accounts)
+(in-package :afdog-tests)
 
 ;;;; Mock accounts service
 ;; Expectations:
@@ -39,4 +30,8 @@
   (:documentation "API agent subclass to handle mock accounts service."))
 
 (defmethod api/endpoint ((m (eql :post)) (p (eql :|/api_clients/validate|)) (agent accounts-agent) organ handler request raw)
-  )
+  (let* ((spec (decode-json-from-request (m2cl:request-body request)))
+         (api-key (cdr (assoc :api--key spec))))
+    (if (ppcre:scan *valid-key-regex* api-key)
+        (json:encode-json-alist '((:success . t)))
+        (error '401-condition))))

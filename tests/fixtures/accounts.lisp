@@ -29,7 +29,7 @@
   (:default-initargs . (:handle *accounts-handler* :server *accounts-server* :port *accounts-port*))
   (:documentation "API agent subclass to handle mock accounts service."))
 
-(defmethod api/endpoint ((m (eql :post)) (p (eql :|/api_clients/validate|)) (agent accounts-agent) organ handler request raw)
+(defmethod api/endpoint ((m (eql :post)) (p (eql :|/validate/|)) (agent accounts-agent) organ handler request raw)
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))
          (api-key (cdr (assoc :api--key spec))))
     (if (ppcre:scan *valid-key-regex* api-key)

@@ -38,7 +38,8 @@
   (:shadowing-import-from :log5
                           :defcategory
                           :log-for)
-  (:export :run-all))
+  (:export :run-all
+           :accounts-agent))
 
 (in-package :afdog-tests)
 

@@ -20,16 +20,17 @@
 (defvar *accounts-port* 1338)
 
 ;; valid API keys
-(defvar *valid-key-regex* "^valid"
-  "Regular expression to match valid keys for testing")
-
 (defclass accounts-agent (api-mixin leaf-test-agent)
-  ((handler
-    :initarg :handler))
+  ()
   (:default-initargs . (:handle *accounts-handler* :server *accounts-server* :port *accounts-port*))
   (:documentation "API agent subclass to handle mock accounts service."))
 
-(defmethod api/endpoint ((m (eql :post)) (p (eql :|/validate/|)) (agent accounts-agent) organ handler request raw)
+(in-package :api-app)
+
+(defvar *valid-key-regex* "^valid"
+  "Regular expression to match valid keys for testing")
+
+(defmethod api/endpoint ((m (eql :post)) (p (eql :|/validate/|)) (agent afdog-tests:accounts-agent) organ handler request raw)
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))
          (api-key (cdr (assoc :api--key spec))))
     (if (ppcre:scan *valid-key-regex* api-key)

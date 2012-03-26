@@ -63,6 +63,7 @@
     ;; block
 
     ;; TODO how to get accounts url?
+    ;; TODO timeout - fail and 504
     (multiple-value-bind (response status-code headers uri stream must-close reason-phrase)
         (apply 'drakma:http-request *accounts-url* args)
       (when must-close (close stream))

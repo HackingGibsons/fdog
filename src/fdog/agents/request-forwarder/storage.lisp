@@ -55,7 +55,7 @@
     ;; TODO where do i get the service name?
     (let* ((api-key (m2cl:request-header req *api-key-header*))
            (service nil)
-           (content (json:encode-json-alist-to-string `(("api_key" . ,api-key) ("service" . ,service))))
+           (content (json:encode-json-alist-to-string `((:api--key . ,api-key) (:service . ,service))))
            (args `(:method :POST :content-type "application/json" :content content :additional-headers ((,*api-key-header* . ,*agent-api-key*))))))
 
     ;; TODO REDIS see if key is valid and cached in redis

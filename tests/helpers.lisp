@@ -56,7 +56,7 @@ with the Host: header being set to `host' defaulting to \"localhost\""
       (format s "User-Agent: Cheap Hack Time") (crlf s)
       (crlf s))))
 
-(defun http->string (url &key (timeout 10) (method :GET) content-type content)
+(defun http->string (url &key (timeout 10) (method :GET) content-type content additional-headers)
   "A slightly repackaged veresion of drakma's client.
 Mostly exists to close the stream when required and repackage the 7-value
 return as something more edible (plist). Though discarding some values that
@@ -67,7 +67,7 @@ it will be an octet vector"
     (handler-case
         (multiple-value-bind
               (response status-code headers uri stream must-close reason-phrase)
-              (let ((args `(:method ,method :content-type ,content-type :content ,content)))
+              (let ((args `(:method ,method :content-type ,content-type :content ,content :additional-headers ,additional-headers)))
                 (apply 'drakma:http-request `(,url ,@args)))
 
           (when must-close (close stream))

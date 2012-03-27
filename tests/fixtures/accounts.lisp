@@ -34,7 +34,7 @@
   (let* ((spec (decode-json-from-request (m2cl:request-body request)))
          (api-key (cdr (assoc :api--key spec))))
     (if (ppcre:scan *valid-key-regex* api-key)
-        (with-chunked-stream-reply (handler req stream
+        (with-chunked-stream-reply (handler request stream
                                             :headers ((header-json-type)))
           (json:encode-json-alist '((:success . t))))
         (error '401-condition))))

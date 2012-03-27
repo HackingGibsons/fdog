@@ -30,11 +30,23 @@
 (defvar *valid-key-regex* "^valid"
   "Regular expression to match valid keys for testing")
 
-(defmethod api/endpoint ((m (eql :post)) (p (eql :|/validate/|)) (agent afdog-tests:accounts-agent) organ handler request raw)
-  (let* ((spec (decode-json-from-request (m2cl:request-body request)))
-         (api-key (cdr (assoc :api--key spec))))
-    (if (ppcre:scan *valid-key-regex* api-key)
-        (with-chunked-stream-reply (handler request stream
-                                            :headers ((header-json-type)))
-          (json:encode-json-alist '((:success . t)) stream))
-        (error '401-condition))))
+(defmethod api/endpoint-with-args ((m (eql :post)) (p (eql :|/keys|)) rest (agent afdog-tests:accounts-agent) organ handler request raw)
+  "Destructure the key name from the path to pass to /validate/."
+  (ppcre:register-groups-bind (api-key rest) ("^/?([^/]+)(/?.*$)" rest)
+    (with-dispatch-on rest &route
+        (funcall &route agent organ handler request api-key rest)
+      (:exact "/validate/" :responder 'api/keys/validate)
+      (:404 :responder 'api/keys/404))))
+
+(defmethod api/keys/404 ((agent api-agent) organ handler request api-key rest)
+  "API key 404"
+  (error '404-condition
+         :details (format nil "No resource for API key ~A matching ~A" api-key rest)))
+
+(defmethod api/keys/validate ((agent afdog-tests:accounts-agent) organ handler request api-key rest)
+  "Validate API key by the given regex."
+  (if (ppcre:scan *valid-key-regex* api-key)
+      (with-chunked-stream-reply (handler request stream
+                                          :headers ((header-json-type)))
+        (json:encode-json-alist '((:success . t)) stream))
+      (error '401-condition)))

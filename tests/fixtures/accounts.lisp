@@ -36,5 +36,5 @@
     (if (ppcre:scan *valid-key-regex* api-key)
         (with-chunked-stream-reply (handler request stream
                                             :headers ((header-json-type)))
-          (json:encode-json-alist '((:success . t))))
+          (json:encode-json-alist '((:success . t)) stream))
         (error '401-condition))))

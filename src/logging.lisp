@@ -57,7 +57,7 @@ Keys:
     (setf ctx (or *logging-context* (setf *logging-context* (zmq:init 1))))
     (setf socket (zmq:socket ctx :pub))
     (zmq:setsockopt socket :linger *socket-linger*)
-    (zmq:connect socket address)))
+    (zmq:bind socket address)))
 
 (defmethod close ((stream zmq-logging-stream) &key abort)
   "Cleans up the zeromq socket when stream is closed."
@@ -121,7 +121,7 @@ Keys:
     (zmq:with-socket (socket ctx :sub)
       (zmq:setsockopt socket :subscribe "")
       (zmq:setsockopt socket :linger *socket-linger*)
-      (zmq:bind socket *socket-address*)
+      (zmq:connect socket *socket-address*)
       (labels ((run-once ()
                  (let ((string (zmq:recv! socket :string)))
                    (unless (string-empty string)

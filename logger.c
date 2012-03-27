@@ -54,7 +54,7 @@ int main(void) {
     void *socket = zmq_socket(context, ZMQ_SUB);
     zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
     zmq_setsockopt(socket, ZMQ_LINGER, "250", sizeof("250"));
-    zmq_bind(socket, SOCKET_ADDR);
+    zmq_connect(socket, SOCKET_ADDR);
 
     while(1) {
         char *r_str = s_recv(socket);
@@ -65,6 +65,6 @@ int main(void) {
         free(r_str);
     }
     zmq_close(socket);
-    zmq_close(context);
+    zmq_term(context);
     return 0;
 }

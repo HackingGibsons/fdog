@@ -355,7 +355,7 @@ Does kill -9 to ensure the process dies in cleanup.")
                 (error "Accounts agent didn't peer with mongrel2 agent"))
               (unless (wait-for-agent-message (accounts-agent-uuid :timeout 60) (msg)
                                (awhen (getf msg :info)
-                                 (> 0 (getf (getf it :requesticle) :peers))))
+                                 (> (getf (getf it :requesticle) :peers) 0)))
                 (error "Accounts requesticle didn't peer with mongrel2 agent"))
               (log-for (test trace) "forwarder-agent-fixture :setup finished."))
 

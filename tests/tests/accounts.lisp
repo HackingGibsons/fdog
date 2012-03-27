@@ -8,16 +8,31 @@
 ;; later - test that a correct API key exists in redis and a timeout
 ;; exists
 
+(def-test (401-when-api-key-header-missing :group accounts-tests)
+    (:eql 401)
+  (let ((api-key "valid-key")
+        (req '((:service . "test-api"))))
+    (multiple-value-bind (res meta)
+        (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key)
+                    :method :POST :content (json:encode-json-to-string req))
+      (getf meta :status-code))))
+
 (def-test (valid-api-key :group accounts-tests)
     (:eql 200)
   (let ((api-key "valid-key")
         (req '((:service . "test-api"))))
-    (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key) :method :POST :content (json:encode-json-to-string req))
+    (multiple-value-bind (res meta)
+        (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key)
+                    :method :POST :content (json:encode-json-to-string req)
+                    :additional-headers `((,api-app::*api-key-header* . "valid-header-key")))
       (getf meta :status-code))))
 
 (def-test (invalid-api-key :group accounts-tests)
     (:eql 401)
   (let ((api-key "invalid-key")
         (req '((:service . "test-api"))))
-    (multiple-value-bind (res meta) (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key) :method :POST :content (json:encode-json-to-string req))
+    (multiple-value-bind (res meta)
+        (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key)
+                    :method :POST :content (json:encode-json-to-string req)
+                    :additional-headers `((,api-app::*api-key-header* . "valid-header-key")))
       (getf meta :status-code))))

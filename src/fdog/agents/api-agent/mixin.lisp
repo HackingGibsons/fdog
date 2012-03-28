@@ -29,24 +29,25 @@
          (servers (getf provides :servers))
          (server (assoc (server agent) servers :test #'string=)))
     ;; If API server does not exist, announce need
-    (unless server
-      (send-message head :command `(:command :speak
-                                    :say (:agent :need
-                                          :need :server
-                                          :server (:name ,(server agent)
-                                                   :port ,(port agent)
-                                                   :hosts ,(hosts agent)))))
-      (log-for (trace api-agent) "Server ~S does not exist, adding" (server agent)))
-    ;; If API handler does not exist, announce need
-    (multiple-value-bind (name handlers) (values (car server) (cdr server))
-      (let ((handler (cdr (assoc (handler-name agent) handlers :test #'string=))))
-        (when (and name (not handler))
-          (send-message head :command `(:command :speak
-                                        :say (:agent :need
-                                              :need  :handler
-                                              :handler (:server ,(server agent)
-                                                        :hosts ,(hosts agent)
-                                                        :route ,(route agent)
-                                                        :name ,(handler-name agent)))))
-          (log-for (trace api-agent) "Server: ~S doesn't have handler ~S, adding." name (handler-name agent)))))))
+    (when (find :servers provides)
+      (unless server
+        (send-message head :command `(:command :speak
+                                               :say (:agent :need
+                                                            :need :server
+                                                            :server (:name ,(server agent)
+                                                                           :port ,(port agent)
+                                                                           :hosts ,(hosts agent)))))
+        (log-for (trace api-agent) "Server ~S does not exist, adding" (server agent)))
+      ;; If API handler does not exist, announce need
+      (multiple-value-bind (name handlers) (values (car server) (cdr server))
+        (let ((handler (cdr (assoc (handler-name agent) handlers :test #'string=))))
+          (when (and name (not handler))
+            (send-message head :command `(:command :speak
+                                                   :say (:agent :need
+                                                                :need  :handler
+                                                                :handler (:server ,(server agent)
+                                                                                  :hosts ,(hosts agent)
+                                                                                  :route ,(route agent)
+                                                                                  :name ,(handler-name agent)))))
+            (log-for (trace api-agent) "Server: ~S doesn't have handler ~S, adding." name (handler-name agent))))))))
 

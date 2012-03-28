@@ -46,7 +46,7 @@
 
 (defmethod api/keys/validate ((agent afdog-tests:accounts-agent) organ handler request api-key rest)
   "Validate API key by the given regex."
-  (if (and (ppcre:scan *valid-key-regex* (m2cl:request-header request *api-key-header*)) (ppcre:scan *valid-key-regex* api-key))
+  (if (and (ppcre:scan *valid-key-regex* (m2cl:request-header request (string-downcase *api-key-header*))) (ppcre:scan *valid-key-regex* api-key))
       (with-chunked-stream-reply (handler request stream
                                           :headers ((header-json-type)))
         (json:encode-json-alist '((:success . t)) stream))

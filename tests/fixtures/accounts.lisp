@@ -27,7 +27,7 @@
 
 (in-package :api-app)
 
-(defvar *api-key-header* "X-API-key")
+(defvar *api-key-header* "X-API-Key")
 (defvar *valid-key-regex* "^valid"
   "Regular expression to match valid keys for testing")
 

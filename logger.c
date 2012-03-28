@@ -66,6 +66,6 @@ int main(void) {
         free(r_str);
     }
     zmq_close(socket);
-    zmq_close(context);
+    zmq_term(context);
     return 0;
 }

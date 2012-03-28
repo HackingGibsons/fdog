@@ -1,3 +1,4 @@
 config.sqlite
 forwarders.json
+secrets.json
 logs/*.log

@@ -61,6 +61,7 @@ int main(void) {
         char *str = trim_whitespace(r_str);
         if (!string_empty(str)) {
             printf("%s\n", str);
+            fflush(NULL);
         }
         free(r_str);
     }

@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
     strlcpy(msg, argv[1], 20);
 
     while(1) {
-      sleep(1);
       s_send(socket, msg);
     }
     zmq_close(socket);

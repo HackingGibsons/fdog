@@ -22,16 +22,17 @@ s_send (void *socket, char *string) {
     return (rc);
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
     void *context = zmq_init(1);
 
     void *socket = zmq_socket(context, ZMQ_PUB);
-    zmq_setsockopt(socket, ZMQ_LINGER, "250", sizeof("250"));
     zmq_bind(socket, SOCKET_ADDR);
 
+    char msg[20];
+    strlcpy(msg, argv[1], 20);
+
     while(1) {
-      char msg[20];
-      sprintf(msg, "(TRACE) foo");
+      sleep(1);
       s_send(socket, msg);
     }
     zmq_close(socket);

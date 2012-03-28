@@ -53,7 +53,6 @@ int main(void) {
 
     void *socket = zmq_socket(context, ZMQ_SUB);
     zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
-    zmq_setsockopt(socket, ZMQ_LINGER, "250", sizeof("250"));
     zmq_connect(socket, SOCKET_ADDR);
 
     while(1) {

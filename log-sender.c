@@ -8,7 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define SOCKET_ADDR "ipc:///tmp/afdog-logging"
+#define SOCKET_ADDR "ipc:///tmp/afdog-logging-collect"
 //#define SOCKET_ADDR "tcp://127.0.0.1:5555"
 
 static int
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     void *context = zmq_init(1);
 
     void *socket = zmq_socket(context, ZMQ_PUB);
-    zmq_bind(socket, SOCKET_ADDR);
+    zmq_connect(socket, SOCKET_ADDR);
 
     char msg[20];
     strlcpy(msg, argv[1], 20);

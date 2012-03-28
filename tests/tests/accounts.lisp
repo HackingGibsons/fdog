@@ -15,6 +15,8 @@
     (multiple-value-bind (res meta)
         (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key)
                     :method :POST :content (json:encode-json-to-string req))
+
+      (declare (ignorable res))
       (getf meta :status-code))))
 
 (def-test (valid-api-key :group accounts-tests)
@@ -25,6 +27,7 @@
         (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key)
                     :method :POST :content (json:encode-json-to-string req)
                     :additional-headers `((,api-app::*api-key-header* . "valid-header-key")))
+      (declare (ignorable res))
       (getf meta :status-code))))
 
 (def-test (invalid-api-key :group accounts-tests)
@@ -35,4 +38,5 @@
         (http->json (format nil "http://localhost:~A/api/keys/~A/validate/" *accounts-port* api-key)
                     :method :POST :content (json:encode-json-to-string req)
                     :additional-headers `((,api-app::*api-key-header* . "valid-header-key")))
+      (declare (ignorable res))
       (getf meta :status-code))))

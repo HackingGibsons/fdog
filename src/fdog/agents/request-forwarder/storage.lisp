@@ -18,7 +18,7 @@
 (defmethod deliver-request :before ((endpoint forwarder-endpoint) (req m2cl:request))
   "Request storage hook."
   ;; TODO better place for this (this file concerns redis)
-  (validate-request endpoint req)
+  ;;(validate-request endpoint req)
   (store-request endpoint req))
 
 (defmethod deliver-request :after ((endpoint forwarder-endpoint) (req m2cl:request))

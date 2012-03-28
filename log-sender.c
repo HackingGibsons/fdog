@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
     zmq_connect(socket, SOCKET_ADDR);
 
     char msg[20];
-    strlcpy(msg, argv[1], 20);
+    strncpy(msg, argv[1], 20);
+    msg[19] = '\0';
 
     while(1) {
       s_send(socket, msg);
